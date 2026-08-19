@@ -620,7 +620,8 @@ document.addEventListener("DOMContentLoaded",function(){
     })
   })
 })
-// Analytics tracking
+</script>
+<script>
 (function(){
   var tid="${site.tenantId}";var sid="${site.id}";var apiBase="${this.apiV1Url()}";
   var track=function(data){
