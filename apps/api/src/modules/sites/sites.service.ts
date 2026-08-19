@@ -8,6 +8,8 @@ import {
 import { PrismaService } from "../../prisma/prisma.service";
 import { VercelService } from "./vercel.service";
 import { resolvePublicSiteUrl } from "../publishing/seo-helpers";
+import { join } from "path";
+import { existsSync, unlinkSync } from "fs";
 
 @Injectable()
 export class SitesService {
@@ -324,5 +326,56 @@ export class SitesService {
       vercel: vercel && !vercel.error ? vercel : null,
       vercelConfigured: this.vercel.isConfigured,
     };
+  }
+
+  async setApk(id: string, dto: { apkUrl: string; apkVersion: string; apkName: string; apkSize: number }) {
+    const site = await this.findLean(id);
+    const current = await this.prisma.site.findUnique({ where: { id }, select: { settings: true } });
+    const settings = ((current?.settings as any) || {});
+
+    if (settings.apkUrl) {
+      const filename = settings.apkUrl.split("/").pop();
+      if (filename) {
+        const filePath = join(process.cwd(), "uploads", "apk", filename);
+        if (existsSync(filePath)) {
+          try { unlinkSync(filePath); } catch {}
+        }
+      }
+    }
+
+    return this.prisma.site.update({
+      where: { id },
+      data: {
+        settings: {
+          ...settings,
+          apkUrl: dto.apkUrl,
+          apkVersion: dto.apkVersion,
+          apkName: dto.apkName,
+          apkSize: dto.apkSize,
+        },
+      },
+    });
+  }
+
+  async removeApk(id: string) {
+    const site = await this.findLean(id);
+    const current = await this.prisma.site.findUnique({ where: { id }, select: { settings: true } });
+    const settings = ((current?.settings as any) || {});
+
+    if (settings.apkUrl) {
+      const filename = settings.apkUrl.split("/").pop();
+      if (filename) {
+        const filePath = join(process.cwd(), "uploads", "apk", filename);
+        if (existsSync(filePath)) {
+          try { unlinkSync(filePath); } catch {}
+        }
+      }
+    }
+
+    const { apkUrl, apkVersion, apkName, apkSize, ...rest } = settings;
+    return this.prisma.site.update({
+      where: { id },
+      data: { settings: rest },
+    });
   }
 }
