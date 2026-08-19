@@ -46,6 +46,7 @@ export class PublishingController {
     @Res() res: Response
   ) {
     const html = await this.publishingService.getPublicHtml(subdomain, path);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   }
 
