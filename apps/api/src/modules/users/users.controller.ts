@@ -61,8 +61,14 @@ export class UsersController {
   async adminFindAll(
     @Query("role") role?: string,
     @Query("tenantId") tenantId?: string,
-    @Query("search") search?: string
-  ) { return this.usersService.adminFindAll({ role, tenantId, search }); }
+    @Query("search") search?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string
+  ) { return this.usersService.adminFindAll({
+    role, tenantId, search,
+    page: parseInt(page || "1", 10) || 1,
+    limit: parseInt(limit || "50", 10) || 50,
+  }); }
 
   @Put("admin/:id/toggle-block")
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)

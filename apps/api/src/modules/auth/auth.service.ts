@@ -4,6 +4,8 @@ import {
   ConflictException,
   BadRequestException,
   Logger,
+  OnModuleInit,
+  OnModuleDestroy,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
@@ -19,14 +21,27 @@ import {
 } from "../../shared/index";
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService
   ) {}
+
+  onModuleInit() {
+    this.cleanupInterval = setInterval(() => {
+      this.prisma.refreshToken.deleteMany({
+        where: { expiresAt: { lt: new Date() } },
+      }).catch(() => {});
+    }, 6 * 60 * 60 * 1000);
+  }
+
+  onModuleDestroy() {
+    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+  }
 
   async register(dto: RegisterUserDto) {
     const existing = await this.prisma.user.findUnique({
@@ -153,7 +168,7 @@ export class AuthService {
 
     const userTenants = await this.prisma.userTenant.findMany({
       where: { userId: user.id },
-      include: { tenant: true },
+      include: { tenant: { select: { id: true, name: true, slug: true, subdomain: true } } },
     });
 
     const enriched = await this.enrichUser(user, rp);
@@ -358,7 +373,7 @@ export class AuthService {
 
     const userTenants = await this.prisma.userTenant.findMany({
       where: { userId: user.id },
-      include: { tenant: true },
+      include: { tenant: { select: { id: true, name: true, slug: true, subdomain: true } } },
     });
 
     const enriched = await this.enrichUser(user, rp);
@@ -418,13 +433,6 @@ export class AuthService {
         }
       ),
     ]);
-    // Delete expired tokens to keep the database clean while allowing multiple devices
-    await this.prisma.refreshToken.deleteMany({
-      where: { 
-        userId: user.id,
-        expiresAt: { lt: new Date() }
-      },
-    }).catch(() => {});
 
     await this.prisma.refreshToken.create({
       data: {

@@ -211,6 +211,10 @@ export class TemplatesService {
       },
     });
 
+    const allBlocksData: Array<{
+      templatePageId: string; type: string; content: any; styles: any; sortOrder: number;
+    }> = [];
+
     for (const page of site.pages) {
       const tp = await this.prisma.templatePage.create({
         data: {
@@ -223,17 +227,19 @@ export class TemplatesService {
         },
       });
 
-      if (page.blocks.length > 0) {
-        await this.prisma.templateBlock.createMany({
-          data: page.blocks.map((b) => ({
-            templatePageId: tp.id,
-            type: b.type,
-            content: b.content as any,
-            styles: b.styles as any,
-            sortOrder: b.sortOrder,
-          })),
+      for (const b of page.blocks) {
+        allBlocksData.push({
+          templatePageId: tp.id,
+          type: b.type,
+          content: b.content as any,
+          styles: b.styles as any,
+          sortOrder: b.sortOrder,
         });
       }
+    }
+
+    if (allBlocksData.length > 0) {
+      await this.prisma.templateBlock.createMany({ data: allBlocksData });
     }
 
     return template;
@@ -242,20 +248,18 @@ export class TemplatesService {
   async diversifyAllTemplates() {
     const templates = await this.prisma.template.findMany({
       where: {},
-      include: {
-        category: { select: { slug: true } },
-        pages: {
-          include: { blocks: { orderBy: { sortOrder: "asc" } } },
-          orderBy: { sortOrder: "asc" },
-        },
-      },
+      select: { id: true },
       orderBy: { createdAt: "asc" },
     });
 
     let updated = 0;
-    for (const t of templates) {
-      const res = await this.diversifyTemplate(t.id);
-      if (res?.updated) updated += 1;
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < templates.length; i += BATCH_SIZE) {
+      const batch = templates.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map((t) => this.diversifyTemplate(t.id))
+      );
+      updated += results.filter((r) => r?.updated).length;
     }
 
     return { updated, total: templates.length };

@@ -101,24 +101,33 @@ export class LeadsService {
       if (filters.to) where.createdAt.lte = new Date(filters.to);
     }
 
+    const BATCH_SIZE = 1000;
     const MAX_EXPORT = 10000;
-    const leads = await this.prisma.lead.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: MAX_EXPORT,
-    });
-
-    if (leads.length === 0) return "Sin datos";
-
     const header = ["Nombre", "Email", "Teléfono", "Estado", "Origen", "Fecha", "Datos"].join(",");
-    const rows = leads.map((l) => {
-      const name = l.name || "";
-      const email = l.email || "";
-      const phone = l.phone || "";
-      const jsondata = l.data ? `"${JSON.stringify(l.data).replace(/"/g, '""')}"` : "";
-      return [`"${name}"`, `"${email}"`, `"${phone}"`, l.status, l.source || "", l.createdAt.toISOString(), jsondata].join(",");
-    });
+    const rows: string[] = [];
+    let offset = 0;
 
+    while (offset < MAX_EXPORT) {
+      const batch = await this.prisma.lead.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: BATCH_SIZE,
+        select: { name: true, email: true, phone: true, status: true, source: true, createdAt: true, data: true },
+      });
+      if (batch.length === 0) break;
+      for (const l of batch) {
+        const name = l.name || "";
+        const email = l.email || "";
+        const phone = l.phone || "";
+        const jsondata = l.data ? `"${JSON.stringify(l.data).replace(/"/g, '""')}"` : "";
+        rows.push([`"${name}"`, `"${email}"`, `"${phone}"`, l.status, l.source || "", l.createdAt.toISOString(), jsondata].join(","));
+      }
+      if (batch.length < BATCH_SIZE) break;
+      offset += BATCH_SIZE;
+    }
+
+    if (rows.length === 0) return "Sin datos";
     return `\uFEFF${header}\n${rows.join("\n")}`;
   }
 

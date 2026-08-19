@@ -184,6 +184,8 @@ export class SubscriptionsService {
 
   async checkAndSuspendExpired() {
     const now = new Date();
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
     const expired = await this.prisma.subscription.findMany({
       where: {
         status: "active",
@@ -191,22 +193,23 @@ export class SubscriptionsService {
       },
     });
 
-    for (const sub of expired) {
-      const daysOverdue = Math.floor((now.getTime() - sub.currentPeriodEnd.getTime()) / (24 * 60 * 60 * 1000));
+    const toSuspend = expired.filter(
+      (sub) => sub.currentPeriodEnd <= threeDaysAgo
+    );
 
-      if (daysOverdue >= 3) {
-        await this.prisma.subscription.update({
-          where: { id: sub.id },
+    if (toSuspend.length > 0) {
+      const tenantIds = [...new Set(toSuspend.map((s) => s.tenantId))];
+      await this.prisma.$transaction([
+        this.prisma.subscription.updateMany({
+          where: { id: { in: toSuspend.map((s) => s.id) } },
           data: { status: "suspended" },
-        });
-
-        await this.prisma.tenant.update({
-          where: { id: sub.tenantId },
+        }),
+        this.prisma.tenant.updateMany({
+          where: { id: { in: tenantIds } },
           data: { isActive: false },
-        });
-
-        this.logger.log(`Tenant ${sub.tenantId} suspended (${daysOverdue}d overdue)`);
-      }
+        }),
+      ]);
+      this.logger.log(`${tenantIds.length} tenants suspended (${toSuspend.length} subscriptions)`);
     }
 
     return { processed: expired.length };

@@ -141,8 +141,10 @@ export class UsersService {
     }));
   }
 
-  async adminFindAll(filters?: { role?: string; tenantId?: string; search?: string }) {
+  async adminFindAll(filters?: { role?: string; tenantId?: string; search?: string; page?: number; limit?: number }) {
     const where: any = { deletedAt: null };
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 50));
 
     if (filters?.search) {
       where.OR = [
@@ -170,22 +172,28 @@ export class UsersService {
       };
     }
 
-    return this.prisma.user.findMany({
-      where,
-      select: {
-        id: true, email: true, firstName: true, lastName: true,
-        isActive: true, isVerified: true, lastLoginAt: true, lastLoginIp: true,
-        createdAt: true, updatedAt: true,
-        userTenants: {
-          include: {
-            tenant: { select: { id: true, name: true } },
-            roles: { include: { role: { select: { id: true, name: true } } } },
+    const [items, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true, email: true, firstName: true, lastName: true,
+          isActive: true, isVerified: true, lastLoginAt: true, lastLoginIp: true,
+          createdAt: true, updatedAt: true,
+          userTenants: {
+            include: {
+              tenant: { select: { id: true, name: true } },
+              roles: { include: { role: { select: { id: true, name: true } } } },
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return { items, total, page, limit };
   }
 
   async adminToggleBlock(userId: string, actorUserId?: string) {

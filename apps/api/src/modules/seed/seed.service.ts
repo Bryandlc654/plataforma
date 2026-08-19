@@ -76,30 +76,28 @@ export class SeedService implements OnModuleInit {
       return;
     }
 
-    for (const [roleName, permissions] of Object.entries(ROLE_PERMISSIONS) as Array<[string, string[]]>) {
-      const role = await this.prisma.role.findUnique({
-        where: { name: roleName },
-      });
+    const roles = await this.prisma.role.findMany({ select: { id: true, name: true } });
+    const permissions = await this.prisma.permission.findMany({ select: { id: true, name: true } });
 
-      if (!role) continue;
+    const roleMap = new Map(roles.map((r) => [r.name, r.id]));
+    const permMap = new Map(permissions.map((p) => [p.name, p.id]));
 
-      for (const permName of permissions) {
-        const permission = await this.prisma.permission.findUnique({
-          where: { name: permName },
-        });
+    const entries: Array<{ roleId: string; permissionId: string }> = [];
 
-        if (!permission) continue;
-
-        await this.prisma.rolePermission.create({
-          data: {
-            roleId: role.id,
-            permissionId: permission.id,
-          },
-        });
+    for (const [roleName, permNames] of Object.entries(ROLE_PERMISSIONS) as Array<[string, string[]]>) {
+      const roleId = roleMap.get(roleName);
+      if (!roleId) continue;
+      for (const permName of permNames) {
+        const permissionId = permMap.get(permName);
+        if (permissionId) entries.push({ roleId, permissionId });
       }
     }
 
-    this.logger.log("Seeded role permissions");
+    if (entries.length > 0) {
+      await this.prisma.rolePermission.createMany({ data: entries, skipDuplicates: true });
+    }
+
+    this.logger.log(`Seeded ${entries.length} role permissions`);
   }
 
   private async seedPlans() {

@@ -62,12 +62,14 @@ export class PagesService {
   }
 
   async reorderPages(siteId: string, pageIds: string[]) {
-    for (let i = 0; i < pageIds.length; i++) {
-      await this.prisma.sitePage.update({
-        where: { id: pageIds[i] },
-        data: { sortOrder: i },
-      });
-    }
+    await this.prisma.$transaction(
+      pageIds.map((id, i) =>
+        this.prisma.sitePage.update({
+          where: { id },
+          data: { sortOrder: i },
+        })
+      )
+    );
     return this.findAll(siteId);
   }
 
@@ -139,12 +141,14 @@ export class PagesService {
   }
 
   async reorderBlocks(pageId: string, blockIds: string[]) {
-    for (let i = 0; i < blockIds.length; i++) {
-      await this.prisma.pageBlock.update({
-        where: { id: blockIds[i] },
-        data: { sortOrder: i },
-      });
-    }
+    await this.prisma.$transaction(
+      blockIds.map((id, i) =>
+        this.prisma.pageBlock.update({
+          where: { id },
+          data: { sortOrder: i },
+        })
+      )
+    );
     return this.findById(pageId);
   }
 }

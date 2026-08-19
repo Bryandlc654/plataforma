@@ -3,6 +3,7 @@ import {
 } from "@nestjs/common";
 import { Response } from "express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { LeadsService } from "./leads.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -77,6 +78,7 @@ export class LeadsController {
     return this.leadsService.updateManyStatus(user.tenantId, body.ids, body.status);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Public()
   @Post("submit/:tenantId")
   @ApiOperation({ summary: "Submit a public lead directly to CRM" })

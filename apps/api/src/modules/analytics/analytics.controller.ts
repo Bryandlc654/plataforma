@@ -2,7 +2,7 @@ import {
   Controller, Get, Post, Param, Query, Body, UseGuards, Req,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
-import { SkipThrottle } from "@nestjs/throttler";
+import { Throttle } from "@nestjs/throttler";
 import { AnalyticsService } from "./analytics.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
@@ -13,7 +13,7 @@ import { CurrentUser } from "../../common/decorators/current-user.decorator";
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
-  @SkipThrottle()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Public()
   @Post("track")
   @ApiOperation({ summary: "Track analytics event (public)" })

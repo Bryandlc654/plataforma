@@ -10,7 +10,7 @@ export class DashboardService {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [totalSites, totalLeads, totalUsers, leadsLast30Days, recentLeads, recentLogs] =
+    const [totalSites, totalLeads, totalUsers, leadsLast30Days, recentLeads, recentLogs, subscription] =
       await Promise.all([
         this.prisma.site.count({
           where: { tenantId, deletedAt: null },
@@ -61,13 +61,12 @@ export class DashboardService {
             },
           },
         }),
+        this.prisma.subscription.findFirst({
+          where: { tenantId, status: "active" },
+          include: { plan: { select: { name: true, slug: true, price: true } } },
+          orderBy: { createdAt: "desc" },
+        }),
       ]);
-
-    const subscription = await this.prisma.subscription.findFirst({
-      where: { tenantId, status: "active" },
-      include: { plan: { select: { name: true, slug: true, price: true } } },
-      orderBy: { createdAt: "desc" },
-    });
 
     return {
       summary: {
@@ -99,61 +98,52 @@ export class DashboardService {
   async getAdminOverview() {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [totalTenants, totalUsers, activeSubscriptions, activeTenants, suspendedTenants] = await Promise.all([
+    const [
+      totalTenants, totalUsers, activeSubscriptions, activeTenants, suspendedTenants,
+      { mrr }, cancelledCount, totalSubs, paidInvoices, monthRevenue,
+      totalLeads, totalSites, recentTenants,
+    ] = await Promise.all([
       this.prisma.tenant.count({ where: { deletedAt: null } }),
       this.prisma.user.count({ where: { deletedAt: null } }),
       this.prisma.subscription.count({ where: { status: "active" } }),
       this.prisma.tenant.count({ where: { deletedAt: null, isActive: true } }),
       this.prisma.tenant.count({ where: { deletedAt: null, isActive: false } }),
-    ]);
-
-    // MRR - Monthly Recurring Revenue (aggregated, avoids loading every subscription row)
-    const { mrr } = await this.getActiveSubsAggregate();
-
-    // Churn - subscriptions cancelled in last 30 days
-    const cancelledCount = await this.prisma.subscription.count({
-      where: { status: "canceled", canceledAt: { gte: thirtyDaysAgo } },
-    });
-    const totalSubs = await this.prisma.subscription.count();
-    const churnRate = totalSubs > 0 ? Math.round((cancelledCount / totalSubs) * 100) : 0;
-
-    // Total revenue
-    const paidInvoices = await this.prisma.invoice.aggregate({
-      where: { status: "paid" },
-      _sum: { amount: true },
-    });
-    const totalRevenue = Number(paidInvoices._sum.amount || 0);
-
-    // Revenue this month
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthRevenue = await this.prisma.invoice.aggregate({
-      where: { status: "paid", paidAt: { gte: monthStart } },
-      _sum: { amount: true },
-    });
-
-    // Total leads and sites
-    const [totalLeads, totalSites] = await Promise.all([
+      this.getActiveSubsAggregate(),
+      this.prisma.subscription.count({
+        where: { status: "canceled", canceledAt: { gte: thirtyDaysAgo } },
+      }),
+      this.prisma.subscription.count(),
+      this.prisma.invoice.aggregate({
+        where: { status: "paid" },
+        _sum: { amount: true },
+      }),
+      this.prisma.invoice.aggregate({
+        where: { status: "paid", paidAt: { gte: monthStart } },
+        _sum: { amount: true },
+      }),
       this.prisma.lead.count(),
       this.prisma.site.count({ where: { deletedAt: null } }),
+      this.prisma.tenant.findMany({
+        where: { deletedAt: null },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          subdomain: true,
+          isActive: true,
+          plan: { select: { name: true, slug: true } },
+          createdAt: true,
+          _count: { select: { userTenants: true, sites: true } },
+        },
+      }),
     ]);
 
-    // Recent tenants
-    const recentTenants = await this.prisma.tenant.findMany({
-      where: { deletedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        subdomain: true,
-        isActive: true,
-        plan: { select: { name: true, slug: true } },
-        createdAt: true,
-        _count: { select: { userTenants: true, sites: true } },
-      },
-    });
+    const churnRate = totalSubs > 0 ? Math.round((cancelledCount / totalSubs) * 100) : 0;
+    const totalRevenue = Number(paidInvoices._sum.amount || 0);
 
     return {
       summary: {

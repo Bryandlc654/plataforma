@@ -7,7 +7,20 @@ import {
 
 @Injectable()
 export class SeoService {
+  private readonly cache = new Map<string, { value: string; expiry: number }>();
+
   constructor(private prisma: PrismaService) {}
+
+  private getCached(key: string): string | null {
+    const entry = this.cache.get(key);
+    if (entry && entry.expiry > Date.now()) return entry.value;
+    if (entry) this.cache.delete(key);
+    return null;
+  }
+
+  private setCached(key: string, value: string, ttlMs: number) {
+    this.cache.set(key, { value, expiry: Date.now() + ttlMs });
+  }
 
   async updateSiteSeo(siteId: string, data: any) {
     const update: any = {};
@@ -41,6 +54,9 @@ export class SeoService {
   }
 
   async generateSitemap(siteId: string): Promise<string> {
+    const cached = this.getCached(`sitemap:${siteId}`);
+    if (cached) return cached;
+
     const site = await this.prisma.site.findUnique({
       where: { id: siteId },
       include: { pages: { orderBy: { sortOrder: "asc" } } },
@@ -60,15 +76,22 @@ export class SeoService {
       return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
     });
 
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+    this.setCached(`sitemap:${siteId}`, xml, 3_600_000);
+    return xml;
   }
 
   async generateRobots(siteId: string): Promise<string> {
+    const cached = this.getCached(`robots:${siteId}`);
+    if (cached) return cached;
+
     const site = await this.prisma.site.findUnique({ where: { id: siteId } });
     if (!site) throw new NotFoundException("Site not found");
 
     const urlBase = resolvePublicSiteUrl(site);
-    return `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
+    const robots = `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
+    this.setCached(`robots:${siteId}`, robots, 3_600_000);
+    return robots;
   }
 
   async getSeoMeta(siteId: string) {

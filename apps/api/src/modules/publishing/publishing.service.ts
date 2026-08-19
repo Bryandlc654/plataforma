@@ -10,10 +10,33 @@ import {
 
 @Injectable()
 export class PublishingService {
+  private readonly htmlCache = new Map<string, { value: string; expiry: number }>();
+  private readonly staticCache = new Map<string, { value: string; expiry: number }>();
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService
   ) {}
+
+  private getCached(cache: Map<string, { value: string; expiry: number }>, key: string): string | null {
+    const entry = cache.get(key);
+    if (entry && entry.expiry > Date.now()) return entry.value;
+    if (entry) cache.delete(key);
+    return null;
+  }
+
+  private setCached(cache: Map<string, { value: string; expiry: number }>, key: string, value: string, ttlMs: number) {
+    cache.set(key, { value, expiry: Date.now() + ttlMs });
+  }
+
+  private invalidateCache(subdomain: string) {
+    for (const key of [...this.htmlCache.keys(), ...this.staticCache.keys()]) {
+      if (key.startsWith(subdomain)) {
+        this.htmlCache.delete(key);
+        this.staticCache.delete(key);
+      }
+    }
+  }
 
   async publish(id: string) {
     const site = await this.prisma.site.findUnique({
@@ -35,6 +58,9 @@ export class PublishingService {
       where: { id },
       data: { isPublished: true, publishedAt: new Date() },
     });
+
+    const subdomain = site.tenant?.subdomain || site.subdomain;
+    if (subdomain) this.invalidateCache(subdomain);
 
     return {
       url: resolvePublicSiteUrl(site),
@@ -121,6 +147,10 @@ export class PublishingService {
   }
 
   async getPublicHtml(subdomain: string, path?: string) {
+    const cacheKey = `${subdomain}:${path || "/"}`;
+    const cached = this.getCached(this.htmlCache, cacheKey);
+    if (cached) return cached;
+
     const site = await this.prisma.site.findFirst({
       where: {
         OR: [{ subdomain }, { domain: subdomain }],
@@ -146,10 +176,16 @@ export class PublishingService {
       if (!match) throw new NotFoundException("Page not found");
     }
 
-    return this.renderFullSite(site, path);
+    const html = this.renderFullSite(site, path);
+    this.setCached(this.htmlCache, cacheKey, html, 60_000);
+    return html;
   }
 
   async getPublicSitemap(subdomain: string): Promise<string> {
+    const cacheKey = `${subdomain}:sitemap`;
+    const cached = this.getCached(this.staticCache, cacheKey);
+    if (cached) return cached;
+
     const site = await this.prisma.site.findFirst({
       where: {
         OR: [{ subdomain }, { domain: subdomain }],
@@ -173,10 +209,16 @@ export class PublishingService {
       return `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
     });
 
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+    this.setCached(this.staticCache, cacheKey, xml, 3_600_000);
+    return xml;
   }
 
   async getPublicRobots(subdomain: string): Promise<string> {
+    const cacheKey = `${subdomain}:robots`;
+    const cached = this.getCached(this.staticCache, cacheKey);
+    if (cached) return cached;
+
     const site = await this.prisma.site.findFirst({
       where: {
         OR: [{ subdomain }, { domain: subdomain }],
@@ -188,7 +230,9 @@ export class PublishingService {
     if (!site) throw new NotFoundException("Site not found");
 
     const urlBase = resolvePublicSiteUrl(site);
-    return `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
+    const robots = `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
+    this.setCached(this.staticCache, cacheKey, robots, 3_600_000);
+    return robots;
   }
 
   private apiBaseUrl(): string {
