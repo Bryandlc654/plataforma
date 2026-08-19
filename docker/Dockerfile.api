@@ -1,0 +1,29 @@
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN npm install -g turbo@^2.3
+
+FROM base AS deps
+COPY package.json package-lock.json* ./
+COPY turbo.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY packages/database/package.json ./packages/database/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
+RUN npm ci
+
+FROM base AS development
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+CMD ["npx", "turbo", "dev", "--filter=@plataforma/api"]
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx turbo build --filter=@plataforma/api
+
+FROM node:20-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/api/package.json ./
+ENV NODE_ENV=production
+CMD ["node", "dist/main"]

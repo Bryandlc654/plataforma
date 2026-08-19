@@ -1,0 +1,226 @@
+Definición de Alcance del Proyecto
+Plataforma SaaS Multi-tenant para Creación y Gestión Digital de Negocios
+1. Descripción General
+El proyecto consiste en el desarrollo de una plataforma SaaS multi-tenant orientada a pequeñas y medianas empresas, emprendedores y agencias, que permita crear, administrar y publicar presencia digital profesional desde un panel centralizado.
+La plataforma permitirá a los usuarios:
+crear sitios web mediante un editor visual,
+administrar dominios y subdominios,
+gestionar usuarios y permisos,
+recibir leads mediante formularios,
+monitorear métricas básicas,
+administrar suscripciones y pagos,
+integrar herramientas externas,
+y publicar automáticamente sus sitios web.
+El sistema operará bajo un modelo de suscripción mensual con múltiples planes de servicio.
+
+2. Objetivo del Proyecto
+Desarrollar una plataforma web escalable y multi-tenant que permita a negocios digitales lanzar y administrar su presencia online sin conocimientos técnicos avanzados.
+
+3. Modelo de Negocio
+La plataforma funcionará bajo modalidad SaaS (Software as a Service).
+Monetización
+Suscripciones mensuales/anuales
+Planes escalables
+Venta de módulos adicionales
+Servicios premium
+Marketplace futuro de plantillas y extensiones
+
+4. Tipo de Plataforma
+Arquitectura General
+SaaS Multi-tenant
+Cloud-based
+Responsive
+Modular
+Escalable
+
+5. Público Objetivo
+Segmentos Iniciales
+Emprendedores
+Negocios locales
+Barberías
+Clínicas
+Restaurantes
+Consultoras
+Agencias digitales
+Freelancers
+
+6. Alcance Funcional del MVP
+El MVP incluirá únicamente las funcionalidades esenciales para validar el producto comercialmente.
+
+7. Módulos Incluidos en el MVP
+7.1 Gestión de Identidad y Acceso
+Funcionalidades
+Registro de usuarios
+Inicio de sesión
+Recuperación de contraseña
+Login social
+Gestión de perfil
+Gestión de empresa
+Configuración de idioma
+Configuración de moneda
+Configuración de zona horaria
+
+7.2 Sistema Multi-tenant
+Funcionalidades
+Creación automática de tenant
+Aislamiento lógico de datos
+Gestión de múltiples sitios por usuario
+Subdominios automáticos
+Configuración de branding
+
+7.3 Gestión de Suscripciones
+Funcionalidades
+Planes Free / Pro / Business
+Gestión de pagos
+Renovaciones automáticas
+Historial de pagos
+Control de vencimientos
+Suspensión automática
+Reactivación automática
+
+7.4 Constructor Web (Core)
+Funcionalidades
+Editor visual por bloques
+Sistema drag & drop básico
+Templates prediseñados
+Responsive automático
+Gestión de páginas
+Publicación automática
+Vista previa en tiempo real
+
+7.5 Gestión de Contenido
+Funcionalidades
+Edición de textos
+Gestión de imágenes
+Gestión de secciones
+Configuración SEO básica
+Gestión de navegación
+Configuración de footer
+
+7.6 Gestión de Media
+Funcionalidades
+Subida de imágenes
+Compresión automática
+Organización de archivos
+CDN básico
+Optimización responsive
+
+7.7 Formularios y Captación de Leads
+Funcionalidades
+Constructor de formularios
+Formularios de contacto
+Formularios de cotización
+Formularios de reservas simples
+Exportación CSV/Excel
+Notificaciones por correo
+Notificaciones WhatsApp
+
+7.8 SEO y Publicación
+Funcionalidades
+Meta tags
+Sitemap.xml
+Robots.txt
+URLs amigables
+Open Graph
+Publicación automática
+
+7.9 Dashboard y Métricas
+Funcionalidades
+Visitas generales
+Leads captados
+Clics en WhatsApp
+Formularios enviados
+Resumen de rendimiento
+
+7.10 Gestión de Usuarios y Roles
+Funcionalidades
+Creación de usuarios secundarios
+Invitaciones
+Roles básicos:
+Owner
+Admin
+Editor
+Viewer
+
+7.11 Integraciones Básicas
+Funcionalidades
+WhatsApp
+Google Analytics
+Facebook Pixel
+Webhooks básicos
+
+7.12 Gestión de Correos
+Funcionalidades
+Correos transaccionales
+Notificaciones automáticas
+Plantillas de email
+Recuperación de contraseña
+Avisos de vencimiento
+
+8. Funcionalidades Fuera del MVP
+Estas funcionalidades NO serán desarrolladas en la primera etapa:
+E-commerce completo
+Marketplace de apps
+Automatizaciones avanzadas
+CRM completo
+IA avanzada personalizada
+Constructor avanzado tipo Webflow
+Multiidioma avanzado
+ERP integrado
+Facturación electrónica
+Email marketing masivo
+Sistema de afiliados
+Mobile app nativa
+
+9. Arquitectura Técnica Base
+Frontend
+Next.js
+TailwindCSS
+Zustand/Redux
+Backend
+NestJS
+Arquitectura modular
+API REST
+Base de Datos
+Mysql
+ORM
+Prisma
+Infraestructura
+Docker
+CDN
+Cloud Storage
+CI/CD
+
+10. Restricciones Iniciales
+El MVP tendrá:
+editor simplificado,
+cantidad limitada de componentes,
+analytics básicos,
+integraciones limitadas,
+personalización moderada.
+
+11. Objetivos del MVP
+Objetivos Comerciales
+Validar mercado
+Captar primeros clientes
+Medir retención
+Validar pricing
+Objetivos Técnicos
+Validar arquitectura multi-tenant
+Validar editor visual
+Validar publicación automática
+Validar sistema de suscripciones
+
+12. Resultado Esperado
+Al finalizar el MVP, el usuario podrá:
+Registrarse
+Crear su negocio
+Elegir plantilla
+Editar contenido
+Configurar dominio/subdominio
+Publicar su sitio
+Recibir leads
+Ver métricas
+Gestionar pagos y suscripción
+Administrar colaboradores internos
+

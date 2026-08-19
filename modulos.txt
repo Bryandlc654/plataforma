@@ -1,0 +1,427 @@
+Definición de Roles del Sistema
+Plataforma SaaS Multi-tenant de Gestión Digital
+La plataforma manejará una arquitectura de acceso basada en RBAC (Role-Based Access Control), permitiendo controlar qué funcionalidades puede visualizar o ejecutar cada tipo de usuario.
+
+1. Roles Globales del Sistema (Platform Level)
+Estos roles pertenecen al núcleo administrativo de la plataforma SaaS y tienen acceso transversal a todos los tenants.
+
+1.1 Super Admin
+Descripción
+Administrador principal de toda la plataforma SaaS.
+Tiene acceso total al sistema, infraestructura comercial y operación global.
+
+Módulos Disponibles
+Dashboard Global
+métricas generales
+tenants activos
+MRR
+churn
+usuarios activos
+consumo de recursos
+
+Gestión de Tenants
+crear tenant
+suspender tenant
+eliminar tenant
+reactivar tenant
+ver consumo
+cambiar planes
+
+Gestión de Usuarios Globales
+visualizar usuarios
+bloquear cuentas
+resetear accesos
+verificar actividad
+
+Gestión de Planes y Suscripciones
+crear planes
+editar límites
+gestionar promociones
+controlar renovaciones
+
+Facturación Global
+historial de pagos
+comprobantes
+ingresos
+renovaciones
+métricas financieras
+
+Gestión de Plantillas
+crear templates
+aprobar templates
+marketplace futuro
+
+Gestión de Integraciones
+APIs
+webhooks
+WhatsApp
+Google
+SMTP
+OAuth providers
+
+Configuración del Sistema
+variables globales
+branding SaaS
+configuración de dominios
+CDN
+almacenamiento
+logs
+
+Soporte y Auditoría
+activity logs
+tickets
+errores
+trazabilidad
+
+1.2 Soporte / Staff Operativo
+Descripción
+Equipo interno de soporte técnico o comercial.
+
+Módulos Disponibles
+Gestión de Clientes
+visualizar tenants
+revisar incidencias
+soporte técnico
+
+Tickets
+responder tickets
+escalar incidencias
+
+Auditoría
+visualizar logs
+monitorear errores
+
+Facturación (solo lectura)
+validar pagos
+revisar estado de suscripciones
+
+2. Roles del Tenant (Cliente SaaS)
+Estos roles pertenecen a cada empresa/negocio registrado dentro de la plataforma.
+Cada tenant tiene sus propios usuarios, permisos y recursos aislados.
+
+2.1 Owner
+Descripción
+Propietario del negocio dentro de la plataforma.
+Es el máximo administrador del tenant.
+
+Módulos Disponibles
+Dashboard Principal
+métricas
+rendimiento
+actividad reciente
+
+Constructor Web
+editar sitio
+crear páginas
+modificar diseño
+publicar cambios
+
+Gestión de Sitios
+dominios
+subdominios
+SEO
+configuración general
+
+Gestión de Usuarios
+crear usuarios
+asignar roles
+eliminar usuarios
+invitaciones
+
+Gestión de Leads
+formularios
+contactos
+exportaciones
+
+Analytics
+visitas
+conversiones
+clics
+formularios
+
+Suscripción y Facturación
+cambiar plan
+métodos de pago
+historial de pagos
+renovaciones
+
+Integraciones
+WhatsApp
+Google Analytics
+Facebook Pixel
+webhooks
+
+Configuración del Negocio
+branding
+idioma
+moneda
+horarios
+correos
+
+Gestión de Correos
+SMTP
+plantillas
+notificaciones
+
+2.2 Admin
+Descripción
+Administrador operativo del negocio.
+Tiene acceso amplio, excepto funciones críticas financieras o propietarias.
+
+Módulos Disponibles
+Dashboard
+Constructor Web
+Gestión de Contenido
+Leads
+Analytics
+Integraciones
+Gestión de Usuarios (limitada)
+
+Restricciones
+NO puede:
+eliminar tenant
+cambiar propietario
+cancelar suscripción
+acceder a facturación crítica
+
+2.3 Editor
+Descripción
+Usuario encargado de modificar contenido del sitio.
+
+Módulos Disponibles
+Constructor Web
+editar páginas
+modificar textos
+cambiar imágenes
+
+Gestión de Media
+subir imágenes
+organizar assets
+
+Blog/CMS futuro
+crear publicaciones
+editar contenido
+
+Restricciones
+NO puede:
+publicar configuraciones críticas
+gestionar pagos
+gestionar usuarios
+modificar integraciones
+
+2.4 Marketing Manager
+Descripción
+Responsable de campañas y conversión.
+
+Módulos Disponibles
+Analytics
+Formularios
+SEO
+WhatsApp
+Conversiones
+Campañas futuras
+
+Restricciones
+NO puede:
+modificar diseño estructural
+administrar usuarios
+modificar facturación
+
+2.5 Billing Manager
+Descripción
+Encargado financiero del tenant.
+
+Módulos Disponibles
+Facturación
+pagos
+invoices
+renovaciones
+métodos de pago
+
+Suscripciones
+upgrades
+downgrades
+
+Restricciones
+NO puede:
+editar sitio
+modificar contenido
+administrar usuarios técnicos
+
+2.6 Viewer / Auditor
+Descripción
+Usuario con acceso únicamente visual.
+
+Módulos Disponibles
+Dashboard
+Analytics
+Leads (solo lectura)
+Reportes
+
+Restricciones
+NO puede editar ningún recurso.
+
+3. Roles Futuros (Escalabilidad)
+
+3.1 Agency Owner
+Descripción
+Agencias que administran múltiples clientes.
+
+Capacidades
+múltiples tenants
+facturación consolidada
+gestión masiva
+branding white-label
+
+3.2 Developer
+Descripción
+Usuario técnico con acceso a APIs e integraciones avanzadas.
+
+Capacidades
+API keys
+webhooks
+custom scripts
+integraciones
+
+4. Matriz General de Permisos
+Módulo
+Super Admin
+Owner
+Admin
+Editor
+Marketing
+Billing
+Viewer
+Dashboard
+✅
+✅
+✅
+⚠️
+✅
+⚠️
+✅
+Constructor Web
+✅
+✅
+✅
+✅
+❌
+❌
+❌
+Publicación
+✅
+✅
+✅
+⚠️
+❌
+❌
+❌
+Usuarios
+✅
+✅
+⚠️
+❌
+❌
+❌
+❌
+Roles
+✅
+✅
+❌
+❌
+❌
+❌
+❌
+Facturación
+✅
+✅
+❌
+❌
+❌
+✅
+👁️
+Suscripciones
+✅
+✅
+❌
+❌
+❌
+✅
+👁️
+Analytics
+✅
+✅
+✅
+⚠️
+✅
+⚠️
+👁️
+Leads
+✅
+✅
+✅
+⚠️
+✅
+❌
+👁️
+Integraciones
+✅
+✅
+⚠️
+❌
+⚠️
+❌
+❌
+Configuración Tenant
+✅
+✅
+⚠️
+❌
+❌
+❌
+❌
+Logs/Auditoría
+✅
+⚠️
+❌
+❌
+❌
+❌
+❌
+
+
+5. Recomendación Técnica de Implementación
+Sistema RBAC
+Debes implementar:
+users
+roles
+permissions
+role_permissions
+user_roles
+
+Permisos Granulares
+NO bases el sistema solo en roles.
+Debes usar:
+role → permissions
+Ejemplo:
+site.edit
+site.publish
+billing.manage
+users.invite
+analytics.view
+Esto permitirá:
+escalabilidad,
+custom roles futuros,
+white-label,
+agencias,
+enterprise plans.
+
+6. Recomendación Arquitectónica Importante
+Cada request debe validar:
+tenant_id
++
+role
++
+permission
+Esto es CRÍTICO en arquitectura multi-tenant para evitar fugas de información entre clientes.
+

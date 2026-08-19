@@ -1,0 +1,412 @@
+Roadmap de Desarrollo por Fases
+Plataforma SaaS Multi-tenant de Creación y Gestión Digital
+Este roadmap organiza el desarrollo del proyecto en fases progresivas, priorizando:
+validación rápida del producto,
+reducción de complejidad,
+escalabilidad técnica,
+estabilidad operativa,
+y crecimiento comercial.
+
+Stack Tecnológico Base
+Frontend
+Next.js
+TailwindCSS
+Zustand
+
+Backend
+NestJS
+Arquitectura modular
+API REST
+
+Base de Datos
+MySQL
+
+ORM
+Prisma
+
+Infraestructura
+Docker
+Nginx
+Redis
+CDN
+CI/CD
+Object Storage
+
+FASE 0 — Arquitectura y Base Técnica
+Duración estimada: 1 a 2 semanas
+Objetivo:
+ Preparar la infraestructura base y arquitectura del sistema.
+
+Implementaciones
+Infraestructura Inicial
+configuración monorepo
+Docker
+variables de entorno
+configuración CI/CD
+entornos:
+local
+development
+staging
+production
+
+Arquitectura Backend
+estructura modular NestJS
+controllers
+services
+repositories
+DTOs
+guards
+interceptors
+exceptions
+logger global
+
+Arquitectura Frontend
+estructura Next.js
+layouts
+routing
+manejo de estado
+sistema de autenticación frontend
+
+Base de Datos
+modelado inicial
+migraciones Prisma
+soft delete
+auditoría básica
+timestamps
+
+Seguridad Base
+JWT
+refresh tokens
+rate limiting
+CORS
+helmet
+validaciones globales
+
+Entregables
+✅ Arquitectura lista
+ ✅ Infraestructura funcional
+ ✅ Base técnica estable
+
+FASE 1 — Núcleo SaaS Multi-tenant (MVP Core)
+Duración estimada: 3 a 4 semanas
+Objetivo:
+ Construir el núcleo funcional de la plataforma.
+
+Implementaciones
+1. Autenticación y Usuarios
+Funcionalidades
+registro
+login
+recuperación contraseña
+login Google
+refresh token
+sesiones
+
+2. Sistema Multi-tenant
+Funcionalidades
+creación tenant
+aislamiento lógico
+tenant_id global
+subdominios automáticos
+configuración tenant
+
+3. Roles y Permisos (RBAC)
+Funcionalidades
+roles
+permisos
+middleware autorización
+validaciones tenant
+
+4. Dashboard Base
+Funcionalidades
+overview tenant
+actividad reciente
+resumen métricas
+
+5. Gestión de Planes
+Funcionalidades
+Free
+Pro
+Business
+límites por plan
+
+Entregables
+✅ Sistema multi-tenant funcional
+ ✅ Usuarios y permisos
+ ✅ Dashboard inicial
+
+FASE 2 — Constructor Web Básico
+Duración estimada: 4 a 6 semanas
+Objetivo:
+ Permitir crear y publicar sitios web funcionales.
+
+Implementaciones
+1. Sistema de Templates
+Funcionalidades
+templates prediseñados
+categorías
+clonación template
+
+2. Editor Visual Básico
+Funcionalidades
+drag & drop simple
+editor por bloques
+edición inline
+responsive automático
+
+3. Componentes Base
+Componentes
+Hero
+Servicios
+FAQ
+CTA
+Testimonios
+Galería
+Footer
+Header
+
+4. Gestión de Páginas
+Funcionalidades
+crear páginas
+rutas
+navegación
+SEO básico
+
+5. Publicación Automática
+Funcionalidades
+render HTML
+deploy automático
+cache
+preview
+
+6. Gestión de Media
+Funcionalidades
+subida imágenes
+compresión
+almacenamiento
+CDN
+
+Entregables
+✅ Constructor funcional
+ ✅ Publicación automática
+ ✅ Sitios públicos online
+
+FASE 3 — Marketing y Conversión
+Duración estimada: 3 a 5 semanas
+Objetivo:
+ Convertir sitios en herramientas comerciales reales.
+
+Implementaciones
+1. Formularios
+Funcionalidades
+contacto
+cotización
+reservas simples
+constructor formularios
+
+2. Leads
+Funcionalidades
+almacenamiento leads
+exportación CSV/Excel
+filtros
+estados
+
+3. Integración WhatsApp
+Funcionalidades
+botón flotante
+tracking clics
+alertas leads
+
+4. SEO Avanzado
+Funcionalidades
+sitemap.xml
+robots.txt
+Open Graph
+schema markup
+
+5. Analytics
+Funcionalidades
+visitas
+conversiones
+clics
+eventos
+
+Entregables
+✅ Captación de leads
+ ✅ Métricas funcionales
+ ✅ SEO operativo
+
+FASE 4 — Suscripciones y Facturación
+Duración estimada: 2 a 3 semanas
+Objetivo:
+ Automatizar monetización SaaS.
+
+Implementaciones
+1. Suscripciones
+Funcionalidades
+activación
+renovación
+upgrade
+downgrade
+suspensión automática
+
+2. Pasarela de Pago
+Funcionalidades
+integración Payphone
+webhooks pagos
+validación automática
+
+3. Facturación
+Funcionalidades
+invoices
+historial pagos
+comprobantes
+
+4. Notificaciones
+Funcionalidades
+vencimientos
+renovaciones
+correos automáticos
+WhatsApp reminders
+
+Entregables
+✅ SaaS monetizable
+ ✅ Renovaciones automáticas
+ ✅ Gestión financiera básica
+
+FASE 5 — Gestión Avanzada del Tenant
+Duración estimada: 3 semanas
+Objetivo:
+ Mejorar colaboración y administración empresarial.
+
+Implementaciones
+1. Gestión de Usuarios
+Funcionalidades
+invitaciones
+múltiples usuarios
+administración accesos
+
+2. Roles Avanzados
+Roles
+Owner
+Admin
+Editor
+Marketing
+Billing
+Viewer
+
+3. Auditoría
+Funcionalidades
+activity logs
+historial cambios
+accesos
+
+4. Configuración Empresarial
+Funcionalidades
+branding
+idioma
+moneda
+zona horaria
+
+Entregables
+✅ Trabajo colaborativo
+ ✅ Seguridad empresarial
+ ✅ Auditoría básica
+
+FASE 6 — Integraciones y Automatización
+Duración estimada: 4 a 5 semanas
+Objetivo:
+ Expandir conectividad del ecosistema.
+
+Implementaciones
+1. Integraciones Externas
+Integraciones
+Google Analytics
+Facebook Pixel
+Meta API
+SMTP
+Webhooks
+
+2. API Pública
+Funcionalidades
+API Keys
+rate limiting
+documentación
+
+3. Automatizaciones
+Funcionalidades
+triggers
+workflows básicos
+eventos
+
+4. Integración Zapier / Make
+Funcionalidades
+eventos externos
+sincronización leads
+
+Entregables
+✅ Ecosistema abierto
+ ✅ Automatización básica
+ ✅ API pública
+
+FASE 7 — IA y Optimización Inteligente
+Duración estimada: 4 semanas
+Objetivo:
+ Aumentar automatización y velocidad de creación.
+
+Implementaciones
+1. Generación IA
+Funcionalidades
+copys
+slogans
+SEO
+textos comerciales
+
+2. Generador de Sitios
+Funcionalidades
+generación automática
+estructura por nicho
+
+3. Asistente IA
+Funcionalidades
+sugerencias
+optimización contenido
+
+Entregables
+✅ IA integrada
+ ✅ Creación acelerada
+ ✅ Mejor onboarding
+
+FASE 8 — E-commerce y Bookings
+Duración estimada: 6 a 8 semanas
+Objetivo:
+ Expandir verticales comerciales.
+
+Implementaciones
+1. E-commerce
+Funcionalidades
+productos
+stock
+cupones
+checkout
+
+2. Bookings
+Funcionalidades
+calendario
+horarios
+reservas
+disponibilidad
+
+3. Pagos Integrados
+Funcionalidades
+reservas pagadas
+checkout ecommerce
+
+Entregables
+✅ Ecommerce funcional
+ ✅ Reservas online
+ ✅ Nuevos nichos comerciales
+
+
+
+
