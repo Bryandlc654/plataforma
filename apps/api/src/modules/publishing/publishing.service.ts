@@ -243,6 +243,10 @@ export class PublishingService {
     return "https://plataforma-api-j6ey.onrender.com";
   }
 
+  private apiV1Url(): string {
+    return this.apiBaseUrl() + "/api/v1";
+  }
+
   private absoluteUrl(url: string): string {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
@@ -618,7 +622,7 @@ document.addEventListener("DOMContentLoaded",function(){
 })
 // Analytics tracking
 (function(){
-  var tid="${site.tenantId}";var sid="${site.id}";var apiBase="${this.apiBaseUrl()}";
+  var tid="${site.tenantId}";var sid="${site.id}";var apiBase="${this.apiV1Url()}";
   var track=function(data){
     data.tenantId=tid;data.siteId=sid;data.path=data.path||window.location.pathname;
     try{fetch(apiBase+"/analytics/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),keepalive:true}).catch(function(){})}
@@ -843,7 +847,7 @@ ${c.imageUrl ? `<div><img src="${this.absoluteUrl(c.imageUrl)}" alt="${c.title |
 
       case "contact": {
         const formFields = (c.fields || [{ label: "Nombre", type: "text", name: "name" }, { label: "Email", type: "email", name: "email" }, { label: "Mensaje", type: "textarea", name: "message" }]) as any[];
-        const actionUrl = site?.tenantId ? `${this.apiBaseUrl()}/leads/submit/${site.tenantId}` : "#";
+        const actionUrl = site?.tenantId ? `${this.apiV1Url()}/leads/submit/${site.tenantId}` : "#";
         return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);background:#f8fafc">
 <div style="max-width:700px;margin:0 auto">
 <div style="text-align:center;margin-bottom:clamp(2rem,4vw,2.5rem)">
@@ -927,7 +931,7 @@ ${(c.items || []).map((item: any) => `<div style="padding:clamp(1.25rem,2.5vw,2r
 
       case "form": {
         const formFields = (c.fields || []) as any[];
-        const actionUrl = site?.tenantId ? `${this.apiBaseUrl()}/leads/submit/${site.tenantId}` : "#";
+        const actionUrl = site?.tenantId ? `${this.apiV1Url()}/leads/submit/${site.tenantId}` : "#";
         return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);background:#f8fafc">
 <div style="max-width:700px;margin:0 auto">
 <div style="text-align:center;margin-bottom:clamp(2rem,4vw,2.5rem)">

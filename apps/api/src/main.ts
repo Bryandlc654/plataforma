@@ -45,7 +45,7 @@ async function bootstrap() {
     })
   );
 
-  app.use(helmet());
+  app.use(helmet({ crossOriginEmbedderPolicy: false }));
 
   app.setGlobalPrefix("api");
 

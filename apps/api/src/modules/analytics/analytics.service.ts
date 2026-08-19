@@ -18,7 +18,7 @@ export class AnalyticsService {
         SELECT id FROM analytics_events
         WHERE tenant_id = ${tenantId}
           AND type = 'pageview'
-          AND ip_address = ${ip || null}
+          AND user_agent = ${userAgent || null}
           AND path = ${dto.path || null}
           AND created_at >= ${thirtyMinutesAgo}
         LIMIT 1
