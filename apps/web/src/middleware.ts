@@ -46,7 +46,13 @@ export async function middleware(request: NextRequest) {
               : "text/html; charset=utf-8";
           return new NextResponse(body, {
             status: 200,
-            headers: { "Content-Type": contentType },
+            headers: {
+              "Content-Type": contentType,
+              "Cache-Control": "no-store, no-cache, must-revalidate",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
+            },
           });
         }
       }
