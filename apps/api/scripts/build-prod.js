@@ -62,7 +62,7 @@ async function main() {
   // dependencies and copies each from the monorepo root node_modules.
   const pkg = require(path.join(__dirname, "..", "package.json"));
   const depNames = Object.keys(pkg.dependencies || {});
-  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types", "class-transformer", "tslib", "reflect-metadata", "rxjs", "class-validator"];
+  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types", "class-transformer", "tslib", "reflect-metadata", "rxjs", "class-validator", "@img/sharp-linux-x64", "@img/sharp-libvips-linux-x64"];
 
   const seen = new Set();
   async function copyWithDeps(name) {
@@ -73,11 +73,11 @@ async function main() {
     const dest = path.join(outdir, "node_modules", name);
     await copyDir(src, dest);
 
-    // Recursively copy this package's own dependencies
+    // Recursively copy this package's own dependencies (including optional, for native binaries)
     let pkgJson = null;
     try { pkgJson = JSON.parse(fs.readFileSync(path.join(src, "package.json"), "utf8")); } catch {}
     if (pkgJson) {
-      const deps = { ...(pkgJson.dependencies || {}), ...(pkgJson.peerDependencies || {}) };
+      const deps = { ...(pkgJson.dependencies || {}), ...(pkgJson.peerDependencies || {}), ...(pkgJson.optionalDependencies || {}) };
       for (const d of Object.keys(deps)) {
         if (d.startsWith(".")) continue;
         await copyWithDeps(d);
@@ -87,6 +87,20 @@ async function main() {
 
   for (const name of [...depNames, ...extraDeps]) {
     await copyWithDeps(name);
+  }
+
+  // Copy the vendored Linux sharp binaries (committed in apps/api/vendor) into dist,
+  // since the local node_modules only has the current platform's binary. Hostinger runs
+  // on linux-x64 and needs these prebuilt binaries.
+  {
+    const vendorImg = path.join(__dirname, "..", "vendor", "@img");
+    if (fs.existsSync(vendorImg)) {
+      for (const sub of fs.readdirSync(vendorImg)) {
+        const src = path.join(vendorImg, sub);
+        const dest = path.join(outdir, "node_modules", "@img", sub);
+        if (!fs.existsSync(dest)) await copyDir(src, dest);
+      }
+    }
   }
 
   // Copy common transitive runtime deps that external packages need at runtime
