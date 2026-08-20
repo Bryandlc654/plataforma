@@ -22,19 +22,22 @@ async function main() {
   const outdir = path.join(__dirname, "..", "dist");
   fs.rmSync(outdir, { recursive: true, force: true });
 
-  // Native/heavy modules that must NOT be bundled (they have their own binaries/engines)
+  // Modules that are referenced via dynamic require by @nestjs/core but are optional.
+  // Bundling them fails because they aren't installed; leaving them external lets Nest
+  // handle their absence gracefully at runtime (or they're copied below if used).
   const external = [
     "@prisma/client",
     "@prisma/engines",
     ".prisma",
     "sharp",
     "@aws-sdk",
-    "@nestjs/microservices",
-    "@nestjs/mapped-types",
     "@nestjs/websockets",
     "@nestjs/platform-socket.io",
     "socket.io",
     "pg-native",
+    "@nestjs/microservices",
+    "@nestjs/mapped-types",
+    "class-transformer/storage",
   ];
 
   await build({
@@ -59,7 +62,7 @@ async function main() {
   // dependencies and copies each from the monorepo root node_modules.
   const pkg = require(path.join(__dirname, "..", "package.json"));
   const depNames = Object.keys(pkg.dependencies || {});
-  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client"];
+  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types", "class-transformer"];
 
   const seen = new Set();
   async function copyWithDeps(name) {
@@ -80,6 +83,30 @@ async function main() {
 
   for (const name of [...depNames, ...extraDeps]) {
     await copyWithDeps(name);
+  }
+
+  // Ensure the whole @aws-sdk scope is copied (client-s3 pulls several sub-packages)
+  const awsScope = path.join(ROOT, "node_modules", "@aws-sdk");
+  if (fs.existsSync(awsScope)) {
+    for (const sub of fs.readdirSync(awsScope)) {
+      await copyWithDeps(`@aws-sdk/${sub}`);
+    }
+  }
+
+  // Ensure @nestjs scoped helpers are available if referenced as external at runtime
+  const nestScope = path.join(ROOT, "node_modules", "@nestjs");
+  if (fs.existsSync(nestScope)) {
+    for (const sub of fs.readdirSync(nestScope)) {
+      const candidate = path.join(nestScope, sub, "package.json");
+      if (fs.existsSync(candidate)) {
+        try {
+          const p = JSON.parse(fs.readFileSync(candidate, "utf8"));
+          if (p.binary || /native|binding/.test(JSON.stringify(p))) {
+            await copyWithDeps(`@nestjs/${sub}`);
+          }
+        } catch {}
+      }
+    }
   }
 
   console.log("✅ Bundle producido en dist/main.js (externos copiados)");
