@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nest start --watch",
     "dev:debug": "nest start --debug --watch",
-    "build": "tsc -p ../../packages/shared && node scripts/build-prod.js",
+    "build": "tsc -p ../../packages/shared && nest build && node scripts/copy-runtime.js",
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "postinstall": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
