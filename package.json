@@ -15,7 +15,7 @@
     "build": "npm run build:hostinger",
     "build:api": "npm run build -w packages/shared && npm run build -w apps/api",
     "build:web": "npm run build -w apps/web",
-    "build:hostinger": "npm run build -w packages/shared && npm run generate -w packages/database && npm run build -w apps/api && npm run build -w apps/web",
+    "build:hostinger": "npm run build -w packages/shared && npm run generate -w packages/database && npm run build -w apps/api && node -e \"const fs=require('fs');fs.cpSync('apps/api/dist','dist',{recursive:true})\"",
     "lint": "turbo lint",
     "lint:api": "npm run lint -w apps/api",
     "lint:web": "npm run lint -w apps/web",
