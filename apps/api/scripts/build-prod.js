@@ -62,7 +62,7 @@ async function main() {
   // dependencies and copies each from the monorepo root node_modules.
   const pkg = require(path.join(__dirname, "..", "package.json"));
   const depNames = Object.keys(pkg.dependencies || {});
-  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types", "class-transformer"];
+  const extraDeps = ["@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types", "class-transformer", "tslib", "reflect-metadata", "rxjs", "class-validator"];
 
   const seen = new Set();
   async function copyWithDeps(name) {
@@ -72,16 +72,25 @@ async function main() {
     if (!fs.existsSync(src)) return;
     const dest = path.join(outdir, "node_modules", name);
     await copyDir(src, dest);
-    // also copy nested node_modules of this package (e.g. prisma engine binaries)
-    const nested = path.join(src, "node_modules");
-    if (fs.existsSync(nested)) {
-      for (const sub of fs.readdirSync(nested)) {
-        await copyWithDeps(`${name}/node_modules/${sub}`);
+
+    // Recursively copy this package's own dependencies
+    let pkgJson = null;
+    try { pkgJson = JSON.parse(fs.readFileSync(path.join(src, "package.json"), "utf8")); } catch {}
+    if (pkgJson) {
+      const deps = { ...(pkgJson.dependencies || {}), ...(pkgJson.peerDependencies || {}) };
+      for (const d of Object.keys(deps)) {
+        if (d.startsWith(".")) continue;
+        await copyWithDeps(d);
       }
     }
   }
 
   for (const name of [...depNames, ...extraDeps]) {
+    await copyWithDeps(name);
+  }
+
+  // Copy common transitive runtime deps that external packages need at runtime
+  for (const name of ["tslib", "rxjs", "class-validator", "class-transformer", "reflect-metadata", "@nestjs/common", "@nestjs/core", "@nestjs/swagger", "@nestjs/config", "@nestjs/jwt", "@nestjs/passport", "@nestjs/platform-express", "@nestjs/mapped-types", "bcryptjs", "cookie-parser", "cors", "express", "helmet", "compression", "winston", "nest-winston", "passport", "passport-jwt", "passport-google-oauth20", "uuid", "ioredis", "nodemailer", "expo-server-sdk"]) {
     await copyWithDeps(name);
   }
 
