@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nest start --watch",
     "dev:debug": "nest start --debug --watch",
-    "build": "tsc -p ../../packages/shared && nest build",
+    "build": "tsc -p ../../packages/shared && node scripts/build-prod.js",
     "start": "node dist/main",
     "start:prod": "node dist/main",
     "postinstall": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
@@ -60,6 +60,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/uuid": "^10.0.0",
+    "esbuild": "^0.28.2",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
