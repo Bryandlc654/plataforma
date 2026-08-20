@@ -8,7 +8,7 @@
     "build": "nest build",
     "start": "node dist/main",
     "start:prod": "node dist/main",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix"
   },
   "dependencies": {
