@@ -38,7 +38,7 @@ export default function LoginScreen() {
           
           <View style={styles.header}>
             <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
-              <Feather name="layers" size={32} color={colors.background} />
+              <Feather name="layers" size={40} color={colors.background} />
             </View>
             <Text style={[styles.title, { color: colors.text }]}>Bienvenido de nuevo</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Inicia sesión para gestionar tus proyectos</Text>
@@ -126,9 +126,9 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,

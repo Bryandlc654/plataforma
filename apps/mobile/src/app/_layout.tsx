@@ -47,7 +47,7 @@ export default function RootLayout() {
   if (!hasHydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? '#09090B' : '#FAFAFA' }}>
-        <ActivityIndicator size="large" color={isDarkMode ? '#FAFAFA' : '#000000'} />
+        <ActivityIndicator size="large" color={isDarkMode ? '#60A5FA' : '#2563EB'} />
       </View>
     );
   }
