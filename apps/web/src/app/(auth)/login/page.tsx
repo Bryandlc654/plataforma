@@ -52,10 +52,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-700 via-primary-800 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
+      <div className="hidden lg:flex lg:w-1/2 bg-[#201b51] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-400 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#f29200] rounded-full blur-[120px]" />
         </div>
         <div className="relative flex flex-col justify-center px-16 text-white">
           <div className="mb-4">
@@ -65,24 +65,24 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-bold leading-tight mb-6">
             Tu presencia digital,{" "}
-            <span className="text-primary-300">simplificada.</span>
+            <span className="text-secondary">simplificada.</span>
           </h1>
-          <p className="text-lg text-primary-100/80 leading-relaxed max-w-md">
+          <p className="text-lg text-slate-300 leading-relaxed max-w-md">
             Crea sitios web profesionales, captura leads, monitorea métricas
             y administra tu negocio desde un solo lugar. Sin código.
           </p>
           <div className="mt-16 flex gap-8">
             <div>
-              <p className="text-3xl font-bold">100+</p>
-              <p className="text-sm text-primary-200/70">Negocios activos</p>
+              <p className="text-3xl font-bold text-secondary">100+</p>
+              <p className="text-sm text-slate-300">Negocios activos</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">99.9%</p>
-              <p className="text-sm text-primary-200/70">Uptime garantizado</p>
+              <p className="text-3xl font-bold text-secondary">99.9%</p>
+              <p className="text-sm text-slate-300">Uptime garantizado</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">24/7</p>
-              <p className="text-sm text-primary-200/70">Soporte técnico</p>
+              <p className="text-3xl font-bold text-secondary">24/7</p>
+              <p className="text-sm text-slate-300">Soporte técnico</p>
             </div>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
                 <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{error}</span>
+                <p>{error}</p>
               </div>
             </div>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className={`block text-sm font-medium mb-2 transition-colors ${
-                  focused === "email" ? "text-primary-600" : "text-slate-700"
+                  focused === "email" ? "text-primary" : "text-slate-700"
                 }`}
               >
                 Correo electrónico
@@ -133,7 +133,7 @@ export default function LoginPage() {
                   errors.email
                     ? "border-red-300 bg-red-50/30"
                     : focused === "email"
-                    ? "border-primary-500 ring-4 ring-primary-500/10"
+                    ? "border-primary ring-4 ring-primary/10"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -159,7 +159,7 @@ export default function LoginPage() {
               <label
                 htmlFor="password"
                 className={`block text-sm font-medium mb-2 transition-colors ${
-                  focused === "password" ? "text-primary-600" : "text-slate-700"
+                  focused === "password" ? "text-primary" : "text-slate-700"
                 }`}
               >
                 Contraseña
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   errors.password
                     ? "border-red-300 bg-red-50/30"
                     : focused === "password"
-                    ? "border-primary-500 ring-4 ring-primary-500/10"
+                    ? "border-primary ring-4 ring-primary/10"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -210,7 +210,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full relative rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
+              className="w-full relative rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-white hover:bg-orange-500 shadow-lg shadow-secondary/30 focus:outline-none focus:ring-4 focus:ring-secondary/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden group"
             >
               <span className={`inline-flex items-center gap-2 transition-opacity ${isLoading ? "opacity-0" : "opacity-100"}`}>
                 Iniciar sesión
@@ -234,7 +234,7 @@ export default function LoginPage() {
               ¿No tienes cuenta?{" "}
               <Link
                 href="/register"
-                className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+                className="font-semibold text-primary hover:text-primary-700 transition-colors"
               >
                 Crear cuenta gratis
               </Link>

@@ -12,9 +12,18 @@
     --ring: 59 130 246;
 
     /* Global Brand Colors for Build Iceberg Agency */
+    --color-primary-50: #f4f3f9;
+    --color-primary-100: #e8e6f1;
+    --color-primary-200: #d5cfdf;
+    --color-primary-300: #b5aacf;
+    --color-primary-400: #9181ba;
+    --color-primary-500: #715ba4;
+    --color-primary-600: #574382;
+    --color-primary-700: #463668;
+    --color-primary-800: #392d53;
+    --color-primary-900: #302646;
+    --color-primary-950: #201b51;
     --color-primary-default: #201b51;
-    --color-primary-500: #2c2670;
-    --color-primary-600: #201b51;
     --color-primary: #201b51;
     --color-secondary: #f29200;
     --color-tertiary: #201c4eb3;
