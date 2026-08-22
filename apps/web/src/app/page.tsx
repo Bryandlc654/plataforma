@@ -238,11 +238,11 @@ export default function HomePage() {
             <p className="text-lg text-on-surface-variant">Mira cómo agencias y creadores están utilizando nuestra plataforma para alojar sitios ultrarrápidos con sus propios dominios personalizados.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             
             {/* Website 1: Rodriplast */}
             <div className="group rounded-3xl overflow-hidden bg-surface-container-low border border-outline-variant/30 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
+              <div className="relative aspect-[16/10] overflow-hidden bg-surface-container">
                 <div className="w-[400%] h-[400%] transform scale-25 origin-top-left pointer-events-none transition-transform duration-700 group-hover:scale-[0.26]">
                   <iframe src="https://www.rodriplast.com/" className="w-full h-full border-0 bg-white" tabIndex={-1} scrolling="no" />
                 </div>
@@ -253,38 +253,15 @@ export default function HomePage() {
                   <span className="text-sm font-mono text-slate-700">rodriplast.com</span>
                 </div>
               </div>
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-4">
+              <div className="p-8 md:p-10">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-6 gap-4">
                   <div>
-                    <h4 className="text-2xl font-bold text-on-surface">Rodriplast</h4>
-                    <a href="https://www.rodriplast.com" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">www.rodriplast.com</a>
+                    <h4 className="text-3xl font-bold text-on-surface mb-2">Rodriplast</h4>
+                    <a href="https://www.rodriplast.com" target="_blank" rel="noopener noreferrer" className="text-base font-medium text-primary hover:underline">www.rodriplast.com</a>
                   </div>
-                  <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">Sitio en Producción</span>
+                  <span className="px-4 py-1.5 bg-primary/10 text-primary text-sm font-bold rounded-full">Sitio en Producción</span>
                 </div>
-                <p className="text-on-surface-variant">Un caso de éxito real alojado en nuestra plataforma, con un rendimiento excepcional y diseño adaptado a su marca.</p>
-              </div>
-            </div>
-
-            {/* Website 2: Bistro 22 */}
-            <div className="group rounded-3xl overflow-hidden bg-surface-container-low border border-outline-variant/30 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKkbNAS1pmw-xX2Yc1tR1b4GxAm6GZEw-D9FN5eJJm_OXRWaNNOmPe_9tdV8rWXyP9eqLsba21xYMSkWVzICYNUkwoSfyPOxQCgZq0mgfnTcFZ0km3_U_KxaTaiysb-2JlCAONFc9m-O4UoooR5gXLD-0N5okvuCQOq62MwO2lLR7EhilhaDcPnpg2fMKaZV25P2OUv1MyvbvUf6MjsUtRpXWBMqr3wiCuKHFFngv0fYZ9030stExg" alt="Bistro 22" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-                
-                {/* Simulated browser bar */}
-                <div className="absolute top-4 left-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg border border-outline-variant/20 flex items-center gap-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-[-10px] group-hover:translate-y-0">
-                  <span className="material-symbols-outlined text-[16px] text-green-600">lock</span>
-                  <span className="text-sm font-mono text-slate-700">bistro22.es</span>
-                </div>
-              </div>
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="text-2xl font-bold text-on-surface">Bistro 22</h4>
-                    <span className="text-sm font-medium text-secondary">bistro22.es</span>
-                  </div>
-                  <span className="px-3 py-1 bg-secondary/10 text-secondary text-xs font-bold rounded-full">Gastronomía</span>
-                </div>
-                <p className="text-on-surface-variant">Restaurante boutique con sistema de reservas, menú digital ultrarrápido y dominio personalizado (.es).</p>
+                <p className="text-lg text-on-surface-variant leading-relaxed">Un caso de éxito real alojado en nuestra plataforma, con un rendimiento excepcional y diseño adaptado a su marca. Haz clic en el enlace para visitarlo.</p>
               </div>
             </div>
 
