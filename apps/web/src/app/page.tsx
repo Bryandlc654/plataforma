@@ -32,16 +32,21 @@ export default function HomePage() {
       } as React.CSSProperties}
     >
       
-      {/* 1. NAVBAR (FUNNEL STYLE) */}
-      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-surface-container-lowest/80 border-b border-outline-variant/20 transition-all">
-        <div className="container-max mx-auto px-6 h-24 flex items-center justify-between">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <Image src="/logo.png" alt="Build Iceberg Agency" width={240} height={80} className="h-16 w-auto object-contain group-hover:scale-105 transition-transform" />
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/register" className="hidden sm:inline-block px-8 py-3 rounded-full bg-secondary text-white text-sm font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all duration-300">
-              Quiero mi sitio web ahora
-            </Link>
+      {/* 1. NAVBAR */}
+      <header className="absolute top-0 w-full z-50 pt-6 pb-4">
+        <div className="container-max mx-auto px-6">
+          <div className="flex items-center justify-between bg-white/50 backdrop-blur-lg rounded-full border border-outline-variant/30 py-3 px-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="flex items-center gap-3 group cursor-pointer pl-4">
+              <Image src="/logo.png" alt="Build Iceberg Agency" width={220} height={70} className="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform" />
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 pr-2">
+              <Link href="/login" className="hidden md:inline-block px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-primary transition-colors">
+                Iniciar Sesión
+              </Link>
+              <Link href="/register" className="px-6 sm:px-8 py-2.5 rounded-full bg-secondary text-white text-sm font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all duration-300">
+                Empezar Gratis
+              </Link>
+            </div>
           </div>
         </div>
       </header>
