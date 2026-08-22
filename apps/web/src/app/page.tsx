@@ -39,7 +39,7 @@ export default function HomePage() {
             <Image src="/logo.png" alt="Build Iceberg Agency" width={240} height={80} className="h-16 w-auto object-contain group-hover:scale-105 transition-transform" />
           </div>
           <div className="flex items-center gap-4">
-            <Link href="#pricing" className="hidden sm:inline-block px-8 py-3 rounded-full bg-secondary text-white text-sm font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all duration-300">
+            <Link href="/register" className="hidden sm:inline-block px-8 py-3 rounded-full bg-secondary text-white text-sm font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all duration-300">
               Quiero mi sitio web ahora
             </Link>
           </div>
@@ -69,7 +69,7 @@ export default function HomePage() {
           </p>
           
           <div className="flex flex-col items-center justify-center gap-4 mb-16">
-            <Link href="#pricing" className="w-full sm:w-auto px-12 py-5 rounded-full bg-secondary text-white text-xl font-black shadow-[0_0_40px_rgba(242,146,0,0.4)] hover:bg-orange-500 hover:shadow-[0_0_60px_rgba(242,146,0,0.6)] hover:-translate-y-1 transition-all duration-300">
+            <Link href="/register" className="w-full sm:w-auto px-12 py-5 rounded-full bg-secondary text-white text-xl font-black shadow-[0_0_40px_rgba(242,146,0,0.4)] hover:bg-orange-500 hover:shadow-[0_0_60px_rgba(242,146,0,0.6)] hover:-translate-y-1 transition-all duration-300">
               SÍ, QUIERO ESCALAR MI NEGOCIO
             </Link>
             <p className="text-sm text-on-surface-variant/70 font-medium">✨ Garantía de satisfacción de 14 días. Sin tarjeta de crédito.</p>
@@ -121,6 +121,110 @@ export default function HomePage() {
 
                <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5. PROBLEM AGITATION */}
+      <section className="py-24 bg-surface relative overflow-hidden border-t border-outline-variant/20">
+        <div className="container-max mx-auto px-6 relative z-10">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-on-surface mb-6 leading-tight">
+              La cruda realidad: Tu sitio web actual te está <span className="text-error">costando clientes</span>
+            </h2>
+            <p className="text-xl text-on-surface-variant font-medium">
+              Tener una presencia digital mediocre es peor que no tener ninguna. Si estás lidiando con estos problemas, estás dejando dinero en la mesa:
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                icon: "hourglass_empty",
+                title: "Lento y Frustrante",
+                desc: "Cada segundo extra de carga reduce tus conversiones un 20%. Los usuarios simplemente cierran la pestaña antes de ver lo que ofreces.",
+                color: "text-amber-500",
+                bg: "bg-amber-500/10"
+              },
+              {
+                icon: "code_off",
+                title: "Dependencia Técnica",
+                desc: "Tener que rogarle (y pagarle) a un desarrollador para cambiar un simple texto o imagen en tu web retrasa toda tu estrategia de marketing.",
+                color: "text-red-500",
+                bg: "bg-red-500/10"
+              },
+              {
+                icon: "sentiment_dissatisfied",
+                title: "Diseño Anticuado",
+                desc: "Una web que parece construida hace 10 años destruye la confianza al instante. Si no te ves premium, no te pagarán como premium.",
+                color: "text-slate-500",
+                bg: "bg-slate-500/10"
+              }
+            ].map((pain, i) => (
+              <div key={i} className="bg-surface-container border border-outline-variant/30 p-8 rounded-3xl relative overflow-hidden group">
+                <div className={`w-14 h-14 ${pain.bg} ${pain.color} rounded-2xl flex items-center justify-center mb-6`}>
+                  <span className="material-symbols-outlined text-[32px]">{pain.icon}</span>
+                </div>
+                <h3 className="text-2xl font-bold text-on-surface mb-4">{pain.title}</h3>
+                <p className="text-on-surface-variant leading-relaxed">{pain.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 2.6. HOW IT WORKS */}
+      <section className="py-24 bg-inverse-surface text-inverse-on-surface relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div className="container-max mx-auto px-6 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-sm font-bold text-secondary uppercase tracking-widest mb-3">La Solución Definitiva</h2>
+            <h3 className="text-4xl lg:text-5xl font-extrabold mb-6">Lanza tu máquina de ventas en 3 simples pasos</h3>
+            <p className="text-lg text-surface-variant">Sin frustraciones, sin código, y sin demoras. Diseñado para que te enfoques en lo que importa: vender.</p>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-12 max-w-6xl mx-auto items-center md:items-start text-center md:text-left relative">
+            
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-transparent via-outline-variant/20 to-transparent"></div>
+
+            {[
+              {
+                step: "01",
+                title: "Elige una base ganadora",
+                desc: "Selecciona una de nuestras estructuras premium pre-diseñadas y optimizadas para máxima conversión.",
+                icon: "dashboard_customize"
+              },
+              {
+                step: "02",
+                title: "Personaliza visualmente",
+                desc: "Edita textos, colores e imágenes haciendo clic. El editor más intuitivo que has usado en tu vida.",
+                icon: "draw"
+              },
+              {
+                step: "03",
+                title: "Conecta tu dominio y lanza",
+                desc: "Vincula tu propio dominio y presiona publicar. Tu sitio estará en vivo a velocidad extrema en segundos.",
+                icon: "rocket_launch"
+              }
+            ].map((step, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center md:items-start relative z-10">
+                <div className="w-24 h-24 rounded-full bg-surface-container/10 border border-outline-variant/20 backdrop-blur-md flex items-center justify-center mb-8 shadow-xl text-secondary">
+                  <span className="material-symbols-outlined text-[40px]">{step.icon}</span>
+                </div>
+                <div className="text-secondary font-black text-xl mb-2">{step.step}</div>
+                <h4 className="text-2xl font-bold mb-4">{step.title}</h4>
+                <p className="text-surface-variant">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-20 flex justify-center">
+             <Link href="/register" className="px-10 py-4 rounded-full bg-secondary text-white text-lg font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:-translate-y-1 transition-all duration-300">
+                Crear mi cuenta ahora
+             </Link>
           </div>
         </div>
       </section>
@@ -274,76 +378,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 6. PRICING */}
-      <section id="pricing" className="py-24 lg:py-32 bg-surface">
-        <div className="container-max mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Planes Claros</h2>
-            <h3 className="text-4xl lg:text-5xl font-bold text-on-surface mb-6">Precios que escalan contigo</h3>
-            <p className="text-lg text-on-surface-variant">Sin letras pequeñas. Actualiza o cancela cuando quieras.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
-            {/* Plan Gratis */}
-            <div className="bg-surface-container border border-outline-variant/30 rounded-3xl p-8 lg:p-10 shadow-sm">
-              <h3 className="text-2xl font-bold text-on-surface mb-2">Starter</h3>
-              <p className="text-on-surface-variant h-12">Para proyectos personales y pruebas.</p>
-              <div className="my-8">
-                <span className="text-5xl font-extrabold text-on-surface">$0</span>
-                <span className="text-on-surface-variant font-medium">/mes</span>
-              </div>
-              <ul className="space-y-4 mb-10">
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> 1 Sitio Web</li>
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Subdominio gratuito</li>
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Acceso a plantillas básicas</li>
-                <li className="flex items-start gap-3 text-on-surface-variant opacity-50"><span className="material-symbols-outlined text-[20px]">cancel</span> Dominio personalizado</li>
-              </ul>
-              <Link href="/register" className="block w-full py-4 text-center rounded-xl bg-surface text-on-surface font-bold border border-outline-variant hover:bg-surface-container-high transition-colors">
-                Empezar Gratis
-              </Link>
-            </div>
-
-            {/* Plan Pro (Destacado) */}
-            <div className="bg-inverse-surface text-inverse-on-surface rounded-3xl p-8 lg:p-10 shadow-2xl relative transform md:-translate-y-4 border border-primary/30">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg">Más Popular</div>
-              <h3 className="text-2xl font-bold mb-2">Profesional</h3>
-              <p className="text-surface-variant h-12">Para negocios y emprendedores serios.</p>
-              <div className="my-8">
-                <span className="text-5xl font-extrabold">$15</span>
-                <span className="text-surface-variant font-medium">/mes</span>
-              </div>
-              <ul className="space-y-4 mb-10">
-                <li className="flex items-start gap-3"><span className="material-symbols-outlined text-primary-fixed text-[20px]">check_circle</span> Hasta 3 Sitios Web</li>
-                <li className="flex items-start gap-3"><span className="material-symbols-outlined text-primary-fixed text-[20px]">check_circle</span> Dominios Personalizados (SSL)</li>
-                <li className="flex items-start gap-3"><span className="material-symbols-outlined text-primary-fixed text-[20px]">check_circle</span> Acceso a Plantillas Premium</li>
-                <li className="flex items-start gap-3"><span className="material-symbols-outlined text-primary-fixed text-[20px]">check_circle</span> SEO Avanzado y Analíticas</li>
-              </ul>
-              <Link href="/register?plan=pro" className="block w-full py-4 text-center rounded-xl bg-primary-fixed text-on-primary-fixed font-bold hover:bg-white transition-colors shadow-lg shadow-primary-fixed/20">
-                Comenzar con Pro
-              </Link>
-            </div>
-
-            {/* Plan Agencia */}
-            <div className="bg-surface-container border border-outline-variant/30 rounded-3xl p-8 lg:p-10 shadow-sm">
-              <h3 className="text-2xl font-bold text-on-surface mb-2">Agencia</h3>
-              <p className="text-on-surface-variant h-12">Para creadores escalando sus servicios.</p>
-              <div className="my-8">
-                <span className="text-5xl font-extrabold text-on-surface">$49</span>
-                <span className="text-on-surface-variant font-medium">/mes</span>
-              </div>
-              <ul className="space-y-4 mb-10">
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Sitios Web Ilimitados</li>
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Dominios Ilimitados</li>
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Marca blanca (Quitar logo)</li>
-                <li className="flex items-start gap-3 text-on-surface-variant"><span className="material-symbols-outlined text-primary text-[20px]">check_circle</span> Soporte Prioritario 24/7</li>
-              </ul>
-              <Link href="/register?plan=agency" className="block w-full py-4 text-center rounded-xl bg-surface text-on-surface font-bold border border-outline-variant hover:bg-surface-container-high transition-colors">
-                Contactar Ventas
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 6. [REMOVED PRICING SECTION] */}
 
       {/* 7. FAQ (NATIVE ACCORDION) */}
       <section id="faq" className="py-24 bg-surface-container-lowest border-t border-outline-variant/20">
