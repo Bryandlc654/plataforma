@@ -45,6 +45,7 @@ async function main() {
     "@prisma/engines", ".prisma", "@prisma/client", "@nestjs/mapped-types",
     "tslib", "reflect-metadata", "rxjs", "class-validator", "class-transformer",
     "@img/sharp-linux-x64", "@img/sharp-libvips-linux-x64",
+    "multer", "body-parser", "raw-body", "busboy",
   ];
 
   for (const name of [...depNames, ...extraDeps]) {
