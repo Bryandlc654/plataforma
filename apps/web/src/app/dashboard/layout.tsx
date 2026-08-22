@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {collapsed ? (
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">I</div>
           ) : (
-            <Image src="/logo.png" alt="Build Iceberg Agency" width={180} height={50} className="h-8 w-auto object-contain" />
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={220} height={64} className="h-10 w-auto object-contain" />
           )}
         </div>
 

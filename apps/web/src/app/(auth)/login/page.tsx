@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div className="relative flex flex-col justify-center px-16 text-white">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-12">
-              <Image src="/logo.png" alt="Build Iceberg Agency" width={220} height={70} className="h-12 w-auto object-contain brightness-0 invert" />
+              <Image src="/logo.png" alt="Build Iceberg Agency" width={280} height={90} className="h-16 w-auto object-contain brightness-0 invert" />
             </div>
           </div>
           <h1 className="text-4xl font-bold leading-tight mb-6">
@@ -94,7 +94,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-12 justify-center">
-            <Image src="/logo.png" alt="Build Iceberg Agency" width={200} height={60} className="h-10 w-auto object-contain" />
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={260} height={80} className="h-14 w-auto object-contain" />
           </div>
 
           <div className="mb-10">
