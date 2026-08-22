@@ -60,10 +60,7 @@ export default function LoginPage() {
         <div className="relative flex flex-col justify-center px-16 text-white">
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-12">
-              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <div className="h-6 w-6 rounded-md bg-white" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight">Plataforma</span>
+              <Image src="/logo.png" alt="Build Iceberg Agency" width={220} height={70} className="h-12 w-auto object-contain brightness-0 invert" />
             </div>
           </div>
           <h1 className="text-4xl font-bold leading-tight mb-6">
@@ -96,10 +93,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-12 justify-center">
-            <div className="h-10 w-10 rounded-xl bg-primary-600 flex items-center justify-center">
-              <div className="h-5 w-5 rounded-md bg-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">Plataforma</span>
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={200} height={60} className="h-10 w-auto object-contain" />
           </div>
 
           <div className="mb-10">

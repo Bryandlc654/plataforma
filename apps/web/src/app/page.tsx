@@ -8,29 +8,7 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <div 
-      className="min-h-screen bg-surface font-sans text-on-surface selection:bg-primary selection:text-white overflow-x-hidden scroll-smooth"
-      style={{
-        "--color-primary-default": "#201b51",
-        "--color-primary-600": "#201c4eb3",
-        "--color-primary-fixed": "#201b51",
-        "--color-on-primary-fixed": "#ffffff",
-        "--color-secondary": "#f29200",
-        "--color-tertiary": "#f29200",
-        "--color-surface": "#ffffff",
-        "--color-surface-container-lowest": "#ffffff",
-        "--color-surface-container-low": "#f8f9fa",
-        "--color-surface-container": "#f1f3f5",
-        "--color-surface-container-high": "#e9ecef",
-        "--color-surface-container-highest": "#dee2e6",
-        "--color-on-surface": "#201b51",
-        "--color-on-surface-variant": "#495057",
-        "--color-inverse-surface": "#201b51",
-        "--color-inverse-on-surface": "#ffffff",
-        "--color-outline": "#ced4da",
-        "--color-outline-variant": "#e9ecef",
-      } as React.CSSProperties}
-    >
+    <div className="min-h-screen bg-surface font-sans text-on-surface selection:bg-primary selection:text-white overflow-x-hidden scroll-smooth">
       
       {/* 1. NAVBAR */}
       <header className="absolute top-0 w-full z-50 pt-6 pb-4">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthStore } from "@/stores/auth-store";
 import { AppIcon } from "@/components/ui/app-icon";
 import { useEffect, useState, Fragment } from "react";
@@ -117,9 +118,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
 
         {/* Brand */}
-        <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2"} mb-8`}>
-          <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">P</div>
-          {!collapsed && <span className="font-semibold text-slate-900">Plataforma</span>}
+        <div className={`flex items-center ${collapsed ? "justify-center" : "px-2"} mb-8`}>
+          {collapsed ? (
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">I</div>
+          ) : (
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={180} height={50} className="h-8 w-auto object-contain" />
+          )}
         </div>
 
         {/* Tenant selector */}
