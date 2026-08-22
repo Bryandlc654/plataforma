@@ -410,28 +410,55 @@ export default function HomePage() {
       </section>
 
       {/* 8. FOOTER / FINAL CTA */}
-      <footer className="bg-inverse-surface text-inverse-on-surface py-20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="container-max mx-auto px-6 relative z-10 flex flex-col items-center text-center">
-          <h2 className="text-4xl font-bold mb-8">¿Listo para transformar tu presencia web?</h2>
-          <Link href="/register" className="px-10 py-5 rounded-full bg-primary-fixed text-on-primary-fixed font-bold text-xl hover:bg-white hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(223,224,255,0.2)] mb-16">
-            Crear cuenta gratuita
+      <footer className="bg-inverse-surface text-inverse-on-surface relative overflow-hidden border-t border-outline-variant/10">
+        {/* Glow effects */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/20 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[150px] pointer-events-none"></div>
+        
+        {/* Final CTA Section */}
+        <div className="container-max mx-auto px-6 pt-32 pb-20 relative z-10 flex flex-col items-center text-center border-b border-outline-variant/10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
+            <span className="text-xs font-bold text-white uppercase tracking-widest">¿Qué estás esperando?</span>
+          </div>
+          <h2 className="text-5xl md:text-6xl font-black mb-8 leading-tight">
+            Es hora de <span className="text-secondary">escalar</span> de verdad.
+          </h2>
+          <p className="text-xl text-surface-variant max-w-2xl mx-auto mb-12">
+            Únete a las agencias y negocios que ya están dominando su industria con sitios web que convierten. Empieza hoy sin riesgo.
+          </p>
+          
+          <Link href="/register" className="px-12 py-5 rounded-full bg-secondary text-white text-xl font-black hover:bg-orange-500 hover:scale-105 transition-all duration-300 shadow-[0_0_50px_rgba(242,146,0,0.4)] hover:shadow-[0_0_80px_rgba(242,146,0,0.7)] mb-6">
+            INICIAR MI PRUEBA AHORA
           </Link>
-          
-          <div className="w-full h-px bg-outline-variant/20 mb-12"></div>
-          
-          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-3 rounded-2xl flex items-center justify-center">
-                <Image src="/logo.png" alt="Build Iceberg Agency" width={180} height={60} className="h-12 w-auto object-contain" />
-              </div>
+          <div className="flex items-center gap-2 text-surface-variant text-sm font-medium">
+            <span className="material-symbols-outlined text-[18px]">verified_user</span>
+            14 días de garantía. Cancela cuando quieras.
+          </div>
+        </div>
+        
+        {/* Actual Footer Links */}
+        <div className="container-max mx-auto px-6 py-12 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
+            <div className="bg-white p-3 rounded-2xl flex items-center justify-center shadow-lg">
+              <Image src="/logo.png" alt="Build Iceberg Agency" width={180} height={60} className="h-12 w-auto object-contain" />
             </div>
-            <div className="text-sm text-surface-variant flex gap-6">
+            
+            <div className="flex flex-wrap justify-center gap-8 text-surface-variant font-medium">
+              <a href="#" className="hover:text-white transition-colors">Soluciones</a>
               <a href="#" className="hover:text-white transition-colors">Términos</a>
               <a href="#" className="hover:text-white transition-colors">Privacidad</a>
-              <a href="#" className="hover:text-white transition-colors">Contacto</a>
+              <a href="#" className="hover:text-white transition-colors">Soporte</a>
             </div>
-            <p className="text-sm text-surface-variant">© 2026 Build Iceberg Agency. Todos los derechos reservados.</p>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-surface-variant">
+            <p>© {new Date().getFullYear()} Build Iceberg Agency. Todos los derechos reservados.</p>
+            <div className="flex gap-4">
+               {/* Simulating social icons */}
+               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-secondary hover:text-white transition-all"><span className="font-bold">X</span></a>
+               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-secondary hover:text-white transition-all"><span className="font-bold">in</span></a>
+               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-secondary hover:text-white transition-all"><span className="font-bold">ig</span></a>
+            </div>
           </div>
         </div>
       </footer>
