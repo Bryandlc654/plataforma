@@ -3,13 +3,14 @@ import { Feather } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import api from '../../lib/api';
+import { useTheme } from '../../stores/theme-store';
 
 const { width } = Dimensions.get('window');
 
 interface Site {
   id: string;
   name: string;
-import { useTheme } from '../../stores/theme-store';
+}
 
 export default function SitesScreen() {
   const [sites, setSites] = useState<any[]>([]);

@@ -104,8 +104,8 @@ export default function LoginScreen() {
           </View>
 
         </View>
-      </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
