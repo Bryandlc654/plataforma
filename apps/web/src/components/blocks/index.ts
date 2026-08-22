@@ -33,4 +33,5 @@ export const BLOCK_META: Record<string, { label: string; icon: string; descripti
   process: { label: "Proceso", icon: "GitBranch", description: "Pasos de un proceso o metodología" },
   image: { label: "Imagen", icon: "Image", description: "Imagen con texto alternativo, enlace y caption" },
   video: { label: "Video", icon: "Play", description: "Video de YouTube o Vimeo embebido" },
+  "review-form": { label: "Formulario Reseñas", icon: "Star", description: "Captador de reseñas para clientes reales" },
 };

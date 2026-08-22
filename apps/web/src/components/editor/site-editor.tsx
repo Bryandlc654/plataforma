@@ -18,7 +18,7 @@ interface Site { id: string; name: string; subdomain: string; domain?: string; i
 const blockCategories: Record<string, string[]> = {
   "Encabezado": ["hero", "header"],
   "Contenido": ["services", "features", "stats", "portfolio", "benefits", "process", "about", "faq", "testimonials", "gallery", "image", "video"],
-  "Conversión": ["cta", "pricing", "contact", "form"],
+  "Conversión": ["cta", "pricing", "contact", "form", "review-form"],
   "Social": ["whatsapp", "team"],
   "Estructura": ["footer"],
 };
@@ -28,7 +28,7 @@ const blockIcons: Record<string, string> = {
   stats: "BarChart", portfolio: "Briefcase", benefits: "Sparkles", process: "GitBranch",
   about: "Info", faq: "HelpCircle", testimonials: "MessageSquare", gallery: "media",
   cta: "Megaphone", pricing: "DollarSign", contact: "Mail", form: "ClipboardList",
-  whatsapp: "MessageCircle", team: "Users", footer: "PanelBottom", image: "Image", video: "Play",
+  whatsapp: "MessageCircle", team: "Users", footer: "PanelBottom", image: "Image", video: "Play", "review-form": "Star",
 };
 
 function BlockWrapper({ block, activeBlockId, onSelect }: {

@@ -104,8 +104,21 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} /></Field>
         </>;
 
+      case "review-form":
+        return <>
+          <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Déjanos tu opinión" /></Field>
+          <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} placeholder="Valoramos tu experiencia" /></Field>
+        </>;
+
       case "testimonials":
         return <>
+          <Field label="Origen de reseñas">
+            <select value={content.source || "manual"} onChange={(e) => set("source", e.target.value)}
+              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+              <option value="manual">Manual (Configurar aquí)</option>
+              <option value="dynamic">Dinámico (Opiniones de clientes reales)</option>
+            </select>
+          </Field>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Testimonios" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
           <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} /></Field>

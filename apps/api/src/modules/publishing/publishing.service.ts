@@ -173,7 +173,9 @@ export class PublishingService {
 
     if (!site) throw new NotFoundException("Site not found");
 
-    if (path) {
+    const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
+
+    if (path && !isReviewFormRoute) {
       const wanted = normalizePublicPath(path);
       const match = site.pages.find(
         (p: any) => normalizePublicPath(p.path) === wanted
@@ -181,7 +183,21 @@ export class PublishingService {
       if (!match) throw new NotFoundException("Page not found");
     }
 
-    const html = this.renderFullSite(site, path);
+    if (isReviewFormRoute) {
+      site.pages.push({
+        name: "Dejar Opinión",
+        path: "/dejar-opinion",
+        isDefault: false,
+        blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} }]
+      });
+    }
+
+    const approvedReviews = await this.prisma.review.findMany({
+      where: { tenantId: site.tenantId, isPublished: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const html = this.renderFullSite(site, path, approvedReviews);
     this.setCached(this.htmlCache, cacheKey, html, 60_000);
     return html;
   }
@@ -309,7 +325,7 @@ ${blocksHtml}
 </html>`;
   }
 
-  private renderFullSite(site: any, requestedPath?: string): string {
+  private renderFullSite(site: any, requestedPath?: string, reviews: any[] = []): string {
     const wanted = requestedPath ? normalizePublicPath(requestedPath) : "/";
     const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
     const page =
@@ -318,7 +334,7 @@ ${blocksHtml}
         : undefined) || defaultPage;
 
     const blocksHtml = page?.blocks.map((block: any) =>
-      this.renderBlock(block.type, this.resolveBlockUrls(block).content, block.styles, site)
+      this.renderBlock(block.type, this.resolveBlockUrls(block).content, block.styles, site, reviews)
     ).join("\n") || "";
 
     const primary = site.primaryColor || "#2563EB";
@@ -661,7 +677,7 @@ ${apkButton}
 </html>`;
   }
 
-  private renderBlock(type: string, content: any, _styles?: any, site?: any): string {
+  private renderBlock(type: string, content: any, _styles?: any, site?: any, reviews: any[] = []): string {
     const c = content || {};
     
     if (c.variant === "prestige") {
@@ -724,19 +740,28 @@ ${c.buttonText ? `<a href="${c.buttonUrl || "#"}" data-analytics-click data-anal
 </section>`;
 
       case "testimonials": {
-        const items = c.items || [];
+        let items = c.items || [];
+        if (c.source === "dynamic") {
+          items = reviews.map(r => ({
+            name: r.authorName,
+            quote: r.content,
+            role: r.rating ? "★".repeat(r.rating) + "☆".repeat(5 - r.rating) : "",
+          }));
+        }
+        if (items.length === 0) items = [{name: "No hay testimonios", quote: "Aún no hay reseñas publicadas.", role: ""}];
+
         const cols = c.columns || 3;
         const isCarousel = c.carousel === true;
         const colsClass = cols === 1 ? "1fr" : cols === 2 ? "repeat(2,1fr)" : "repeat(3,1fr)";
 
         const cardHtml = (item: any) => `<div style="padding:clamp(1.25rem,2.5vw,1.5rem);border-radius:16px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column;height:100%">
-<div style="color:#f59e0b;margin-bottom:.75rem;font-size:1rem">★ ★ ★ ★ ★</div>
+<div style="color:#f59e0b;margin-bottom:.75rem;font-size:1rem">${item.role?.includes('★') ? item.role : '★ ★ ★ ★ ★'}</div>
 <p style="font-style:italic;color:#475569;margin-bottom:1rem;line-height:1.6;font-size:clamp(.85rem,1.5vw,.95rem);flex:1">&ldquo;${item.quote || ""}&rdquo;</p>
 <div style="display:flex;align-items:center;gap:.75rem;margin-top:auto">
 <div style="width:clamp(36px,4vw,44px);height:clamp(36px,4vw,44px);border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-weight:700;color:#475569;font-size:clamp(.75rem,1.3vw,.85rem);flex-shrink:0">${(item.name?.[0] || "?").toUpperCase()}</div>
 <div>
 <div style="font-weight:600;color:#0f172a;font-size:clamp(.85rem,1.5vw,.95rem)">${item.name || ""}</div>
-<div style="color:#94a3b8;font-size:clamp(.75rem,1.2vw,.85rem)">${item.role || ""}</div>
+${!item.role?.includes('★') ? `<div style="color:#94a3b8;font-size:clamp(.75rem,1.2vw,.85rem)">${item.role || ""}</div>` : ''}
 </div>
 </div>
 </div>`;
@@ -765,6 +790,47 @@ ${c.subtitle ? `<p style="text-align:center;color:#64748b;margin-top:-1.5rem;mar
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(${cols === 1 ? "100%" : cols === 2 ? "380px" : "280px"},100%),1fr));gap:clamp(1rem,2vw,1.5rem)">
 ${items.map(cardHtml).join("")}
 </div>
+</section>`;
+      }
+
+      case "review-form": {
+        const tenantId = c.tenantId || site?.tenantId;
+        const siteId = c.siteId || site?.id;
+        const apiUrl = this.apiBaseUrl();
+        return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);max-width:600px;margin:0 auto">
+<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:#0f172a">${c.title || "Déjanos tu opinión"}</h2>
+<p style="text-align:center;color:#64748b;margin-bottom:2rem">${c.subtitle || "Valoramos tu experiencia con nosotros"}</p>
+<form action="${apiUrl}/api/v1/reviews/public" method="POST" class="pub-form" style="display:flex;flex-direction:column;gap:1.25rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+  <input type="hidden" name="tenantId" value="${tenantId}">
+  <input type="hidden" name="siteId" value="${siteId}">
+  <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;margin-bottom:1rem">
+    <label style="font-weight:600;color:#334155;font-size:.95rem">Calificación</label>
+    <div style="display:flex;flex-direction:row-reverse;gap:0.25rem" class="star-rating">
+      <input type="radio" id="star5" name="rating" value="5" style="display:none" checked><label for="star5" style="cursor:pointer;font-size:2rem;color:#fbbf24">★</label>
+      <input type="radio" id="star4" name="rating" value="4" style="display:none"><label for="star4" style="cursor:pointer;font-size:2rem;color:#cbd5e1">★</label>
+      <input type="radio" id="star3" name="rating" value="3" style="display:none"><label for="star3" style="cursor:pointer;font-size:2rem;color:#cbd5e1">★</label>
+      <input type="radio" id="star2" name="rating" value="2" style="display:none"><label for="star2" style="cursor:pointer;font-size:2rem;color:#cbd5e1">★</label>
+      <input type="radio" id="star1" name="rating" value="1" style="display:none"><label for="star1" style="cursor:pointer;font-size:2rem;color:#cbd5e1">★</label>
+    </div>
+  </div>
+  <style>
+    .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #fbbf24 !important; }
+  </style>
+  <div style="display:flex;flex-direction:column;gap:.5rem">
+    <label style="font-weight:600;color:#334155;font-size:.95rem">Tu nombre <span style="color:#ef4444">*</span></label>
+    <input type="text" name="authorName" required style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s">
+  </div>
+  <div style="display:flex;flex-direction:column;gap:.5rem">
+    <label style="font-weight:600;color:#334155;font-size:.95rem">Tu correo (Opcional)</label>
+    <input type="email" name="authorEmail" style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s">
+  </div>
+  <div style="display:flex;flex-direction:column;gap:.5rem">
+    <label style="font-weight:600;color:#334155;font-size:.95rem">Comentario <span style="color:#ef4444">*</span></label>
+    <textarea name="content" required rows="4" style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s;resize:vertical"></textarea>
+  </div>
+  <div class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
+  <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Enviar opinión</button>
+</form>
 </section>`;
       }
 

@@ -34,6 +34,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { PermissionsGuard } from "./common/guards/permissions.guard";
 import { TenantMiddleware } from "./common/middleware/tenant.middleware";
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     BookingsModule,
     TicketsModule,
     NotificationsModule,
+    ReviewsModule,
   ],
   providers: [
     {
