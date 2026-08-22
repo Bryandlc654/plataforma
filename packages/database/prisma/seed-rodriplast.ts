@@ -286,7 +286,7 @@ async function main() {
       buttonText: 'Enviar solicitud',
       address: 'Parque Industrial · Guayaquil, Ecuador',
       phone: '+593 4 000 0000',
-      email: 'ventas@rodriplast.ec',
+      email: 'ventas@rodriplast.com',
       mapUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=-79.95%2C-2.20%2C-79.85%2C-2.10&layer=mapnik',
       fields: [
         { label: 'Nombre completo', type: 'text', name: 'nombre', required: true },
@@ -309,7 +309,7 @@ async function main() {
       description: 'Fabricantes ecuatorianos de mangueras elaboradas 100% con materiales reciclados. Calidad, innovación y compromiso ambiental.',
       address: 'Parque Industrial · Guayaquil, Ecuador',
       phone: '+593 4 000 0000',
-      email: 'ventas@rodriplast.ec',
+      email: 'ventas@rodriplast.com',
       social: [
         { icon: 'bi-facebook', url: 'https://www.facebook.com/rodriplast', label: 'Facebook' },
         { icon: 'bi-instagram', url: 'https://www.instagram.com/rodriplast', label: 'Instagram' },
@@ -524,7 +524,7 @@ async function main() {
         buttonText: 'Enviar solicitud',
         address: 'Parque Industrial · Guayaquil, Ecuador',
         phone: '+593 4 000 0000',
-        email: 'ventas@rodriplast.ec',
+        email: 'ventas@rodriplast.com',
         mapUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=-79.95%2C-2.20%2C-79.85%2C-2.10&layer=mapnik',
         fields: [
           { label: 'Nombre completo', type: 'text', name: 'nombre', required: true },

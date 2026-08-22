@@ -165,7 +165,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                         ${c.buttonText || 'Solicitar cotización'}
                         <i class="bi bi-arrow-right h-5 w-5 group-hover:translate-x-1 transition-transform"></i>
                     </a>
-                    ${c.secondaryButtonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" href="${siteHref(c.secondaryButtonUrl || '#')}" class="inline-flex items-center gap-2 rounded-full glass text-white px-7 py-4 text-base font-semibold hover:bg-white/25 transition-all">
+                    ${c.secondaryButtonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" href="${siteHref(c.secondaryButtonUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full glass text-white px-7 py-4 text-base font-semibold hover:bg-white/25 transition-all">
                         <i class="bi bi-play-circle h-5 w-5"></i>
                         ${c.secondaryButtonText}
                     </a>` : ''}
@@ -236,7 +236,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                     'Equipo técnico con más de 15 años de experiencia'
                 ]).map((f: any) => `<li class="flex items-center gap-4 rounded-xl bg-rodri-primary/5 border border-rodri-primary/10 px-5 py-4 transition hover:bg-rodri-primary/10 hover:border-rodri-primary/20"><div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rodri-primary text-white shrink-0"><i class="bi bi-check-lg h-4 w-4"></i></div><span class="text-rodri-foreground/85 font-medium">${typeof f === 'string' ? f : f.text || f.title || ''}</span></li>`).join("")}
                 </ul>
-                ${c.linkText || c.buttonText ? `<div class="mt-8">${c.buttonUrl || c.linkUrl ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" href="${siteHref(c.buttonUrl || c.linkUrl)}" class="inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-3.5 text-sm font-semibold shadow-elegant transition-all hover:scale-[1.03]">${c.buttonText || c.linkText}<i class="bi bi-arrow-right h-4 w-4"></i></a>` : ''}</div>` : ''}
+                ${c.linkText || c.buttonText ? `<div class="mt-8"><a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" href="${siteHref(c.buttonUrl || c.linkUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-3.5 text-sm font-semibold shadow-elegant transition-all hover:scale-[1.03]">${c.buttonText || c.linkText}<i class="bi bi-arrow-right h-4 w-4"></i></a></div>` : ''}
             </div>
         </div>
     </section>`;
@@ -474,7 +474,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                     </div>
                     <div class="reveal-2 group flex items-start gap-4 p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)] hover:shadow-[0_8px_32px_rgba(79,173,51,.08)] hover:-translate-y-0.5 hover:border-rodri-primary/20 transition-all duration-500">
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-envelope h-5 w-5"></i></div>
-                        <div class="min-w-0"><div class="font-semibold">Correo</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.ec'}</div></div>
+                        <div class="min-w-0"><div class="font-semibold">Correo</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.com'}</div></div>
                     </div>
                     ${c.mapUrl ? `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${c.mapUrl}" class="w-full h-full" loading="lazy"></iframe></div>` : ''}
                 </div>
@@ -517,7 +517,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
       const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
       const address = c.address || 'Parque Industrial · Guayaquil, Ecuador';
       const phone = c.phone || '+593 4 000 0000';
-      const email = c.email || 'ventas@rodriplast.ec';
+      const email = c.email || 'ventas@rodriplast.com';
       const columns = c.columns && c.columns.length ? c.columns : [
         { title: 'Navegación', links: [
           { label: 'Inicio', url: '#inicio' },
