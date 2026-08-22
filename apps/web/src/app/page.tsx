@@ -32,25 +32,15 @@ export default function HomePage() {
       } as React.CSSProperties}
     >
       
-      {/* 1. NAVBAR */}
-      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-surface-container-lowest/70 border-b border-outline-variant/20 transition-all">
-        <div className="container-max mx-auto px-6 h-20 flex items-center justify-between">
+      {/* 1. NAVBAR (FUNNEL STYLE) */}
+      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-surface-container-lowest/80 border-b border-outline-variant/20 transition-all">
+        <div className="container-max mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <Image src="/logo.png" alt="Build Iceberg Agency" width={150} height={50} className="h-12 w-auto object-contain group-hover:scale-105 transition-transform" />
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={240} height={80} className="h-16 w-auto object-contain group-hover:scale-105 transition-transform" />
           </div>
-          <nav className="hidden lg:flex items-center gap-8 font-semibold text-sm text-on-surface-variant">
-            <a href="#templates" className="hover:text-primary transition-colors">Plantillas</a>
-            <a href="#features" className="hover:text-primary transition-colors">Características</a>
-            <a href="#testimonials" className="hover:text-primary transition-colors">Testimonios</a>
-            <a href="#pricing" className="hover:text-primary transition-colors">Precios</a>
-            <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
-          </nav>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden sm:block text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors">
-              Iniciar Sesión
-            </Link>
-            <Link href="/register" className="px-6 py-2.5 rounded-full bg-primary text-white text-sm font-bold shadow-lg shadow-primary/30 hover:bg-primary-700 hover:shadow-primary/50 hover:-translate-y-0.5 transition-all duration-300">
-              Crear cuenta gratis
+            <Link href="#pricing" className="hidden sm:inline-block px-8 py-3 rounded-full bg-secondary text-white text-sm font-bold shadow-lg shadow-secondary/30 hover:bg-orange-500 hover:shadow-secondary/50 hover:-translate-y-0.5 transition-all duration-300">
+              Quiero mi sitio web ahora
             </Link>
           </div>
         </div>
@@ -64,58 +54,72 @@ export default function HomePage() {
           <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-tertiary/20 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '10s' }}></div>
         </div>
 
-        <div className="relative z-10 container-max mx-auto px-6 max-w-5xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-highest/80 backdrop-blur-md border border-outline-variant/30 mb-8 shadow-sm group hover:border-primary/50 transition-colors cursor-pointer">
-            <span className="flex w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
-            <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest group-hover:text-primary transition-colors">El editor del futuro ya está aquí</span>
+        <div className="relative z-10 container-max mx-auto px-6 max-w-5xl mt-8">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/10 border border-secondary/30 mb-8 shadow-sm">
+            <span className="flex w-3 h-3 rounded-full bg-secondary animate-pulse"></span>
+            <span className="text-xs font-bold text-secondary uppercase tracking-widest">Atención Agencias y Negocios</span>
           </div>
           
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tighter text-on-surface mb-8 leading-[1.05]">
-            Tu visión digital, construida <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-600 to-tertiary">sin tocar código</span>
+            Convierte visitantes en <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-600 to-secondary">clientes leales</span>
           </h1>
           
-          <p className="text-lg lg:text-2xl text-on-surface-variant max-w-3xl mx-auto mb-10 leading-relaxed font-medium">
-            Agencias, creadores y negocios lanzan sitios ultra rápidos con nuestras plantillas premium. Diseñado para deslumbrar, optimizado para vender.
+          <p className="text-lg lg:text-2xl text-on-surface-variant max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
+            Deja de perder clientes por una web lenta y anticuada. Lanza embudos y sitios web de ultra conversión en minutos con Build Iceberg Agency.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-16">
-            <Link href="/register" className="w-full sm:w-auto px-10 py-4 rounded-full bg-primary text-white text-lg font-bold shadow-xl shadow-primary/30 hover:bg-primary-700 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 transition-all duration-300">
-              Empezar mi prueba gratis
+          <div className="flex flex-col items-center justify-center gap-4 mb-16">
+            <Link href="#pricing" className="w-full sm:w-auto px-12 py-5 rounded-full bg-secondary text-white text-xl font-black shadow-[0_0_40px_rgba(242,146,0,0.4)] hover:bg-orange-500 hover:shadow-[0_0_60px_rgba(242,146,0,0.6)] hover:-translate-y-1 transition-all duration-300">
+              SÍ, QUIERO ESCALAR MI NEGOCIO
             </Link>
-            <a href="#templates" className="w-full sm:w-auto px-10 py-4 rounded-full bg-surface-container-high text-on-surface text-lg font-bold border border-outline-variant/30 hover:bg-surface-container-highest hover:border-outline-variant transition-colors flex items-center justify-center gap-2">
-              Explorar Plantillas
-              <span className="material-symbols-outlined text-[20px]">arrow_downward</span>
-            </a>
+            <p className="text-sm text-on-surface-variant/70 font-medium">✨ Garantía de satisfacción de 14 días. Sin tarjeta de crédito.</p>
           </div>
         </div>
 
         {/* Dashboard Mockup Hover */}
         <div className="relative z-10 container-max mx-auto px-6 max-w-6xl w-full perspective-[2000px]">
-          <div className="relative rounded-3xl border border-outline-variant/40 bg-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_20px_80px_-20px_rgba(0,0,0,0.15)] overflow-hidden transition-transform duration-700 transform-gpu hover:rotate-x-0 hover:scale-[1.02] rotate-x-[8deg] scale-100">
+          {/* Glowing backdrop */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/30 to-secondary/30 blur-3xl opacity-50 transform scale-95"></div>
+          
+          <div className="relative rounded-[2rem] border-[8px] border-surface-container-highest/50 bg-surface-container-lowest/90 backdrop-blur-3xl shadow-[0_30px_100px_-20px_rgba(32,27,81,0.4)] overflow-hidden transition-all duration-700 transform-gpu hover:rotate-x-0 hover:scale-[1.03] rotate-x-[5deg] scale-100">
             {/* Window controls */}
-            <div className="w-full h-12 flex items-center gap-2 px-6 border-b border-outline-variant/20 bg-surface-container-lowest">
-              <div className="w-3.5 h-3.5 rounded-full bg-red-400"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-amber-400"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-green-400"></div>
+            <div className="w-full h-14 flex items-center gap-2 px-6 border-b border-outline-variant/20 bg-surface-container-lowest">
+              <div className="w-4 h-4 rounded-full bg-red-500 shadow-sm"></div>
+              <div className="w-4 h-4 rounded-full bg-amber-500 shadow-sm"></div>
+              <div className="w-4 h-4 rounded-full bg-green-500 shadow-sm"></div>
               <div className="ml-4 flex-1 flex justify-center">
-                <div className="bg-surface-container-low px-4 py-1.5 rounded-md text-xs text-on-surface-variant font-medium font-mono border border-outline-variant/20">editor.buildiceberg.com</div>
+                <div className="bg-surface-container-low px-6 py-2 rounded-lg text-sm text-on-surface-variant font-medium font-mono border border-outline-variant/30 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">lock</span>
+                  app.buildiceberg.com/funnel/sales
+                </div>
               </div>
             </div>
             {/* Editor Image Mockup */}
             <div className="w-full relative aspect-[16/10] bg-surface-container">
                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU29CaMpcauBw66zIT8_U_NX3lcijaYGO0uHF4Y7L1bxjR3bB0dOuZ_dE3_tvNHxso_x3FNNGGl9s7-XXyaW7r25GO72k5lX0P4QNjfL6zz1FYJolmuh0_6jPhH8LHNtOmvOIY8-rtTtZaWJFI8CA5wqZ6EQyd1jjp2toWimTmroPGQLj5veYNPVzYn-ZAyaHlc8jKlY5w-HdWXg11E0QKAUlbwOBKTv83HwdPv3yphWI3uKLLrTXKhA" alt="Editor Mockup" className="w-full h-full object-cover object-top opacity-95"/>
-               <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
                
-               {/* Overlay fake editor panels */}
-               <div className="absolute left-6 top-6 bottom-6 w-64 bg-surface/90 backdrop-blur-md rounded-2xl border border-outline-variant/30 shadow-2xl p-4 hidden md:flex flex-col gap-4">
-                  <div className="h-6 w-1/2 bg-surface-container-high rounded-md mb-2"></div>
-                  {[...Array(6)].map((_, i) => <div key={i} className="h-10 w-full bg-surface-container-low rounded-lg border border-outline-variant/20"></div>)}
+               {/* Floating elements to emphasize sales funnel */}
+               <div className="absolute -left-8 md:left-8 top-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
+                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                    <span className="material-symbols-outlined">trending_up</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant font-bold uppercase">Conversión</p>
+                    <p className="text-xl font-black text-on-surface">+ 24.5%</p>
+                  </div>
                </div>
-               <div className="absolute right-6 top-6 w-72 bg-surface/90 backdrop-blur-md rounded-2xl border border-outline-variant/30 shadow-2xl p-4 hidden lg:flex flex-col gap-4">
-                  <div className="h-6 w-3/4 bg-surface-container-high rounded-md mb-2"></div>
-                  <div className="h-32 w-full bg-primary/10 border border-primary/20 rounded-xl"></div>
-                  <div className="h-10 w-full bg-primary text-white rounded-lg flex items-center justify-center font-semibold text-sm">Publicar Cambios</div>
+
+               <div className="absolute -right-8 md:right-8 bottom-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+                  <div className="w-12 h-12 bg-secondary/20 text-secondary rounded-full flex items-center justify-center">
+                    <span className="material-symbols-outlined">notifications_active</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant font-bold uppercase">Nuevo Lead</p>
+                    <p className="text-xl font-black text-on-surface">Hace 2 min</p>
+                  </div>
                </div>
+
+               <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
             </div>
           </div>
         </div>
@@ -371,8 +375,8 @@ export default function HomePage() {
           
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="bg-white p-2 rounded-xl flex items-center justify-center">
-                <Image src="/logo.png" alt="Build Iceberg Agency" width={120} height={40} className="h-8 w-auto object-contain" />
+              <div className="bg-white p-3 rounded-2xl flex items-center justify-center">
+                <Image src="/logo.png" alt="Build Iceberg Agency" width={180} height={60} className="h-12 w-auto object-contain" />
               </div>
             </div>
             <div className="text-sm text-surface-variant flex gap-6">
