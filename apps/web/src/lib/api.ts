@@ -29,9 +29,17 @@ api.interceptors.request.use((config) => {
 
   // Let the browser set the multipart boundary for FormData uploads
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
-    delete config.headers["Content-Type"];
+    if (typeof config.headers.delete === "function") {
+      config.headers.delete("Content-Type");
+    } else {
+      delete config.headers["Content-Type"];
+    }
   } else if (config.headers["Content-Type"] === "multipart/form-data") {
-    delete config.headers["Content-Type"];
+    if (typeof config.headers.delete === "function") {
+      config.headers.delete("Content-Type");
+    } else {
+      delete config.headers["Content-Type"];
+    }
   }
 
   const method = (config.method || "get").toLowerCase();

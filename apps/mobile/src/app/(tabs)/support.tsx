@@ -106,9 +106,7 @@ export default function SupportScreen() {
             type: img.mimeType || 'image/jpeg',
           } as any);
 
-          const res: any = await api.post('/media/upload?folder=tickets', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
+          const res: any = await api.post('/media/upload?folder=tickets', formData);
           
           if (res.data?.url) uploadedImages.push(res.data.url);
           else if (res.url) uploadedImages.push(res.url);
