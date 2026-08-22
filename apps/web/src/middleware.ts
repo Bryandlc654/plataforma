@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PLATFORM_HOSTNAMES = ["localhost", "plat.nextboostperu.com", "127.0.0.1"];
+const PLATFORM_HOSTNAMES = ["localhost", "build.icebergup.com", "127.0.0.1"];
 
 const protectedPaths = ["/dashboard"];
 const authPaths = ["/login", "/register"];
@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
   // the [subdomain] route so the correct site is served and tracked.
   const isPlatformHost =
     PLATFORM_HOSTNAMES.includes(cleanHost) ||
-    cleanHost.endsWith(".nextboostperu.com") ||
+    cleanHost.endsWith(".icebergup.com") ||
     cleanHost.endsWith(".vercel.app");
 
   if (!isPlatformHost) {

@@ -115,7 +115,7 @@ export default function AppDownloadPage() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-900 text-sm">{site.name}</p>
-                      <p className="text-xs text-slate-500">{site.domain || `${site.subdomain}.nextboostperu.com`}</p>
+                      <p className="text-xs text-slate-500">{site.domain || `${site.subdomain}.build.icebergup.com`}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
