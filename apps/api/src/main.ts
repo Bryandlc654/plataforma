@@ -33,7 +33,10 @@ async function bootstrap() {
   // CORS must be the first middleware
   app.use(
     cors({
-      origin: true,
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        cb(null, true);
+      },
       credentials: true,
       methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
       allowedHeaders: [
@@ -42,6 +45,7 @@ async function bootstrap() {
         "X-Tenant-Id",
         "X-CSRF-Token",
       ],
+      maxAge: 86400,
     })
   );
 

@@ -96,24 +96,6 @@ export class TenantMiddleware implements NestMiddleware {
   }
 
   use(req: Request, res: Response, next: NextFunction) {
-    const origin = req.headers["origin"];
-    if (origin) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
-      );
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type,Authorization,X-Tenant-Id,X-CSRF-Token"
-      );
-    }
-
-    if (req.method === "OPTIONS") {
-      res.status(204).end();
-      return;
-    }
     const tenantId = req.headers["x-tenant-id"];
 
     if (tenantId) {
