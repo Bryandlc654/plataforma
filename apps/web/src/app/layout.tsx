@@ -9,8 +9,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Plataforma - Crea tu presencia digital",
-    template: "%s | Plataforma",
+    default: "Build Iceberg Agency - Crea tu presencia digital",
+    template: "%s | Build Iceberg Agency",
   },
   description:
     "Crea, administra y publica tu presencia digital profesional sin conocimientos técnicos. Sitios web, leads, analíticas y más.",

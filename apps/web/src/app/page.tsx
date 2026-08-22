@@ -2,22 +2,41 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "PlataformaWeb - Crea tu sitio premium",
+  title: "Build Iceberg Agency - Crea tu sitio premium",
   description: "Plataforma líder para agencias y negocios. Lanza sitios increíbles en minutos.",
 };
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-surface font-sans text-on-surface selection:bg-primary selection:text-white overflow-x-hidden scroll-smooth">
+    <div 
+      className="min-h-screen bg-surface font-sans text-on-surface selection:bg-primary selection:text-white overflow-x-hidden scroll-smooth"
+      style={{
+        "--color-primary-default": "#201b51",
+        "--color-primary-600": "#201c4eb3",
+        "--color-primary-fixed": "#201b51",
+        "--color-on-primary-fixed": "#ffffff",
+        "--color-secondary": "#f29200",
+        "--color-tertiary": "#f29200",
+        "--color-surface": "#ffffff",
+        "--color-surface-container-lowest": "#ffffff",
+        "--color-surface-container-low": "#f8f9fa",
+        "--color-surface-container": "#f1f3f5",
+        "--color-surface-container-high": "#e9ecef",
+        "--color-surface-container-highest": "#dee2e6",
+        "--color-on-surface": "#201b51",
+        "--color-on-surface-variant": "#495057",
+        "--color-inverse-surface": "#201b51",
+        "--color-inverse-on-surface": "#ffffff",
+        "--color-outline": "#ced4da",
+        "--color-outline-variant": "#e9ecef",
+      } as React.CSSProperties}
+    >
       
       {/* 1. NAVBAR */}
       <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-surface-container-lowest/70 border-b border-outline-variant/20 transition-all">
         <div className="container-max mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-xl leading-none">P</span>
-            </div>
-            <span className="font-bold text-2xl tracking-tighter text-on-surface">PlataformaWeb</span>
+            <Image src="/logo.png" alt="Build Iceberg Agency" width={150} height={50} className="h-12 w-auto object-contain group-hover:scale-105 transition-transform" />
           </div>
           <nav className="hidden lg:flex items-center gap-8 font-semibold text-sm text-on-surface-variant">
             <a href="#templates" className="hover:text-primary transition-colors">Plantillas</a>
@@ -79,7 +98,7 @@ export default function HomePage() {
               <div className="w-3.5 h-3.5 rounded-full bg-amber-400"></div>
               <div className="w-3.5 h-3.5 rounded-full bg-green-400"></div>
               <div className="ml-4 flex-1 flex justify-center">
-                <div className="bg-surface-container-low px-4 py-1.5 rounded-md text-xs text-on-surface-variant font-medium font-mono border border-outline-variant/20">editor.tuplataforma.com</div>
+                <div className="bg-surface-container-low px-4 py-1.5 rounded-md text-xs text-on-surface-variant font-medium font-mono border border-outline-variant/20">editor.buildiceberg.com</div>
               </div>
             </div>
             {/* Editor Image Mockup */}
@@ -352,17 +371,16 @@ export default function HomePage() {
           
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center">
-                <span className="text-on-primary-fixed font-bold text-sm">P</span>
+              <div className="bg-white p-2 rounded-xl flex items-center justify-center">
+                <Image src="/logo.png" alt="Build Iceberg Agency" width={120} height={40} className="h-8 w-auto object-contain" />
               </div>
-              <span className="font-bold text-xl tracking-tight text-white">PlataformaWeb</span>
             </div>
             <div className="text-sm text-surface-variant flex gap-6">
               <a href="#" className="hover:text-white transition-colors">Términos</a>
               <a href="#" className="hover:text-white transition-colors">Privacidad</a>
               <a href="#" className="hover:text-white transition-colors">Contacto</a>
             </div>
-            <p className="text-sm text-surface-variant">© 2026 PlataformaWeb. Todos los derechos reservados.</p>
+            <p className="text-sm text-surface-variant">© 2026 Build Iceberg Agency. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
