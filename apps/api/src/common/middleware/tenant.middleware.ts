@@ -118,7 +118,6 @@ export class TenantMiddleware implements NestMiddleware {
 
     if (tenantId) {
       req["tenantId"] = tenantId;
-      this.logger.debug(`Request scoped to tenant: ${tenantId}`);
     }
 
     const csrfCookieName = "csrf_token";

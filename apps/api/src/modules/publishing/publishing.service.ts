@@ -12,6 +12,7 @@ import {
 export class PublishingService {
   private readonly htmlCache = new Map<string, { value: string; expiry: number }>();
   private readonly staticCache = new Map<string, { value: string; expiry: number }>();
+  private static readonly CACHE_MAX = 200;
 
   constructor(
     private prisma: PrismaService,
@@ -26,6 +27,10 @@ export class PublishingService {
   }
 
   private setCached(cache: Map<string, { value: string; expiry: number }>, key: string, value: string, ttlMs: number) {
+    if (cache.size >= PublishingService.CACHE_MAX) {
+      const oldest = cache.keys().next().value;
+      if (oldest) cache.delete(oldest);
+    }
     cache.set(key, { value, expiry: Date.now() + ttlMs });
   }
 

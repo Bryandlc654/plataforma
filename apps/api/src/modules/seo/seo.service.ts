@@ -8,6 +8,7 @@ import {
 @Injectable()
 export class SeoService {
   private readonly cache = new Map<string, { value: string; expiry: number }>();
+  private static readonly CACHE_MAX = 100;
 
   constructor(private prisma: PrismaService) {}
 
@@ -19,6 +20,10 @@ export class SeoService {
   }
 
   private setCached(key: string, value: string, ttlMs: number) {
+    if (this.cache.size >= SeoService.CACHE_MAX) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest) this.cache.delete(oldest);
+    }
     this.cache.set(key, { value, expiry: Date.now() + ttlMs });
   }
 

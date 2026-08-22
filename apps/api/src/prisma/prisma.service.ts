@@ -14,9 +14,9 @@ export class PrismaService
   constructor() {
     let url = process.env.DATABASE_URL || "";
     const params = [
-      "connection_limit=1",
-      "pool_timeout=0",
-      "idle_timeout=5",
+      "connection_limit=5",
+      "pool_timeout=10",
+      "idle_timeout=10",
     ];
     for (const p of params) {
       const key = p.split("=")[0];

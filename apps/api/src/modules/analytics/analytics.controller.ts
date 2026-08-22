@@ -13,7 +13,7 @@ import { CurrentUser } from "../../common/decorators/current-user.decorator";
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Public()
   @Post("track")
   @ApiOperation({ summary: "Track analytics event (public)" })

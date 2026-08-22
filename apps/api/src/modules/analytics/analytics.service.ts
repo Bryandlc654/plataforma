@@ -5,41 +5,27 @@ import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class AnalyticsService {
+  private readonly lastNotification = new Map<string, number>();
+  private static readonly NOTIFICATION_COOLDOWN = 5 * 60 * 1000;
+
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService
   ) {}
 
   async track(tenantId: string, dto: { type: string; siteId?: string; path?: string; referrer?: string; metadata?: any }, ip?: string, userAgent?: string) {
-    if (dto.type === "pageview") {
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-
-      const duplicate = await this.prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM analytics_events
-        WHERE tenant_id = ${tenantId}
-          AND type = 'pageview'
-          AND user_agent = ${userAgent || null}
-          AND path = ${dto.path || null}
-          AND created_at >= ${thirtyMinutesAgo}
-        LIMIT 1
-      `;
-
-      if (duplicate.length > 0) {
-        return { skipped: true, reason: "duplicate_pageview" };
+    if (dto.type === "pageview" && dto.siteId) {
+      const now = Date.now();
+      const last = this.lastNotification.get(dto.siteId) || 0;
+      if (now - last > AnalyticsService.NOTIFICATION_COOLDOWN) {
+        this.lastNotification.set(dto.siteId, now);
+        this.notificationsService.sendPushNotificationToTenant(
+          tenantId,
+          "¡Nueva visita web!",
+          `Alguien está navegando en tu sitio.`,
+          { url: "/analytics" }
+        ).catch(() => {});
       }
-
-      let siteName = "tu web";
-      if (dto.siteId) {
-        const site = await this.prisma.site.findUnique({ where: { id: dto.siteId }, select: { name: true } });
-        if (site?.name) siteName = site.name;
-      }
-
-      this.notificationsService.sendPushNotificationToTenant(
-        tenantId,
-        "¡Nueva visita web!",
-        `Alguien está navegando en ${siteName}.`,
-        { url: "/analytics" }
-      ).catch(e => console.error("Error sending visit push notification", e));
     }
 
     return this.prisma.analyticsEvent.create({
