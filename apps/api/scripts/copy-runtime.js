@@ -62,7 +62,21 @@ async function main() {
     }
   }
 
-  console.log("✅ Runtime deps copiadas a dist/node_modules");
+  // Generar un package.json limpio para Hostinger/cPanel sin dependencias locales
+  const cleanPkg = {
+    name: pkg.name,
+    version: pkg.version,
+    private: true,
+    main: "main.js",
+    scripts: {
+      start: "node main.js"
+    },
+    // No dependencias! Así NPM Install en Hostinger no falla con 404 buscando @plataforma/shared
+    dependencies: {}
+  };
+  fs.writeFileSync(path.join(OUTDIR, "package.json"), JSON.stringify(cleanPkg, null, 2));
+
+  console.log("✅ Runtime deps y package.json limpio copiados a dist/");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
