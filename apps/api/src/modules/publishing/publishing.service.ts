@@ -8,10 +8,18 @@ import {
   escapeHtml,
 } from "./seo-helpers";
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, msg = 'Request timeout'): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(msg)), ms);
+    promise.then(val => { clearTimeout(timer); resolve(val); }).catch(err => { clearTimeout(timer); reject(err); });
+  });
+};
+
 @Injectable()
 export class PublishingService {
   private readonly htmlCache = new Map<string, { value: string; expiry: number }>();
   private readonly staticCache = new Map<string, { value: string; expiry: number }>();
+  private readonly inFlightRequests = new Map<string, Promise<any>>();
   private static readonly CACHE_MAX = 200;
 
   constructor(
@@ -151,55 +159,66 @@ export class PublishingService {
     };
   }
 
-  async getPublicHtml(subdomain: string, path?: string) {
+  async getPublicHtml(subdomain: string, path?: string): Promise<string> {
     const cacheKey = `${subdomain}:${path || "/"}`;
     const cached = this.getCached(this.htmlCache, cacheKey);
     if (cached) return cached;
 
-    const site = await this.prisma.site.findFirst({
-      where: {
-        OR: [{ subdomain }, { domain: subdomain }],
-        isPublished: true,
-        deletedAt: null,
-      },
-      include: {
-        pages: {
-          include: { blocks: { orderBy: { sortOrder: "asc" } } },
-          orderBy: { sortOrder: "asc" },
+    if (this.inFlightRequests.has(cacheKey)) {
+      return this.inFlightRequests.get(cacheKey);
+    }
+
+    const promise = withTimeout((async () => {
+      const site = await this.prisma.site.findFirst({
+        where: {
+          OR: [{ subdomain }, { domain: subdomain }],
+          isPublished: true,
+          deletedAt: null,
         },
-        tenant: { select: { settings: true } },
-      },
-    });
-
-    if (!site) throw new NotFoundException("Site not found");
-
-    const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
-
-    if (path && !isReviewFormRoute) {
-      const wanted = normalizePublicPath(path);
-      const match = site.pages.find(
-        (p: any) => normalizePublicPath(p.path) === wanted
-      );
-      if (!match) throw new NotFoundException("Page not found");
-    }
-
-    if (isReviewFormRoute) {
-      site.pages.push({
-        name: "Dejar Opinión",
-        path: "/dejar-opinion",
-        isDefault: false,
-        blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} }]
+        include: {
+          pages: {
+            include: { blocks: { orderBy: { sortOrder: "asc" } } },
+            orderBy: { sortOrder: "asc" },
+          },
+          tenant: { select: { settings: true } },
+        },
       });
-    }
 
-    const approvedReviews = await this.prisma.review.findMany({
-      where: { tenantId: site.tenantId, isPublished: true },
-      orderBy: { createdAt: "desc" },
+      if (!site) throw new NotFoundException("Site not found");
+
+      const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
+
+      if (path && !isReviewFormRoute) {
+        const wanted = normalizePublicPath(path);
+        const match = site.pages.find(
+          (p: any) => normalizePublicPath(p.path) === wanted
+        );
+        if (!match) throw new NotFoundException("Page not found");
+      }
+
+      if (isReviewFormRoute) {
+        site.pages.push({
+          name: "Dejar Opinión",
+          path: "/dejar-opinion",
+          isDefault: false,
+          blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} } as any]
+        } as any);
+      }
+
+      const approvedReviews = await this.prisma.review.findMany({
+        where: { tenantId: site.tenantId, isPublished: true },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const html = this.renderFullSite(site, path, approvedReviews);
+      this.setCached(this.htmlCache, cacheKey, html, 60_000);
+      return html;
+    })(), 10000, "Timeout rendering site").finally(() => {
+      this.inFlightRequests.delete(cacheKey);
     });
 
-    const html = this.renderFullSite(site, path, approvedReviews);
-    this.setCached(this.htmlCache, cacheKey, html, 60_000);
-    return html;
+    this.inFlightRequests.set(cacheKey, promise);
+    return promise;
   }
 
   async getPublicSitemap(subdomain: string): Promise<string> {
@@ -207,32 +226,43 @@ export class PublishingService {
     const cached = this.getCached(this.staticCache, cacheKey);
     if (cached) return cached;
 
-    const site = await this.prisma.site.findFirst({
-      where: {
-        OR: [{ subdomain }, { domain: subdomain }],
-        isPublished: true,
-        deletedAt: null,
-      },
-      include: { pages: { orderBy: { sortOrder: "asc" } } },
+    if (this.inFlightRequests.has(cacheKey)) {
+      return this.inFlightRequests.get(cacheKey);
+    }
+
+    const promise = withTimeout((async () => {
+      const site = await this.prisma.site.findFirst({
+        where: {
+          OR: [{ subdomain }, { domain: subdomain }],
+          isPublished: true,
+          deletedAt: null,
+        },
+        include: { pages: { orderBy: { sortOrder: "asc" } } },
+      });
+
+      if (!site) throw new NotFoundException("Site not found");
+
+      const urlBase = resolvePublicSiteUrl(site);
+      const lastmod =
+        site.publishedAt?.toISOString().split("T")[0] ||
+        new Date().toISOString().split("T")[0];
+
+      const urls = site.pages.map((page) => {
+        const loc =
+          page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
+        const priority = page.isDefault ? "1.0" : "0.8";
+        return `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+      });
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+      this.setCached(this.staticCache, cacheKey, xml, 3_600_000);
+      return xml;
+    })(), 5000, "Timeout generating sitemap").finally(() => {
+      this.inFlightRequests.delete(cacheKey);
     });
 
-    if (!site) throw new NotFoundException("Site not found");
-
-    const urlBase = resolvePublicSiteUrl(site);
-    const lastmod =
-      site.publishedAt?.toISOString().split("T")[0] ||
-      new Date().toISOString().split("T")[0];
-
-    const urls = site.pages.map((page) => {
-      const loc =
-        page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
-      const priority = page.isDefault ? "1.0" : "0.8";
-      return `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
-    });
-
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
-    this.setCached(this.staticCache, cacheKey, xml, 3_600_000);
-    return xml;
+    this.inFlightRequests.set(cacheKey, promise);
+    return promise;
   }
 
   async getPublicRobots(subdomain: string): Promise<string> {
@@ -240,20 +270,31 @@ export class PublishingService {
     const cached = this.getCached(this.staticCache, cacheKey);
     if (cached) return cached;
 
-    const site = await this.prisma.site.findFirst({
-      where: {
-        OR: [{ subdomain }, { domain: subdomain }],
-        isPublished: true,
-        deletedAt: null,
-      },
+    if (this.inFlightRequests.has(cacheKey)) {
+      return this.inFlightRequests.get(cacheKey);
+    }
+
+    const promise = withTimeout((async () => {
+      const site = await this.prisma.site.findFirst({
+        where: {
+          OR: [{ subdomain }, { domain: subdomain }],
+          isPublished: true,
+          deletedAt: null,
+        },
+      });
+
+      if (!site) throw new NotFoundException("Site not found");
+
+      const urlBase = resolvePublicSiteUrl(site);
+      const robots = `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
+      this.setCached(this.staticCache, cacheKey, robots, 3_600_000);
+      return robots;
+    })(), 5000, "Timeout generating robots").finally(() => {
+      this.inFlightRequests.delete(cacheKey);
     });
 
-    if (!site) throw new NotFoundException("Site not found");
-
-    const urlBase = resolvePublicSiteUrl(site);
-    const robots = `User-agent: *\nAllow: /\nSitemap: ${urlBase}/sitemap.xml\n`;
-    this.setCached(this.staticCache, cacheKey, robots, 3_600_000);
-    return robots;
+    this.inFlightRequests.set(cacheKey, promise);
+    return promise;
   }
 
   private apiBaseUrl(): string {
