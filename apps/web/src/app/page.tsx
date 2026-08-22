@@ -125,48 +125,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. SHOWCASE PLANTILLAS (NEW) */}
-      <section id="templates" className="py-24 bg-surface-container-lowest relative">
+      {/* 3. SHOWCASE CASOS DE ÉXITO (REAL WEBSITES) */}
+      <section id="showcase" className="py-24 bg-surface-container-lowest relative">
         <div className="container-max mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Catálogo Premium</h2>
-            <h3 className="text-4xl lg:text-5xl font-bold text-on-surface mb-6">No empieces de cero. Empieza desde la cima.</h3>
-            <p className="text-lg text-on-surface-variant">Nuestras plantillas están diseñadas por expertos para dominar tu industria. 100% editables y optimizadas para máxima conversión.</p>
+            <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-3">Casos de Éxito</h2>
+            <h3 className="text-4xl lg:text-5xl font-bold text-on-surface mb-6">Negocios reales, resultados reales.</h3>
+            <p className="text-lg text-on-surface-variant">Mira cómo agencias y creadores están utilizando nuestra plataforma para alojar sitios ultrarrápidos con sus propios dominios personalizados.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
             
-            {/* Template 1: Prestige Corp */}
+            {/* Website 1: Nexus Consulting */}
             <div className="group rounded-3xl overflow-hidden bg-surface-container-low border border-outline-variant/30 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU29CaMpcauBw66zIT8_U_NX3lcijaYGO0uHF4Y7L1bxjR3bB0dOuZ_dE3_tvNHxso_x3FNNGGl9s7-XXyaW7r25GO72k5lX0P4QNjfL6zz1FYJolmuh0_6jPhH8LHNtOmvOIY8-rtTtZaWJFI8CA5wqZ6EQyd1jjp2toWimTmroPGQLj5veYNPVzYn-ZAyaHlc8jKlY5w-HdWXg11E0QKAUlbwOBKTv83HwdPv3yphWI3uKLLrTXKhA" alt="Prestige Corp" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4 backdrop-blur-[2px]">
-                  <Link href="/register" className="px-6 py-3 bg-white text-slate-900 font-bold rounded-full hover:scale-105 transition-transform">Usar Plantilla</Link>
+              <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU29CaMpcauBw66zIT8_U_NX3lcijaYGO0uHF4Y7L1bxjR3bB0dOuZ_dE3_tvNHxso_x3FNNGGl9s7-XXyaW7r25GO72k5lX0P4QNjfL6zz1FYJolmuh0_6jPhH8LHNtOmvOIY8-rtTtZaWJFI8CA5wqZ6EQyd1jjp2toWimTmroPGQLj5veYNPVzYn-ZAyaHlc8jKlY5w-HdWXg11E0QKAUlbwOBKTv83HwdPv3yphWI3uKLLrTXKhA" alt="Nexus Consulting" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                
+                {/* Simulated browser bar */}
+                <div className="absolute top-4 left-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg border border-outline-variant/20 flex items-center gap-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-[-10px] group-hover:translate-y-0">
+                  <span className="material-symbols-outlined text-[16px] text-green-600">lock</span>
+                  <span className="text-sm font-mono text-slate-700">nexusconsulting.com</span>
                 </div>
               </div>
               <div className="p-8">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-2xl font-bold text-on-surface">Prestige Corp</h4>
-                  <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">B2B / Agencias</span>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-2xl font-bold text-on-surface">Nexus Consulting</h4>
+                    <span className="text-sm font-medium text-primary">nexusconsulting.com</span>
+                  </div>
+                  <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">B2B / Agencia</span>
                 </div>
-                <p className="text-on-surface-variant">Diseño corporativo pulido para firmas de consultoría y servicios profesionales de alto nivel.</p>
+                <p className="text-on-surface-variant">Sitio corporativo de alta conversión con embudo de captación de leads integrado y optimización SEO automática.</p>
               </div>
             </div>
 
-            {/* Template 2: L'Art Culinaire */}
+            {/* Website 2: Bistro 22 */}
             <div className="group rounded-3xl overflow-hidden bg-surface-container-low border border-outline-variant/30 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKkbNAS1pmw-xX2Yc1tR1b4GxAm6GZEw-D9FN5eJJm_OXRWaNNOmPe_9tdV8rWXyP9eqLsba21xYMSkWVzICYNUkwoSfyPOxQCgZq0mgfnTcFZ0km3_U_KxaTaiysb-2JlCAONFc9m-O4UoooR5gXLD-0N5okvuCQOq62MwO2lLR7EhilhaDcPnpg2fMKaZV25P2OUv1MyvbvUf6MjsUtRpXWBMqr3wiCuKHFFngv0fYZ9030stExg" alt="L'Art Culinaire" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4 backdrop-blur-[2px]">
-                  <Link href="/register" className="px-6 py-3 bg-white text-slate-900 font-bold rounded-full hover:scale-105 transition-transform">Usar Plantilla</Link>
+              <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKkbNAS1pmw-xX2Yc1tR1b4GxAm6GZEw-D9FN5eJJm_OXRWaNNOmPe_9tdV8rWXyP9eqLsba21xYMSkWVzICYNUkwoSfyPOxQCgZq0mgfnTcFZ0km3_U_KxaTaiysb-2JlCAONFc9m-O4UoooR5gXLD-0N5okvuCQOq62MwO2lLR7EhilhaDcPnpg2fMKaZV25P2OUv1MyvbvUf6MjsUtRpXWBMqr3wiCuKHFFngv0fYZ9030stExg" alt="Bistro 22" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
+                
+                {/* Simulated browser bar */}
+                <div className="absolute top-4 left-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-lg border border-outline-variant/20 flex items-center gap-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-[-10px] group-hover:translate-y-0">
+                  <span className="material-symbols-outlined text-[16px] text-green-600">lock</span>
+                  <span className="text-sm font-mono text-slate-700">bistro22.es</span>
                 </div>
               </div>
               <div className="p-8">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-2xl font-bold text-on-surface">L&apos;Art Culinaire</h4>
-                  <span className="px-3 py-1 bg-tertiary/10 text-tertiary text-xs font-bold rounded-full">Gastronomía</span>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-2xl font-bold text-on-surface">Bistro 22</h4>
+                    <span className="text-sm font-medium text-secondary">bistro22.es</span>
+                  </div>
+                  <span className="px-3 py-1 bg-secondary/10 text-secondary text-xs font-bold rounded-full">Gastronomía</span>
                 </div>
-                <p className="text-on-surface-variant">Estética elegante y oscura para restaurantes finos, chefs y marcas boutique.</p>
+                <p className="text-on-surface-variant">Restaurante boutique con sistema de reservas, menú digital ultrarrápido y dominio personalizado (.es).</p>
               </div>
             </div>
 
