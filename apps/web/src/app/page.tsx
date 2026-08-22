@@ -94,12 +94,116 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            {/* Editor Image Mockup */}
-            <div className="w-full relative aspect-[16/10] bg-surface-container">
-               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU29CaMpcauBw66zIT8_U_NX3lcijaYGO0uHF4Y7L1bxjR3bB0dOuZ_dE3_tvNHxso_x3FNNGGl9s7-XXyaW7r25GO72k5lX0P4QNjfL6zz1FYJolmuh0_6jPhH8LHNtOmvOIY8-rtTtZaWJFI8CA5wqZ6EQyd1jjp2toWimTmroPGQLj5veYNPVzYn-ZAyaHlc8jKlY5w-HdWXg11E0QKAUlbwOBKTv83HwdPv3yphWI3uKLLrTXKhA" alt="Editor Mockup" className="w-full h-full object-cover object-top opacity-95"/>
-               
+            {/* Native HTML Editor Mockup */}
+            <div className="w-full relative aspect-[16/10] bg-[#0f111a] flex font-sans">
+              
+              {/* Editor Sidebar Left */}
+              <div className="w-48 border-r border-slate-800 bg-[#131620] p-4 flex-col gap-4 hidden md:flex">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-slate-500 tracking-wider">COMPONENTES</span>
+                  <span className="material-symbols-outlined text-[14px] text-slate-500">add</span>
+                </div>
+                {['Header', 'Hero Section', 'Features Grid', 'Testimonials', 'Pricing', 'Footer'].map((item, i) => (
+                  <div key={i} className={`text-xs p-2 rounded-md border flex items-center cursor-default ${i === 1 ? 'border-primary/50 bg-primary/10 text-primary' : 'border-slate-800 bg-[#1a1d27] text-slate-400'}`}>
+                    <span className="material-symbols-outlined text-[14px] mr-2">
+                      {i === 1 ? 'dashboard' : 'view_agenda'}
+                    </span>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Editor Main Canvas */}
+              <div className="flex-1 p-4 md:p-8 bg-[#0a0c10] relative flex items-center justify-center overflow-hidden">
+                {/* Dotted grid background for editor feel */}
+                <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #334155 1px, transparent 0)', backgroundSize: '24px 24px', opacity: 0.3 }}></div>
+                
+                {/* The Website being "edited" */}
+                <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col z-10 transform transition-transform hover:scale-[1.02] duration-500">
+                  {/* Web Nav */}
+                  <div className="h-12 border-b border-slate-100 flex items-center justify-between px-6 bg-white">
+                     <div className="w-24 h-4 bg-slate-900 rounded-sm"></div>
+                     <div className="flex gap-4">
+                       <div className="w-10 h-1.5 bg-slate-200 rounded-full"></div>
+                       <div className="w-10 h-1.5 bg-slate-200 rounded-full"></div>
+                       <div className="w-16 h-6 bg-primary rounded-full ml-2"></div>
+                     </div>
+                  </div>
+                  
+                  {/* Web Hero */}
+                  <div className="flex-1 flex flex-col items-center justify-center p-10 text-center relative overflow-hidden bg-slate-50">
+                    {/* Decorative blobs */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl"></div>
+                    
+                    <div className="w-max px-3 py-1 bg-white text-slate-600 rounded-full text-[9px] font-bold mb-5 border border-slate-200 shadow-sm relative z-10">
+                      🚀 NUEVA VERSIÓN DISPONIBLE
+                    </div>
+                    
+                    <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 leading-tight relative z-10">
+                      Diseña el futuro <br/><span className="text-primary">sin límites</span>
+                    </h1>
+                    
+                    <p className="text-slate-500 text-sm md:text-base max-w-md mx-auto mb-8 relative z-10">
+                      La herramienta perfecta para equipos modernos que buscan escalar su presencia en internet en tiempo récord.
+                    </p>
+                    
+                    <div className="px-8 py-3 bg-slate-900 text-white text-sm font-bold rounded-full shadow-lg shadow-slate-900/20 relative z-10">
+                      Comenzar Gratis
+                    </div>
+                    
+                    {/* Editor Bounding Box (Active state simulation) */}
+                    <div className="absolute top-4 left-4 right-4 bottom-4 border-2 border-primary border-dashed rounded-lg pointer-events-none z-20">
+                      <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full"></div>
+                      <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full"></div>
+                      <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full"></div>
+                      <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-primary rounded-full"></div>
+                      <div className="absolute -top-3 left-4 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">
+                        Hero Section
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Editor Sidebar Right (Properties) */}
+              <div className="w-56 border-l border-slate-800 bg-[#131620] p-4 hidden lg:flex flex-col gap-6 relative z-40">
+                 <div>
+                   <span className="text-[10px] font-bold text-slate-500 block mb-3 tracking-wider">DISEÑO (HERO)</span>
+                   <div className="grid grid-cols-2 gap-2">
+                     <div className="bg-[#1a1d27] p-2 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-1">
+                        <span>Width</span><span className="text-white font-mono text-xs">100%</span>
+                     </div>
+                     <div className="bg-[#1a1d27] p-2 rounded border border-slate-800 text-[10px] text-slate-400 flex flex-col gap-1">
+                        <span>Height</span><span className="text-white font-mono text-xs">Auto</span>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div>
+                   <span className="text-[10px] font-bold text-slate-500 block mb-3 tracking-wider">ESPACIADO</span>
+                   <div className="w-full aspect-square max-h-32 border border-slate-800 rounded-lg p-2 flex items-center justify-center relative bg-[#0a0c10]">
+                     <div className="w-3/4 h-3/4 border border-slate-700 bg-[#1a1d27] rounded flex items-center justify-center text-[10px] text-slate-500">Margin</div>
+                     <span className="absolute top-1 text-[9px] text-slate-400">40</span>
+                     <span className="absolute bottom-1 text-[9px] text-slate-400">40</span>
+                     <span className="absolute left-1 text-[9px] text-slate-400">auto</span>
+                     <span className="absolute right-1 text-[9px] text-slate-400">auto</span>
+                   </div>
+                 </div>
+                 
+                 <div>
+                   <span className="text-[10px] font-bold text-slate-500 block mb-3 tracking-wider">FONDO</span>
+                   <div className="flex items-center gap-3 bg-[#1a1d27] p-2 rounded border border-slate-800">
+                      <div className="w-6 h-6 rounded bg-slate-50 border border-slate-700"></div>
+                      <span className="text-xs text-white font-mono">#F8FAFC</span>
+                   </div>
+                 </div>
+              </div>
+              
+              {/* Overlay gradient at bottom */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a] via-transparent to-transparent opacity-80 pointer-events-none z-30"></div>
                {/* Floating elements to emphasize sales funnel */}
-               <div className="absolute -left-8 md:left-8 top-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
+               <div className="absolute -left-8 md:left-8 top-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce z-40" style={{ animationDuration: '3s' }}>
                   <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
                     <span className="material-symbols-outlined">trending_up</span>
                   </div>
@@ -109,7 +213,7 @@ export default function HomePage() {
                   </div>
                </div>
 
-               <div className="absolute -right-8 md:right-8 bottom-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+               <div className="absolute -right-8 md:right-8 bottom-1/4 bg-white p-4 rounded-2xl shadow-2xl border border-outline-variant/30 flex items-center gap-4 animate-bounce z-40" style={{ animationDuration: '4s', animationDelay: '1s' }}>
                   <div className="w-12 h-12 bg-secondary/20 text-secondary rounded-full flex items-center justify-center">
                     <span className="material-symbols-outlined">notifications_active</span>
                   </div>
@@ -118,8 +222,6 @@ export default function HomePage() {
                     <p className="text-xl font-black text-on-surface">Hace 2 min</p>
                   </div>
                </div>
-
-               <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-80"></div>
             </div>
           </div>
         </div>
