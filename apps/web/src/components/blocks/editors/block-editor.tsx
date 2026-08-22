@@ -190,6 +190,12 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           <Field label="Columna de navegación"><ArrayEditor value={content.columns} onChange={(v) => set("columns", v)} fields={[{ key: "title", label: "Título" }]} /></Field>
           <Field label="Enlaces de navegación"><ArrayEditor value={content.navLinks} onChange={(v) => set("navLinks", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
           <Field label="Redes sociales"><ArrayEditor value={content.social} onChange={(v) => set("social", v)} fields={[{ key: "icon", label: "Icono (ej: bi-facebook)" }, { key: "url", label: "URL" }, { key: "label", label: "Etiqueta" }]} /></Field>
+          <div className="border-t border-slate-200 pt-4 mt-2">
+            <Field label="Imagen flotante (derecha, entre secciones)">
+              <ImageField label="Subir imagen" value={content.floatingImage} onChange={(v) => set("floatingImage", v)} />
+              <div className="mt-2"><TextInput value={content.floatingImageAlt} onChange={(v) => set("floatingImageAlt", v)} placeholder="Texto alternativo" /></div>
+            </Field>
+          </div>
         </>;
 
       case "whatsapp":

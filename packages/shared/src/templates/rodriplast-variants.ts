@@ -535,7 +535,9 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
         { icon: 'bi-youtube', url: '#', label: 'YouTube' }
       ];
       const copyright = c.copyright || `© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.`;
+      const floatingImg = c.floatingImage ? `<div class="hidden lg:block absolute -top-32 right-0 w-64 h-64 z-10 pointer-events-none"><img src="${c.floatingImage}" alt="${c.floatingImageAlt || ''}" class="w-full h-full object-contain drop-shadow-2xl"></div>` : '';
       return `<footer class="relative bg-rodri-charcoal text-rodri-charcoal-foreground pt-20 pb-8">
+        ${floatingImg}
         <div class="absolute inset-0 bg-gradient-to-b from-rodri-primary/5 via-transparent to-transparent"></div>
         <div class="absolute top-0 left-1/2 -translate-x-1/2 h-px w-1/3 bg-gradient-to-r from-transparent via-rodri-primary/40 to-transparent"></div>
         <div class="container-x relative">
