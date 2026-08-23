@@ -1,4 +1,4 @@
-export type BlockType = "hero" | "services" | "faq" | "cta" | "testimonials" | "gallery" | "header" | "footer" | "form" | "about" | "contact" | "whatsapp" | "pricing" | "team" | "features" | "stats" | "portfolio" | "benefits" | "process" | "image" | "video";
+export type BlockType = "hero" | "services" | "faq" | "cta" | "testimonials" | "gallery" | "header" | "footer" | "form" | "about" | "contact" | "whatsapp" | "pricing" | "team" | "features" | "stats" | "portfolio" | "benefits" | "process" | "image" | "video" | "review-form";
 
 export interface BlockData {
   type: string;
@@ -8,7 +8,7 @@ export interface BlockData {
 
 export const BLOCK_TYPES: BlockType[] = [
   "hero", "services", "faq", "cta", "testimonials", "gallery", "header", "footer",
-  "form", "about", "contact", "whatsapp", "pricing", "team", "features", "stats", "portfolio", "benefits", "process", "image", "video",
+  "form", "about", "contact", "whatsapp", "pricing", "team", "features", "stats", "portfolio", "benefits", "process", "image", "video", "review-form",
 ];
 
 export function getBlockDefaultContent(type: BlockType): any {
@@ -109,6 +109,7 @@ export function getBlockDefaultContent(type: BlockType): any {
     process: { kicker: "Proceso", title: "Nuestro proceso", items: [{ icon: "bi-arrow-repeat", title: "Paso 1", desc: "Descripción del paso" }] },
     image: { url: "https://placehold.co/800x400/2563EB/white?text=Imagen", alt: "Descripción de la imagen", link: "", caption: "", alignment: "center" },
     video: { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", title: "Video", aspectRatio: "16/9", autoplay: false },
+    "review-form": { title: "Déjanos tu opinión", subtitle: "Valoramos tu experiencia con nosotros", tenantId: "", siteId: "" },
   };
   return JSON.parse(JSON.stringify(defaults[type] || {}));
 }

@@ -765,24 +765,27 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
             ) : (
               <form onSubmit={handleSubmit} className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-sm">
                 <div className="space-y-4">
-                  {fields.map((field: any, i: number) => (
+                  {fields.map((field: any, i: number) => {
+                    const isRequired = field.required === true || field.required === "true";
+                    return (
                     <div key={i}>
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">
                         {field.label || field.name}
-                        {field.required && <span className="text-red-400 ml-1">*</span>}
+                        {isRequired && <span className="text-red-400 ml-1">*</span>}
                       </label>
                       {field.type === "textarea" ? (
-                        <textarea name={field.name} required={field.required}
+                        <textarea name={field.name} required={isRequired}
                           className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"
                           rows={4}
                         />
                       ) : (
-                        <input type={field.type || "text"} name={field.name} required={field.required}
+                        <input type={field.type || "text"} name={field.name} required={isRequired}
                           className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                         />
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                   <button
                     type="submit"
                     disabled={formState === "loading"}
@@ -793,6 +796,81 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
                   {formState === "error" && (
                     <p className="text-sm text-red-600 text-center">Error al enviar. Intenta de nuevo.</p>
                   )}
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    case "review-form": {
+      const [rating, setRating] = useState(5);
+      const [hover, setHover] = useState(0);
+      const [formState, setFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+      const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setFormState("loading");
+        const fd = new FormData(e.currentTarget);
+        try {
+          await api.post("/reviews/public", {
+            tenantId: c.tenantId || "",
+            siteId: c.siteId || "",
+            rating: Number(fd.get("rating")) || rating,
+            authorName: fd.get("authorName"),
+            authorEmail: fd.get("authorEmail") || undefined,
+            content: fd.get("content"),
+          });
+          setFormState("success");
+        } catch { setFormState("error"); }
+      };
+
+      return (
+        <section id={c.anchor || undefined} className="py-12 sm:py-16 px-6">
+          <div className="max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 text-center mb-2">{c.title || "Déjanos tu opinión"}</h2>
+            <p className="text-center text-slate-500 mb-8">{c.subtitle || "Valoramos tu experiencia con nosotros"}</p>
+            {formState === "success" ? (
+              <div className="rounded-2xl bg-green-50 border border-green-200 p-8 text-center">
+                <svg className="h-8 w-8 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <h3 className="font-semibold text-green-800">¡Gracias!</h3>
+                <p className="text-sm text-green-600 mt-1">Tu opinión ha sido enviada. Será visible tras ser aprobada.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-sm">
+                <div className="space-y-5">
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-700">Calificación</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button key={star} type="button"
+                          className={`text-3xl transition-colors ${star <= (hover || rating) ? "text-yellow-400" : "text-slate-300"}`}
+                          onClick={() => { setRating(star); const hidden = document.getElementById("review-rating-hidden") as HTMLInputElement; if (hidden) hidden.value = String(star); }}
+                          onMouseEnter={() => setHover(star)}
+                          onMouseLeave={() => setHover(0)}
+                        >★</button>
+                      ))}
+                    </div>
+                    <input type="hidden" id="review-rating-hidden" name="rating" value={String(rating)} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Tu nombre <span className="text-red-400">*</span></label>
+                    <input type="text" name="authorName" required className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Tu correo <span className="text-slate-400 text-xs">(opcional)</span></label>
+                    <input type="email" name="authorEmail" className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Comentario <span className="text-red-400">*</span></label>
+                    <textarea name="content" required rows={4} className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none" />
+                  </div>
+                  <button type="submit" disabled={formState === "loading"}
+                    className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors">
+                    {formState === "loading" ? "Enviando..." : "Enviar opinión"}
+                  </button>
+                  {formState === "error" && <p className="text-sm text-red-600 text-center">Error al enviar. Intenta de nuevo.</p>}
                 </div>
               </form>
             )}

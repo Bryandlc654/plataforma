@@ -7,8 +7,7 @@ import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/bl
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
-import { AppIcon } from "@/components/ui/app-icon";
-import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate } from "react-icons/hi";
+import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineArrowUp, HiOutlineArrowDown } from "react-icons/hi";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
@@ -23,27 +22,82 @@ const blockCategories: Record<string, string[]> = {
   "Estructura": ["footer"],
 };
 
-const blockIcons: Record<string, string> = {
-  hero: "home", header: "PanelTop", services: "Grid", features: "Star",
-  stats: "BarChart", portfolio: "Briefcase", benefits: "Sparkles", process: "GitBranch",
-  about: "Info", faq: "HelpCircle", testimonials: "MessageSquare", gallery: "media",
-  cta: "Megaphone", pricing: "DollarSign", contact: "Mail", form: "ClipboardList",
-  whatsapp: "MessageCircle", team: "Users", footer: "PanelBottom", image: "Image", video: "Play", "review-form": "Star",
-};
-
-function BlockWrapper({ block, activeBlockId, onSelect }: {
+function BlockWrapper({ block, activeBlockId, onSelect, onMoveUp, onMoveDown, onDelete, isFirst, isLast }: {
   block: Block; activeBlockId: string | null;
   onSelect: (id: string) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDelete: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }) {
   return (
     <div className="group relative">
-      <div className={`absolute -top-10 left-0 right-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20 ${activeBlockId === block.id ? "opacity-100" : ""}`}>
+      <div className={`absolute -top-10 left-0 right-0 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity z-20 ${activeBlockId === block.id ? "opacity-100" : ""}`}>
         <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 shadow-lg px-2 py-1">
           <span className="text-xs text-slate-500 px-2 font-medium">{BLOCK_META[block.type]?.label || block.type}</span>
+        </div>
+        <div className="flex items-center gap-0.5 bg-white rounded-xl border border-slate-200 shadow-lg px-1 py-0.5">
+          {!isFirst && (
+            <button onClick={(e) => { e.stopPropagation(); onMoveUp(); }} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" title="Mover arriba">
+              <HiOutlineArrowUp className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {!isLast && (
+            <button onClick={(e) => { e.stopPropagation(); onMoveDown(); }} className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" title="Mover abajo">
+              <HiOutlineArrowDown className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Eliminar bloque">
+            <HiOutlineTrash className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
       <div onClick={() => onSelect(block.id)} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${activeBlockId === block.id ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
         <BlockRenderer type={block.type} content={block.content} />
+      </div>
+    </div>
+  );
+}
+
+function BlockPalette({ onAdd, onClose }: { onAdd: (type: string) => void; onClose: () => void }) {
+  const [search, setSearch] = useState("");
+  const filtered = Object.entries(blockCategories).map(([cat, types]) => ({
+    cat,
+    types: types.filter(t => !search || BLOCK_META[t]?.label?.toLowerCase().includes(search.toLowerCase()) || t.includes(search.toLowerCase())),
+  })).filter(g => g.types.length > 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30" />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[75vh] flex flex-col m-4 z-10" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h3 className="font-semibold text-sm text-slate-900">Agregar bloque</h3>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4" /></button>
+        </div>
+        <div className="p-3 border-b border-slate-100">
+          <input className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20" placeholder="Buscar bloque..." value={search} onChange={e => setSearch(e.target.value)} autoFocus />
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {filtered.map(({ cat, types }) => (
+            <div key={cat}>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">{cat}</h4>
+              <div className="grid grid-cols-2 gap-1.5">
+                {types.map(type => (
+                  <button key={type} onClick={() => { onAdd(type); onClose(); }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left hover:bg-primary-50 hover:border-primary-200 border border-slate-100 transition-all group">
+                    <div className="h-8 w-8 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm">{BLOCK_META[type]?.icon === "Megaphone" ? "📢" : BLOCK_META[type]?.icon === "HelpCircle" ? "❓" : BLOCK_META[type]?.icon === "Star" ? "⭐" : BLOCK_META[type]?.icon === "Mail" ? "✉️" : BLOCK_META[type]?.icon === "Users" ? "👥" : BLOCK_META[type]?.icon === "DollarSign" ? "💰" : BLOCK_META[type]?.icon === "Image" ? "🖼️" : BLOCK_META[type]?.icon === "Play" ? "▶️" : "📦"}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-slate-700 group-hover:text-primary-700 truncate">{BLOCK_META[type]?.label || type}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{BLOCK_META[type]?.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -90,9 +144,30 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   useEffect(() => { fetchSite(); }, [fetchSite]);
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); } }, [toast]);
 
-  const pushHistory = useCallback((s: Site) => { if (isUndoRedo.current) { isUndoRedo.current = false; return; } setHistory(prev => { const next = prev.slice(0, historyIdx + 1); next.push(JSON.parse(JSON.stringify(s))); if (next.length > 50) next.shift(); return next; }); setHistoryIdx(prev => Math.min(prev + 1, 50)); }, [historyIdx]);
-  const undo = useCallback(() => { if (historyIdx <= 0) return; isUndoRedo.current = true; const target = history[historyIdx - 1]; if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev - 1); setDirty(true); } }, [history, historyIdx]);
-  const redo = useCallback(() => { if (historyIdx >= history.length - 1) return; isUndoRedo.current = true; const target = history[historyIdx + 1]; if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev + 1); setDirty(true); } }, [history, historyIdx]);
+  const pushHistory = useCallback((s: Site) => {
+    if (isUndoRedo.current) { isUndoRedo.current = false; return; }
+    setHistory(prev => {
+      const next = prev.slice(0, historyIdx + 1);
+      next.push(JSON.parse(JSON.stringify(s)));
+      if (next.length > 50) next.shift();
+      return next;
+    });
+    setHistoryIdx(prev => Math.min(prev + 1, 49));
+  }, [historyIdx]);
+
+  const undo = useCallback(() => {
+    if (historyIdx <= 0) return;
+    isUndoRedo.current = true;
+    const target = history[historyIdx - 1];
+    if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev - 1); setDirty(true); }
+  }, [history, historyIdx]);
+
+  const redo = useCallback(() => {
+    if (historyIdx >= history.length - 1) return;
+    isUndoRedo.current = true;
+    const target = history[historyIdx + 1];
+    if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev + 1); setDirty(true); }
+  }, [history, historyIdx]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -101,12 +176,13 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       else if ((e.ctrlKey || e.metaKey) && e.key === "y") { e.preventDefault(); redo(); }
     };
     window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
-  }, [activeBlockId, undo, redo]);
+  }, [undo, redo]);
 
   useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
 
   const activePage = site?.pages.find(p => p.id === activePageId);
-  const activeBlock = activePage?.blocks.find(b => b.id === activeBlockId);
+  const sortedBlocks = activePage ? [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder) : [];
+  const activeBlock = sortedBlocks.find(b => b.id === activeBlockId);
 
   const savePending = useCallback(async () => {
     const pendingBlocks = Object.entries(pendingBlocksRef.current);
@@ -124,6 +200,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       pendingSeoRef.current = {};
       setLastSaved(new Date());
       setDirty(false);
+    } catch (err: any) {
+      setToast(err.response?.data?.message || "Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -131,17 +209,16 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   const addPage = async () => {
     if (!newPageName.trim()) return;
-    const slug = newPageName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = newPageName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     try {
       const res: any = await api.post(`/sites/${siteId}/pages`, { name: newPageName, slug });
       const page = res.data || res;
-      setSite(p => p ? { ...p, pages: [...p.pages, page] } : p);
+      setSite(p => p ? { ...p, pages: [...p.pages, { ...page, blocks: [] }] } : p);
       setActivePageId(page.id);
       setShowAddPage(false);
       setNewPageName("");
       setToast("Página creada");
 
-      // Update header block with new page link
       const defaultPage = site?.pages.find(p => p.isDefault);
       if (defaultPage) {
         const headerBlock = defaultPage.blocks.find(b => b.type === "header");
@@ -149,19 +226,107 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           const links = headerBlock.content?.links || [];
           const updatedContent = { ...headerBlock.content, links: [...links, { label: newPageName, url: `/${slug}` }] };
           await api.put(`/blocks/${headerBlock.id}`, { content: updatedContent });
-          // Refresh site to get updated blocks
           await fetchSite();
         }
       }
-    } catch (err: any) { alert(err.response?.data?.message || "Error"); }
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al crear página"); }
   };
-  const deletePage = async (pageId: string) => { if (!(await confirm("¿Eliminar esta página y sus bloques?"))) return; await api.delete(`/pages/${pageId}`); setSite(p => { if (!p) return p; const pages = p.pages.filter(x => x.id !== pageId); if (activePageId === pageId) setActivePageId(pages[0]?.id || null); return { ...p, pages }; }); setToast("Página eliminada"); };
-  const duplicatePage = async (pageId: string) => { const page = site?.pages.find(p => p.id === pageId); if (!page) return; try { const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: `${page.slug}-copy`, path: page.path }); const newP = res.data || res; for (const b of page.blocks) { await api.post(`/pages/${newP.id}/blocks`, { type: b.type, content: JSON.parse(JSON.stringify(b.content)) }); } await fetchSite(); setToast("Página duplicada"); } catch { alert("Error al duplicar"); } };
+
+  const deletePage = async (pageId: string) => {
+    if (!(await confirm({ title: "Eliminar página", message: "¿Eliminar esta página y todos sus bloques?" }))) return;
+    try {
+      await api.delete(`/pages/${pageId}`);
+      setSite(p => {
+        if (!p) return p;
+        const pages = p.pages.filter(x => x.id !== pageId);
+        if (activePageId === pageId) setActivePageId(pages[0]?.id || null);
+        return { ...p, pages };
+      });
+      setToast("Página eliminada");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al eliminar"); }
+  };
+
+  const duplicatePage = async (pageId: string) => {
+    const page = site?.pages.find(p => p.id === pageId);
+    if (!page) return;
+    try {
+      const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: `${page.slug}-copy`, path: page.path });
+      const newP = res.data || res;
+      await Promise.all(page.blocks.map(b => api.post(`/pages/${newP.id}/blocks`, { type: b.type, content: JSON.parse(JSON.stringify(b.content)) })));
+      await fetchSite();
+      setToast("Página duplicada");
+    } catch { setToast("Error al duplicar"); }
+  };
 
   const updateBlock = (blockId: string, content: any) => {
-    setSite(p => p ? { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.map(b => b.id === blockId ? { ...b, content } : b) })) } : p);
+    setSite(p => {
+      if (!p) return p;
+      const next = { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.map(b => b.id === blockId ? { ...b, content } : b) })) };
+      pushHistory(next);
+      return next;
+    });
     pendingBlocksRef.current[blockId] = content;
     setDirty(true);
+  };
+
+  const addBlock = async (type: string) => {
+    if (!activePageId) return;
+    try {
+      const content = getBlockDefaultContent(type as any);
+      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type, content });
+      const newBlock = res.data || res;
+      setSite(p => {
+        if (!p) return p;
+        const next = { ...p, pages: p.pages.map(pg => pg.id === activePageId ? { ...pg, blocks: [...pg.blocks, newBlock] } : pg) };
+        pushHistory(next);
+        return next;
+      });
+      setDirty(true);
+      setToast(`${BLOCK_META[type]?.label || type} agregado`);
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al agregar bloque"); }
+  };
+
+  const deleteBlock = async (blockId: string) => {
+    if (!(await confirm({ title: "Eliminar bloque", message: "¿Eliminar este bloque?" }))) return;
+    try {
+      await api.delete(`/blocks/${blockId}`);
+      setSite(p => {
+        if (!p) return p;
+        const next = { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.filter(b => b.id !== blockId) })) };
+        pushHistory(next);
+        return next;
+      });
+      if (activeBlockId === blockId) setActiveBlockId(null);
+      setDirty(true);
+      setToast("Bloque eliminado");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al eliminar bloque"); }
+  };
+
+  const moveBlock = async (blockId: string, direction: "up" | "down") => {
+    if (!activePageId || !activePage) return;
+    const sorted = [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder);
+    const idx = sorted.findIndex(b => b.id === blockId);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+
+    const newOrder = [...sorted];
+    [newOrder[idx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[idx]];
+    const blockIds = newOrder.map(b => b.id);
+
+    const reorderedBlocks = newOrder.map((b, i) => ({ ...b, sortOrder: i }));
+
+    setSite(p => {
+      if (!p) return p;
+      const next = { ...p, pages: p.pages.map(pg => pg.id === activePageId ? { ...pg, blocks: reorderedBlocks } : pg) };
+      pushHistory(next);
+      return next;
+    });
+    setDirty(true);
+
+    try {
+      await api.put(`/pages/${activePageId}/blocks/reorder`, { blockIds });
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al reordenar"); }
   };
 
   const publish = async () => {
@@ -171,12 +336,40 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       await api.post(`/sites/${siteId}/publish`);
       setSite(p => p ? { ...p, isPublished: true } : p);
       setToast("¡Sitio publicado!");
-    } catch (err: any) { alert(err.response?.data?.message || "Error"); }
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al publicar"); }
     finally { setPublishing(false); }
   };
-  const unpublish = async () => { await api.post(`/sites/${siteId}/unpublish`); setSite(p => p ? { ...p, isPublished: false } : p); setToast("Sitio despublicado"); };
-  const saveSiteSettings = async () => { try { await api.put(`/sites/${siteId}`, siteSettings); setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined } : p); setToast("Configuración guardada"); setDnsStatus("idle"); } catch (err: any) { alert(err.response?.data?.message || "Error"); } };
-  const checkDomainDns = async () => { if (!siteSettings.domain) return; setCheckingDns(true); setDnsStatus("checking"); try { const res: any = await api.get(`/sites/${siteId}/check-domain?domain=${encodeURIComponent(siteSettings.domain)}`); const d = res.data || res; setDnsResult(d); setDnsStatus(d?.pointsToServer ? "ok" : "error"); setToast(d?.pointsToServer ? "¡Dominio conectado!" : "DNS no apunta al servidor"); } catch { setDnsStatus("error"); } finally { setCheckingDns(false); } };
+
+  const unpublish = async () => {
+    try {
+      await api.post(`/sites/${siteId}/unpublish`);
+      setSite(p => p ? { ...p, isPublished: false } : p);
+      setToast("Sitio despublicado");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al despublicar"); }
+  };
+
+  const saveSiteSettings = async () => {
+    try {
+      await api.put(`/sites/${siteId}`, siteSettings);
+      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined } : p);
+      setToast("Configuración guardada");
+      setDnsStatus("idle");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
+  };
+
+  const checkDomainDns = async () => {
+    if (!siteSettings.domain) return;
+    setCheckingDns(true);
+    setDnsStatus("checking");
+    try {
+      const res: any = await api.get(`/sites/${siteId}/check-domain?domain=${encodeURIComponent(siteSettings.domain)}`);
+      const d = res.data || res;
+      setDnsResult(d);
+      setDnsStatus(d?.pointsToServer ? "ok" : "error");
+      setToast(d?.pointsToServer ? "¡Dominio conectado!" : "DNS no apunta al servidor");
+    } catch { setDnsStatus("error"); }
+    finally { setCheckingDns(false); }
+  };
 
   if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><svg className="animate-spin h-8 w-8 text-primary-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-slate-500">Cargando editor...</p></div></div>;
   if (!site) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><h2 className="text-xl font-semibold text-slate-900 mb-2">Sitio no encontrado</h2><Link href="/dashboard/sites" className="btn-primary inline-flex items-center gap-1.5"><HiOutlineArrowLeft className="h-4 w-4" /> Volver</Link></div></div>;
@@ -202,6 +395,14 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         <div className="flex items-center gap-2">
           <button onClick={() => setShowPagesModal(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineDocumentText className="h-3.5 w-3.5" />Páginas ({site.pages.length})</button>
           <button onClick={openPreview} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineEye className="h-3.5 w-3.5" />Preview</button>
+          <div className="flex items-center gap-1 border border-slate-200 rounded-lg">
+            <button onClick={undo} disabled={historyIdx <= 0} className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4" /></svg>
+            </button>
+            <button onClick={redo} disabled={historyIdx >= history.length - 1} className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Rehacer (Ctrl+Shift+Z)">
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a5 5 0 00-5 5v2m15-7l-4-4m4 4l-4 4" /></svg>
+            </button>
+          </div>
           {saving?<span className="text-[10px] text-slate-400 flex items-center gap-1"><svg className="animate-spin h-2.5 w-2.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Guardando</span>:dirty?<span className="text-[10px] text-amber-500">Cambios sin guardar</span>:lastSaved?<span className="text-[10px] text-slate-400">Guardado {(()=>{const s=Math.floor((Date.now()-lastSaved.getTime())/1000);return s<5?"ahora":s<60?`hace ${s}s`:`hace ${Math.floor(s/60)}min`})()}</span>:null}
           {dirty&&<button onClick={()=>savePending()} disabled={saving} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors disabled:opacity-60"><HiOutlineCheck className="h-3.5 w-3.5" />Guardar</button>}
           {!dirty&&site.isPublished?<button onClick={unpublish} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">Despublicar</button>:<button onClick={publish} disabled={publishing||saving} className="flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700 shadow-sm transition-colors disabled:opacity-60">{publishing?<><svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Publicando...</>:<><HiOutlineCheck className="h-3.5 w-3.5"/>{dirty?"Publicar cambios":site.isPublished?"Actualizar":"Publicar"}</>}</button>}
@@ -210,16 +411,32 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
       {/* CANVAS */}
       <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
-        {activePage && activePage.blocks.length > 0 ? (
+        {activePage && sortedBlocks.length > 0 ? (
           <div className="max-w-4xl mx-auto py-8 px-6 space-y-6">
-            {activePage.blocks.map(block => (
-              <BlockWrapper key={block.id} block={block} activeBlockId={activeBlockId} onSelect={setActiveBlockId} />
+            {sortedBlocks.map((block, idx) => (
+              <BlockWrapper
+                key={block.id}
+                block={block}
+                activeBlockId={activeBlockId}
+                onSelect={setActiveBlockId}
+                onMoveUp={() => moveBlock(block.id, "up")}
+                onMoveDown={() => moveBlock(block.id, "down")}
+                onDelete={() => deleteBlock(block.id)}
+                isFirst={idx === 0}
+                isLast={idx === sortedBlocks.length - 1}
+              />
             ))}
+            <button onClick={() => setShowAddBlock(true)} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-xl text-sm font-medium text-slate-400 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50/30 transition-all flex items-center justify-center gap-2">
+              <HiOutlinePlus className="h-4 w-4" /> Agregar bloque
+            </button>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full"><div className="text-center py-16 max-w-sm"><div className="h-20 w-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><svg className="h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div><h3 className="text-lg font-bold text-slate-700 mb-2">{hasPages?"Página vacía":"Creá tu primera página"}</h3><p className="text-sm text-slate-500 mb-6">Esta página no tiene bloques de plantilla.</p><div className="flex flex-col gap-2">{!hasPages && <button onClick={()=>setShowPagesModal(true)} className="btn-primary text-sm">+ Crear página</button>}</div></div></div>
+          <div className="flex items-center justify-center h-full"><div className="text-center py-16 max-w-sm"><div className="h-20 w-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><svg className="h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div><h3 className="text-lg font-bold text-slate-700 mb-2">{hasPages?"Página vacía":"Creá tu primera página"}</h3><p className="text-sm text-slate-500 mb-6">Esta página no tiene bloques.</p><div className="flex flex-col gap-2">{hasPages ? <button onClick={() => setShowAddBlock(true)} className="btn-primary text-sm flex items-center justify-center gap-1.5"><HiOutlinePlus className="h-4 w-4" /> Agregar bloque</button> : <button onClick={()=>setShowPagesModal(true)} className="btn-primary text-sm">+ Crear página</button>}</div></div></div>
         )}
       </div>
+
+      {/* BLOCK PALETTE MODAL */}
+      {showAddBlock && <BlockPalette onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}
 
       {/* PAGES MODAL */}
       {showPagesModal && (
@@ -252,7 +469,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               <div className="flex gap-3"><div className="flex-1"><label className="block text-xs font-medium text-slate-600 mb-1">Color primario</label><div className="flex gap-2"><input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={siteSettings.primaryColor} onChange={e=>setSiteSettings({...siteSettings,primaryColor:e.target.value})}/><input className="input-field text-xs flex-1" value={siteSettings.primaryColor} onChange={e=>setSiteSettings({...siteSettings,primaryColor:e.target.value})}/></div></div><div className="flex-1"><label className="block text-xs font-medium text-slate-600 mb-1">Color secundario</label><div className="flex gap-2"><input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={siteSettings.secondaryColor} onChange={e=>setSiteSettings({...siteSettings,secondaryColor:e.target.value})}/><input className="input-field text-xs flex-1" value={siteSettings.secondaryColor} onChange={e=>setSiteSettings({...siteSettings,secondaryColor:e.target.value})}/></div></div></div>
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Logo URL</label><input className="input-field text-xs" value={siteSettings.logoUrl} onChange={e=>setSiteSettings({...siteSettings,logoUrl:e.target.value})} placeholder="https://..."/></div>
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Favicon</label><ImageField label="Favicon" value={siteSettings.faviconUrl} onChange={v=>setSiteSettings({...siteSettings,faviconUrl:v})}/></div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3"><div><label className="block text-xs font-semibold text-slate-700 mb-1"><span className="inline-flex items-center gap-1"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>Dominio personalizado</span></label><div className="flex gap-2"><input className="input-field text-xs flex-1" value={siteSettings.domain} onChange={e=>setSiteSettings({...siteSettings,domain:e.target.value})} placeholder="www.midominio.com"/><button onClick={checkDomainDns} disabled={checkingDns||!siteSettings.domain} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 whitespace-nowrap">{checkingDns?"Verificando...":"Verificar"}</button></div></div>{dnsStatus==="checking"&&<div className="flex items-center gap-2 text-xs text-slate-500"><svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Verificando DNS...</div>}{dnsStatus==="ok"&&<div className="rounded-lg bg-green-50 border border-green-200 p-2.5"><p className="text-xs font-medium text-green-700 flex items-center gap-1"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>Dominio conectado</p><p className="text-xs text-green-600 mt-0.5">Tu sitio en <strong>https://{siteSettings.domain}</strong></p></div>}{dnsStatus==="error"&&<div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5"><p className="text-xs font-medium text-amber-700 flex items-center gap-1"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>DNS no configurado</p></div>}<div className="text-[10px] text-slate-400 leading-relaxed"><p className="font-medium text-slate-500 mb-0.5">3 pasos:</p><p>1. Guardá el dominio → <strong>Guardar</strong></p><p>2. DNS: registro <strong>A</strong> → IP</p><p>3. Clic en <strong>Verificar</strong></p>{dnsResult?.vercel&&<div className="mt-2 p-2 rounded-lg bg-white border border-slate-200 space-y-1"><p className="font-medium text-slate-500">Registros DNS en tu proveedor (Vercel):</p><p><strong>A</strong> @ → 76.76.21.21</p><p><strong>CNAME</strong> www → cname.vercel-dns.com</p></div>}</div></div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div><label className="block text-xs font-semibold text-slate-700 mb-1">Dominio personalizado</label><div className="flex gap-2"><input className="input-field text-xs flex-1" value={siteSettings.domain} onChange={e=>setSiteSettings({...siteSettings,domain:e.target.value})} placeholder="www.midominio.com"/><button onClick={checkDomainDns} disabled={checkingDns||!siteSettings.domain} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 whitespace-nowrap">{checkingDns?"Verificando...":"Verificar"}</button></div></div>
+                {dnsStatus==="checking"&&<div className="flex items-center gap-2 text-xs text-slate-500"><svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Verificando DNS...</div>}
+                {dnsStatus==="ok"&&<div className="rounded-lg bg-green-50 border border-green-200 p-2.5"><p className="text-xs font-medium text-green-700">Dominio conectado</p><p className="text-xs text-green-600 mt-0.5">Tu sitio en <strong>https://{siteSettings.domain}</strong></p></div>}
+                {dnsStatus==="error"&&<div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5"><p className="text-xs font-medium text-amber-700">DNS no configurado</p><p className="text-xs text-amber-600 mt-0.5">Apunta tu dominio al servidor y verifica de nuevo.</p></div>}
+              </div>
               <div className="flex gap-2"><input className="input-field text-xs flex-1" placeholder="Título SEO" value={site.seoTitle||""} onChange={e=>{setSite({...site,seoTitle:e.target.value});pendingSeoRef.current.seoTitle=e.target.value;setDirty(true);}}/><input className="input-field text-xs flex-1" placeholder="Descripción SEO" value={site.seoDesc||""} onChange={e=>{setSite({...site,seoDesc:e.target.value});pendingSeoRef.current.seoDesc=e.target.value;setDirty(true);}}/></div>
               <button onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="w-full btn-primary text-xs">Guardar cambios</button>
             </div>
