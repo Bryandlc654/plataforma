@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/auth-store';
 
 const BRAND = {
@@ -47,10 +46,7 @@ export default function LoginScreen() {
         <View style={styles.topSection}>
           <View style={styles.brandHeader}>
             <View style={styles.logoRow}>
-              <View style={styles.logoIcon}>
-                <Feather name="box" size={28} color={BRAND.orange} />
-              </View>
-              <Text style={styles.logoText}>Build Iceberg</Text>
+              <Image source={require('../../../assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
             </View>
           </View>
 
@@ -181,21 +177,11 @@ const styles = StyleSheet.create({
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
   },
-  logoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(242,146,0,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: BRAND.white,
-    letterSpacing: -0.3,
+  logoImage: {
+    width: 200,
+    height: 56,
+    tintColor: '#FFFFFF',
   },
   heroSection: {
     marginBottom: 28,
