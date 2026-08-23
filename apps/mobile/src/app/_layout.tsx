@@ -44,14 +44,6 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, [isAuthenticated, accessToken, segments, navigationState?.key, hasHydrated]);
 
-  if (!hasHydrated) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? '#09090B' : '#FAFAFA' }}>
-        <ActivityIndicator size="large" color={isDarkMode ? '#60A5FA' : '#2563EB'} />
-      </View>
-    );
-  }
-
   return (
     <>
       <Stack>
@@ -59,6 +51,11 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      {!hasHydrated && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? '#09090B' : '#FAFAFA', zIndex: 9999 }}>
+          <ActivityIndicator size="large" color={isDarkMode ? '#60A5FA' : '#2563EB'} />
+        </View>
+      )}
     </>
   );
 }
