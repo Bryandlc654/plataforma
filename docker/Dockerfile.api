@@ -8,6 +8,7 @@ COPY turbo.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/database/package.json ./packages/database/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/database/prisma ./packages/database/prisma
 RUN npm ci
 
 # --- build shared + api ---
