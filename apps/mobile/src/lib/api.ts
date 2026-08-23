@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // We point to the production server by default. 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://plataforma-api-j6ey.onrender.com/api/v1';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://plataforma-api-71743315793.us-central1.run.app/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,

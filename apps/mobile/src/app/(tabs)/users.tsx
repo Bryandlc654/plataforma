@@ -141,7 +141,7 @@ export default function UsersScreen() {
                 </View>
               ) : (
                 <>
-                  {item.roles.map(r => (
+                  {(item.roles as string[]).map((r: string) => (
                     <View key={r} style={styles.roleChip}>
                       <Text style={styles.roleText}>{r}</Text>
                     </View>

@@ -73,7 +73,7 @@ export default function SettingsScreen() {
         <View style={[styles.avatar, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
           <Text style={[styles.avatarText, { color: colors.text }]}>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</Text>
         </View>
-        <Text style={[styles.userName, { color: colors.text }]}>{user?.name || 'Administrador'}</Text>
+        <Text style={[styles.userName, { color: colors.text }]}>{user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Administrador'}</Text>
         <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email || 'usuario@plataforma.com'}</Text>
       </View>
 
