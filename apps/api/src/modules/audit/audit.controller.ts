@@ -20,9 +20,10 @@ export class AuditController {
     @Query("userId") userId?: string,
     @Query("from") from?: string,
     @Query("to") to?: string,
-    @Query("limit") limit?: number
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
   ) {
-    return this.auditService.findAll(user.tenantId, { action, userId, from, to, limit });
+    return this.auditService.findAll(user.tenantId, { action, userId, from, to, page: Number(page) || 1, limit: Number(limit) || 50 });
   }
 
   @Get("actions")
@@ -37,8 +38,10 @@ export class AuditController {
   async getGlobal(
     @Query("action") action?: string,
     @Query("from") from?: string,
-    @Query("to") to?: string
+    @Query("to") to?: string,
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
   ) {
-    return this.auditService.getGlobal({ action, from, to });
+    return this.auditService.getGlobal({ action, from, to, page: Number(page) || 1, limit: Number(limit) || 50 });
   }
 }

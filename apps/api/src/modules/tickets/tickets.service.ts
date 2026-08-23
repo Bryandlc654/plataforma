@@ -25,36 +25,53 @@ export class TicketsService {
         category: dto.category || "general",
         images: dto.images || null,
       },
+      select: { id: true, subject: true, priority: true, status: true, category: true, createdAt: true },
     });
   }
 
-  async findAll(filters?: { tenantId?: string; status?: string; priority?: string; assignedTo?: string }) {
+  async findAll(filters?: { tenantId?: string; status?: string; priority?: string; assignedTo?: string; page?: number; limit?: number }) {
     const where: any = {};
     if (filters?.tenantId) where.tenantId = filters.tenantId;
     if (filters?.status) where.status = filters.status;
     if (filters?.priority) where.priority = filters.priority;
     if (filters?.assignedTo) where.assignedTo = filters.assignedTo;
 
-    return this.prisma.supportTicket.findMany({
-      where,
-      include: {
-        tenant: { select: { name: true } },
-        user: { select: { firstName: true, lastName: true, email: true } },
-        _count: { select: { replies: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    });
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 25));
+
+    const [items, total] = await Promise.all([
+      this.prisma.supportTicket.findMany({
+        where,
+        select: {
+          id: true, subject: true, priority: true, status: true, category: true, images: true,
+          assignedTo: true, createdAt: true, updatedAt: true, closedAt: true,
+          tenant: { select: { id: true, name: true } },
+          user: { select: { firstName: true, lastName: true, email: true } },
+          _count: { select: { replies: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.supportTicket.count({ where }),
+    ]);
+
+    return { items, total, page, limit };
   }
 
   async findById(id: string) {
     const ticket = await this.prisma.supportTicket.findUnique({
       where: { id },
-      include: {
-        tenant: { select: { name: true } },
+      select: {
+        id: true, subject: true, description: true, priority: true, status: true, category: true,
+        images: true, assignedTo: true, createdAt: true, updatedAt: true, closedAt: true,
+        tenant: { select: { id: true, name: true } },
         user: { select: { firstName: true, lastName: true, email: true } },
         replies: {
-          include: { user: { select: { firstName: true, lastName: true, email: true } } },
+          select: {
+            id: true, message: true, isStaff: true, images: true, createdAt: true,
+            user: { select: { firstName: true, lastName: true, email: true } },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
@@ -63,51 +80,59 @@ export class TicketsService {
     return ticket;
   }
 
-  private async getStatus(id: string) {
-    const ticket = await this.prisma.supportTicket.findUnique({
-      where: { id },
-      select: { status: true },
-    });
-    if (!ticket) throw new NotFoundException("Ticket not found");
-    return ticket.status;
-  }
-
   async addReply(ticketId: string, userId: string, message: string, isStaff: boolean, images?: any) {
     if (!message?.trim()) throw new BadRequestException("El mensaje es obligatorio");
 
-    const status = await this.getStatus(ticketId);
-    if (status === "closed") throw new BadRequestException("No se puede responder a un ticket cerrado");
+    const ticket = await this.prisma.supportTicket.findUnique({ where: { id: ticketId }, select: { status: true } });
+    if (!ticket) throw new NotFoundException("Ticket not found");
+    if (ticket.status === "closed") throw new BadRequestException("No se puede responder a un ticket cerrado");
 
-    await this.prisma.supportTicket.update({
-      where: { id: ticketId },
-      data: { status: "in_progress" },
-    });
+    const [, reply] = await this.prisma.$transaction([
+      this.prisma.supportTicket.update({ where: { id: ticketId }, data: { status: "in_progress" }, select: { id: true } }),
+      this.prisma.supportTicketReply.create({
+        data: { ticketId, userId, message, isStaff, images: images || null },
+        select: {
+          id: true, message: true, isStaff: true, images: true, createdAt: true,
+          user: { select: { firstName: true, lastName: true } },
+        },
+      }),
+    ]);
 
-    return this.prisma.supportTicketReply.create({
-      data: { ticketId, userId, message, isStaff, images: images || null },
-      include: { user: { select: { firstName: true, lastName: true } } },
-    });
+    return reply;
   }
 
   async updateStatus(id: string, status: string) {
     if (!STATUSES.includes(status)) throw new BadRequestException("Estado inválido");
-    await this.getStatus(id);
+
+    const ticket = await this.prisma.supportTicket.findUnique({ where: { id }, select: { id: true } });
+    if (!ticket) throw new NotFoundException("Ticket not found");
 
     return this.prisma.supportTicket.update({
       where: { id },
       data: { status, closedAt: status === "closed" ? new Date() : null },
+      select: { id: true, status: true, closedAt: true },
     });
   }
 
   async updatePriority(id: string, priority: string) {
     if (!PRIORITIES.includes(priority)) throw new BadRequestException("Prioridad inválida");
-    await this.getStatus(id);
-    return this.prisma.supportTicket.update({ where: { id }, data: { priority } });
+
+    const ticket = await this.prisma.supportTicket.findUnique({ where: { id }, select: { id: true } });
+    if (!ticket) throw new NotFoundException("Ticket not found");
+
+    return this.prisma.supportTicket.update({
+      where: { id },
+      data: { priority },
+      select: { id: true, priority: true },
+    });
   }
 
   async remove(id: string) {
-    await this.getStatus(id);
-    return this.prisma.supportTicket.delete({ where: { id } });
+    const ticket = await this.prisma.supportTicket.findUnique({ where: { id }, select: { id: true } });
+    if (!ticket) throw new NotFoundException("Ticket not found");
+
+    await this.prisma.supportTicket.delete({ where: { id } });
+    return { deleted: true };
   }
 
   async getStats(where: any = {}) {

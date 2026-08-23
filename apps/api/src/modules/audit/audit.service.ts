@@ -5,7 +5,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class AuditService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string, filters?: { action?: string; userId?: string; from?: string; to?: string; limit?: number }) {
+  async findAll(tenantId: string, filters?: { action?: string; userId?: string; from?: string; to?: string; page?: number; limit?: number }) {
     const where: any = { tenantId };
     if (filters?.action) where.action = filters.action;
     if (filters?.userId) where.userId = filters.userId;
@@ -15,12 +15,25 @@ export class AuditService {
       if (filters.to) where.createdAt.lte = new Date(filters.to);
     }
 
-    return this.prisma.auditLog.findMany({
-      where,
-      include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-      take: Math.min(filters?.limit || 100, 500),
-    });
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 50));
+
+    const [items, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        select: {
+          id: true, action: true, resource: true, resourceId: true, metadata: true,
+          ipAddress: true, createdAt: true,
+          user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return { items, total, page, limit };
   }
 
   async getActions(tenantId: string) {
@@ -33,7 +46,7 @@ export class AuditService {
     return result.map((r) => ({ action: r.action, count: r._count }));
   }
 
-  async getGlobal(filters?: { action?: string; from?: string; to?: string }) {
+  async getGlobal(filters?: { action?: string; from?: string; to?: string; page?: number; limit?: number }) {
     const where: any = {};
     if (filters?.action) where.action = filters.action;
     if (filters?.from || filters?.to) {
@@ -42,14 +55,25 @@ export class AuditService {
       if (filters.to) where.createdAt.lte = new Date(filters.to);
     }
 
-    return this.prisma.auditLog.findMany({
-      where,
-      include: {
-        user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        tenant: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    });
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 50));
+
+    const [items, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        select: {
+          id: true, action: true, resource: true, resourceId: true, metadata: true,
+          ipAddress: true, createdAt: true,
+          user: { select: { id: true, firstName: true, lastName: true, email: true } },
+          tenant: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return { items, total, page, limit };
   }
 }

@@ -19,12 +19,6 @@ export class TicketsController {
     if (!this.isStaff(user)) throw new ForbiddenException("Requiere rol de soporte o super admin");
   }
 
-  private async assertTicketAccess(ticket: any, user: any): Promise<void> {
-    if (!this.isStaff(user) && ticket.tenantId !== user.tenantId) {
-      throw new ForbiddenException("No tienes acceso a este ticket");
-    }
-  }
-
   @Post()
   @ApiOperation({ summary: "Create ticket" })
   async create(@CurrentUser() user: any, @Body() body: any) {
@@ -37,10 +31,12 @@ export class TicketsController {
     @CurrentUser() user: any,
     @Query("status") status?: string,
     @Query("priority") priority?: string,
-    @Query("tenantId") tenantId?: string
+    @Query("tenantId") tenantId?: string,
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
   ) {
     const isAdmin = this.isStaff(user);
-    const filters: any = { status, priority };
+    const filters: any = { status, priority, page: Number(page) || 1, limit: Number(limit) || 25 };
     if (!isAdmin) filters.tenantId = user.tenantId;
     else if (tenantId) filters.tenantId = tenantId;
     return this.ticketsService.findAll(filters);
@@ -57,7 +53,9 @@ export class TicketsController {
   @ApiOperation({ summary: "Get ticket by ID" })
   async findById(@Param("id") id: string, @CurrentUser() user: any) {
     const ticket = await this.ticketsService.findById(id);
-    await this.assertTicketAccess(ticket, user);
+    if (!this.isStaff(user) && ticket.tenant?.id !== user.tenantId) {
+      throw new ForbiddenException("No tienes acceso a este ticket");
+    }
     return ticket;
   }
 
@@ -67,12 +65,13 @@ export class TicketsController {
     @Param("id") id: string,
     @CurrentUser() user: any,
     @Body("message") message: string,
-    @Body("images") images?: any
+    @Body("images") images?: any,
   ) {
-    const isAdmin = this.isStaff(user);
     const ticket = await this.ticketsService.findById(id);
-    await this.assertTicketAccess(ticket, user);
-    return this.ticketsService.addReply(id, user.id, message, isAdmin, images);
+    if (!this.isStaff(user) && ticket.tenant?.id !== user.tenantId) {
+      throw new ForbiddenException("No tienes acceso a este ticket");
+    }
+    return this.ticketsService.addReply(id, user.id, message, this.isStaff(user), images);
   }
 
   @Put(":id/status")
