@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Put, Post, Body, Param, UseGuards,
+  Controller, Get, Put, Post, Body, UseGuards,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { WhatsAppService } from "./whatsapp.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
@@ -42,6 +43,7 @@ export class WhatsAppController {
     return this.whatsappService.sendMessage(to, message);
   }
 
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Public()
   @Post("track-click")
   @ApiOperation({ summary: "Track WhatsApp click (public)" })
