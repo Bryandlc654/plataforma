@@ -35,6 +35,7 @@ import { PermissionsGuard } from "./common/guards/permissions.guard";
 import { TenantMiddleware } from "./common/middleware/tenant.middleware";
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { AppDownloadModule } from './modules/app-download/app-download.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     TicketsModule,
     NotificationsModule,
     ReviewsModule,
+    AppDownloadModule,
   ],
   providers: [
     {
