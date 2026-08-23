@@ -41,8 +41,8 @@ export class MediaController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get media by ID" })
-  async findById(@Param("id") id: string) {
-    return this.mediaService.findById(id);
+  async findById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.mediaService.findById(id, user.tenantId);
   }
 
   @Put(":id")
