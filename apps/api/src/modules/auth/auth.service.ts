@@ -12,6 +12,7 @@ import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcryptjs";
 import { v4 as uuid } from "uuid";
 import { PrismaService } from "../../prisma/prisma.service";
+import { EmailService } from "../email/email.service";
 import {
   RegisterUserDto,
   LoginDto,
@@ -28,7 +29,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private emailService: EmailService
   ) {}
 
   onModuleInit() {
@@ -245,6 +247,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.logger.log(`Password reset requested for ${user.email}`);
+
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (err: any) {
+      this.logger.warn(`Failed to send reset email: ${err.message}`);
+    }
 
     return { message: "If the email exists, a reset link will be sent" };
   }

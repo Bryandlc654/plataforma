@@ -43,7 +43,12 @@ export class EmailService {
     }
   }
 
+  private getFrontendUrl(): string {
+    return this.configService.get<string>("FRONTEND_URL", "https://build.icebergup.com");
+  }
+
   async sendWelcomeEmail(to: string, name: string) {
+    const dashboardUrl = `${this.getFrontendUrl()}/dashboard`;
     await this.send({
       to,
       subject: "Bienvenido a Plataforma",
@@ -59,7 +64,7 @@ export class EmailService {
             <li>Monitorear el rendimiento de tu negocio</li>
           </ul>
           <p>Comienza ahora y crea tu primer sitio web.</p>
-          <a href="http://localhost:3000/dashboard" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px;">
+          <a href="${dashboardUrl}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px;">
             Ir al dashboard
           </a>
         </div>
@@ -68,7 +73,7 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string) {
-    const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+    const resetUrl = `${this.getFrontendUrl()}/reset-password?token=${token}`;
     await this.send({
       to,
       subject: "Recuperación de contraseña - Plataforma",
