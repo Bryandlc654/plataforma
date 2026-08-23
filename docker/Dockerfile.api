@@ -1,7 +1,7 @@
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN npm install -g turbo@^2.3
 
+# --- dependency install ---
 FROM base AS deps
 COPY package.json package-lock.json* ./
 COPY turbo.json ./
@@ -10,20 +10,40 @@ COPY packages/database/package.json ./packages/database/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 RUN npm ci
 
-FROM base AS development
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-CMD ["npx", "turbo", "dev", "--filter=@plataforma/api"]
-
+# --- build shared + api ---
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx turbo build --filter=@plataforma/api
 
+# Build shared first, then API (skip copy-runtime.js which is for Hostinger)
+RUN npx tsc -p packages/shared/tsconfig.json
+RUN cd apps/api && npx nest build
+
+# Generate Prisma client
+RUN cd packages/database && npx prisma generate
+
+# --- production ---
 FROM node:20-alpine AS production
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY --from=builder /app/apps/api/dist ./dist
+
+# Copy built shared package
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/
+
+# Copy built API
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+
+# Copy generated Prisma client & schema
+COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
+COPY --from=builder /app/packages/database/package.json ./packages/database/
+
+# Copy node_modules (Prisma engine, sharp native, passport, etc)
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api/package.json ./
+
 ENV NODE_ENV=production
-CMD ["node", "dist/main"]
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["node", "apps/api/dist/main"]
