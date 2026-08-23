@@ -29,7 +29,7 @@ export default function SupportPage() {
       const params: any = {};
       if (filter) params.status = filter;
       const res: any = await api.get("/tickets", { params });
-      setTickets(res.data || res);
+      setTickets(res.data?.items || res.items || []);
     } catch {} finally { setLoading(false); }
   }, [filter]);
 

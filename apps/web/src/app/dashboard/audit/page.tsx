@@ -36,7 +36,7 @@ export default function AuditPage() {
         api.get(url, { params }),
         api.get("/audit/actions"),
       ]);
-      setLogs(logRes.data || logRes);
+      setLogs(logRes.data?.items || logRes.items || []);
       setActions(actRes.data || actRes);
     } catch { setLogs([]); }
     finally { setLoading(false); }
