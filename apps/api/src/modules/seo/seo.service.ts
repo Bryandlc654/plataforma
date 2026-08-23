@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import {
-  resolvePublicSiteUrl,
-  normalizePublicPath,
-} from "../publishing/seo-helpers";
+import { resolvePublicSiteUrl, normalizePublicPath } from "../publishing/seo-helpers";
 
 @Injectable()
 export class SeoService {
@@ -40,13 +37,10 @@ export class SeoService {
         select: { settings: true },
       });
       const settings = (current?.settings as any) || {};
-      update.settings = {
-        ...settings,
-        og: { ...(settings.og || {}), image: data.ogImage || "" },
-      };
+      update.settings = { ...settings, og: { ...(settings.og || {}), image: data.ogImage || "" } };
     }
 
-    return this.prisma.site.update({ where: { id: siteId }, data: update });
+    return this.prisma.site.update({ where: { id: siteId }, data: update, select: { id: true, seoTitle: true, seoDesc: true, settings: true } });
   }
 
   async updatePageSeo(pageId: string, data: any) {
@@ -55,7 +49,7 @@ export class SeoService {
     const seoDesc = data?.seoDesc ?? data?.description;
     if (typeof seoTitle === "string") update.seoTitle = seoTitle;
     if (typeof seoDesc === "string") update.seoDesc = seoDesc;
-    return this.prisma.sitePage.update({ where: { id: pageId }, data: update });
+    return this.prisma.sitePage.update({ where: { id: pageId }, data: update, select: { id: true, seoTitle: true, seoDesc: true } });
   }
 
   async generateSitemap(siteId: string): Promise<string> {
@@ -64,19 +58,15 @@ export class SeoService {
 
     const site = await this.prisma.site.findUnique({
       where: { id: siteId },
-      include: { pages: { orderBy: { sortOrder: "asc" } } },
+      select: { domain: true, subdomain: true, publishedAt: true, pages: { select: { path: true, isDefault: true }, orderBy: { sortOrder: "asc" } } },
     });
-
     if (!site) throw new NotFoundException("Site not found");
 
     const urlBase = resolvePublicSiteUrl(site);
-    const lastmod =
-      site.publishedAt?.toISOString().split("T")[0] ||
-      new Date().toISOString().split("T")[0];
+    const lastmod = site.publishedAt?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0];
 
     const urls = site.pages.map((page) => {
-      const loc =
-        page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
+      const loc = page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
       const priority = page.isDefault ? "1.0" : "0.8";
       return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
     });
@@ -90,7 +80,7 @@ export class SeoService {
     const cached = this.getCached(`robots:${siteId}`);
     if (cached) return cached;
 
-    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    const site = await this.prisma.site.findUnique({ where: { id: siteId }, select: { domain: true, subdomain: true } });
     if (!site) throw new NotFoundException("Site not found");
 
     const urlBase = resolvePublicSiteUrl(site);
@@ -102,22 +92,15 @@ export class SeoService {
   async getSeoMeta(siteId: string) {
     const site = await this.prisma.site.findUnique({
       where: { id: siteId },
-      include: {
+      select: {
+        id: true, name: true, subdomain: true, domain: true, isPublished: true,
+        seoTitle: true, seoDesc: true, faviconUrl: true, logoUrl: true, settings: true,
         pages: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            path: true,
-            isDefault: true,
-            seoTitle: true,
-            seoDesc: true,
-          },
+          select: { id: true, name: true, slug: true, path: true, isDefault: true, seoTitle: true, seoDesc: true },
           orderBy: { sortOrder: "asc" },
         },
       },
     });
-
     if (!site) throw new NotFoundException("Site not found");
 
     const url = resolvePublicSiteUrl(site);

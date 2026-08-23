@@ -15,18 +15,8 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { email },
       select: {
-        id: true,
-        email: true,
-        passwordHash: true,
-        firstName: true,
-        lastName: true,
-        avatarUrl: true,
-        phone: true,
-        isActive: true,
-        isVerified: true,
-        locale: true,
-        timezone: true,
-        createdAt: true,
+        id: true, email: true, passwordHash: true, firstName: true, lastName: true,
+        avatarUrl: true, phone: true, isActive: true, isVerified: true, locale: true, timezone: true, createdAt: true,
       },
     });
     if (!user) throw new NotFoundException("User not found");
@@ -37,19 +27,8 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        avatarUrl: true,
-        phone: true,
-        isActive: true,
-        isVerified: true,
-        locale: true,
-        timezone: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
+        id: true, email: true, firstName: true, lastName: true, avatarUrl: true, phone: true,
+        isActive: true, isVerified: true, locale: true, timezone: true, lastLoginAt: true, createdAt: true, updatedAt: true,
       },
     });
     if (!user) throw new NotFoundException("User not found");
@@ -60,37 +39,20 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        avatarUrl: true,
-        phone: true,
-        locale: true,
-        timezone: true,
-      },
+      select: { id: true, email: true, firstName: true, lastName: true, avatarUrl: true, phone: true, locale: true, timezone: true },
     });
   }
 
-  async changePassword(
-    userId: string,
-    currentPassword: string,
-    newPassword: string
-  ) {
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { passwordHash: true },
     });
 
-    if (!user?.passwordHash) {
-      throw new ForbiddenException("Cannot change password for this account");
-    }
+    if (!user?.passwordHash) throw new ForbiddenException("Cannot change password for this account");
 
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!isValid) {
-      throw new ForbiddenException("Current password is incorrect");
-    }
+    if (!isValid) throw new ForbiddenException("Current password is incorrect");
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -103,27 +65,11 @@ export class UsersService {
   async getTenantsByUser(userId: string) {
     const userTenants = await this.prisma.userTenant.findMany({
       where: { userId },
-      include: {
-        tenant: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            subdomain: true,
-            customDomain: true,
-            logoUrl: true,
-            isActive: true,
-            planId: true,
-            createdAt: true,
-          },
-        },
-        roles: {
-          include: {
-            role: {
-              select: { id: true, name: true },
-            },
-          },
-        },
+      select: {
+        isOwner: true,
+        joinedAt: true,
+        tenant: { select: { id: true, name: true, slug: true, subdomain: true, customDomain: true, logoUrl: true, isActive: true } },
+        roles: { select: { role: { select: { name: true } } } },
       },
     });
 
@@ -155,20 +101,13 @@ export class UsersService {
     }
 
     if (filters?.role) {
-      where.userTenants = {
-        some: {
-          roles: { some: { role: { name: filters.role } } },
-        },
-      };
+      where.userTenants = { some: { roles: { some: { role: { name: filters.role } } } } };
     }
 
     if (filters?.tenantId) {
       where.userTenants = {
         ...(where.userTenants || {}),
-        some: {
-          ...((where.userTenants as any)?.some || {}),
-          tenantId: filters.tenantId,
-        },
+        some: { ...((where.userTenants as any)?.some || {}), tenantId: filters.tenantId },
       };
     }
 
@@ -177,12 +116,11 @@ export class UsersService {
         where,
         select: {
           id: true, email: true, firstName: true, lastName: true,
-          isActive: true, isVerified: true, lastLoginAt: true, lastLoginIp: true,
-          createdAt: true, updatedAt: true,
+          isActive: true, isVerified: true, lastLoginAt: true, lastLoginIp: true, createdAt: true, updatedAt: true,
           userTenants: {
-            include: {
+            select: {
               tenant: { select: { id: true, name: true } },
-              roles: { include: { role: { select: { id: true, name: true } } } },
+              roles: { select: { role: { select: { id: true, name: true } } } },
             },
           },
         },
@@ -200,35 +138,38 @@ export class UsersService {
     if (actorUserId && actorUserId === userId) {
       throw new ForbiddenException("You cannot block your own account");
     }
-    const user = await this.findById(userId);
-    return this.prisma.user.update({ where: { id: userId }, data: { isActive: !user.isActive } });
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true, isActive: true } });
+    if (!user) throw new NotFoundException("User not found");
+
+    return this.prisma.user.update({ where: { id: userId }, data: { isActive: !user.isActive }, select: { id: true, isActive: true } });
   }
 
   async adminAssignTenant(userId: string, tenantId: string, roleId?: string, actorUserId?: string) {
-    await this.findById(userId);
-    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null } });
+    const [user, tenant, existing] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
+      this.prisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null }, select: { id: true } }),
+      this.prisma.userTenant.findUnique({ where: { userId_tenantId: { userId, tenantId } }, select: { id: true } }),
+    ]);
+
+    if (!user) throw new NotFoundException("User not found");
     if (!tenant) throw new NotFoundException("Tenant not found");
-
-    const existing = await this.prisma.userTenant.findUnique({
-      where: { userId_tenantId: { userId, tenantId } },
-    });
-
     if (existing) throw new ForbiddenException("User is already a member of this tenant");
 
-    const role = roleId
-      ? await this.prisma.role.findUnique({ where: { id: roleId }, select: { id: true, name: true } })
-      : null;
-    if (roleId && !role) throw new NotFoundException("Role not found");
+    let role: { id: string; name: string } | null = null;
+    if (roleId) {
+      role = await this.prisma.role.findUnique({ where: { id: roleId }, select: { id: true, name: true } });
+      if (!role) throw new NotFoundException("Role not found");
+    }
     const isOwner = role?.name === "owner";
 
-    const userTenant = await this.prisma.userTenant.create({
-      data: { userId, tenantId, isOwner },
-    });
+    const [userTenant] = await this.prisma.$transaction([
+      this.prisma.userTenant.create({ data: { userId, tenantId, isOwner } }),
+    ]);
 
-    if (role?.id) {
-      await this.prisma.userTenantRole.create({
-        data: { userTenantId: userTenant.id, roleId: role.id },
-      });
+    const roleIdVal = role?.id || null;
+    if (roleIdVal) {
+      await this.prisma.userTenantRole.create({ data: { userTenantId: userTenant.id, roleId: roleIdVal } });
     }
 
     await this.prisma.auditLog.create({
@@ -238,7 +179,7 @@ export class UsersService {
         action: "user.assigned",
         resource: "UserTenant",
         resourceId: userTenant.id,
-        metadata: { assignedUserId: userId, roleId: role?.id || null } as any,
+        metadata: { assignedUserId: userId, roleId: roleIdVal } as any,
       },
     });
 
@@ -248,6 +189,7 @@ export class UsersService {
   async adminRemoveTenant(userId: string, tenantId: string) {
     const userTenant = await this.prisma.userTenant.findUnique({
       where: { userId_tenantId: { userId, tenantId } },
+      select: { id: true, isOwner: true },
     });
 
     if (!userTenant) throw new NotFoundException("User is not a member of this tenant");
