@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Put, Post, Param, Query, Body, UseGuards, Req, Res,
+  Controller, Get, Put, Post, Param, Query, Body, UseGuards, Res,
 } from "@nestjs/common";
 import { Response } from "express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
@@ -56,17 +56,18 @@ export class LeadsController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get lead by ID" })
-  async findById(@Param("id") id: string) {
-    return this.leadsService.findById(id);
+  async findById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.leadsService.findById(id, user.tenantId);
   }
 
   @Put(":id/status")
   @ApiOperation({ summary: "Update lead status" })
   async updateStatus(
     @Param("id") id: string,
-    @Body("status") status: string
+    @Body("status") status: string,
+    @CurrentUser() user: any
   ) {
-    return this.leadsService.updateStatus(id, status);
+    return this.leadsService.updateStatus(id, status, user.tenantId);
   }
 
   @Put("bulk-status")
@@ -86,7 +87,6 @@ export class LeadsController {
     @Param("tenantId") tenantId: string,
     @Body() body: any
   ) {
-    // We optionally extract siteId if it's sent in the body
     const siteId = body.siteId || null;
     return this.leadsService.submitPublicLead(tenantId, siteId, body);
   }
