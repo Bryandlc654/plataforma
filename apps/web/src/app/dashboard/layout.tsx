@@ -21,6 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) { router.push("/login"); return; }
     (async () => {
       const ok = await ensureSession();
       if (!ok) { router.push("/login"); return; }

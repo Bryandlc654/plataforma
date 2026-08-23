@@ -146,7 +146,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        api.post("/auth/logout").catch(() => {});
+        const state = get();
+        const refreshToken = state.refreshToken;
+        api.post("/auth/logout", { refreshToken }).catch(() => {});
         if (typeof document !== "undefined") {
           document.cookie = "auth_session=; path=/; max-age=0";
         }
@@ -159,6 +161,9 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         });
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
       },
 
       refreshAuth: async () => {
