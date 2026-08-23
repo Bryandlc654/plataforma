@@ -412,7 +412,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       {/* CANVAS */}
       <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
         {activePage && sortedBlocks.length > 0 ? (
-          <div className="max-w-4xl mx-auto py-8 px-6 space-y-6">
+          <div className="max-w-6xl mx-auto py-8 px-6 space-y-6">
             {sortedBlocks.map((block, idx) => (
               <BlockWrapper
                 key={block.id}
