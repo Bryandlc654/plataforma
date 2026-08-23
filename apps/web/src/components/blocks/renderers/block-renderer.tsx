@@ -82,6 +82,51 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     root.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-1, .reveal-2, .reveal-3").forEach((el) => el.classList.add("in-view"));
   }, [c.variant, c]);
 
+  useEffect(() => {
+    if (c.variant !== "rodriplast" || type !== "hero") return;
+    const root = revealRef.current;
+    if (!root) return;
+    const slider = root.querySelector("#heroSlider");
+    if (!slider) return;
+    const slides = Array.from(slider.children) as HTMLElement[];
+    if (slides.length <= 1) return;
+    const dotsContainer = root.querySelector("#heroDots");
+    if (!dotsContainer) return;
+    let idx = 0;
+    const dots: HTMLButtonElement[] = [];
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.className = "w-2.5 h-2.5 rounded-full bg-white/30 transition-all duration-300 hover:bg-white/60";
+      if (i === 0) { dot.classList.remove("bg-white/30"); dot.classList.add("bg-white", "scale-125"); }
+      dot.addEventListener("click", () => {
+        slides[idx].classList.remove("opacity-100");
+        slides[idx].classList.add("opacity-0");
+        idx = i;
+        slides[idx].classList.remove("opacity-0");
+        slides[idx].classList.add("opacity-100");
+        updateDots();
+      });
+      dotsContainer.appendChild(dot);
+      dots.push(dot);
+    });
+    function updateDots() {
+      dots.forEach((dot, i) => {
+        dot.classList.remove("bg-white", "scale-125");
+        dot.classList.add("bg-white/30");
+        if (i === idx) { dot.classList.remove("bg-white/30"); dot.classList.add("bg-white", "scale-125"); }
+      });
+    }
+    const interval = setInterval(() => {
+      slides[idx].classList.remove("opacity-100");
+      slides[idx].classList.add("opacity-0");
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.remove("opacity-0");
+      slides[idx].classList.add("opacity-100");
+      updateDots();
+    }, 5000);
+    return () => { clearInterval(interval); dots.forEach(d => d.remove()); };
+  }, [c.variant, type, c]);
+
   if (c.variant === "prestige") {
     // Import from local lib directory since Vercel root doesn't have access to packages/
     const { getPrestigeHtml } = require("../../../lib/prestige-variants");
