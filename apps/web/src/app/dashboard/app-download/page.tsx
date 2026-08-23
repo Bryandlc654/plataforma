@@ -37,7 +37,7 @@ export default function AppDownloadPage() {
     setLoading(true);
     try {
       const res: any = await api.get("/sites");
-      const list = (res.data || res || []).map((s: any) => ({
+      const list = (res.data?.items || res.items || []).map((s: any) => ({
         id: s.id,
         name: s.name,
         subdomain: s.subdomain,

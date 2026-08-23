@@ -1,12 +1,12 @@
 import {
   Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards,
-  UploadedFile, UseInterceptors, BadRequestException,
+  UploadedFile, UseInterceptors, BadRequestException, ForbiddenException,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
 import { join } from "path";
-import { existsSync, mkdirSync, unlinkSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { SitesService } from "./sites.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -24,15 +24,19 @@ export class SitesController {
   @ApiOperation({ summary: "Create new site" })
   async create(
     @CurrentUser() user: any,
-    @Body() body: { name: string; templateId: string; subdomain?: string }
+    @Body() body: { name: string; templateId: string; subdomain?: string; domain?: string },
   ) {
     return this.sitesService.create(user.tenantId, body);
   }
 
   @Get()
   @ApiOperation({ summary: "List tenant sites" })
-  async findAll(@CurrentUser() user: any) {
-    return this.sitesService.findAll(user.tenantId);
+  async findAll(
+    @CurrentUser() user: any,
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
+  ) {
+    return this.sitesService.findAll(user.tenantId, { page: Number(page) || 1, limit: Number(limit) || 50 });
   }
 
   @Get("capabilities")
@@ -43,28 +47,29 @@ export class SitesController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get site by ID" })
-  async findById(@Param("id") id: string) {
-    return this.sitesService.findById(id);
+  async findById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.sitesService.findById(id, user.tenantId);
   }
 
   @Put(":id")
   @ApiOperation({ summary: "Update site" })
   async update(
     @Param("id") id: string,
-    @Body() body: any
+    @CurrentUser() user: any,
+    @Body() body: any,
   ) {
-    return this.sitesService.update(id, body);
+    return this.sitesService.update(id, user.tenantId, body);
   }
 
   @Delete(":id")
   @ApiOperation({ summary: "Soft-delete site" })
-  async remove(@Param("id") id: string) {
-    return this.sitesService.remove(id);
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.sitesService.remove(id, user.tenantId);
   }
 
   @Get(":id/check-domain")
   @ApiOperation({ summary: "Check if custom domain DNS points to server" })
-  async checkDomain(@Param("id") id: string, @Query("domain") domain: string) {
+  async checkDomain(@Param("id") id: string, @CurrentUser() user: any, @Query("domain") domain: string) {
     return this.sitesService.checkDomainDns(id, domain);
   }
 
@@ -95,14 +100,15 @@ export class SitesController {
   )
   async uploadApk(
     @Param("id") id: string,
+    @CurrentUser() user: any,
     @UploadedFile() file: Express.Multer.File,
     @Body("apkVersion") apkVersion?: string,
     @Body("apkName") apkName?: string,
   ) {
     if (!file) throw new BadRequestException("Archivo APK requerido");
-    const apiBase = process.env.PUBLIC_API_URL || process.env.RENDER_EXTERNAL_URL || "https://plataforma-api-j6ey.onrender.com";
+    const apiBase = process.env.PUBLIC_API_URL || process.env.PLATAFORMA_API_URL || "https://plataforma-api-71743315793.us-central1.run.app";
     const apkUrl = `${apiBase}/uploads/apk/${file.filename}`;
-    return this.sitesService.setApk(id, {
+    return this.sitesService.setApk(id, user.tenantId, {
       apkUrl,
       apkVersion: apkVersion || "",
       apkName: apkName || file.originalname,
@@ -112,7 +118,7 @@ export class SitesController {
 
   @Delete(":id/apk")
   @ApiOperation({ summary: "Remove APK from a site" })
-  async removeApk(@Param("id") id: string) {
-    return this.sitesService.removeApk(id);
+  async removeApk(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.sitesService.removeApk(id, user.tenantId);
   }
 }

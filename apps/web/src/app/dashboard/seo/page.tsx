@@ -209,7 +209,7 @@ export default function SeoPage() {
   const fetchSites = useCallback(async () => {
     try {
       const res: any = await api.get("/sites");
-      const list = (Array.isArray(res) ? res : res?.data || []) as Site[];
+      const list = (res.data?.items || res.items || []) as Site[];
       setSites(list);
       if (list.length > 0) {
         setSelectedId(list[0].id);

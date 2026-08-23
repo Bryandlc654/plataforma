@@ -10,6 +10,9 @@ import { VercelService } from "./vercel.service";
 import { resolvePublicSiteUrl } from "../publishing/seo-helpers";
 import { join } from "path";
 import { existsSync, unlinkSync } from "fs";
+import * as dns from "dns";
+
+const RESERVED_PATHS = ["api", "dashboard", "login", "register", "admin", "templates", "auth", "public", "static", "images", "fonts", "s"];
 
 @Injectable()
 export class SitesService {
@@ -21,22 +24,15 @@ export class SitesService {
   async create(tenantId: string, dto: { name: string; templateId: string; subdomain?: string; domain?: string }) {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      include: { plan: true },
+      select: { id: true, isActive: true, maxSites: true, plan: { select: { slug: true, price: true } } },
     });
     if (!tenant) throw new NotFoundException("Tenant not found");
     if (!tenant.isActive) throw new ForbiddenException("Tenant is suspended");
 
-    const siteCount = await this.prisma.site.count({
-      where: { tenantId, deletedAt: null },
-    });
-    if (siteCount >= tenant.maxSites) {
-      throw new ForbiddenException("Site limit reached for your plan");
-    }
+    const siteCount = await this.prisma.site.count({ where: { tenantId, deletedAt: null } });
+    if (siteCount >= tenant.maxSites) throw new ForbiddenException("Site limit reached for your plan");
 
-    // Validate and generate subdomain
     let subdomain: string;
-    const RESERVED_PATHS = ["api", "dashboard", "login", "register", "admin", "templates", "auth", "public", "static", "images", "fonts", "s"];
-    
     if (dto.subdomain) {
       subdomain = dto.subdomain
         .toLowerCase()
@@ -49,7 +45,7 @@ export class SitesService {
       if (subdomain.length < 3) throw new ForbiddenException("Subdomain must be at least 3 characters");
       if (RESERVED_PATHS.includes(subdomain)) throw new ConflictException(`El dominio "${subdomain}" es reservado y no puede ser usado.`);
 
-      const existing = await this.prisma.site.findUnique({ where: { subdomain } });
+      const existing = await this.prisma.site.findUnique({ where: { subdomain }, select: { id: true } });
       if (existing) throw new ConflictException(`El dominio "${subdomain}" ya está siendo utilizado por otro usuario.`);
     } else {
       let base = dto.name
@@ -59,49 +55,38 @@ export class SitesService {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
         .substring(0, 40);
-        
-      if (!base || RESERVED_PATHS.includes(base)) {
-        base = "site";
-      }
-        
+
+      if (!base || RESERVED_PATHS.includes(base)) base = "site";
       subdomain = `${base}-${Math.random().toString(36).substring(2, 6)}`;
 
-      // Ensure uniqueness
-      const existing = await this.prisma.site.findUnique({ where: { subdomain } });
+      const existing = await this.prisma.site.findUnique({ where: { subdomain }, select: { id: true } });
       if (existing) subdomain = `${base}-${Math.random().toString(36).substring(2, 8)}`;
     }
 
-    if (!dto.templateId) {
-      throw new BadRequestException("Template is required to create a site");
-    }
+    if (!dto.templateId) throw new BadRequestException("Template is required to create a site");
 
     const template = await this.prisma.template.findUnique({
       where: { id: dto.templateId },
       select: { id: true, isActive: true, isPremium: true },
     });
-
     if (!template) throw new NotFoundException("Template not found");
     if (!template.isActive) throw new ForbiddenException("Template is not available");
 
     if (template.isPremium) {
-      const hasPaidPlan =
-        tenant.plan && tenant.plan.slug !== "free" && Number(tenant.plan.price) > 0;
+      const hasPaidPlan = tenant.plan && tenant.plan.slug !== "free" && Number(tenant.plan.price) > 0;
       const activeSub = await this.prisma.subscription.findFirst({
         where: { tenantId, status: "active" },
         select: { id: true },
       });
-      if (!hasPaidPlan && !activeSub) {
-        throw new ForbiddenException("This template requires a paid plan");
-      }
+      if (!hasPaidPlan && !activeSub) throw new ForbiddenException("This template requires a paid plan");
     }
 
-    // Validate domain if provided
     if (dto.domain) {
       const cleanDomain = dto.domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
       const reserved = ["build.icebergup.com", "backplat.nextboostbusiness", "backplat.nextboostperu.com", "apiplat.nextboostperu.com"];
       if (reserved.includes(cleanDomain)) throw new ConflictException("Este dominio está reservado para la plataforma.");
       if (cleanDomain.endsWith(".build.icebergup.com") || cleanDomain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
-      const existingDomain = await this.prisma.site.findUnique({ where: { domain: cleanDomain } });
+      const existingDomain = await this.prisma.site.findUnique({ where: { domain: cleanDomain }, select: { id: true } });
       if (existingDomain) throw new ConflictException(`Domain "${cleanDomain}" is already in use`);
       dto.domain = cleanDomain;
     }
@@ -118,13 +103,17 @@ export class SitesService {
           isPublished: true,
           publishedAt: new Date(),
         },
+        select: { id: true, tenantId: true, subdomain: true, domain: true },
       });
 
       const template = await tx.template.findUnique({
         where: { id: dto.templateId },
-        include: {
+        select: {
           pages: {
-            include: { blocks: true },
+            select: {
+              name: true, slug: true, path: true, isDefault: true, sortOrder: true,
+              blocks: { select: { type: true, content: true, styles: true, sortOrder: true } },
+            },
             orderBy: { sortOrder: "asc" },
           },
         },
@@ -141,6 +130,7 @@ export class SitesService {
               isDefault: tPage.isDefault,
               sortOrder: tPage.sortOrder,
             },
+            select: { id: true },
           });
 
           if (tPage.blocks.length > 0) {
@@ -158,12 +148,7 @@ export class SitesService {
       }
 
       await tx.auditLog.create({
-        data: {
-          tenantId,
-          action: "site.create",
-          resource: "Site",
-          resourceId: site.id,
-        },
+        data: { tenantId, action: "site.create", resource: "Site", resourceId: site.id },
       });
 
       return site;
@@ -174,22 +159,31 @@ export class SitesService {
       vercel = await this.vercel.addDomain(site.domain);
     }
 
-    return {
-      ...(await this.findById(site.id)),
-      url: resolvePublicSiteUrl(site),
-      vercel,
-    };
+    const fullSite = await this.findById(site.id, tenantId);
+    return { ...fullSite, url: resolvePublicSiteUrl(site), vercel };
   }
 
-  async findAll(tenantId: string) {
-    return this.prisma.site.findMany({
-      where: { tenantId, deletedAt: null },
-      include: {
-        _count: { select: { pages: true } },
-        template: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  async findAll(tenantId: string, filters?: { page?: number; limit?: number }) {
+    const page = Math.max(1, filters?.page || 1);
+    const limit = Math.min(100, Math.max(1, filters?.limit || 50));
+
+    const [items, total] = await Promise.all([
+      this.prisma.site.findMany({
+        where: { tenantId, deletedAt: null },
+        select: {
+          id: true, name: true, subdomain: true, domain: true, isPublished: true,
+          primaryColor: true, logoUrl: true, faviconUrl: true, createdAt: true, updatedAt: true,
+          _count: { select: { pages: true } },
+          template: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.site.count({ where: { tenantId, deletedAt: null } }),
+    ]);
+
+    return { items, total, page, limit };
   }
 
   async getCapabilities(tenantId: string) {
@@ -231,31 +225,34 @@ export class SitesService {
     return { bookings, ecommerce };
   }
 
-  async findById(id: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id },
-      include: {
+  async findById(id: string, tenantId?: string) {
+    const where: any = { id, deletedAt: null };
+    if (tenantId) where.tenantId = tenantId;
+
+    const site = await this.prisma.site.findFirst({
+      where,
+      select: {
+        id: true, tenantId: true, name: true, subdomain: true, domain: true,
+        templateId: true, isPublished: true, primaryColor: true, seoTitle: true, seoDesc: true,
+        logoUrl: true, faviconUrl: true, settings: true, publishedAt: true, createdAt: true, updatedAt: true,
         pages: {
-          include: { blocks: { orderBy: { sortOrder: "asc" } } },
+          select: {
+            id: true, name: true, slug: true, path: true, isDefault: true, sortOrder: true, seoTitle: true, seoDesc: true,
+            blocks: {
+              select: { id: true, type: true, content: true, styles: true, sortOrder: true },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
           orderBy: { sortOrder: "asc" },
         },
         template: { select: { id: true, name: true } },
       },
     });
-    if (!site || site.deletedAt) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Site not found");
     return site;
   }
 
-  private async findLean(id: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id },
-      select: { id: true, domain: true, deletedAt: true },
-    });
-    if (!site || site.deletedAt) throw new NotFoundException("Site not found");
-    return site;
-  }
-
-  async update(id: string, data: {
+  async update(id: string, tenantId: string, data: {
     name?: string;
     domain?: string | null;
     primaryColor?: string;
@@ -265,14 +262,18 @@ export class SitesService {
     logoUrl?: string;
     faviconUrl?: string;
   }) {
-    const current = await this.findLean(id);
-    // Validate domain uniqueness if provided
+    const current = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { id: true, domain: true },
+    });
+    if (!current) throw new NotFoundException("Site not found");
+
     if (data.domain) {
       data.domain = data.domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
       const reserved = ["build.icebergup.com", "backplat.nextboostbusiness", "backplat.nextboostperu.com", "apiplat.nextboostperu.com"];
       if (reserved.includes(data.domain)) throw new ConflictException("Este dominio está reservado para la plataforma.");
       if (data.domain.endsWith(".build.icebergup.com") || data.domain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
-      const existing = await this.prisma.site.findUnique({ where: { domain: data.domain } });
+      const existing = await this.prisma.site.findUnique({ where: { domain: data.domain }, select: { id: true } });
       if (existing && existing.id !== id) throw new ConflictException("Domain already in use");
     }
 
@@ -284,41 +285,58 @@ export class SitesService {
       if (newDomain) await this.vercel.addDomain(newDomain);
     }
 
-    // Only pass fields that exist on the Site model (frontend sends extra UI fields like secondaryColor)
     const allowed: (keyof NonNullable<typeof data>)[] = ["name", "domain", "primaryColor", "seoTitle", "seoDesc", "settings", "logoUrl", "faviconUrl"];
     const cleanData: any = {};
     for (const key of allowed) {
       if (data[key] !== undefined) cleanData[key] = data[key];
     }
 
-    const site = await this.prisma.site.update({ where: { id }, data: cleanData });
+    const site = await this.prisma.site.update({
+      where: { id },
+      data: cleanData,
+      select: {
+        id: true, tenantId: true, name: true, subdomain: true, domain: true,
+        primaryColor: true, seoTitle: true, seoDesc: true, logoUrl: true, faviconUrl: true,
+        settings: true, isPublished: true, createdAt: true, updatedAt: true,
+      },
+    });
+
     return {
       ...site,
       vercel: newDomain ? await this.vercel.getDomainConfig(newDomain) : null,
     };
   }
 
-  async remove(id: string) {
-    const site = await this.findLean(id);
+  async remove(id: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { id: true, domain: true },
+    });
+    if (!site) throw new NotFoundException("Site not found");
+
     if (site.domain) await this.vercel.removeDomain(site.domain);
+
     return this.prisma.site.update({
       where: { id },
       data: { deletedAt: new Date() },
+      select: { id: true, deletedAt: true },
     });
   }
 
   async checkDomainDns(id: string, domain: string) {
-    await this.findLean(id);
+    const site = await this.prisma.site.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+    if (!site) throw new NotFoundException("Site not found");
+
     const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
 
-    // Ask Vercel for the authoritative domain configuration (nameservers / CNAME / misconfigured)
     const vercel = await this.vercel.getDomainConfig(cleanDomain);
 
-    // Try local DNS resolution as a fallback signal
     let resolvedIps: string[] = [];
     try {
-      const dns = require("dns").promises;
-      resolvedIps = await dns.resolve4(cleanDomain);
+      resolvedIps = await dns.promises.resolve4(cleanDomain);
     } catch {}
 
     const isMisconfigured = vercel && (vercel.misconfigured === true || vercel.verified === false);
@@ -334,10 +352,14 @@ export class SitesService {
     };
   }
 
-  async setApk(id: string, dto: { apkUrl: string; apkVersion: string; apkName: string; apkSize: number }) {
-    const site = await this.findLean(id);
-    const current = await this.prisma.site.findUnique({ where: { id }, select: { settings: true } });
-    const settings = ((current?.settings as any) || {});
+  async setApk(id: string, tenantId: string, dto: { apkUrl: string; apkVersion: string; apkName: string; apkSize: number }) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { id: true, settings: true },
+    });
+    if (!site) throw new NotFoundException("Site not found");
+
+    const settings = ((site.settings as any) || {});
 
     if (settings.apkUrl) {
       const filename = settings.apkUrl.split("/").pop();
@@ -360,13 +382,18 @@ export class SitesService {
           apkSize: dto.apkSize,
         },
       },
+      select: { id: true, settings: true },
     });
   }
 
-  async removeApk(id: string) {
-    const site = await this.findLean(id);
-    const current = await this.prisma.site.findUnique({ where: { id }, select: { settings: true } });
-    const settings = ((current?.settings as any) || {});
+  async removeApk(id: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: { id: true, settings: true },
+    });
+    if (!site) throw new NotFoundException("Site not found");
+
+    const settings = ((site.settings as any) || {});
 
     if (settings.apkUrl) {
       const filename = settings.apkUrl.split("/").pop();
@@ -382,6 +409,7 @@ export class SitesService {
     return this.prisma.site.update({
       where: { id },
       data: { settings: rest },
+      select: { id: true, settings: true },
     });
   }
 }

@@ -23,7 +23,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     api.get("/sites").then((res: any) => {
-      const list = (Array.isArray(res) ? res : res?.data || []) as Site[];
+      const list = (res.data?.items || res.items || []) as Site[];
       setSites(list);
     }).catch(() => {});
   }, []);

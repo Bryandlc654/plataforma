@@ -15,7 +15,7 @@ export default function SitesPage() {
   const { confirm } = useConfirm();
   const fetchSites = useCallback(async () => {
     setLoading(true);
-    try { const res: any = await api.get("/sites"); setSites((res.data || res) as Site[]); }
+    try { const res: any = await api.get("/sites"); setSites((res.data?.items || res.items || []) as Site[]); }
     catch { setSites([]); }
     finally { setLoading(false); }
   }, []);
