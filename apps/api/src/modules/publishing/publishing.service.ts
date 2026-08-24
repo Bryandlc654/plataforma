@@ -342,7 +342,7 @@ export class PublishingService {
     if (url && !url.includes("localhost")) {
       return url.replace(/\/+$/, "");
     }
-    return "https://plataforma-api-j6ey.onrender.com";
+    return "https://plataforma-api-71743315793.us-central1.run.app";
   }
 
   private apiV1Url(): string {
