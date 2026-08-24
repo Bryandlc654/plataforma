@@ -495,7 +495,16 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-envelope h-5 w-5"></i></div>
                         <div class="min-w-0"><div class="font-semibold">Correo</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.com'}</div></div>
                     </div>
-                    ${c.mapUrl ? `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${toGoogleMapsEmbed(c.mapUrl)}" class="w-full h-full" loading="lazy" style="border:0" allowfullscreen></iframe></div>` : ''}
+                    ${c.mapUrl ? (() => {
+                      const isGoogle = /google\.com\/maps|goo\.gl\/maps|maps\.app\.goo\.gl/.test(c.mapUrl);
+                      if (isGoogle) {
+                        return `<a href="${c.mapUrl}" target="_blank" rel="noopener" class="reveal flex items-center justify-center gap-3 aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 bg-rodri-primary/5 hover:bg-rodri-primary/10 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(79,173,51,.1)] transition-all duration-500 group">
+                          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-geo-alt-fill h-6 w-6"></i></div>
+                          <div class="text-left"><div class="font-semibold text-rodri-foreground">Ver en Google Maps</div><div class="text-sm text-rodri-muted-foreground">Abrir ubicación</div></div>
+                        </a>`;
+                      }
+                      return `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${c.mapUrl}" class="w-full h-full" loading="lazy" style="border:0" allowfullscreen></iframe></div>`;
+                    })() : ''}
                 </div>
             </div>
         </div>
