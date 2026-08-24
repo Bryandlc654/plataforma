@@ -356,6 +356,15 @@ export class PublishingService {
     return url;
   }
 
+  private isLightColor(hex: string): boolean {
+    if (!hex || !hex.startsWith("#")) return true;
+    const h = hex.replace("#", "");
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 150;
+  }
+
   private resolveBlockUrls(block: any): any {
     const content = { ...(block.content || {}) };
     // Common image fields
@@ -920,6 +929,7 @@ ${items.map(cardHtml).join("")}
         const tenantId = c.tenantId || site?.tenantId;
         const apiUrl = this.apiBaseUrl();
         const fields = (sorteo?.fields || []) as any[];
+        const bg = (sorteo?.background || {}) as any;
         const fieldHtml = fields.map((f: any) => {
           const req = f.required ? "required" : "";
           const reqStar = f.required ? '<span style="color:#ef4444"> *</span>' : "";
@@ -938,14 +948,39 @@ ${items.map(cardHtml).join("")}
         const desc = sorteo?.description ? `<p style="text-align:center;color:#64748b;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">${escapeHtml(sorteo.description)}</p>` : "";
         const endDate = sorteo?.endDate ? `<p style="text-align:center;color:#94a3b8;font-size:.85rem;margin-bottom:1.5rem">Fecha límite: ${new Date(sorteo.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}</p>` : "";
 
-        return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);max-width:600px;margin:0 auto">
-<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:#0f172a">${escapeHtml(sorteo?.title || "Sorteo")}</h2>
-${desc}${endDate}
-<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+        let sectionBg = "background:#f8fafc;";
+        let titleColor = "#0f172a";
+        let formBg = "#fff";
+        if (bg.type === "color" && bg.color) {
+          sectionBg = `background:${bg.color};`;
+          titleColor = this.isLightColor(bg.color) ? "#0f172a" : "#ffffff";
+          formBg = this.isLightColor(bg.color) ? "#ffffff" : "rgba(255,255,255,0.95)";
+        } else if (bg.type === "gradient" && bg.gradientFrom && bg.gradientTo) {
+          const angle = bg.gradientAngle || 135;
+          sectionBg = `background:linear-gradient(${angle}deg,${bg.gradientFrom},${bg.gradientTo});`;
+          titleColor = this.isLightColor(bg.gradientFrom) ? "#0f172a" : "#ffffff";
+          formBg = this.isLightColor(bg.gradientFrom) ? "#ffffff" : "rgba(255,255,255,0.95)";
+        } else if (bg.type === "image" && bg.imageUrl) {
+          sectionBg = `background:url('${escapeHtml(bg.imageUrl)}') center/cover no-repeat;position:relative;`;
+          titleColor = "#ffffff";
+          formBg = "rgba(255,255,255,0.95)";
+        }
+        const imageOverlay = bg.type === "image" ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);pointer-events:none"></div>` : "";
+        const wrapperOpen = bg.type === "image" ? `<div style="position:relative;${sectionBg}min-height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem)">${imageOverlay}<div style="position:relative;z-index:1;width:100%;max-width:600px">` : "";
+        const wrapperClose = bg.type === "image" ? `</div></div>` : "";
+        const sectionStyle = bg.type === "image" ? "" : `style="${sectionBg}padding:clamp(5rem,12vw,8rem) clamp(1rem,5vw,2rem);width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center"`;
+
+        return `<section ${sectionStyle}>
+${wrapperOpen}
+<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:${titleColor}">${escapeHtml(sorteo?.title || "Sorteo")}</h2>
+${sorteo?.description ? `<p style="text-align:center;color:${titleColor};opacity:0.8;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">${escapeHtml(sorteo.description)}</p>` : ""}
+${endDate}
+<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:${formBg};padding:2rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.2)">
 ${fieldHtml}
   <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
   <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Participar</button>
 </form>
+${wrapperClose}
 </section>`;
       }
 

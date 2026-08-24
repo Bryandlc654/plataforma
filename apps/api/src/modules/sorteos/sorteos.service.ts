@@ -42,7 +42,7 @@ export class SorteosService {
 
   async create(tenantId: string, data: {
     title: string; slug: string; description?: string;
-    fields: any[]; isActive?: boolean; startDate?: string; endDate?: string;
+    fields: any[]; background?: any; isActive?: boolean; startDate?: string; endDate?: string;
   }) {
     const slug = data.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
     if (!slug || slug.length < 2) throw new BadRequestException("Slug inválido");
@@ -61,6 +61,7 @@ export class SorteosService {
         slug,
         description: data.description || null,
         fields: data.fields,
+        background: data.background || null,
         isActive: data.isActive ?? true,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
@@ -70,7 +71,7 @@ export class SorteosService {
 
   async update(id: string, tenantId: string, data: {
     title?: string; slug?: string; description?: string;
-    fields?: any[]; isActive?: boolean; startDate?: string; endDate?: string;
+    fields?: any[]; background?: any; isActive?: boolean; startDate?: string; endDate?: string;
   }) {
     const sorteo = await this.prisma.sorteo.findFirst({ where: { id, tenantId } });
     if (!sorteo) throw new NotFoundException("Sorteo no encontrado");
@@ -84,6 +85,7 @@ export class SorteosService {
       }
       updateData.fields = data.fields;
     }
+    if (data.background !== undefined) updateData.background = data.background || null;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.startDate !== undefined) updateData.startDate = data.startDate ? new Date(data.startDate) : null;
     if (data.endDate !== undefined) updateData.endDate = data.endDate ? new Date(data.endDate) : null;

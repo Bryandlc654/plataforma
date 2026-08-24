@@ -15,9 +15,18 @@ interface SorteoField {
 
 interface Sorteo {
   id: string; title: string; slug: string; description: string;
-  fields: SorteoField[]; isActive: boolean;
+  fields: SorteoField[]; background?: SorteoBackground; isActive: boolean;
   startDate: string | null; endDate: string | null;
   participantCount: number; createdAt: string;
+}
+
+interface SorteoBackground {
+  type?: "none" | "color" | "gradient" | "image";
+  color?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientAngle?: number;
+  imageUrl?: string;
 }
 
 const FIELD_TYPES = [
@@ -45,6 +54,7 @@ export default function SorteosPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [fields, setFields] = useState<SorteoField[]>(DEFAULT_FIELDS);
+  const [bg, setBg] = useState<SorteoBackground>({ type: "none" });
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [participants, setParticipants] = useState<any[]>([]);
@@ -67,21 +77,25 @@ export default function SorteosPage() {
 
   const openCreate = () => {
     setEditId(null); setTitle(""); setSlug(""); setDescription("");
-    setFields(DEFAULT_FIELDS); setStartDate(""); setEndDate(""); setShowForm(true);
+    setFields(DEFAULT_FIELDS); setBg({ type: "none" });
+    setStartDate(""); setEndDate(""); setShowForm(true);
   };
 
   const openEdit = (s: Sorteo) => {
     setEditId(s.id); setTitle(s.title); setSlug(s.slug); setDescription(s.description || "");
     setFields(s.fields?.length ? s.fields : DEFAULT_FIELDS);
+    setBg(s.background || { type: "none" });
     setStartDate(s.startDate ? s.startDate.slice(0, 16) : "");
     setEndDate(s.endDate ? s.endDate.slice(0, 16) : ""); setShowForm(true);
   };
 
   const handleSave = async () => {
     try {
+      const bgPayload = bg.type && bg.type !== "none" ? bg : null;
       const body = {
         title, slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-        description, fields, startDate: startDate || undefined, endDate: endDate || undefined,
+        description, fields, background: bgPayload,
+        startDate: startDate || undefined, endDate: endDate || undefined,
       };
       if (editId) await api.put(`/sorteos/${editId}`, body);
       else await api.post("/sorteos", body);
@@ -207,6 +221,55 @@ export default function SorteosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-xs font-medium text-slate-600 mb-1">Inicio (opcional)</label><input type="datetime-local" className="input-field w-full" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
                 <div><label className="block text-xs font-medium text-slate-600 mb-1">Fin (opcional)</label><input type="datetime-local" className="input-field w-full" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-2">Fondo de la página</label>
+                <div className="flex gap-2 mb-3">
+                  {(["none","color","gradient","image"] as const).map(t => (
+                    <button key={t} onClick={() => setBg({ ...bg, type: t })}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${bg.type === t ? "border-primary-500 bg-primary-50 text-primary-700 font-medium" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}>
+                      {t === "none" ? "Sin fondo" : t === "color" ? "Color sólido" : t === "gradient" ? "Degradado" : "Imagen"}
+                    </button>
+                  ))}
+                </div>
+                {bg.type === "color" && (
+                  <div className="flex items-center gap-3">
+                    <input type="color" className="h-9 w-14 rounded border cursor-pointer" value={bg.color || "#f8fafc"} onChange={e => setBg({ ...bg, color: e.target.value })} />
+                    <input className="input-field flex-1 text-sm" placeholder="#201b51" value={bg.color || ""} onChange={e => setBg({ ...bg, color: e.target.value })} />
+                  </div>
+                )}
+                {bg.type === "gradient" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-xs text-slate-500">Desde</span>
+                        <input type="color" className="h-8 w-12 rounded border cursor-pointer" value={bg.gradientFrom || "#201b51"} onChange={e => setBg({ ...bg, gradientFrom: e.target.value })} />
+                        <input className="input-field flex-1 text-sm" value={bg.gradientFrom || ""} onChange={e => setBg({ ...bg, gradientFrom: e.target.value })} placeholder="#201b51" />
+                      </div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="text-xs text-slate-500">Hasta</span>
+                        <input type="color" className="h-8 w-12 rounded border cursor-pointer" value={bg.gradientTo || "#f29200"} onChange={e => setBg({ ...bg, gradientTo: e.target.value })} />
+                        <input className="input-field flex-1 text-sm" value={bg.gradientTo || ""} onChange={e => setBg({ ...bg, gradientTo: e.target.value })} placeholder="#f29200" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs text-slate-500">Ángulo</label>
+                      <input type="range" min={0} max={360} value={bg.gradientAngle ?? 135} onChange={e => setBg({ ...bg, gradientAngle: Number(e.target.value) })} className="flex-1" />
+                      <span className="text-xs text-slate-500 w-8 text-right">{bg.gradientAngle ?? 135}°</span>
+                    </div>
+                  </div>
+                )}
+                {bg.type === "image" && (
+                  <div className="space-y-2">
+                    <input className="input-field w-full text-sm" placeholder="URL de la imagen (https://...)" value={bg.imageUrl || ""} onChange={e => setBg({ ...bg, imageUrl: e.target.value })} />
+                    {bg.imageUrl && (
+                      <div className="relative h-32 rounded-lg overflow-hidden border bg-slate-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={bg.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
