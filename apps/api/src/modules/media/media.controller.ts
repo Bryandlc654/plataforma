@@ -3,10 +3,17 @@ import {
   UploadedFile, Req, Body,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { diskStorage } from "multer";
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
 import { MediaService } from "./media.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { v4 as uuid } from "uuid";
+import * as path from "path";
+import * as fs from "fs";
+
+const TEMP_DIR = path.join(process.cwd(), "uploads", "_temp");
+if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
 
 @ApiTags("media")
 @Controller("media")
@@ -16,9 +23,18 @@ export class MediaController {
   constructor(private mediaService: MediaService) {}
 
   @Post("upload")
-  @UseInterceptors(FileInterceptor("file"))
+  @UseInterceptors(FileInterceptor("file", {
+    storage: diskStorage({
+      destination: TEMP_DIR,
+      filename: (_req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `${uuid()}${ext}`);
+      },
+    }),
+    limits: { fileSize: 50 * 1024 * 1024 },
+  }))
   @ApiConsumes("multipart/form-data")
-  @ApiOperation({ summary: "Upload a file" })
+  @ApiOperation({ summary: "Upload a file (max 50MB)" })
   async upload(
     @CurrentUser() user: any,
     @UploadedFile() file: Express.Multer.File,

@@ -42,6 +42,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
   const actionUrl = site?.tenantId ? `${apiBaseUrl || ""}/api/v1/leads/submit/${site.tenantId}` : "#";
 
   const siteBase = !site?.domain && site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
+  const homeUrl = site?.domain ? `https://${site.domain}` : (site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "#inicio");
   const siteHref = (url: string): string => {
     if (!url || url === "#") return url || "#";
     if (/^(https?:)?\/\//.test(url) || /^(mailto|tel|javascript):/i.test(url)) return url;
@@ -112,7 +113,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
       </style>
       <header id="navHeader" class="fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-transparent border-b border-white/10">
         <div class="container-x flex items-center justify-between h-18 py-3">
-            <a href="#inicio" class="flex items-center gap-2 group">
+            <a href="${homeUrl}" class="flex items-center gap-2 group">
                 <img id="navLogoTop" src="${logo}" alt="${c.logoText || 'Rodriplast'}" class="logo-top h-14 w-auto object-contain transition-all duration-500">
                 ${logoScrolled ? `<img id="navLogoScrolled" src="${logoScrolled}" alt="${c.logoText || 'Rodriplast'}" class="logo-scrolled h-12 w-auto object-contain transition-all duration-500">` : `<img id="navLogoScrolled" src="${logo}" alt="${c.logoText || 'Rodriplast'}" class="logo-scrolled h-12 w-auto object-contain transition-all duration-500">`}
             </a>

@@ -51,7 +51,15 @@ export class MediaService {
 
     const ext = path.extname(file.originalname);
     const cleanFolder = folder && folder !== "/" ? folder.replace(/^\/+|\/+$/g, "") : "";
-    let finalBuffer = file.buffer;
+
+    let fileBuffer: Buffer;
+    if (file.path) {
+      fileBuffer = fs.readFileSync(file.path);
+    } else {
+      fileBuffer = file.buffer;
+    }
+
+    let finalBuffer = fileBuffer;
     let mimeType = file.mimetype;
     let storedExt = ext;
     let width: number | null = null;
@@ -59,7 +67,7 @@ export class MediaService {
 
     if (file.mimetype.startsWith("image/") && !file.mimetype.includes("svg")) {
       try {
-        const image = sharp(file.buffer);
+        const image = sharp(fileBuffer);
         const metadata = await image.metadata();
         width = metadata.width || null;
         height = metadata.height || null;
@@ -74,7 +82,7 @@ export class MediaService {
           storedExt = ".jpg";
         }
       } catch {
-        finalBuffer = file.buffer;
+        finalBuffer = fileBuffer;
       }
     }
 
@@ -115,6 +123,10 @@ export class MediaService {
         data: { storageUsed: { increment: fileSize } },
       }),
     ]);
+
+    if (file.path) {
+      try { fs.unlinkSync(file.path); } catch {}
+    }
 
     return { ...media[0], url: this.toAbsoluteUrl(media[0].url) };
   }

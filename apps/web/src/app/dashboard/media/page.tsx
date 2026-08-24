@@ -7,6 +7,8 @@ import Image from "next/image";
 import { FileText, Clipboard, X, Upload } from "lucide-react";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
 interface MediaItem {
   id: string; url: string; originalName: string; mimeType: string; size: string;
   width: number; height: number; folder: string; createdAt: string;
@@ -16,6 +18,7 @@ export default function MediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, fileName: "" });
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -47,19 +50,36 @@ export default function MediaPage() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
+
+    const oversized = Array.from(files).find(f => f.size > MAX_FILE_SIZE);
+    if (oversized) {
+      alert(`El archivo "${oversized.name}" supera los 50 MB. Comprímelo o divídelo antes de subirlo.`);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
     setUploading(true);
-    try {
-      for (const file of Array.from(files)) {
+    setUploadProgress({ current: 0, total: files.length, fileName: "" });
+    let errors: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress({ current: i + 1, total: files.length, fileName: file.name });
+      try {
         const form = new FormData();
         form.append("file", file);
         await api.post("/media/upload", form);
+      } catch (err: any) {
+        const msg = err.response?.data?.message || err.message || "Error desconocido";
+        errors.push(`${file.name}: ${msg}`);
       }
-      fetchMedia(1);
-    } catch (err: any) { 
-      const msg = err.response?.data?.message || err.message || "Error desconocido";
-      alert("Error al subir archivo: " + msg); 
     }
-    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+
+    if (errors.length) alert("Errores:\n" + errors.join("\n"));
+    fetchMedia(1);
+    setUploading(false);
+    setUploadProgress({ current: 0, total: 0, fileName: "" });
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleDelete = async (id: string) => {
@@ -80,7 +100,12 @@ export default function MediaPage() {
         <div className="flex items-center justify-between mb-8">
           <div><h1 className="text-2xl font-bold text-slate-900">Biblioteca de Medios</h1><p className="text-sm text-slate-600">{total} archivos</p></div>
           <label className="btn-primary text-sm cursor-pointer inline-flex items-center gap-2">
-            {uploading ? "Subiendo..." : (<><Upload className="h-4 w-4" /> Subir archivos</>)}
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {uploadProgress.total > 1 ? `${uploadProgress.current}/${uploadProgress.total}` : "Subiendo..."} {uploadProgress.fileName && <span className="max-w-[120px] truncate text-xs opacity-80">{uploadProgress.fileName}</span>}
+              </span>
+            ) : (<><Upload className="h-4 w-4" /> Subir archivos</>)}
             <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*,.pdf,application/pdf" multiple />
           </label>
         </div>
@@ -94,7 +119,7 @@ export default function MediaPage() {
         </div>
 
         {loading ? <p className="text-slate-500">Cargando...</p> : items.length === 0 ? (
-          <div className="card text-center py-16"><p className="text-slate-500 mb-2">Sin archivos</p><p className="text-sm text-slate-400">Sube imágenes para usar en tus sitios web</p></div>
+          <div className="card text-center py-16"><p className="text-slate-500 mb-2">Sin archivos</p><p className="text-sm text-slate-400">Sube imágenes o documentos (PDF) para usar en tus sitios web</p></div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
