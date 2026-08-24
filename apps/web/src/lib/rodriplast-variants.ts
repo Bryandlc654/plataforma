@@ -1,5 +1,23 @@
 const PLACEHOLDER_LOGO = "https://placehold.co/200x80/ffffff/0f172a?text=Logo";
 
+function toGoogleMapsEmbed(url: string): string {
+  if (!url) return "";
+  if (url.includes("/maps/embed") || url.includes("output=embed")) return url;
+  const placeMatch = url.match(/place\/([^/]+)/);
+  if (placeMatch) return `https://maps.google.com/maps?q=${encodeURIComponent(placeMatch[1].replace(/\+/g, " "))}&output=embed`;
+  const queryMatch = url.match(/[?&]q=([^&]+)/);
+  if (queryMatch) return `https://maps.google.com/maps?q=${decodeURIComponent(queryMatch[1])}&output=embed`;
+  const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (atMatch) return `https://maps.google.com/maps?q=${atMatch[1]},${atMatch[2]}&output=embed`;
+  if (/google\.com\/maps|goo\.gl\/maps|maps\.app\.goo\.gl/.test(url)) {
+    const q = url.match(/[?&]q=([^&]+)/);
+    if (q) return `https://maps.google.com/maps?q=${decodeURIComponent(q[1])}&output=embed`;
+    return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+  }
+  if (url.startsWith("http")) return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+}
+
 export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
   if (c.variant !== "rodriplast") return null;
 
@@ -482,7 +500,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-envelope h-5 w-5"></i></div>
                         <div class="min-w-0"><div class="font-semibold">Correo</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.com'}</div></div>
                     </div>
-                    ${c.mapUrl ? `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${c.mapUrl}" class="w-full h-full" loading="lazy"></iframe></div>` : ''}
+                    ${c.mapUrl ? `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${toGoogleMapsEmbed(c.mapUrl)}" class="w-full h-full" loading="lazy" style="border:0" allowfullscreen></iframe></div>` : ''}
                 </div>
             </div>
         </div>

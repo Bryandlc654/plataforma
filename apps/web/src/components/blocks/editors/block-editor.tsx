@@ -384,7 +384,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} placeholder="Parque Industrial · Guayaquil, Ecuador" /></Field>
           <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="+593 4 000 0000" /></Field>
           <Field label="Correo"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="ventas@miempresa.ec" /></Field>
-          <Field label="URL del mapa (embed)"><TextInput value={content.mapUrl} onChange={(v) => set("mapUrl", v)} placeholder="https://www.openstreetmap.org/export/embed.html?bbox=..." /></Field>
+          <Field label="URL de Google Maps"><TextInput value={content.mapUrl} onChange={(v) => set("mapUrl", v)} placeholder="https://maps.app.goo.gl/... o https://www.google.com/maps/..." /></Field>
           <Field label="Campos"><ArrayEditor value={content.fields} onChange={(v) => set("fields", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "name", label: "Nombre" }, { key: "type", label: "Tipo (text, textarea, email)" }, { key: "required", label: "Requerido (true/false)" }]} /></Field>
         </>;
 
