@@ -84,7 +84,7 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
         <span className="text-sm font-medium text-slate-700">Biblioteca de medios</span>
         <label className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
           {uploading ? "Subiendo..." : "+ Subir archivo"}
-          <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*" />
+          <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*,.pdf,application/pdf" />
         </label>
       </div>
 
@@ -106,6 +106,11 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
                     unoptimized
                     className="w-full h-20 object-cover rounded-lg pointer-events-none hover:opacity-80 transition-opacity"
                   />
+                ) : item.mimeType === "application/pdf" ? (
+                  <div className="w-full h-20 rounded-lg bg-red-50 flex flex-col items-center justify-center gap-1 text-red-500">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span className="text-[10px] font-medium">PDF</span>
+                  </div>
                 ) : (
                   <div className="w-full h-20 rounded-lg bg-slate-100 flex items-center justify-center text-xs text-slate-400">
                     Archivo

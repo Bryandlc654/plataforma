@@ -81,7 +81,7 @@ export default function MediaPage() {
           <div><h1 className="text-2xl font-bold text-slate-900">Biblioteca de Medios</h1><p className="text-sm text-slate-600">{total} archivos</p></div>
           <label className="btn-primary text-sm cursor-pointer inline-flex items-center gap-2">
             {uploading ? "Subiendo..." : (<><Upload className="h-4 w-4" /> Subir archivos</>)}
-            <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*" multiple />
+            <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*,.pdf,application/pdf" multiple />
           </label>
         </div>
 
@@ -89,6 +89,7 @@ export default function MediaPage() {
           <select className="input-field w-44" value={type} onChange={(e) => setType(e.target.value)}>
             <option value="">Todos los tipos</option>
             <option value="image">Imágenes</option>
+            <option value="application">Documentos</option>
           </select>
         </div>
 
