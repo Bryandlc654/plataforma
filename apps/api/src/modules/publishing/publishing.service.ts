@@ -15,6 +15,21 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, msg = 'Request timeout'
   });
 };
 
+function decodeUnicodeEscapes(val: any): any {
+  if (typeof val === "string") {
+    if (!val.includes("\\u")) return val;
+    try { return JSON.parse(JSON.stringify(val).replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))); }
+    catch { return val.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16))); }
+  }
+  if (Array.isArray(val)) return val.map(decodeUnicodeEscapes);
+  if (val && typeof val === "object") {
+    const out: any = {};
+    for (const k of Object.keys(val)) out[k] = decodeUnicodeEscapes(val[k]);
+    return out;
+  }
+  return val;
+}
+
 @Injectable()
 export class PublishingService {
   private readonly htmlCache = new Map<string, { value: string; expiry: number }>();
@@ -719,7 +734,7 @@ ${apkButton}
   }
 
   private renderBlock(type: string, content: any, _styles?: any, site?: any, reviews: any[] = []): string {
-    const c = content || {};
+    const c = decodeUnicodeEscapes(content) || {};
     
     if (c.variant === "prestige") {
       const html = getPrestigeHtml(type, c, this.apiBaseUrl(), site);
