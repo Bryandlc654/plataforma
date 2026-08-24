@@ -132,9 +132,10 @@ model Tenant {
   orders            Order[]
   bookingServices   BookingService[]
   bookings          Booking[]
-  supportTickets    SupportTicket[]
+   supportTickets    SupportTicket[]
+   sorteos           Sorteo[]
 
-  @@index([slug])
+   @@index([slug])
   @@index([subdomain])
   @@index([isActive, deletedAt])
   @@map("tenants")
@@ -817,5 +818,43 @@ model Review {
   @@index([tenantId, isPublished, createdAt])
   @@index([siteId])
   @@map("reviews")
+}
+
+model Sorteo {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  title       String
+  slug        String
+  description String?  @db.Text
+  fields      Json     @default("[]")
+  isActive    Boolean  @default(true) @map("is_active")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  participants SorteoParticipant[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@map("sorteos")
+}
+
+model SorteoParticipant {
+  id          String   @id @default(uuid())
+  sorteoId    String   @map("sorteo_id")
+  tenantId    String   @map("tenant_id")
+  data        Json
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  sorteo Sorteo @relation(fields: [sorteoId], references: [id], onDelete: Cascade)
+
+  @@index([sorteoId])
+  @@index([sorteoId, createdAt])
+  @@map("sorteo_participants")
 }
 

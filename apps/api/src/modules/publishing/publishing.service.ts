@@ -203,7 +203,17 @@ export class PublishingService {
 
       const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
 
+      let sorteoSlug: string | null = null;
       if (path && !isReviewFormRoute) {
+        const cleanPath = normalizePublicPath(path).replace(/^\//, "");
+        const sorteo = await this.prisma.sorteo.findFirst({
+          where: { tenantId: site.tenantId, slug: cleanPath, isActive: true },
+          select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
+        });
+        if (sorteo) sorteoSlug = sorteo.slug;
+      }
+
+      if (path && !isReviewFormRoute && !sorteoSlug) {
         const wanted = normalizePublicPath(path);
         const match = site.pages.find(
           (p: any) => normalizePublicPath(p.path) === wanted
@@ -218,6 +228,21 @@ export class PublishingService {
           isDefault: false,
           blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} } as any]
         } as any);
+      }
+
+      if (sorteoSlug) {
+        const sorteo = await this.prisma.sorteo.findFirst({
+          where: { tenantId: site.tenantId, slug: sorteoSlug, isActive: true },
+          select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
+        });
+        if (sorteo) {
+          site.pages.push({
+            name: sorteo.title,
+            path: `/${sorteo.slug}`,
+            isDefault: false,
+            blocks: [{ type: "sorteo-form", content: { sorteo, tenantId: site.tenantId }, styles: {} } as any]
+          } as any);
+        }
       }
 
       const approvedReviews = await this.prisma.review.findMany({
@@ -886,6 +911,40 @@ ${items.map(cardHtml).join("")}
   </div>
   <div class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
   <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Enviar opinión</button>
+</form>
+</section>`;
+      }
+
+      case "sorteo-form": {
+        const sorteo = c.sorteo;
+        const tenantId = c.tenantId || site?.tenantId;
+        const apiUrl = this.apiBaseUrl();
+        const fields = (sorteo?.fields || []) as any[];
+        const fieldHtml = fields.map((f: any) => {
+          const req = f.required ? "required" : "";
+          const reqStar = f.required ? '<span style="color:#ef4444"> *</span>' : "";
+          const label = escapeHtml(f.label || f.name);
+          if (f.type === "select" && f.options?.length) {
+            const opts = f.options.map((o: string) => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("");
+            return `<div style="display:flex;flex-direction:column;gap:.4rem"><label style="font-weight:600;color:#334155;font-size:.9rem">${label}${reqStar}</label><select name="${escapeHtml(f.name)}" ${req} style="padding:.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:.95rem;background:#fff">${opts}</select></div>`;
+          }
+          if (f.type === "textarea") {
+            return `<div style="display:flex;flex-direction:column;gap:.4rem"><label style="font-weight:600;color:#334155;font-size:.9rem">${label}${reqStar}</label><textarea name="${escapeHtml(f.name)}" ${req} rows="3" style="padding:.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:.95rem;resize:vertical"></textarea></div>`;
+          }
+          const inputType = f.type === "tel" ? "tel" : f.type === "email" ? "email" : f.type === "number" ? "number" : "text";
+          return `<div style="display:flex;flex-direction:column;gap:.4rem"><label style="font-weight:600;color:#334155;font-size:.9rem">${label}${reqStar}</label><input type="${inputType}" name="${escapeHtml(f.name)}" ${req} style="padding:.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:.95rem"></div>`;
+        }).join("\n");
+
+        const desc = sorteo?.description ? `<p style="text-align:center;color:#64748b;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">${escapeHtml(sorteo.description)}</p>` : "";
+        const endDate = sorteo?.endDate ? `<p style="text-align:center;color:#94a3b8;font-size:.85rem;margin-bottom:1.5rem">Fecha límite: ${new Date(sorteo.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}</p>` : "";
+
+        return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);max-width:600px;margin:0 auto">
+<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:#0f172a">${escapeHtml(sorteo?.title || "Sorteo")}</h2>
+${desc}${endDate}
+<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+${fieldHtml}
+  <div class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
+  <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Participar</button>
 </form>
 </section>`;
       }

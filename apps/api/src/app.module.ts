@@ -36,6 +36,7 @@ import { TenantMiddleware } from "./common/middleware/tenant.middleware";
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AppDownloadModule } from './modules/app-download/app-download.module';
+import { SorteosModule } from './modules/sorteos/sorteos.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { AppDownloadModule } from './modules/app-download/app-download.module';
     NotificationsModule,
     ReviewsModule,
     AppDownloadModule,
+    SorteosModule,
   ],
   providers: [
     {
