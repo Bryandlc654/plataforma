@@ -38,9 +38,14 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
       const ctaText = c.ctaText || "Solicitar cotización";
       const ctaUrl = c.ctaUrl || "#contacto";
       const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
+      const logoScrolled = c.logoScrolled || "";
       return `
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
       <style>
+        .logo-top { display: block; }
+        .logo-scrolled { display: none; }
+        .scrolled .logo-top { display: none; }
+        .scrolled .logo-scrolled { display: block; }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { font-family: 'Inter', system-ui, sans-serif; scroll-behavior: smooth; }
         html, body { max-width: 100vw; overflow-x: hidden; }
@@ -84,7 +89,8 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
       <header id="navHeader" class="fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-transparent border-b border-white/10">
         <div class="container-x flex items-center justify-between h-18 py-3">
             <a href="#inicio" class="flex items-center gap-2 group">
-                <img id="navLogoBox" src="${logo}" alt="${c.logoText || 'Rodriplast'}" class="h-14 w-auto object-contain transition-all duration-500">
+                <img id="navLogoTop" src="${logo}" alt="${c.logoText || 'Rodriplast'}" class="logo-top h-14 w-auto object-contain transition-all duration-500">
+                ${logoScrolled ? `<img id="navLogoScrolled" src="${logoScrolled}" alt="${c.logoText || 'Rodriplast'}" class="logo-scrolled h-12 w-auto object-contain transition-all duration-500">` : `<img id="navLogoScrolled" src="${logo}" alt="${c.logoText || 'Rodriplast'}" class="logo-scrolled h-12 w-auto object-contain transition-all duration-500">`}
             </a>
             <nav class="hidden lg:flex items-center gap-7">
                 ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="nav-link text-sm font-medium text-white/85 hover:text-white transition-colors">${l.label}</a>`).join("")}
@@ -106,12 +112,12 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
           window._navScrollBound = true;
           const navHeader = document.getElementById('navHeader');
           const navLinks = document.querySelectorAll('.nav-link');
-          const navLogoBox = document.getElementById('navLogoBox');
           window.addEventListener('scroll', () => {
               const s = window.scrollY > 30;
-              if(navHeader) navHeader.className = s ? 'fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-rodri-background/85 backdrop-blur-xl border-b border-rodri-border shadow-sm' : 'fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-transparent border-b border-white/10';
+              if(navHeader) {
+                navHeader.className = s ? 'fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-rodri-background/85 backdrop-blur-xl border-b border-rodri-border shadow-sm scrolled' : 'fixed top-0 inset-x-0 z-50 transition-all duration-500 bg-transparent border-b border-white/10';
+              }
               navLinks.forEach(l => { l.className = s ? 'text-sm font-medium text-rodri-foreground/80 hover:text-rodri-primary transition-colors' : 'text-sm font-medium text-white/85 hover:text-white transition-colors'; });
-              if(navLogoBox) navLogoBox.className = s ? 'h-12 w-auto object-contain transition-all duration-500' : 'h-14 w-auto object-contain transition-all duration-500';
           });
         }
         (function() {

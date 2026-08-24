@@ -172,6 +172,9 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           {(content.logoType !== "text") && (
             <ImageField label="Logo (imagen)" value={content.logoImage} onChange={(v) => set("logoImage", v)} />
           )}
+          {(content.logoType !== "text") && (
+            <ImageField label="Logo (al hacer scroll)" value={content.logoScrolled} onChange={(v) => set("logoScrolled", v)} />
+          )}
           <Field label="Enlaces"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
           <Field label="Texto del botón CTA"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="Contáctanos" /></Field>
           <Field label="URL del botón CTA"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
