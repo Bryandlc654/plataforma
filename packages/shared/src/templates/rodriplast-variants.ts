@@ -2,20 +2,15 @@ const PLACEHOLDER_LOGO = "https://placehold.co/200x80/ffffff/0f172a?text=Logo";
 
 function toGoogleMapsEmbed(url: string): string {
   if (!url) return "";
-  if (url.includes("/maps/embed") || url.includes("output=embed")) return url;
-  const placeMatch = url.match(/place\/([^/]+)/);
-  if (placeMatch) return `https://maps.google.com/maps?q=${encodeURIComponent(placeMatch[1].replace(/\+/g, " "))}&output=embed`;
-  const queryMatch = url.match(/[?&]q=([^&]+)/);
-  if (queryMatch) return `https://maps.google.com/maps?q=${decodeURIComponent(queryMatch[1])}&output=embed`;
+  if (url.includes("maps.google.com/maps/embed") || url.includes("www.google.com/maps/embed")) return url;
+  if (url.includes("output=embed") && url.includes("maps.google.com")) return url.replace("www.google.com", "maps.google.com");
   const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-  if (atMatch) return `https://maps.google.com/maps?q=${atMatch[1]},${atMatch[2]}&output=embed`;
-  if (/google\.com\/maps|goo\.gl\/maps|maps\.app\.goo\.gl/.test(url)) {
-    const q = url.match(/[?&]q=([^&]+)/);
-    if (q) return `https://maps.google.com/maps?q=${decodeURIComponent(q[1])}&output=embed`;
-    return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
-  }
-  if (url.startsWith("http")) return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
-  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
+  if (atMatch) return `https://maps.google.com/maps?q=${atMatch[1]},${atMatch[2]}&z=15&output=embed`;
+  const placeMatch = url.match(/place\/([^/@]+)/);
+  if (placeMatch) return `https://maps.google.com/maps?q=${encodeURIComponent(placeMatch[1].replace(/\+/g, " "))}&z=15&output=embed`;
+  const queryMatch = url.match(/[?&]q=([^&]+)/);
+  if (queryMatch) return `https://maps.google.com/maps?q=${decodeURIComponent(queryMatch[1])}&z=15&output=embed`;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&z=15&output=embed`;
 }
 
 export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
