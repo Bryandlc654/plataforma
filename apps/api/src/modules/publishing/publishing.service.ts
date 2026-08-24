@@ -720,9 +720,9 @@ document.addEventListener("DOMContentLoaded",function(){
       fetch(form.action,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
         .then(function(r){return r.json().then(function(j){return {ok:r.ok,json:j}})})
         .then(function(res){
-          if(!res.ok||res.json.statusCode||res.json.error){throw new Error(res.json.message||"Error")}
+          if(!res.ok||res.json.error){throw new Error(res.json.message||"Error")}
           form.reset()
-          if(status){status.style.background="#f0fdf4";status.style.color="#15803d";status.textContent="¡Mensaje enviado correctamente!"}
+          if(status){status.style.background="#f0fdf4";status.style.color="#15803d";status.textContent="¡Registro exitoso!"}
         })
         .catch(function(){
           if(status){status.style.background="#fef2f2";status.style.color="#b91c1c";status.textContent="Ocurrió un error. Inténtalo nuevamente."}
@@ -881,7 +881,7 @@ ${items.map(cardHtml).join("")}
         return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);max-width:600px;margin:0 auto">
 <h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:#0f172a">${c.title || "Déjanos tu opinión"}</h2>
 <p style="text-align:center;color:#64748b;margin-bottom:2rem">${c.subtitle || "Valoramos tu experiencia con nosotros"}</p>
-<form action="${apiUrl}/api/v1/reviews/public" method="POST" class="pub-form" style="display:flex;flex-direction:column;gap:1.25rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+<form action="${apiUrl}/api/v1/reviews/public" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.25rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
   <input type="hidden" name="tenantId" value="${tenantId}">
   <input type="hidden" name="siteId" value="${siteId}">
   <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;margin-bottom:1rem">
@@ -909,7 +909,7 @@ ${items.map(cardHtml).join("")}
     <label style="font-weight:600;color:#334155;font-size:.95rem">Comentario <span style="color:#ef4444">*</span></label>
     <textarea name="content" required rows="4" style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s;resize:vertical"></textarea>
   </div>
-  <div class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
+  <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
   <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Enviar opinión</button>
 </form>
 </section>`;
@@ -941,9 +941,9 @@ ${items.map(cardHtml).join("")}
         return `<section style="padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem);max-width:600px;margin:0 auto">
 <h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:#0f172a">${escapeHtml(sorteo?.title || "Sorteo")}</h2>
 ${desc}${endDate}
-<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
+<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
 ${fieldHtml}
-  <div class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
+  <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
   <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Participar</button>
 </form>
 </section>`;
