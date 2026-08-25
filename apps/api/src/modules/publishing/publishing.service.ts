@@ -80,6 +80,11 @@ export class PublishingService {
 
     if (!site || site.deletedAt) throw new NotFoundException("Site not found");
 
+    for (const page of site.pages) {
+      if (page.blocks) {
+        page.blocks = await this.resolveLinktreeBlocks(page.blocks, site.tenantId);
+      }
+    }
     const html = this.renderSite(site);
 
     await this.prisma.site.update({
@@ -272,7 +277,7 @@ export class PublishingService {
         orderBy: { createdAt: "desc" },
       });
 
-      const html = this.renderFullSite(site, path, approvedReviews);
+      const html = await this.renderFullSite(site, path, approvedReviews);
       this.setCached(this.htmlCache, cacheKey, html, 60_000);
       return html;
     })(), 10000, "Timeout rendering site").finally(() => {
@@ -437,13 +442,35 @@ ${blocksHtml}
 </html>`;
   }
 
-  private renderFullSite(site: any, requestedPath?: string, reviews: any[] = []): string {
+  private async resolveLinktreeBlocks(blocks: any[], tenantId: string): Promise<any[]> {
+    const resolved: any[] = [];
+    for (const block of blocks) {
+      if (block.type === "linktree" && !block.content?.linktree) {
+        const lt = await this.prisma.linkPage.findFirst({
+          where: { tenantId, isActive: true },
+          orderBy: { createdAt: "desc" },
+        });
+        if (lt) {
+          resolved.push({ ...block, content: { ...block.content, linktree: lt } });
+          continue;
+        }
+      }
+      resolved.push(block);
+    }
+    return resolved;
+  }
+
+  private async renderFullSite(site: any, requestedPath?: string, reviews: any[] = []): Promise<string> {
     const wanted = requestedPath ? normalizePublicPath(requestedPath) : "/";
     const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
     const page =
       (requestedPath
         ? site.pages.find((p: any) => normalizePublicPath(p.path) === wanted)
         : undefined) || defaultPage;
+
+    if (page?.blocks) {
+      page.blocks = await this.resolveLinktreeBlocks(page.blocks, site.tenantId);
+    }
 
     const blocksHtml = page?.blocks.map((block: any) =>
       this.renderBlock(block.type, this.resolveBlockUrls(block).content, block.styles, site, reviews)
@@ -1233,6 +1260,69 @@ ${c.title ? `<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2rem);font-
 <div style="position:relative;padding-top:${pad}%;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
 <iframe src="${getEmbedUrl(c.url || "")}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${c.title || "Video"}"></iframe>
 </div>
+</section>`;
+      }
+
+      case "linktree": {
+        const lt = c.linktree;
+        if (!lt) return "";
+        const bg = lt.background;
+        let sectionBg = "background:#f8fafc";
+        let titleColor = "#111827";
+        let descColor = "#6b7280";
+        let linkBg = "#ffffff";
+        let linkBorder = "border:1px solid #e5e7eb";
+        let linkText = "#111827";
+        let socialBg = "#f3f4f6";
+        let socialText = "#374151";
+        let isDark = false;
+        if (bg?.type === "color" && bg.value) {
+          sectionBg = `background:${bg.value}`;
+          isDark = !this.isLightColor(bg.value);
+        } else if (bg?.type === "gradient" && bg.value) {
+          sectionBg = `background:${bg.value}`;
+          isDark = !this.isLightColor(bg.gradientFrom || "#ffffff");
+        } else if (bg?.type === "image" && bg.value) {
+          sectionBg = `background:url('${escapeHtml(bg.value)}') center/cover no-repeat`;
+          isDark = true;
+        }
+        if (isDark) {
+          titleColor = "#ffffff"; descColor = "rgba(255,255,255,0.8)";
+          linkBg = "#ffffff"; linkText = "#111827"; linkBorder = "border:none";
+          socialBg = "rgba(255,255,255,0.2)"; socialText = "#ffffff";
+        }
+        const imageOverlay = bg?.type === "image" ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.45)"></div>` : "";
+        const relativeOpen = bg?.type === "image" ? `<div style="position:relative">` : "";
+        const relativeClose = bg?.type === "image" ? `</div>` : "";
+
+        const logoHtml = lt.logoUrl
+          ? `<img src="${escapeHtml(this.absoluteUrl(lt.logoUrl))}" alt="${escapeHtml(lt.title)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin-bottom:1rem;border:4px solid rgba(255,255,255,0.2);box-shadow:0 4px 12px rgba(0,0,0,0.15)">`
+          : `<div style="width:96px;height:96px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.875rem;font-weight:700;margin-bottom:1rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:4px solid rgba(255,255,255,0.2)">${escapeHtml((lt.title || "?")[0]?.toUpperCase() || "?")}</div>`;
+
+        const socialsHtml = (lt.socials || []).map((s: any) =>
+          `<a href="${escapeHtml(s.url || "#")}" target="_blank" rel="noopener noreferrer" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .2s;text-decoration:none;background:${socialBg};color:${socialText}" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><span style="font-weight:700;font-size:.75rem;text-transform:capitalize">${escapeHtml((s.platform || "").substring(0, 2))}</span></a>`
+        ).join("\n");
+
+        const linksHtml = (lt.links || []).filter((l: any) => l.isActive !== false).map((l: any) =>
+          `<a href="${escapeHtml(l.url || "#")}" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;padding:1rem;border-radius:12px;text-align:center;font-weight:500;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);background:${linkBg};color:${linkText};${linkBorder}" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">${escapeHtml(l.title || "")}</a>`
+        ).join("\n");
+
+        return `<section style="${sectionBg};min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem)">
+${imageOverlay}
+${relativeOpen}
+<div style="width:100%;max-width:28rem;margin:0 auto;position:relative;z-index:1">
+<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:2rem">
+${logoHtml}
+<h1 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;color:${titleColor}">${escapeHtml(lt.title || "")}</h1>
+${lt.description ? `<p style="font-size:1rem;color:${descColor}">${escapeHtml(lt.description)}</p>` : ""}
+</div>
+${socialsHtml ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:2rem">${socialsHtml}</div>` : ""}
+${linksHtml ? `<div style="display:flex;flex-direction:column;gap:1rem">${linksHtml}</div>` : ""}
+<div style="margin-top:3rem;text-align:center">
+<a href="https://build.icebergup.com" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;font-weight:600;letter-spacing:.05em;opacity:.6;text-decoration:none;color:${socialText}">POWERED BY BIA</a>
+</div>
+</div>
+${relativeClose}
 </section>`;
       }
 
