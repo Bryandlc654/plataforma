@@ -28,7 +28,8 @@ export default function AdminUsersPage() {
       const params: any = {};
       if (roleFilter) params.role = roleFilter;
       const res: any = await api.get("/users/admin/all", { params });
-      setUsers(res.data || res);
+      const payload = res.data || res;
+      setUsers(Array.isArray(payload) ? payload : (payload.items || []));
     }
     catch {} finally { setLoading(false); }
   }, [roleFilter]);
@@ -60,12 +61,19 @@ export default function AdminUsersPage() {
   };
 
   const fetchRoles = async () => {
-    try { const res: any = await api.get("/roles"); setRoles((res.data || res).filter((r: any) => r.name !== "super_admin" && r.name !== "support")); }
+    try { const res: any = await api.get("/roles");
+      const payload = res.data || res;
+      const list = Array.isArray(payload) ? payload : (payload.items || payload.data || []);
+      setRoles(list.filter((r: any) => r.name !== "super_admin" && r.name !== "support"));
+    }
     catch {}
   };
 
   const fetchTenants = async () => {
-    try { const res: any = await api.get("/tenants/admin/all"); setTenants(res.data || res); }
+    try { const res: any = await api.get("/tenants/admin/all");
+      const payload = res.data || res;
+      setTenants(Array.isArray(payload) ? payload : (payload.items || payload.data || []));
+    }
     catch {}
   };
 

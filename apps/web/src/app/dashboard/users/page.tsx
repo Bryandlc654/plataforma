@@ -27,8 +27,11 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const [mRes, rRes]: any[] = await Promise.all([api.get(`/tenants/${tenantId}/users`), api.get("/roles")]);
-      setMembers(mRes.data || mRes);
-      const tr = (rRes.data || rRes).filter((r: Role) => r.name !== "super_admin" && r.name !== "support" && r.name !== "owner");
+      const membersData = mRes.data || mRes;
+      setMembers(Array.isArray(membersData) ? membersData : (membersData.items || membersData.data || []));
+      const rolesData = rRes.data || rRes;
+      const rolesList = Array.isArray(rolesData) ? rolesData : (rolesData.items || rolesData.data || []);
+      const tr = rolesList.filter((r: Role) => r.name !== "super_admin" && r.name !== "support" && r.name !== "owner");
       setRoles(tr);
       if (tr.length > 0 && !inviteRole) setInviteRole(tr[0].id);
     } catch {} finally { setLoading(false); }
