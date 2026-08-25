@@ -56,6 +56,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="linktrees"
+        options={{
+          title: 'Bio Links',
+          tabBarIcon: ({ color }) => <MaterialIcons name="link" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Ajustes',
