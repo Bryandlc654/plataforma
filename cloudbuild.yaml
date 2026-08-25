@@ -9,6 +9,10 @@ steps:
       - 'gcr.io/$PROJECT_ID/plataforma-api'
       - '.'
 
+  # Push image to registry before deploying
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/plataforma-api']
+
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
