@@ -204,6 +204,7 @@ export class PublishingService {
       const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
 
       let sorteoSlug: string | null = null;
+      let linktreeSlug: string | null = null;
       if (path && !isReviewFormRoute) {
         const cleanPath = normalizePublicPath(path).replace(/^\//, "");
         const sorteo = await this.prisma.sorteo.findFirst({
@@ -213,7 +214,7 @@ export class PublishingService {
         if (sorteo) sorteoSlug = sorteo.slug;
       }
 
-      if (path && !isReviewFormRoute && !sorteoSlug) {
+      if (path && !isReviewFormRoute && !sorteoSlug && !linktreeSlug) {
         const wanted = normalizePublicPath(path);
         const match = site.pages.find(
           (p: any) => normalizePublicPath(p.path) === wanted
@@ -228,6 +229,20 @@ export class PublishingService {
           isDefault: false,
           blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} } as any]
         } as any);
+      }
+
+      if (linktreeSlug) {
+        const linktree = await this.prisma.linkPage.findFirst({
+          where: { tenantId: site.tenantId, slug: linktreeSlug, isActive: true },
+        });
+        if (linktree) {
+          site.pages.push({
+            name: linktree.title,
+            path: `/${linktree.slug}`,
+            isDefault: false,
+            blocks: [{ type: 'linktree', content: { linktree, tenantId: site.tenantId }, styles: {} } as any]
+          } as any);
+        }
       }
 
       if (sorteoSlug) {

@@ -37,6 +37,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AppDownloadModule } from './modules/app-download/app-download.module';
 import { SorteosModule } from './modules/sorteos/sorteos.module';
+import { LinktreesModule } from './modules/linktrees/linktrees.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { SorteosModule } from './modules/sorteos/sorteos.module';
     ReviewsModule,
     AppDownloadModule,
     SorteosModule,
+    LinktreesModule,
   ],
   providers: [
     {
