@@ -49,6 +49,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="sorteos"
+        options={{
+          title: 'Sorteos',
+          tabBarIcon: ({ color }) => <MaterialIcons name="card-giftcard" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Ajustes',
