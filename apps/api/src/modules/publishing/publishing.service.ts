@@ -212,6 +212,13 @@ export class PublishingService {
           select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
         });
         if (sorteo) sorteoSlug = sorteo.slug;
+
+        if (!sorteoSlug) {
+          const linktreeMatch = await this.prisma.linkPage.findFirst({
+            where: { tenantId: site.tenantId, slug: cleanPath, isActive: true },
+          });
+          if (linktreeMatch) linktreeSlug = linktreeMatch.slug;
+        }
       }
 
       if (path && !isReviewFormRoute && !sorteoSlug && !linktreeSlug) {
