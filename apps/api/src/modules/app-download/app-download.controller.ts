@@ -3,15 +3,11 @@ import {
   UploadedFile, BadRequestException,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import { memoryStorage } from "multer";
 import { ApiTags, ApiOperation, ApiConsumes, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { AppDownloadService } from "./app-download.service";
-
-const APK_DIR = join(process.cwd(), "uploads", "app-download");
 
 @ApiTags("app-download")
 @Controller("app-download")
@@ -37,16 +33,7 @@ export class AppDownloadController {
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(
     FileInterceptor("file", {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          if (!existsSync(APK_DIR)) mkdirSync(APK_DIR, { recursive: true });
-          cb(null, APK_DIR);
-        },
-        filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-          cb(null, `${unique}.apk`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (file.mimetype === "application/vnd.android.package-archive" || file.originalname.endsWith(".apk")) {
           cb(null, true);
@@ -65,13 +52,18 @@ export class AppDownloadController {
   ) {
     this.checkSuperAdmin(user);
     if (!file) throw new BadRequestException("Archivo APK requerido");
-    const apiBase = process.env.PUBLIC_API_URL || process.env.PLATAFORMA_API_URL || "https://plataforma-api-71743315793.us-central1.run.app";
-    const apkUrl = `${apiBase}/uploads/app-download/${file.filename}`;
+
+    const apkBuffer = file.buffer || (() => {
+      const fs = require("fs");
+      return fs.readFileSync(file.path);
+    })();
+
     return this.appDownloadService.setApk({
-      apkUrl,
+      apkBuffer,
       apkVersion: apkVersion || "",
       apkName: apkName || file.originalname.replace(".apk", ""),
       apkSize: file.size,
+      originalFilename: file.originalname,
     });
   }
 

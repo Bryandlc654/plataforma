@@ -86,16 +86,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Agrupación para Super Admin
   const adminNavGroups = [
-    {
-      title: "Gestión Core",
-      links: [
-        { href: "/dashboard", label: "Dashboard Global", icon: "home" },
-        { href: "/dashboard/admin/tenants", label: "Tenants", icon: "admintenants" },
-        { href: "/dashboard/admin/users", label: "Usuarios", icon: "adminusers" },
-        { href: "/dashboard/admin/plans", label: "Planes", icon: "adminplans" },
-        { href: "/dashboard/admin/billing", label: "Facturación", icon: "billing" },
-      ]
-    },
+      {
+        title: "Gestión Core",
+        links: [
+          { href: "/dashboard", label: "Dashboard Global", icon: "home" },
+          { href: "/dashboard/admin/tenants", label: "Tenants", icon: "admintenants" },
+          { href: "/dashboard/admin/users", label: "Usuarios", icon: "adminusers" },
+          { href: "/dashboard/admin/plans", label: "Planes", icon: "adminplans" },
+          { href: "/dashboard/admin/billing", label: "Facturación", icon: "billing" },
+          { href: "/dashboard/app-download", label: "App Movil", icon: "appdownload" },
+        ]
+      },
     {
       title: "Configuración",
       links: [
