@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { useConfirm } from "@/components/providers/confirm-provider";
-import { Plus, Trash2, Copy, Eye, EyeOff, Link as LinkIcon, Share2, Upload, Image as ImageIcon, X } from "lucide-react";
+import { Plus, Trash2, Copy, Eye, EyeOff, Link as LinkIcon, Share2, Upload, Image as ImageIcon, X, FolderOpen } from "lucide-react";
+import MediaPicker from "@/components/media-picker";
 
 interface Linktree {
   id: string; title: string; slug: string; description: string | null;
@@ -34,6 +35,8 @@ export default function LinktreesPage() {
   const [toast, setToast] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  const [logoPickerOpen, setLogoPickerOpen] = useState(false);
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
 
   const { confirm } = useConfirm();
 
@@ -226,18 +229,25 @@ export default function LinktreesPage() {
               <div>
                 <label className="block text-sm font-medium mb-1">Logo</label>
                 <input type="file" accept="image/*" className="hidden" ref={logoInputRef} onChange={handleLogoUpload} />
+                <MediaPicker open={logoPickerOpen} onClose={() => setLogoPickerOpen(false)} onSelect={url => setLogoUrl(url)} />
                 {logoUrl ? (
                   <div className="flex items-center gap-3">
                     <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-full object-cover border" />
                     <div className="flex gap-2">
-                      <button onClick={() => logoInputRef.current?.click()} className="text-sm text-blue-600 hover:underline">Cambiar</button>
+                      <button onClick={() => logoInputRef.current?.click()} className="text-sm text-blue-600 hover:underline flex items-center gap-1"><Upload size={12} /> Subir</button>
+                      <button onClick={() => setLogoPickerOpen(true)} className="text-sm text-blue-600 hover:underline flex items-center gap-1"><FolderOpen size={12} /> Elegir</button>
                       <button onClick={() => setLogoUrl("")} className="text-sm text-red-500 hover:underline">Eliminar</button>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => logoInputRef.current?.click()} className="flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors w-full">
-                    <Upload size={18} /> Subir logo
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => logoInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                      <Upload size={18} /> Subir logo
+                    </button>
+                    <button onClick={() => setLogoPickerOpen(true)} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                      <FolderOpen size={18} /> Elegir de archivos
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -296,17 +306,25 @@ export default function LinktreesPage() {
                 {bgType === "image" && (
                   <div>
                     <input type="file" accept="image/*" className="hidden" ref={bgInputRef} onChange={handleBgImageUpload} />
+                    <MediaPicker open={bgPickerOpen} onClose={() => setBgPickerOpen(false)} onSelect={url => { setBgImage(url); setBgType("image"); }} />
                     {bgImage ? (
                       <div className="relative">
                         <img src={bgImage} alt="Fondo" className="w-full h-32 object-cover rounded-lg border" />
-                        <button onClick={() => { setBgImage(""); setBgType("none"); }} className="absolute top-2 right-2 bg-white/90 rounded-full p-1 hover:bg-white shadow">
-                          <X size={14} />
-                        </button>
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <button onClick={() => bgInputRef.current?.click()} className="bg-white/90 rounded-full p-1 hover:bg-white shadow text-gray-600"><Upload size={14} /></button>
+                          <button onClick={() => setBgPickerOpen(true)} className="bg-white/90 rounded-full p-1 hover:bg-white shadow text-gray-600"><FolderOpen size={14} /></button>
+                          <button onClick={() => { setBgImage(""); setBgType("none"); }} className="bg-white/90 rounded-full p-1 hover:bg-white shadow text-red-500"><X size={14} /></button>
+                        </div>
                       </div>
                     ) : (
-                      <button onClick={() => bgInputRef.current?.click()} className="flex items-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors w-full">
-                        <ImageIcon size={18} /> Subir imagen de fondo
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => bgInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                          <Upload size={18} /> Subir imagen
+                        </button>
+                        <button onClick={() => setBgPickerOpen(true)} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                          <FolderOpen size={18} /> Elegir de archivos
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
