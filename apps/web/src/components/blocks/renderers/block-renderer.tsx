@@ -974,61 +974,96 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     case "linktree": {
       const { linktree } = c;
       if (!linktree) return null;
-      
-      const bgStyle = linktree.background?.type === "image" 
-        ? { backgroundImage: `url(${resolveMediaUrl(linktree.background.value)})`, backgroundSize: "cover", backgroundPosition: "center" }
+
+      const isDefaultBg = !linktree.background || (linktree.background.type === "none");
+      const isLightBg = linktree.background?.type === "color" && linktree.background?.value && !["#000000","#111827","#0f172a","#1e293b","#18181b","#000"].includes(linktree.background.value.toLowerCase()) && (() => { const h = linktree.background.value.replace("#",""); const r = parseInt(h.substring(0,2),16); const g = parseInt(h.substring(2,4),16); const b = parseInt(h.substring(4,6),16); return (r*299+g*587+b*114)/1000 > 150; })();
+      const isDark = isDefaultBg || !isLightBg;
+
+      const bgStyle = isDefaultBg
+        ? { background: "linear-gradient(135deg,#0f172a 0%,#1e293b 100%)" }
+        : linktree.background?.type === "image"
+        ? { backgroundImage: `url(${resolveMediaUrl(linktree.background.value)})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" as const }
         : linktree.background?.type === "gradient"
         ? { background: linktree.background.value }
-        : { backgroundColor: linktree.background?.value || "#f8fafc" };
+        : { backgroundColor: linktree.background?.value || "#0f172a" };
 
-      const isDarkBg = linktree.background?.type !== "color" || (linktree.background?.value && linktree.background.value !== "#ffffff" && linktree.background.value !== "#f8fafc");
+      const socialColors: Record<string, string> = {
+        instagram: "#E4405F", facebook: "#1877F2", twitter: "#1DA1F2",
+        tiktok: "#000000", youtube: "#FF0000", whatsapp: "#25D366", linkedin: "#0A66C2",
+      };
 
       return (
-        <div style={bgStyle} className="min-h-screen w-full flex flex-col items-center py-12 px-4">
-          <div className="w-full max-w-md mx-auto">
-            {/* Header */}
-            <div className="flex flex-col items-center text-center mb-8">
+        <div style={bgStyle} className="min-h-screen w-full flex flex-col items-center py-16 px-4">
+          {linktree.background?.type === "image" && (
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60 pointer-events-none" />
+          )}
+          <div className="w-full max-w-sm mx-auto relative z-10 animate-[fadeUp_.6s_cubic-bezier(.16,1,.3,1)_both]">
+            {/* Avatar */}
+            <div className="flex flex-col items-center text-center mb-10">
               {linktree.logoUrl ? (
-                <img src={resolveMediaUrl(linktree.logoUrl)} alt={linktree.title} className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-white/20 shadow-lg" />
+                <div className="w-[112px] h-[112px] rounded-full p-[3px] mb-5 shadow-2xl"
+                  style={{ background: isDark ? "linear-gradient(135deg,rgba(255,255,255,0.3),rgba(255,255,255,0.1))" : "linear-gradient(135deg,rgba(99,102,241,0.4),rgba(168,85,247,0.4))" }}>
+                  <img src={resolveMediaUrl(linktree.logoUrl)} alt={linktree.title}
+                    className="w-full h-full rounded-full object-cover border-[3px]"
+                    style={{ borderColor: isDark ? "rgba(0,0,0,0.3)" : "#ffffff" }} />
+                </div>
               ) : (
-                <div className="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-lg border-4 border-white/20">
+                <div className="w-[112px] h-[112px] rounded-full mb-5 flex items-center justify-center text-[2.25rem] font-extrabold text-white shadow-2xl border-[3px]"
+                  style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)", borderColor: isDark ? "rgba(0,0,0,0.3)" : "#ffffff" }}>
                   {linktree.title?.[0]?.toUpperCase()}
                 </div>
               )}
-              <h1 className={`text-2xl font-bold ${isDarkBg ? 'text-white' : 'text-gray-900'} mb-2`}>{linktree.title}</h1>
+              <h1 className={`text-[1.75rem] font-extrabold mb-2 tracking-tight leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                {linktree.title}
+              </h1>
               {linktree.description && (
-                <p className={`text-base ${isDarkBg ? 'text-white/80' : 'text-gray-600'}`}>{linktree.description}</p>
+                <p className={`text-[.95rem] leading-relaxed max-w-[320px] ${isDark ? 'text-white/70' : 'text-gray-500'}`}>
+                  {linktree.description}
+                </p>
               )}
             </div>
 
             {/* Social Icons */}
             {linktree.socials?.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-4 mb-8">
-                {linktree.socials.map((s: any, idx: number) => (
-                  <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer" 
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110 ${isDarkBg ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm'}`}>
-                    <span className="sr-only">{s.platform}</span>
-                    <div className="capitalize font-bold text-xs">{s.platform.substring(0,2)}</div>
-                  </a>
-                ))}
+              <div className="flex flex-wrap justify-center gap-3 mb-10">
+                {linktree.socials.map((s: any, idx: number) => {
+                  const color = socialColors[s.platform] || (isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0");
+                  return (
+                    <a key={idx} href={s.url} target="_blank" rel="noopener noreferrer"
+                      className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-xs transition-all duration-300 hover:-translate-y-1 hover:scale-110 shadow-lg"
+                      style={{ background: color, boxShadow: `0 4px 14px ${color}44` }}
+                      onMouseOver={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px ${color}66`; }}
+                      onMouseOut={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 14px ${color}44`; }}>
+                      {s.platform?.substring(0, 2)}
+                    </a>
+                  );
+                })}
               </div>
             )}
 
             {/* Links */}
             {linktree.links?.length > 0 && (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3.5">
                 {linktree.links.map((link: any, idx: number) => link.isActive !== false && (
                   <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className={`w-full p-4 rounded-xl text-center font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md ${isDarkBg ? 'bg-white text-gray-900 hover:bg-gray-50' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'}`}>
+                    className={`w-full py-4 px-6 rounded-2xl text-center font-semibold text-[.95rem] tracking-wide transition-all duration-300 hover:-translate-y-[3px] hover:scale-[1.02] active:scale-[0.98] shadow-lg backdrop-blur-sm ${
+                      isDark
+                        ? 'bg-white/10 text-white hover:bg-white/15 border border-white/15 hover:shadow-2xl'
+                        : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200/80 hover:shadow-xl'
+                    }`}>
                     {link.title}
                   </a>
                 ))}
               </div>
             )}
-            
-            <div className="mt-12 text-center">
-              <a href="https://build.icebergup.com" target="_blank" rel="noopener noreferrer" className={`text-xs font-semibold tracking-wider opacity-60 hover:opacity-100 ${isDarkBg ? 'text-white' : 'text-gray-500'}`}>
-                POWERED BY BIA
+
+            {/* Footer */}
+            <div className="mt-14 text-center">
+              <a href="https://build.icebergup.com" target="_blank" rel="noopener noreferrer"
+                className={`text-[.7rem] font-semibold tracking-[.1em] uppercase transition-colors duration-300 ${
+                  isDark ? 'text-white/30 hover:text-white/70' : 'text-gray-300 hover:text-gray-500'
+                }`}>
+                Powered by Bia
               </a>
             </div>
           </div>

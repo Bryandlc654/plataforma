@@ -1267,15 +1267,16 @@ ${c.title ? `<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2rem);font-
         const lt = c.linktree;
         if (!lt) return "";
         const bg = lt.background;
-        let sectionBg = "background:#f8fafc";
-        let titleColor = "#111827";
-        let descColor = "#6b7280";
-        let linkBg = "#ffffff";
-        let linkBorder = "border:1px solid #e5e7eb";
-        let linkText = "#111827";
-        let socialBg = "#f3f4f6";
-        let socialText = "#374151";
-        let isDark = false;
+        let sectionBg = "background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%)";
+        let titleColor = "#ffffff";
+        let descColor = "rgba(255,255,255,0.7)";
+        let linkBg = "rgba(255,255,255,0.1)";
+        let linkBorder = "1px solid rgba(255,255,255,0.15)";
+        let linkText = "#ffffff";
+        let socialBg = "rgba(255,255,255,0.12)";
+        let socialText = "#ffffff";
+        let isDark = true;
+        let cardShadow = "0 8px 32px rgba(0,0,0,0.3)";
         if (bg?.type === "color" && bg.value) {
           sectionBg = `background:${bg.value}`;
           isDark = !this.isLightColor(bg.value);
@@ -1283,43 +1284,51 @@ ${c.title ? `<h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2rem);font-
           sectionBg = `background:${bg.value}`;
           isDark = !this.isLightColor(bg.gradientFrom || "#ffffff");
         } else if (bg?.type === "image" && bg.value) {
-          sectionBg = `background:url('${escapeHtml(bg.value)}') center/cover no-repeat`;
+          sectionBg = `background:url('${escapeHtml(bg.value)}') center/cover no-repeat fixed`;
           isDark = true;
         }
-        if (isDark) {
-          titleColor = "#ffffff"; descColor = "rgba(255,255,255,0.8)";
-          linkBg = "#ffffff"; linkText = "#111827"; linkBorder = "border:none";
-          socialBg = "rgba(255,255,255,0.2)"; socialText = "#ffffff";
+        if (!isDark) {
+          titleColor = "#0f172a"; descColor = "#64748b";
+          linkBg = "#ffffff"; linkText = "#0f172a"; linkBorder = "1px solid #e2e8f0";
+          socialBg = "#f1f5f9"; socialText = "#334155";
+          cardShadow = "0 4px 20px rgba(0,0,0,0.08)";
         }
-        const imageOverlay = bg?.type === "image" ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.45)"></div>` : "";
+        const imageOverlay = bg?.type === "image" ? `<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.4) 100%)"></div>` : "";
         const relativeOpen = bg?.type === "image" ? `<div style="position:relative">` : "";
         const relativeClose = bg?.type === "image" ? `</div>` : "";
+        const logoShadow = isDark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.12)";
 
         const logoHtml = lt.logoUrl
-          ? `<img src="${escapeHtml(this.absoluteUrl(lt.logoUrl))}" alt="${escapeHtml(lt.title)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;margin-bottom:1rem;border:4px solid rgba(255,255,255,0.2);box-shadow:0 4px 12px rgba(0,0,0,0.15)">`
-          : `<div style="width:96px;height:96px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.875rem;font-weight:700;margin-bottom:1rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:4px solid rgba(255,255,255,0.2)">${escapeHtml((lt.title || "?")[0]?.toUpperCase() || "?")}</div>`;
+          ? `<div style="width:112px;height:112px;border-radius:50%;padding:3px;background:linear-gradient(135deg,${isDark ? "rgba(255,255,255,0.3)" : "rgba(99,102,241,0.4)"},${isDark ? "rgba(255,255,255,0.1)" : "rgba(168,85,247,0.4)"});margin-bottom:1.25rem;box-shadow:${logoShadow}"><img src="${escapeHtml(this.absoluteUrl(lt.logoUrl))}" alt="${escapeHtml(lt.title)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid ${isDark ? "rgba(0,0,0,0.3)" : "#ffffff"}"></div>`
+          : `<div style="width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:2.25rem;font-weight:800;margin-bottom:1.25rem;box-shadow:${logoShadow};border:3px solid ${isDark ? "rgba(0,0,0,0.3)" : "#ffffff"};letter-spacing:-0.02em">${escapeHtml((lt.title || "?")[0]?.toUpperCase() || "?")}</div>`;
 
-        const socialsHtml = (lt.socials || []).map((s: any) =>
-          `<a href="${escapeHtml(s.url || "#")}" target="_blank" rel="noopener noreferrer" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .2s;text-decoration:none;background:${socialBg};color:${socialText}" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><span style="font-weight:700;font-size:.75rem;text-transform:capitalize">${escapeHtml((s.platform || "").substring(0, 2))}</span></a>`
+        const socialIcons: Record<string, string> = {
+          instagram: "#E4405F", facebook: "#1877F2", twitter: "#1DA1F2",
+          tiktok: "#000000", youtube: "#FF0000", whatsapp: "#25D366", linkedin: "#0A66C2",
+        };
+        const socialsHtml = (lt.socials || []).map((s: any) => {
+          const color = socialIcons[s.platform] || (isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0");
+          return `<a href="${escapeHtml(s.url || "#")}" target="_blank" rel="noopener noreferrer" style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s cubic-bezier(.4,0,.2,1);text-decoration:none;background:${color};color:#fff;box-shadow:0 4px 12px ${color}44" onmouseover="this.style.transform='translateY(-3px) scale(1.1)';this.style.boxShadow='0 8px 20px ${color}66'" onmouseout="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='0 4px 12px ${color}44'"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui">${escapeHtml((s.platform || "").substring(0, 2))}</text></svg></a>`;
+        }).join("\n");
+
+        const linksHtml = (lt.links || []).filter((l: any) => l.isActive !== false).map((l: any, i: number) =>
+          `<a href="${escapeHtml(l.url || "#")}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;width:100%;padding:1rem 1.5rem;border-radius:16px;text-align:center;font-weight:600;font-size:.95rem;letter-spacing:.01em;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:${cardShadow};background:${linkBg};color:${linkText};border:${linkBorder};backdrop-filter:blur(10px)" onmouseover="this.style.transform='translateY(-3px) scale(1.02)';this.style.boxShadow='0 12px 40px rgba(0,0,0,0.25)'" onmouseout="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='${cardShadow}'">${escapeHtml(l.title || "")}</a>`
         ).join("\n");
 
-        const linksHtml = (lt.links || []).filter((l: any) => l.isActive !== false).map((l: any) =>
-          `<a href="${escapeHtml(l.url || "#")}" target="_blank" rel="noopener noreferrer" style="display:block;width:100%;padding:1rem;border-radius:12px;text-align:center;font-weight:500;text-decoration:none;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);background:${linkBg};color:${linkText};${linkBorder}" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">${escapeHtml(l.title || "")}</a>`
-        ).join("\n");
-
-        return `<section style="${sectionBg};min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem)">
+        return `<style>.linktree-fade{animation:linktreeIn .6s cubic-bezier(.16,1,.3,1) both}@keyframes linktreeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>
+<section style="${sectionBg};min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;padding:clamp(4rem,12vw,6rem) clamp(1rem,5vw,2rem)">
 ${imageOverlay}
 ${relativeOpen}
-<div style="width:100%;max-width:28rem;margin:0 auto;position:relative;z-index:1">
-<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:2rem">
+<div style="width:100%;max-width:24rem;margin:0 auto;position:relative;z-index:1" class="linktree-fade">
+<div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:2.5rem">
 ${logoHtml}
-<h1 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;color:${titleColor}">${escapeHtml(lt.title || "")}</h1>
-${lt.description ? `<p style="font-size:1rem;color:${descColor}">${escapeHtml(lt.description)}</p>` : ""}
+<h1 style="font-size:1.75rem;font-weight:800;margin-bottom:.5rem;color:${titleColor};letter-spacing:-.02em;line-height:1.2">${escapeHtml(lt.title || "")}</h1>
+${lt.description ? `<p style="font-size:.95rem;color:${descColor};line-height:1.5;max-width:320px;margin:0 auto">${escapeHtml(lt.description)}</p>` : ""}
 </div>
-${socialsHtml ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:2rem">${socialsHtml}</div>` : ""}
-${linksHtml ? `<div style="display:flex;flex-direction:column;gap:1rem">${linksHtml}</div>` : ""}
-<div style="margin-top:3rem;text-align:center">
-<a href="https://build.icebergup.com" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;font-weight:600;letter-spacing:.05em;opacity:.6;text-decoration:none;color:${socialText}">POWERED BY BIA</a>
+${socialsHtml ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-bottom:2.5rem">${socialsHtml}</div>` : ""}
+${linksHtml ? `<div style="display:flex;flex-direction:column;gap:.875rem">${linksHtml}</div>` : ""}
+<div style="margin-top:3.5rem;text-align:center">
+<a href="https://build.icebergup.com" target="_blank" rel="noopener noreferrer" style="font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;color:${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.25)"};transition:color .3s" onmouseover="this.style.color='${isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)"}'" onmouseout="this.style.color='${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.25)"}'">Powered by Bia</a>
 </div>
 </div>
 ${relativeClose}

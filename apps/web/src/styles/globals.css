@@ -142,3 +142,8 @@
   --font-body-lg: "Montserrat", sans-serif;
   --font-label-sm: "Montserrat", sans-serif;
 }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
