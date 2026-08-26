@@ -7,49 +7,24 @@ function siteHref(url?: string) {
   return url.startsWith("/") || url.startsWith("http") ? url : `#${url}`;
 }
 
-function fieldIcon(name: string) {
-  const map: Record<string, string> = {
-    nombre: "bi-person", name: "bi-person", email: "bi-envelope",
-    telefono: "bi-telephone", phone: "bi-telephone", mensaje: "bi-chat-dots",
-    message: "bi-chat-dots", empresa: "bi-building", company: "bi-building",
-    asunto: "bi-tag", subject: "bi-tag",
-  };
-  return map[name] || "bi-pencil";
-}
-
 function actionUrl(site?: any, apiBaseUrl?: string) {
   const host = apiBaseUrl || "https://plataforma-api-71743315793.us-central1.run.app";
   return `${host}/api/v1/leads`;
 }
 
-function footerScript() {
-  return `<script>
-    (function(){
-      if(window._indigoFooterNav) return;
-      window._indigoFooterNav = true;
-      const btn = document.getElementById('footerToggle');
-      const col = document.getElementById('footerCol1');
-      if(!btn||!col) return;
-      btn.addEventListener('click',()=>{ col.classList.toggle('max-h-0'); col.classList.toggle('max-h-96'); });
-    })();
-  </script>`;
-}
-
 function heroScript() {
   return `<script>
     (function(){
-      if(window._indigoHeroNav) return;
-      window._indigoHeroNav = true;
-      const hamburger = document.getElementById('indigoHamburger');
-      const nav = document.getElementById('indigoMobileNav');
-      const overlay = document.getElementById('indigoNavOverlay');
-      const close = document.getElementById('indigoNavClose');
+      if(window._indigoNav) return;
+      window._indigoNav = true;
+      var hamburger = document.getElementById('indigoHamburger');
+      var nav = document.getElementById('indigoMobileNav');
+      var overlay = document.getElementById('indigoNavOverlay');
+      var close = document.getElementById('indigoNavClose');
       if(!hamburger||!nav) return;
-      hamburger.addEventListener('click',()=>{ nav.classList.remove('max-h-0','opacity-0','pointer-events-none'); nav.classList.add('max-h-[500px]','opacity-100'); overlay.classList.remove('opacity-0','pointer-events-none'); overlay.classList.add('opacity-100'); });
-      if(close) close.addEventListener('click',()=>{ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
-      if(overlay) overlay.addEventListener('click',()=>{ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
-      const links = nav.querySelectorAll('a');
-      links.forEach(a => a.addEventListener('click',()=>{ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); }));
+      hamburger.addEventListener('click',function(){ nav.classList.remove('max-h-0','opacity-0','pointer-events-none'); nav.classList.add('max-h-[500px]','opacity-100'); overlay.classList.remove('opacity-0','pointer-events-none'); overlay.classList.add('opacity-100'); });
+      if(close) close.addEventListener('click',function(){ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
+      if(overlay) overlay.addEventListener('click',function(){ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
     })();
   </script>`;
 }
@@ -59,72 +34,81 @@ function marqueeScript() {
     (function(){
       if(window._indigoMarquee) return;
       window._indigoMarquee = true;
-      const track = document.getElementById('indigoMarqueeTrack');
+      var track = document.getElementById('indigoMarqueeTrack');
       if(!track) return;
-      const clone = track.innerHTML;
+      var clone = track.innerHTML;
       track.innerHTML = clone + clone;
-      let pos = 0;
-      function scroll(){ pos -= 0.5; if(Math.abs(pos) >= track.scrollWidth/2) pos = 0; track.style.transform = 'translateX('+pos+'px)'; requestAnimationFrame(scroll); }
+      var pos = 0;
+      function scroll(){ pos -= 1; if(Math.abs(pos) >= track.scrollWidth/2) pos = 0; track.style.transform = 'translateX('+pos+'px)'; requestAnimationFrame(scroll); }
       requestAnimationFrame(scroll);
     })();
   </script>`;
 }
 
+function footerScript() {
+  return `<script>
+    (function(){
+      if(window._indigoFooter) return;
+      window._indigoFooter = true;
+      var btn = document.getElementById('footerToggle');
+      var col = document.getElementById('footerCol1');
+      if(!btn||!col) return;
+      btn.addEventListener('click',function(){ col.classList.toggle('max-h-0'); col.classList.toggle('max-h-96'); });
+    })();
+  </script>`;
+}
+
 export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
-  const INDIGO = "#fdcb0c";
-  const DARK = "#050505";
-  const LIGHT = "#fcfcfc";
-  const GRAY = "#999999";
+  const B = "#fdcb0c";
+  const D = "#050505";
+  const L = "#fcfcfc";
 
-  const iReveal = (i: number) => `style="animation-delay:${i * 80}ms"`;
-
-  const indigoAnchor = (anchor?: string, fallback?: string) => anchor || fallback || "";
-
-  const indigoImgBorder = (img?: string, alt?: string) =>
-    `<div class="relative w-full max-w-[480px] mx-auto lg:mx-0" style="padding:16px 0 16px 16px">
-      <div class="absolute top-0 left-0 w-full h-full" style="border:2px solid ${INDIGO};transform:translate(12px,-12px);z-index:0"></div>
-      <div class="relative z-10 bg-white overflow-hidden" style="box-shadow:8px 8px 0 ${INDIGO}">
-        <img src="${img || 'https://placehold.co/600x800/050505/fdcb0c?text=AGENCIA'}" alt="${alt || 'Agencia'}" class="w-full h-auto object-cover aspect-[3/4]">
-      </div>
+  const offsetImg = (img: string, alt: string, borderColor?: string, direction?: string) => {
+    const bc = borderColor || B;
+    const tx = direction === "right" ? "translate-x-4 -translate-y-4" : "translate-x-4 translate-y-4";
+    const hoverTx = direction === "right" ? "group-hover:translate-x-6 group-hover:-translate-y-6" : "group-hover:translate-x-6 group-hover:translate-y-6";
+    return `<div class="relative group">
+      <div class="absolute inset-0 ${tx} ${hoverTx} transition-transform duration-500 z-0" style="background:${bc}"></div>
+      <img src="${img}" alt="${alt}" class="relative z-10 w-full h-[500px] md:h-[600px] object-cover border-2 border-${D === '#050505' ? 'dark' : '[#050505]'}" style="filter:contrast(1.25) saturate(1.5)">
     </div>`;
+  };
 
-  const indigoBrutalistBtn = (text: string, href: string, primary?: boolean) =>
-    `<a href="${siteHref(href)}" data-indigo-dl data-analytics-click data-analytics-type="click" data-analytics-label="indigo_${text.toLowerCase().replace(/\s/g,'_')}" class="relative inline-flex items-center gap-2 px-8 py-4 text-sm font-bold uppercase tracking-widest transition-all" style="background:${primary ? INDIGO : DARK};color:${primary ? DARK : LIGHT};border:2px solid ${INDIGO};box-shadow:4px 4px 0 ${primary ? DARK : INDIGO}" onmouseover="this.style.boxShadow='6px 6px 0 ${primary ? DARK : INDIGO}';this.style.transform='translate(-1px,-1px)'" onmouseout="this.style.boxShadow='4px 4px 0 ${primary ? DARK : INDIGO}';this.style.transform=''">${text}<span data-indigo-dl-inner class="inline-block transition-transform"><i class="bi bi-arrow-down"></i></span></a>`;
+  const dotList = (items: string[]) =>
+    items.map((item: string) => `<li class="flex items-center gap-3">
+      <div class="w-2 h-2 rounded-full" style="background:${B}"></div> ${item}
+    </li>`).join("");
 
-  const indigoNumber = (n: number) =>
-    `<span class="inline-flex items-center justify-center w-12 h-12 rounded-full border-2 text-sm font-bold" style="border-color:${INDIGO};color:${INDIGO}">${String(n).padStart(2, "0")}</span>`;
+  const offsetBtn = (text: string, href: string) =>
+    `<a href="${siteHref(href)}" class="inline-block relative group w-max z-10">
+      <span class="absolute inset-0 translate-x-2 translate-y-2 group-hover:translate-x-1 group-hover:translate-y-1 transition-transform" style="background:${B}"></span>
+      <span class="relative block border-2 font-bold uppercase tracking-widest py-4 px-10 group-hover:text-white transition-colors" style="border-color:${B};background:white;color:${B}" onmouseover="this.style.background='${D}';this.style.color='${B}'" onmouseout="this.style.background='white';this.style.color='${B}'">${text}</span>
+    </a>`;
 
   switch (type) {
     case "header": {
       const links = c.links || c.navLinks || [
-        { label: "Inicio", url: "#hero" },
         { label: "Agencia", url: "#agencia" },
-        { label: "Servicios", url: "#servicios" },
+        { label: "Letras 3D", url: "#letras3d" },
+        { label: "Branding", url: "#branding" },
         { label: "Portafolio", url: "#portafolio" },
         { label: "Contacto", url: "#contacto" },
       ];
       const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
-      const companyName = c.companyName || site?.name || "INDIGO";
-      return `<nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300" style="background:transparent" id="indigoNav">
-        <div class="flex items-center justify-between px-6 py-4 lg:px-12" style="mix-blend-mode:difference">
-          <a href="${siteHref(c.logoUrl || '#')}" class="flex items-center gap-3 z-10">
-            <img src="${logo}" alt="${companyName}" class="h-8 w-auto" style="filter:brightness(0) invert(1)">
-          </a>
-          <div class="hidden lg:flex items-center gap-8">
-            ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-xs font-bold uppercase tracking-[0.25em] transition-colors" style="color:${LIGHT};font-family:Poppins,sans-serif" onmouseover="this.style.color='${INDIGO}'" onmouseout="this.style.color='${LIGHT}'">${l.label}</a>`).join("")}
-            ${c.ctaUrl ? `<a href="${siteHref(c.ctaUrl)}" class="px-6 py-3 text-xs font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${INDIGO};color:${INDIGO}" onmouseover="this.style.background='${INDIGO}';this.style.color='${DARK}'" onmouseout="this.style.background='transparent';this.style.color='${INDIGO}'">${c.ctaText || "Contactar"}</a>` : ''}
-          </div>
-          <button id="indigoHamburger" class="lg:hidden z-10 flex flex-col gap-1.5 p-2" aria-label="Menú">
-            <span class="block w-6 h-0.5" style="background:${LIGHT}"></span>
-            <span class="block w-4 h-0.5" style="background:${LIGHT}"></span>
-          </button>
+      return `<nav class="fixed w-full z-50 top-0 left-0 p-6 flex justify-between items-center" style="mix-blend-mode:difference;color:${L}">
+        <a href="${siteHref(c.logoUrl || '#')}" class="inline-block">
+          <img src="${logo}" alt="${c.companyName || site?.name || 'Indigo Publicidad'}" class="h-10 md:h-12 w-auto object-contain" style="filter:brightness(0) invert(1)">
+        </a>
+        <div class="hidden md:flex gap-8 font-semibold text-sm tracking-widest uppercase" style="font-family:Poppins,sans-serif">
+          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="hover:opacity-80 transition-colors" style="color:${B}">${l.label}</a>`).join("")}
         </div>
-        <div id="indigoNavOverlay" class="fixed inset-0 bg-black/60 z-40 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
-        <div id="indigoMobileNav" class="lg:hidden absolute top-full left-0 w-full max-h-0 opacity-0 pointer-events-none overflow-hidden transition-all duration-300 z-50" style="background:${DARK}">
+        <button id="indigoHamburger" class="md:hidden" style="color:${B}" aria-label="Menú">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+        <div id="indigoNavOverlay" class="fixed inset-0 z-40 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" style="background:rgba(0,0,0,0.6)"></div>
+        <div id="indigoMobileNav" class="md:hidden absolute top-full left-0 w-full max-h-0 opacity-0 pointer-events-none overflow-hidden transition-all duration-300 z-50" style="background:${D}">
           <div class="px-6 py-8 flex flex-col gap-6">
-            <button id="indigoNavClose" class="absolute top-4 right-6 text-white text-2xl" aria-label="Cerrar">&times;</button>
-            ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-sm font-bold uppercase tracking-widest" style="color:${LIGHT};font-family:Poppins,sans-serif">${l.label}</a>`).join("")}
-            ${c.ctaUrl ? `<a href="${siteHref(c.ctaUrl)}" class="mt-4 inline-block px-6 py-3 text-xs font-bold uppercase tracking-widest border-2 text-center" style="border-color:${INDIGO};color:${INDIGO}">${c.ctaText || "Contactar"}</a>` : ''}
+            <button id="indigoNavClose" class="absolute top-4 right-6 text-2xl" style="color:${L}" aria-label="Cerrar">&times;</button>
+            ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-sm font-semibold uppercase tracking-widest" style="color:${L};font-family:Poppins,sans-serif">${l.label}</a>`).join("")}
           </div>
         </div>
         ${heroScript()}
@@ -132,71 +116,65 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     }
 
     case "hero": {
-      const title = c.title || "DESARROLLAMOS";
-      const subtitle = c.subtitle || "EXPERIENCIAS DIGITALES";
-      const desc = c.description || "Creamos marcas, plataformas y productos que conectan con personas reales. Estrategia, diseño y tecnología bajo un mismo techo.";
-      const btnText = c.buttonText || "VER PROYECTOS";
-      const btnUrl = c.buttonUrl || "#portafolio";
-      const secondaryText = c.secondaryButtonText || "CONTACTAR";
-      const secondaryUrl = c.secondaryButtonUrl || "#contacto";
-      const marqueeWords = c.marqueeWords || ["BRANDING", "DESARROLLO", "UI/UX", "CREATIVIDAD", "ESTRATEGIA", "DISEÑO"];
-      return `<section id="${indigoAnchor(c.anchor, 'hero')}" class="relative min-h-screen flex items-center justify-center overflow-hidden" style="background:${DARK}">
-        <div class="absolute inset-0 opacity-5" style="background-image:repeating-linear-gradient(0deg,transparent,transparent 50px,${INDIGO}22 50px,${INDIGO}22 51px),repeating-linear-gradient(90deg,transparent,transparent 50px,${INDIGO}22 50px,${INDIGO}22 51px)"></div>
-        <div class="relative z-10 w-full px-6 lg:px-12 pt-32 pb-16">
-          <div class="max-w-7xl mx-auto">
-            <p class="text-xs font-bold uppercase tracking-[0.4em] mb-6" style="color:${INDIGO};font-family:Poppins,sans-serif" ${iReveal(0)}>${c.kicker || "AGENCIA CREATIVA"}</p>
-            <h1 class="font-black uppercase leading-[0.85] tracking-tight" style="font-size:clamp(3.5rem,12vw,10rem);color:${LIGHT};font-family:Poppins,sans-serif" ${iReveal(1)}>
-              <span class="block" style="mix-blend-mode:difference">${title}</span>
-              <span class="block" style="mix-blend-mode:difference;color:${INDIGO}">${subtitle}</span>
-            </h1>
-            <div class="mt-8 max-w-md" ${iReveal(2)}>
-              <p class="text-sm leading-relaxed" style="color:${GRAY}">${desc}</p>
-            </div>
-            <div class="mt-10 flex flex-wrap gap-4" ${iReveal(3)}>
-              ${indigoBrutalistBtn(btnText, btnUrl, true)}
-              ${secondaryText ? indigoBrutalistBtn(secondaryText, secondaryUrl) : ''}
-            </div>
-          </div>
+      const title = c.title || "Publicidad";
+      const subtitle = c.subtitle || "Creativa.";
+      const desc = c.description || "Rompemos las reglas del diseño. Transformamos marcas convencionales en experiencias visuales inolvidables con letras 3D y estrategias de branding disruptivas.";
+      const bgImg = c.backgroundImage || "";
+      return `<section id="${c.anchor || 'hero'}" class="relative min-h-screen flex items-center pt-20" style="background:${D};color:${L}">
+        ${bgImg ? `<div class="absolute inset-0 z-0 opacity-40">
+          <img src="${bgImg}" alt="Creative Hero" class="w-full h-full object-cover" style="filter:grayscale(1);mix-blend-mode:luminosity">
+        </div>` : ''}
+        <div class="container mx-auto px-6 relative z-10 flex flex-col justify-center min-h-[80vh]">
+          <h1 class="font-extrabold uppercase mb-6 relative" style="font-size:clamp(4rem,12vw,9rem);line-height:0.85;letter-spacing:-0.05em;font-family:Poppins,sans-serif">
+            <span class="block">${title}</span>
+            <span class="block" style="color:${B}">${subtitle}</span>
+          </h1>
+          <p class="max-w-xl text-lg md:text-xl font-light mt-8 opacity-90" style="border-left:4px solid ${B};padding-left:1.5rem">
+            ${desc}
+          </p>
         </div>
-        <div class="relative w-full overflow-hidden py-6 border-y" style="border-color:${INDIGO}33">
-          <div class="flex whitespace-nowrap" id="indigoMarqueeTrack">
-            ${marqueeWords.map((w: string) => `<span class="inline-block mx-8 text-2xl lg:text-4xl font-black uppercase" style="-webkit-text-stroke:1px ${INDIGO};color:transparent;font-family:Poppins,sans-serif">${w}</span>`).join("")}
-          </div>
+        <div class="absolute bottom-10 right-10 flex-col items-end gap-2 z-10 hidden md:flex">
+          <div class="w-24 h-[2px]" style="background:${B}"></div>
+          <span class="uppercase tracking-widest text-xs font-bold" style="color:${B};font-family:Poppins,sans-serif">Scroll para descubrir</span>
         </div>
-        ${marqueeScript()}
       </section>`;
+    }
+
+    case "marquee": {
+      const words = c.words || c.marqueeWords || ["INDIGO PUBLICIDAD", "LETRAS 3D", "BRANDING", "DISEÑO DISRUPTIVO"];
+      return `<div class="overflow-hidden py-4 relative z-20" style="background:${B};color:${D};border-top:1px solid ${D};border-bottom:1px solid ${D}">
+        <div class="whitespace-nowrap flex font-bold uppercase items-center" style="font-size:clamp(2rem,5vw,4rem);font-family:Poppins,sans-serif" id="indigoMarqueeTrack">
+          ${words.map((w: string, i: number) => `<span class="mx-8" ${i % 2 === 1 ? `style="color:transparent;-webkit-text-stroke:1px ${D}"` : ''}>• ${w}</span>`).join("")}
+        </div>
+      </div>
+      ${marqueeScript()}`;
     }
 
     case "about":
     case "agency": {
-      const kicker = c.kicker || "AGENCIA";
-      const title = c.title || "Somos un equipo que transforma ideas en realidades digitales";
-      const desc = c.description || "Trabajamos con marcas ambiciosas que buscan destacar. Nuestro enfoque combina estrategia, diseño y tecnología para crear experiencias que generan resultados.";
-      const img = c.imageUrl || "https://placehold.co/600x800/050505/fdcb0c?text=AGENCIA";
+      const title = c.title || "NUESTRA <span style='color:" + B + "'>VISIÓN</span>";
+      const desc = c.description || "No somos una agencia tradicional. Somos un laboratorio de ideas donde el diseño se encuentra con la rebeldía. Creemos que lo normal es aburrido y nos especializamos en hacer que las marcas resalten en la jungla de asfalto y en el entorno digital.";
+      const img = c.imageUrl || "https://placehold.co/800x500/fdcb0c/050505?text=AGENCIA";
       const stats = c.stats || c.items || [
-        { value: "120+", label: "Proyectos" },
-        { value: "50+", label: "Clientes" },
-        { value: "8", label: "Premios" },
-        { value: "99%", label: "Satisfacción" },
+        { value: "10+", label: "Años de exp." },
+        { value: "500", label: "Proyectos" },
       ];
-      const btnText = c.buttonText || "CONOCER MÁS";
-      const btnUrl = c.buttonUrl || "#servicios";
-      return `<section id="${indigoAnchor(c.anchor, 'agencia')}" class="relative py-24 lg:py-32" style="background:${LIGHT}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-16 items-center">
-          <div class="order-2 lg:order-1">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${DARK};font-family:Poppins,sans-serif">${title}</h2>
-            <p class="mt-6 text-sm leading-relaxed" style="color:${GRAY}">${desc}</p>
-            <div class="mt-10 grid grid-cols-2 gap-6">
-              ${stats.map((s: any, i: number) => `<div ${iReveal(i)}>
-                <div class="text-3xl lg:text-4xl font-black" style="color:${DARK};font-family:Poppins,sans-serif">${s.value || s.title}</div>
-                <div class="mt-1 text-xs uppercase tracking-widest" style="color:${GRAY}">${s.label || s.desc}</div>
-              </div>`).join("")}
+      return `<section id="${c.anchor || 'agencia'}" class="py-24 md:py-32 relative" style="background:white;border-bottom:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6">
+          <div class="flex flex-col md:flex-row items-center gap-16">
+            <div class="w-full md:w-5/12 flex flex-col justify-center">
+              <h2 class="font-extrabold text-5xl md:text-7xl mb-6 relative z-10" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+              <p class="text-xl font-light mb-8 opacity-80 relative z-10 leading-relaxed" style="color:${D}">${desc}</p>
+              <div class="flex items-center gap-8 font-bold" style="color:${B};font-family:Poppins,sans-serif">
+                ${stats.map((s: any) => `<div>
+                  <span class="block text-6xl">${s.value || s.title}</span>
+                  <span class="text-sm uppercase tracking-widest opacity-60" style="color:${D}">${s.label || s.desc}</span>
+                </div>`).join("")}
+              </div>
             </div>
-            ${btnText ? `<div class="mt-10">${indigoBrutalistBtn(btnText, btnUrl, true)}</div>` : ''}
-          </div>
-          <div class="order-1 lg:order-2">
-            ${indigoImgBorder(img, title)}
+            <div class="w-full md:w-7/12">
+              ${offsetImg(img, "Agencia Indigo", B, "right")}
+            </div>
           </div>
         </div>
       </section>`;
@@ -204,142 +182,78 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
 
     case "features":
     case "services": {
-      const kicker = c.kicker || "SERVICIOS";
-      const title = c.title || "Lo que hacemos";
-      const desc = c.description || "";
-      const items = c.items || [
-        { number: "01", title: "Branding", desc: "Identidad visual, naming y estrategia de marca que conecta con tu audiencia.", icon: "bi-palette" },
-        { number: "02", title: "Desarrollo", desc: "Plataformas web y apps escalables con tecnología de vanguardia.", icon: "bi-code-slash" },
-        { number: "03", title: "UI/UX Design", desc: "Interfaces intuitivas y experiencias de usuario que generan resultados.", icon: "bi-phone" },
-        { number: "04", title: "Estrategia", desc: "Planificación digital, SEO, content marketing y growth hacking.", icon: "bi-graph-up" },
+      const kicker = c.kicker || "01";
+      const title = c.title || "LETRAS <span style='color:" + B + "'>3D</span>";
+      const desc = c.description || "Dale volumen a tu identidad. Fabricamos letreros en 3D que capturan miradas y dominan el espacio. Materiales de primera, acabados surrealistas e iluminación impactante para que tu marca nunca pase desapercibida.";
+      const img = c.imageUrl || "https://placehold.co/800x600/fdcb0c/050505?text=LETRAS+3D";
+      const bullets = c.features || c.bullets || [
+        "Acero inoxidable y acrílico.",
+        "Iluminación LED Neon de alto brillo.",
+        "Instalación profesional interior y exterior.",
       ];
-      return `<section id="${indigoAnchor(c.anchor, 'servicios')}" class="relative py-24 lg:py-32" style="background:${DARK}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="max-w-2xl mb-16">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${LIGHT};font-family:Poppins,sans-serif">${title}</h2>
-            ${desc ? `<p class="mt-4 text-sm leading-relaxed" style="color:${GRAY}">${desc}</p>` : ''}
-          </div>
-          <div class="grid md:grid-cols-2 gap-6">
-            ${items.map((item: any, i: number) => `<div class="group relative p-8 lg:p-10 border transition-all duration-300" style="border-color:${INDIGO}33;animation-delay:${i * 100}ms" onmouseover="this.style.borderColor='${INDIGO}';this.style.background='${INDIGO}08'" onmouseout="this.style.borderColor='${INDIGO}33';this.style.background='transparent'">
-              <div class="flex items-start justify-between mb-6">
-                ${indigoNumber(i + 1)}
-                <i class="bi ${item.icon || 'bi-stars'} text-2xl" style="color:${INDIGO}"></i>
-              </div>
-              <h3 class="text-xl lg:text-2xl font-black uppercase" style="color:${LIGHT};font-family:Poppins,sans-serif">${item.title || item.name}</h3>
-              <p class="mt-3 text-sm leading-relaxed" style="color:${GRAY}">${item.desc || item.description || ''}</p>
-            </div>`).join("")}
-          </div>
-        </div>
-      </section>`;
-    }
-
-    case "process": {
-      const kicker = c.kicker || "PROCESO";
-      const title = c.title || "Cómo trabajamos";
-      const items = c.items || [
-        { number: "01", title: "Briefing", desc: "Entendemos tu marca, objetivos y público para definir la hoja de ruta." },
-        { number: "02", title: "Concepto", desc: "Exploramos ideas, moodboards y direcciones creativas hasta encontrar la correcta." },
-        { number: "03", title: "Desarrollo", desc: "Diseñamos y construimos tu proyecto con metodologías ágiles y entrega continua." },
-        { number: "04", title: "Lanzamiento", desc: "Publicamos, medimos y optimizamos para asegurar el mejor resultado." },
-      ];
-      return `<section id="${indigoAnchor(c.anchor, 'proceso')}" class="relative py-24 lg:py-32" style="background:${LIGHT}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="max-w-2xl mb-16">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${DARK};font-family:Poppins,sans-serif">${title}</h2>
-          </div>
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            ${items.map((item: any, i: number) => `<div class="relative" ${iReveal(i)}>
-              <div class="mb-4">${indigoNumber(i + 1)}</div>
-              <h3 class="text-lg font-black uppercase" style="color:${DARK};font-family:Poppins,sans-serif">${item.title || item.name}</h3>
-              <p class="mt-2 text-sm leading-relaxed" style="color:${GRAY}">${item.desc || item.description || ''}</p>
-              ${i < items.length - 1 ? `<div class="hidden lg:block absolute top-6 left-[calc(100%+8px)] w-8 h-px" style="background:${INDIGO}44"></div>` : ''}
-            </div>`).join("")}
-          </div>
-        </div>
-      </section>`;
-    }
-
-    case "stats": {
-      const items = c.items || [
-        { value: "120+", label: "Proyectos entregados", icon: "bi-folder" },
-        { value: "50+", label: "Clientes satisfechos", icon: "bi-people" },
-        { value: "8", label: "Premios ganados", icon: "bi-award" },
-        { value: "99%", label: "Tasa de satisfacción", icon: "bi-heart" },
-      ];
-      return `<section class="relative py-16 lg:py-20 border-y" style="border-color:${INDIGO}22;background:${DARK}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-2 lg:grid-cols-4 gap-8">
-          ${items.map((item: any, i: number) => `<div class="text-center" ${iReveal(i)}>
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full border mb-4" style="border-color:${INDIGO}44">
-              <i class="bi ${item.icon || 'bi-star'}" style="color:${INDIGO}"></i>
+      const btnText = c.buttonText || "Cotizar Letras 3D";
+      const btnUrl = c.buttonUrl || "#contacto";
+      return `<section id="${c.anchor || 'letras3d'}" class="py-24 md:py-32 relative" style="background:#f9fafb">
+        <div class="container mx-auto px-6">
+          <div class="flex flex-col md:flex-row items-center gap-16">
+            <div class="w-full md:w-1/2">
+              ${offsetImg(img, "Letras 3D Neon", B)}
             </div>
-            <div class="text-3xl lg:text-4xl font-black" style="color:${LIGHT};font-family:Poppins,sans-serif">${item.value || item.title}</div>
-            <div class="mt-1 text-xs uppercase tracking-widest" style="color:${GRAY}">${item.label || item.desc}</div>
-          </div>`).join("")}
+            <div class="w-full md:w-1/2 flex flex-col justify-center">
+              <div class="font-bold text-8xl md:text-9xl opacity-20 absolute top-10 right-10 z-0 pointer-events-none" style="color:${B};font-family:Poppins,sans-serif">${kicker}</div>
+              <h2 class="font-extrabold text-5xl md:text-7xl mb-6 relative z-10" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+              <p class="text-xl font-light mb-8 opacity-80 relative z-10 leading-relaxed" style="color:${D}">${desc}</p>
+              <ul class="space-y-4 font-semibold text-lg relative z-10" style="color:${D}">
+                ${dotList(bullets)}
+              </ul>
+              <div class="mt-12 relative z-10">${offsetBtn(btnText, btnUrl)}</div>
+            </div>
+          </div>
         </div>
       </section>`;
     }
 
     case "portfolio": {
-      const kicker = c.kicker || "PORTAFOLIO";
-      const title = c.title || "Proyectos destacados";
-      const items = c.items || c.images || [
-        { image: "https://placehold.co/800x600/050505/fdcb0c?text=PROYECTO+1", title: "E-Commerce", tag: "Branding + Web", link: "#" },
-        { image: "https://placehold.co/800x600/fdcb0c/050505?text=PROYECTO+2", title: "App Móvil", tag: "UI/UX + Dev", link: "#" },
-        { image: "https://placehold.co/800x600/1a1a1a/fdcb0c?text=PROYECTO+3", title: "Dashboard", tag: "Producto", link: "#" },
-        { image: "https://placehold.co/800x600/050505/fdcb0c?text=PROYECTO+4", title: "Landing Page", tag: "Web", link: "#" },
-      ];
-      const btnText = c.buttonText || "VER TODOS";
-      const btnUrl = c.buttonUrl || "#contacto";
-      return `<section id="${indigoAnchor(c.anchor, 'portafolio')}" class="relative py-24 lg:py-32" style="background:${DARK}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-              <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${LIGHT};font-family:Poppins,sans-serif">${title}</h2>
-            </div>
-            ${btnText ? `<div>${indigoBrutalistBtn(btnText, btnUrl)}</div>` : ''}
+      const title = c.title || "NUESTRO <span style='-webkit-text-stroke:1px " + D + ";color:transparent'>TRABAJO</span>";
+      const desc = c.description || "Una selección de nuestros proyectos más audaces. Casos de éxito donde la creatividad no tuvo límites.";
+      const img = c.imageUrl || c.image || "https://placehold.co/1200x600/fdcb0c/050505?text=PORTAFOLIO";
+      return `<section id="${c.anchor || 'portafolio'}" class="py-24 md:py-32 relative" style="background:white;border-top:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6">
+          <div class="text-center mb-16">
+            <h2 class="font-extrabold text-5xl md:text-7xl relative z-10 inline-block" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+            <p class="text-xl font-light opacity-80 mt-4 max-w-2xl mx-auto" style="color:${D}">${desc}</p>
           </div>
-          <div class="grid md:grid-cols-2 gap-6">
-            ${items.map((item: any, i: number) => `<a href="${siteHref(item.link || '#')}" class="group relative aspect-[4/3] overflow-hidden border transition-all duration-300" style="border-color:${INDIGO}22;animation-delay:${i * 100}ms" onmouseover="this.style.borderColor='${INDIGO}'" onmouseout="this.style.borderColor='${INDIGO}22'">
-              <img src="${item.image || item.url || item.src || ''}" alt="${item.title || item.alt || 'Proyecto'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-              <div class="absolute inset-0 flex flex-col justify-end p-6 transition-opacity duration-300" style="background:linear-gradient(transparent,${DARK}ee)">
-                ${item.tag ? `<span class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${INDIGO}">${item.tag}</span>` : ''}
-                <h3 class="text-lg font-black uppercase" style="color:${LIGHT};font-family:Poppins,sans-serif">${item.title || item.name}</h3>
-              </div>
-              <div class="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background:${INDIGO}">
-                <i class="bi bi-arrow-up-right" style="color:${DARK}"></i>
-              </div>
-            </a>`).join("")}
+          <div class="relative group max-w-5xl mx-auto">
+            <div class="absolute inset-0 ${c.variant === 'indigo' ? 'translate-x-4 translate-y-4 group-hover:translate-x-8 group-hover:translate-y-8' : ''} transition-transform duration-500 z-0" style="background:${B}"></div>
+            <img src="${img}" alt="Portafolio Indigo" class="relative z-10 w-full h-auto object-cover border-4" style="border-color:${D};filter:contrast(1.25)">
+            <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none" style="background:rgba(5,5,5,0.8)">
+              <span class="text-4xl uppercase font-bold tracking-widest border-2 p-6 text-center" style="color:${B};border-color:${B};font-family:Poppins,sans-serif">Explorar<br>Galería</span>
+            </div>
           </div>
         </div>
       </section>`;
     }
 
     case "testimonials": {
-      const kicker = c.kicker || "TESTIMONIOS";
-      const title = c.title || "Lo que dicen nuestros clientes";
+      const title = c.title || "LO QUE <span style='color:" + B + "'>DICEN</span>";
       const items = c.items || [
-        { name: "María González", role: "CEO, TechStart", quote: "Transformaron completamente nuestra presencia digital. El resultado superó todas nuestras expectativas.", rating: 5 },
-        { name: "Carlos Ruiz", role: "Director, InnovaLab", quote: "Un equipo profesional, creativo y comprometido. Entregaron antes de plazo y con calidad excepcional.", rating: 5 },
-        { name: "Ana Torres", role: "CMO, GrowthCo", quote: "La mejor inversión que hicimos. Nuestras métricas mejoraron un 300% después del rediseño.", rating: 5 },
+        { quote: "Indigo transformó nuestra fachada por completo. Las letras 3D le dieron una presencia corporativa brutal que atrajo muchas más miradas.", name: "Carlos M.", role: "TechCorp" },
+        { quote: "Rompieron los esquemas con nuestro branding. Entendieron que queríamos algo disruptivo y superaron las expectativas. ¡Increíble trabajo!", name: "Laura S.", role: "Urban Studio" },
+        { quote: "Buscábamos salir de lo común y encontramos al socio ideal. El rediseño de identidad nos posicionó como líderes creativos en el sector.", name: "Diego R.", role: "Krypton Labs" },
       ];
-      return `<section id="${indigoAnchor(c.anchor, 'testimonios')}" class="relative py-24 lg:py-32" style="background:${LIGHT}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="text-center max-w-2xl mx-auto mb-14">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${DARK};font-family:Poppins,sans-serif">${title}</h2>
-          </div>
-          <div class="grid md:grid-cols-3 gap-6">
-            ${items.map((item: any, i: number) => `<div class="relative p-8 border transition-all duration-300" style="border-color:${INDIGO}22;animation-delay:${i * 100}ms" onmouseover="this.style.borderColor='${INDIGO}'" onmouseout="this.style.borderColor='${INDIGO}22'">
-              <div class="flex gap-1 mb-4">
-                ${Array.from({length: item.rating || 5}).map(() => `<i class="bi bi-star-fill text-sm" style="color:${INDIGO}"></i>`).join("")}
-              </div>
-              <blockquote class="text-sm leading-relaxed" style="color:${DARK}">"${item.quote || item.description || ''}"</blockquote>
-              <div class="mt-6 pt-6 border-t" style="border-color:${INDIGO}22">
-                <div class="font-bold text-sm" style="color:${DARK};font-family:Poppins,sans-serif">${item.name}</div>
-                <div class="text-xs mt-0.5" style="color:${GRAY}">${item.role}</div>
+      return `<section class="py-24 md:py-32" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6">
+          <h2 class="font-extrabold text-5xl md:text-7xl mb-16 text-center" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            ${items.map((item: any, i: number) => `<div class="bg-white p-8 transition-colors group ${i === 1 ? 'shadow-xl md:-translate-y-6' : ''}" style="border:1px solid rgba(0,0,0,0.1)" onmouseover="this.style.borderColor='${B}'" onmouseout="this.style.borderColor='rgba(0,0,0,0.1)'">
+              <div class="text-4xl mb-6" style="color:${B}">"</div>
+              <p class="font-light mb-6 italic opacity-80" style="color:${D}">"${item.quote || item.description || ''}"</p>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full" style="background:rgba(0,0,0,0.1)"></div>
+                <div>
+                  <h4 class="font-bold" style="color:${D};font-family:Poppins,sans-serif">${item.name}</h4>
+                  <span class="text-sm uppercase tracking-widest" style="color:${B}">${item.role}</span>
+                </div>
               </div>
             </div>`).join("")}
           </div>
@@ -349,40 +263,50 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
 
     case "cta":
     case "contact": {
-      const kicker = c.kicker || "CONTACTO";
-      const title = c.title || "Trabajemos juntos";
-      const desc = c.description || "Cuéntanos tu proyecto y te responderemos en menos de 24 horas.";
-      return `<section id="${indigoAnchor(c.anchor, 'contacto')}" class="relative py-24 lg:py-32" style="background:${DARK}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-16 items-start">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${LIGHT};font-family:Poppins,sans-serif">${title}</h2>
-            <p class="mt-4 text-sm leading-relaxed" style="color:${GRAY}">${desc}</p>
-            <div class="mt-10 space-y-4">
-              ${c.phone ? `<div class="flex items-center gap-4 text-sm" style="color:${LIGHT}"><i class="bi bi-telephone" style="color:${INDIGO}"></i>${c.phone}</div>` : ''}
-              ${c.email ? `<div class="flex items-center gap-4 text-sm" style="color:${LIGHT}"><i class="bi bi-envelope" style="color:${INDIGO}"></i>${c.email}</div>` : ''}
-              ${c.address ? `<div class="flex items-center gap-4 text-sm" style="color:${LIGHT}"><i class="bi bi-geo-alt" style="color:${INDIGO}"></i>${c.address}</div>` : ''}
-            </div>
-          </div>
-          <form id="contactForm" method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 lg:p-10 border" style="border-color:${INDIGO}33">
-            <div class="space-y-5">
+      const kicker = c.kicker || "¿Listo para";
+      const title = c.title || "destacar?";
+      const subtitle = c.description || "Hagamos que tu marca sea imposible de ignorar.";
+      const btnText = c.buttonText || "Iniciar Proyecto";
+      const btnUrl = c.buttonUrl || c.email ? `mailto:${c.email || 'hola@indigopublicidad.com'}` : "#";
+      const phone = c.phone || "";
+      const address = c.address || "";
+      return `<section id="${c.anchor || 'contacto'}" class="py-32 md:py-48 relative overflow-hidden" style="background:${B}">
+        <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(${D} 2px,transparent 2px);background-size:30px 30px"></div>
+        <div class="absolute top-10 left-10 w-24 h-24 border-4 rounded-full animate-pulse" style="border-color:${D}"></div>
+        <div class="absolute bottom-10 right-10 w-32 h-32 rotate-45 transform origin-center" style="background:${D}"></div>
+        <div class="container mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+          <h2 class="font-black text-6xl md:text-[8rem] leading-none mb-6 uppercase tracking-tighter" style="color:${D};font-family:Poppins,sans-serif;text-shadow:8px 8px 0 ${D}">
+            ${kicker}<br>${title}
+          </h2>
+          <p class="text-xl md:text-3xl mb-16 font-medium max-w-3xl mx-auto inline-block px-4 py-2 border-2" style="color:${D};background:${B};border-color:${D};box-shadow:4px 4px 0 ${D};font-family:Poppins,sans-serif">
+            ${subtitle}
+          </p>
+          <a href="${btnUrl}" class="inline-flex items-center gap-4 relative group" ${btnUrl.startsWith('mailto') || btnUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+            <span class="absolute inset-0 translate-x-3 translate-y-3 group-hover:translate-x-1 group-hover:translate-y-1 transition-transform duration-300 rounded-full" style="background:${D}"></span>
+            <span class="relative flex items-center gap-4 border-4 font-black uppercase tracking-widest py-5 px-12 md:py-6 md:px-16 text-xl md:text-2xl rounded-full transition-colors" style="border-color:${D};background:white;color:${D};font-family:Poppins,sans-serif" onmouseover="this.style.background='${D}';this.style.color='${B}'" onmouseout="this.style.background='white';this.style.color='${D}'">
+              ${btnText}
+              <svg class="w-8 h-8 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </span>
+          </a>
+          <form id="contactForm" method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="mt-16 w-full max-w-lg text-left">
+            <div class="space-y-4">
               ${(c.fields && c.fields.length ? c.fields : [
                 { label: "Nombre", name: "nombre", type: "text", required: true },
                 { label: "Email", name: "email", type: "email", required: true },
-                { label: "Teléfono", name: "telefono", type: "tel", required: false },
+                { label: "Mensaje", name: "mensaje", type: "textarea", required: true },
               ]).filter((f: any) => f.type !== 'textarea').map((f: any) => `<div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${GRAY}">${f.label}</label>
-                <input type="${f.type || 'text'}" name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}" class="w-full px-4 py-3 text-sm border outline-none transition-colors" style="border-color:${INDIGO}33;background:transparent;color:${LIGHT}" onfocus="this.style.borderColor='${INDIGO}'" onblur="this.style.borderColor='${INDIGO}33'">
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">${f.label}</label>
+                <input type="${f.type || 'text'}" name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}" class="w-full px-4 py-3 text-sm border-2 outline-none" style="border-color:${D};background:white;color:${D}">
               </div>`).join("")}
               ${(c.fields && c.fields.length ? c.fields : []).filter((f: any) => f.type === 'textarea').map((f: any) => `<div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${GRAY}">${f.label}</label>
-                <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border outline-none transition-colors resize-none" style="border-color:${INDIGO}33;background:transparent;color:${LIGHT}" onfocus="this.style.borderColor='${INDIGO}'" onblur="this.style.borderColor='${INDIGO}33'" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">${f.label}</label>
+                <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
               </div>`).join("") || `<div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${GRAY}">Mensaje</label>
-                <textarea name="mensaje" rows="4" required class="w-full px-4 py-3 text-sm border outline-none transition-colors resize-none" style="border-color:${INDIGO}33;background:transparent;color:${LIGHT}" onfocus="this.style.borderColor='${INDIGO}'" onblur="this.style.borderColor='${INDIGO}33'" placeholder="Cuéntanos tu proyecto..."></textarea>
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">Mensaje</label>
+                <textarea name="mensaje" rows="4" required class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="Cuéntanos tu proyecto..."></textarea>
               </div>`}
-              <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:1px solid ${INDIGO}33;color:${LIGHT}"></div>
-              <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_contact_submit" type="submit" class="w-full py-4 text-xs font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${INDIGO};color:${DARK};background:${INDIGO}" onmouseover="this.style.boxShadow='4px 4px 0 ${LIGHT}'" onmouseout="this.style.boxShadow='none'">
+              <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D};background:white"></div>
+              <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_cta_submit" type="submit" class="w-full py-4 text-sm font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${D};background:${D};color:${B}" onmouseover="this.style.boxShadow='4px 4px 0 white'" onmouseout="this.style.boxShadow='none'">
                 ENVIAR <i class="bi bi-send ml-2"></i>
               </button>
             </div>
@@ -391,100 +315,152 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       </section>`;
     }
 
-    case "footer": {
-      const companyName = c.companyName || site?.name || "INDIGO";
-      const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
-      const links = c.links || c.navLinks || [
-        { label: "Inicio", url: "#hero" },
-        { label: "Agencia", url: "#agencia" },
-        { label: "Servicios", url: "#servicios" },
-        { label: "Portafolio", url: "#portafolio" },
-        { label: "Contacto", url: "#contacto" },
+    case "process": {
+      const title = c.title || "NUESTRO <br><span style='-webkit-text-stroke:1px " + B + ";color:transparent'>PROCESO</span>";
+      const img = c.imageUrl || "https://placehold.co/800x600/fdcb0c/050505?text=PROCESO";
+      const items = c.items || [
+        { number: "01", title: "Descubrimiento", desc: "Sumergirnos en el ADN de tu marca. Entender el mercado, la competencia y el objetivo final para trazar un plan de ataque." },
+        { number: "02", title: "Concepto", desc: "Lluvia de ideas sin filtros. Creamos propuestas abstractas que luego moldeamos hasta conseguir un diseño sólido y disruptivo." },
+        { number: "03", title: "Ejecución", desc: "Manos a la obra. Ya sea la fabricación de letras 3D o el desarrollo de una identidad, pulimos cada detalle a la perfección." },
       ];
-      const social = c.social || [
-        { icon: "bi-instagram", url: "#", label: "Instagram" },
-        { icon: "bi-linkedin", url: "#", label: "LinkedIn" },
-        { icon: "bi-dribbble", url: "#", label: "Dribbble" },
-        { icon: "bi-behance", url: "#", label: "Behance" },
-      ];
-      const copyright = c.copyright || `© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.`;
-      return `<footer class="relative py-16 lg:py-20 border-t" style="border-color:${INDIGO}22;background:${DARK}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="grid md:grid-cols-3 gap-12 pb-12 border-b" style="border-color:${INDIGO}11">
-            <div>
-              <img src="${logo}" alt="${companyName}" class="h-8 w-auto mb-4" style="filter:brightness(0) invert(1)">
-              <p class="text-xs leading-relaxed max-w-xs" style="color:${GRAY}">${c.description || 'Agencia creativa especializada en diseño, desarrollo y estrategia digital.'}</p>
+      return `<section id="${c.anchor || 'proceso'}" class="py-24 md:py-32 relative" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6">
+          <div class="flex flex-col md:flex-row items-center gap-16">
+            <div class="w-full md:w-1/2">
+              ${offsetImg(img, "Proceso Creativo Indigo", B)}
             </div>
-            <div>
-              <button id="footerToggle" class="md:hidden flex items-center justify-between w-full text-xs font-bold uppercase tracking-widest pb-4 border-b md:cursor-default" style="color:${LIGHT};border-color:${INDIGO}33">
-                Navegación <i class="bi bi-chevron-down md:hidden" style="color:${INDIGO}"></i>
-              </button>
-              <div id="footerCol1" class="max-h-0 md:max-h-none overflow-hidden transition-all duration-300">
-                <ul class="mt-4 md:mt-0 space-y-3">
-                  ${links.map((l: any) => `<li><a href="${siteHref(l.url)}" class="text-xs uppercase tracking-widest transition-colors" style="color:${GRAY}" onmouseover="this.style.color='${INDIGO}'" onmouseout="this.style.color='${GRAY}'">${l.label}</a></li>`).join("")}
-                </ul>
+            <div class="w-full md:w-1/2 flex flex-col justify-center">
+              <h2 class="font-extrabold text-5xl md:text-7xl mb-12 relative z-10" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+              <div class="space-y-8 relative z-10" style="color:${D}">
+                ${items.map((item: any, i: number) => `<div class="flex gap-6 items-start">
+                  <span class="font-bold text-4xl" style="color:${B};font-family:Poppins,sans-serif">${item.number || String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 class="font-bold text-2xl mb-2 uppercase tracking-widest" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
+                    <p class="font-light opacity-70">${item.desc || item.description || ''}</p>
+                  </div>
+                </div>`).join("")}
               </div>
             </div>
-            <div>
-              <div class="text-xs font-bold uppercase tracking-widest mb-4" style="color:${LIGHT}">Social</div>
-              <div class="flex gap-3">
-                ${social.map((s: any) => `<a href="${s.url || '#'}" class="w-10 h-10 flex items-center justify-center border transition-all" style="border-color:${INDIGO}33;color:${GRAY}" onmouseover="this.style.borderColor='${INDIGO}';this.style.color='${INDIGO}'" onmouseout="this.style.borderColor='${INDIGO}33';this.style.color='${GRAY}'" aria-label="${s.label || s.icon}"${s.url && s.url !== '#' ? ' target="_blank" rel="noopener"' : ''}><i class="bi ${s.icon || 'bi-link'}"></i></a>`).join("")}
-              </div>
-            </div>
-          </div>
-          <div class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p class="text-[10px] uppercase tracking-widest" style="color:${GRAY}">${copyright}</p>
-            <p class="text-[10px] uppercase tracking-widest" style="color:${GRAY}">Hecho por <a href="https://icebergup.com" target="_blank" rel="noopener" style="color:${INDIGO}">Iceberg Agency</a></p>
           </div>
         </div>
-        ${footerScript()}
-      </footer>`;
+      </section>`;
+    }
+
+    case "stats": {
+      const items = c.items || [
+        { value: "10+", label: "Años de exp." },
+        { value: "500", label: "Proyectos" },
+        { value: "50+", label: "Clientes" },
+        { value: "99%", label: "Satisfacción" },
+      ];
+      return `<section class="py-16 lg:py-20" style="background:${D}">
+        <div class="container mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+          ${items.map((item: any) => `<div>
+            <div class="text-3xl lg:text-5xl font-black" style="color:${B};font-family:Poppins,sans-serif">${item.value || item.title}</div>
+            <div class="mt-2 text-sm uppercase tracking-widest opacity-60" style="color:${L}">${item.label || item.desc}</div>
+          </div>`).join("")}
+        </div>
+      </section>`;
     }
 
     case "gallery": {
-      const kicker = c.kicker || "GALERÍA";
-      const title = c.title || "Nuestro trabajo";
+      const title = c.title || "GALERÍA";
       const images = c.images || [
-        { url: "https://placehold.co/600x400/050505/fdcb0c?text=1" },
-        { url: "https://placehold.co/600x400/fdcb0c/050505?text=2" },
-        { url: "https://placehold.co/600x400/1a1a1a/fdcb0c?text=3" },
-        { url: "https://placehold.co/600x400/050505/fdcb0c?text=4" },
-        { url: "https://placehold.co/600x400/fdcb0c/050505?text=5" },
-        { url: "https://placehold.co/600x400/1a1a1a/fdcb0c?text=6" },
+        { url: "https://placehold.co/600x400/fdcb0c/050505?text=1" },
+        { url: "https://placehold.co/600x400/050505/fdcb0c?text=2" },
+        { url: "https://placehold.co/600x400/fdcb0c/050505?text=3" },
       ];
-      return `<section id="${indigoAnchor(c.anchor, 'galeria')}" class="relative py-24 lg:py-32" style="background:${LIGHT}">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-          <div class="text-center max-w-2xl mx-auto mb-14">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-5xl font-black uppercase leading-tight" style="color:${DARK};font-family:Poppins,sans-serif">${title}</h2>
-          </div>
+      return `<section id="${c.anchor || 'galeria'}" class="py-24 md:py-32" style="background:#f9fafb">
+        <div class="container mx-auto px-6">
+          <h2 class="font-extrabold text-5xl md:text-7xl mb-16 text-center" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            ${images.map((img: any, i: number) => `<div class="relative aspect-[4/3] overflow-hidden border transition-all duration-300" style="border-color:${INDIGO}11;animation-delay:${i * 60}ms" onmouseover="this.style.borderColor='${INDIGO}'" onmouseout="this.style.borderColor='${INDIGO}11'">
-              <img src="${img.url || img.src || ''}" alt="${img.alt || 'Galería'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+            ${images.map((img: any, i: number) => `<div class="relative aspect-[4/3] overflow-hidden group">
+              <img src="${img.url || img.src || ''}" alt="${img.alt || 'Galería'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" style="filter:contrast(1.25)">
             </div>`).join("")}
           </div>
         </div>
       </section>`;
     }
 
+    case "footer": {
+      const companyName = c.companyName || site?.name || "Indigo Publicidad";
+      const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
+      const links = c.links || c.navLinks || [
+        { label: "Nosotros", url: "#agencia" },
+        { label: "Letras 3D & Neón", url: "#letras3d" },
+        { label: "Branding Estratégico", url: "#branding" },
+        { label: "Portafolio", url: "#portafolio" },
+      ];
+      const social = c.social || [
+        { label: "Instagram", url: "#" },
+        { label: "Behance", url: "#" },
+        { label: "LinkedIn", url: "#" },
+      ];
+      const copyright = c.copyright || `© ${new Date().getFullYear()} ${companyName}. Todos los derechos reservados.`;
+      const email = c.email || "hola@indigopublicidad.com";
+      const phone = c.phone || "+1 (555) 123-4567";
+      const address = c.address || "Ciudad Creativa, Distrito de Diseño 0987";
+      return `<footer class="pt-24 pb-8 relative overflow-hidden" style="background:white;border-top:4px solid ${D}">
+        <div class="container mx-auto px-6 relative z-10">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-24">
+            <div class="md:col-span-1">
+              <a href="#" class="block mb-6">
+                <img src="${logo}" alt="${companyName}" class="h-16 w-auto object-contain" style="filter:brightness(0) invert(1)">
+              </a>
+              <p class="font-light opacity-70 mb-6 max-w-xs" style="color:${D}">Laboratorio de ideas creativas. Rompemos moldes con Letras 3D y Branding disruptivo.</p>
+            </div>
+            <div>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Agencia</h4>
+              <ul class="space-y-4 font-light opacity-80" style="color:${D}">
+                ${links.map((l: any) => `<li><a href="${siteHref(l.url)}" class="hover:font-semibold transition-all" style="color:${D}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${l.label}</a></li>`).join("")}
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Estudio</h4>
+              <ul class="space-y-4 font-light opacity-80" style="color:${D}">
+                <li><a href="mailto:${email}" class="hover:font-semibold transition-all" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${email}</a></li>
+                <li><a href="tel:${phone.replace(/[^0-9+]/g, '')}" class="hover:font-semibold transition-all" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${phone}</a></li>
+                <li class="pt-4">${address}</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Redes</h4>
+              <ul class="space-y-4 font-light opacity-80" style="color:${D}">
+                ${social.map((s: any) => `<li><a href="${s.url || '#'}" class="hover:font-semibold transition-all flex items-center gap-2" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" ${s.url && s.url !== '#' ? 'target="_blank" rel="noopener"' : ''}>↗ ${s.label}</a></li>`).join("")}
+              </ul>
+            </div>
+          </div>
+          <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-6" style="border-top:2px solid rgba(0,0,0,0.1)">
+            <div class="text-sm font-semibold opacity-60" style="color:${D}">${copyright}</div>
+            <div class="flex gap-6 text-sm font-semibold opacity-60" style="color:${D}">
+              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Privacidad</a>
+              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Términos</a>
+            </div>
+          </div>
+        </div>
+        <div class="absolute bottom-[-5%] left-0 w-full overflow-hidden flex justify-center pointer-events-none select-none z-0" style="opacity:0.05">
+          <span class="font-black text-dark whitespace-nowrap" style="font-size:15vw;line-height:1;font-family:Poppins,sans-serif">INDIGO AGENCY</span>
+        </div>
+        ${footerScript()}
+      </footer>`;
+    }
+
     case "video": {
-      return `<section id="${indigoAnchor(c.anchor, 'video')}" class="relative py-24 lg:py-32" style="background:${DARK}">
-        <div class="max-w-5xl mx-auto px-6 lg:px-12">
-          <div class="relative aspect-video border overflow-hidden" style="border-color:${INDIGO}33">
-            ${c.videoUrl ? `<iframe src="${c.videoUrl}" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>` : `<img src="${c.thumbnail || c.imageUrl || 'https://placehold.co/1280x720/050505/fdcb0c?text=VIDEO'}" alt="${c.title || 'Video'}" class="w-full h-full object-cover">`}
-            ${!c.videoUrl ? `<div class="absolute inset-0 flex items-center justify-center"><div class="w-20 h-20 rounded-full flex items-center justify-center" style="background:${INDIGO};box-shadow:0 0 40px ${INDIGO}66"><i class="bi bi-play-fill text-3xl" style="color:${DARK}"></i></div></div>` : ''}
+      return `<section id="${c.anchor || 'video'}" class="py-24 md:py-32" style="background:${D}">
+        <div class="max-w-5xl mx-auto px-6">
+          <div class="relative aspect-video overflow-hidden border-4" style="border-color:${D}">
+            ${c.videoUrl ? `<iframe src="${c.videoUrl}" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>` : `<img src="${c.thumbnail || c.imageUrl || 'https://placehold.co/1280x720/fdcb0c/050505?text=VIDEO'}" alt="${c.title || 'Video'}" class="w-full h-full object-cover">`}
           </div>
         </div>
       </section>`;
     }
 
     case "image": {
-      return `<section id="${indigoAnchor(c.anchor, 'imagen')}" class="relative py-16" style="background:${c.background === 'dark' ? DARK : LIGHT}">
-        <div class="max-w-5xl mx-auto px-6 lg:px-12">
-          <div class="border overflow-hidden" style="border-color:${INDIGO}22;box-shadow:8px 8px 0 ${INDIGO}22">
-            <img src="${c.imageUrl || 'https://placehold.co/1200x600/050505/fdcb0c?text=IMAGEN'}" alt="${c.title || c.alt || 'Imagen'}" class="w-full h-auto object-cover" loading="lazy">
+      return `<section id="${c.anchor || 'imagen'}" class="py-16" style="background:${c.background === 'dark' ? D : L}">
+        <div class="max-w-5xl mx-auto px-6">
+          <div class="border-4 overflow-hidden" style="border-color:${D}">
+            <img src="${c.imageUrl || 'https://placehold.co/1200x600/fdcb0c/050505?text=IMAGEN'}" alt="${c.title || c.alt || 'Imagen'}" class="w-full h-auto object-cover" loading="lazy">
           </div>
-          ${c.caption ? `<p class="mt-4 text-xs text-center uppercase tracking-widest" style="color:${GRAY}">${c.caption}</p>` : ''}
         </div>
       </section>`;
     }
@@ -492,28 +468,28 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     case "form": {
       const kicker = c.kicker || "FORMULARIO";
       const title = c.title || "Contáctanos";
-      return `<section id="${indigoAnchor(c.anchor, 'formulario')}" class="relative py-24 lg:py-32" style="background:${c.background === 'dark' ? DARK : LIGHT}">
-        <div class="max-w-2xl mx-auto px-6 lg:px-12">
+      return `<section id="${c.anchor || 'formulario'}" class="py-24 md:py-32" style="background:${c.background === 'dark' ? D : L}">
+        <div class="max-w-2xl mx-auto px-6">
           <div class="text-center mb-10">
-            <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${kicker}</p>
-            <h2 class="text-3xl lg:text-4xl font-black uppercase" style="color:${c.background === 'dark' ? LIGHT : DARK};font-family:Poppins,sans-serif">${title}</h2>
+            <p class="text-sm font-bold uppercase tracking-widest mb-4" style="color:${B}">${kicker}</p>
+            <h2 class="text-3xl lg:text-4xl font-black uppercase" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
           </div>
-          <form method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 lg:p-10 border" style="border-color:${INDIGO}33;background:${c.background === 'dark' ? DARK : LIGHT}">
+          <form method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 border-2" style="border-color:${D};background:white">
             <div class="space-y-5">
               ${(c.fields && c.fields.length ? c.fields : [
                 { label: "Nombre", name: "nombre", type: "text", required: true },
                 { label: "Email", name: "email", type: "email", required: true },
                 { label: "Mensaje", name: "mensaje", type: "textarea", required: true },
               ]).filter((f: any) => f.type !== 'textarea').map((f: any) => `<div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${GRAY}">${f.label}</label>
-                <input type="${f.type || 'text'}" name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}" class="w-full px-4 py-3 text-sm border outline-none transition-colors" style="border-color:${INDIGO}33;background:transparent;color:${c.background === 'dark' ? LIGHT : DARK}" onfocus="this.style.borderColor='${INDIGO}'" onblur="this.style.borderColor='${INDIGO}33'">
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">${f.label}</label>
+                <input type="${f.type || 'text'}" name="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder || ''}" class="w-full px-4 py-3 text-sm border-2 outline-none" style="border-color:${D};background:white;color:${D}">
               </div>`).join("")}
               ${(c.fields && c.fields.length ? c.fields : []).filter((f: any) => f.type === 'textarea').map((f: any) => `<div>
-                <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:${GRAY}">${f.label}</label>
-                <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border outline-none transition-colors resize-none" style="border-color:${INDIGO}33;background:transparent;color:${c.background === 'dark' ? LIGHT : DARK}" onfocus="this.style.borderColor='${INDIGO}'" onblur="this.style.borderColor='${INDIGO}33'" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">${f.label}</label>
+                <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
               </div>`).join("")}
-              <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:1px solid ${INDIGO}33;color:${c.background === 'dark' ? LIGHT : DARK}"></div>
-              <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_form_submit" type="submit" class="w-full py-4 text-xs font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${INDIGO};color:${DARK};background:${INDIGO}" onmouseover="this.style.boxShadow='4px 4px 0 ${c.background === 'dark' ? LIGHT : DARK}'" onmouseout="this.style.boxShadow='none'">
+              <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D}"></div>
+              <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_form_submit" type="submit" class="w-full py-4 text-sm font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${D};background:${D};color:${B}" onmouseover="this.style.boxShadow='4px 4px 0 white'" onmouseout="this.style.boxShadow='none'">
                 ENVIAR <i class="bi bi-send ml-2"></i>
               </button>
             </div>
@@ -527,17 +503,17 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const msg = c.message || "Hola, me interesa su servicio";
       if (!phone) return null;
       const encoded = encodeURIComponent(msg);
-      return `<a href="https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encoded}" target="_blank" rel="noopener" class="fixed bottom-6 right-6 z-50 w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110" style="background:${INDIGO};box-shadow:4px 4px 0 ${DARK}" aria-label="WhatsApp">
-        <svg viewBox="0 0 24 24" fill="${DARK}" width="24" height="24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      return `<a href="https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encoded}" target="_blank" rel="noopener" class="fixed bottom-6 right-6 z-50 w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110" style="background:#25D366;box-shadow:4px 4px 0 ${D}" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" fill="white" width="24" height="24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       </a>`;
     }
 
     case "sorteo-form": {
-      return `<section id="${indigoAnchor(c.anchor, 'sorteo')}" class="relative py-24 lg:py-32" style="background:${DARK}">
-        <div class="max-w-2xl mx-auto px-6 lg:px-12 text-center">
-          <p class="text-xs font-bold uppercase tracking-[0.3em] mb-4" style="color:${INDIGO};font-family:Poppins,sans-serif">${c.kicker || "SORTEO"}</p>
-          <h2 class="text-3xl lg:text-5xl font-black uppercase" style="color:${LIGHT};font-family:Poppins,sans-serif">${c.title || "Participa y gana"}</h2>
-          ${c.description ? `<p class="mt-4 text-sm" style="color:${GRAY}">${c.description}</p>` : ''}
+      return `<section id="${c.anchor || 'sorteo'}" class="py-24 md:py-32" style="background:${D}">
+        <div class="max-w-2xl mx-auto px-6 text-center">
+          <p class="text-sm font-bold uppercase tracking-widest mb-4" style="color:${B}">${c.kicker || "SORTEO"}</p>
+          <h2 class="text-3xl lg:text-5xl font-black uppercase" style="color:${L};font-family:Poppins,sans-serif">${c.title || "Participa y gana"}</h2>
+          ${c.description ? `<p class="mt-4 text-sm opacity-70" style="color:${L}">${c.description}</p>` : ''}
         </div>
       </section>`;
     }
