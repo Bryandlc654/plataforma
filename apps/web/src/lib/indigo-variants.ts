@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable */
 
 const PLACEHOLDER_LOGO = "https://placehold.co/200x60/050505/fdcb0c?text=INDIGO";
 

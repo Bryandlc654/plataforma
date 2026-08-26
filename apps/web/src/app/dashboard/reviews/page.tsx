@@ -64,7 +64,7 @@ export default function ReviewsPage() {
           </div>
           <h3 className="text-lg font-semibold mb-2">Aún no hay opiniones</h3>
           <p className="text-slate-500 max-w-sm mx-auto mb-6">
-            Añade el bloque 'Formulario Reseñas' en tu página para empezar a recibir valoraciones de clientes reales.
+            Añade el bloque &apos;Formulario Reseñas&apos; en tu página para empezar a recibir valoraciones de clientes reales.
           </p>
         </div>
       ) : (
@@ -88,7 +88,7 @@ export default function ReviewsPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-slate-700 italic mb-4 text-sm">"{review.content}"</p>
+                <p className="text-slate-700 italic mb-4 text-sm">&quot;{review.content}&quot;</p>
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <User className="w-4 h-4" /> {review.authorName} {review.authorEmail ? `(${review.authorEmail})` : ''}
