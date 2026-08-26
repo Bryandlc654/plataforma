@@ -94,12 +94,13 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         { label: "Contacto", url: "#contacto" },
       ];
       const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
-      return `<nav class="fixed w-full z-50 top-0 left-0 p-6 flex justify-between items-center" style="mix-blend-mode:difference;color:${L}">
+      const isWhite = c.navbarStyle === "white";
+      return `<nav class="fixed w-full z-50 top-0 left-0 p-6 flex justify-between items-center" ${isWhite ? `style="background:white;border-bottom:1px solid rgba(0,0,0,0.1);color:${D}"` : `style="mix-blend-mode:difference;color:${L}"`}>
         <a href="${siteHref(c.logoUrl || '#')}" class="inline-block">
-          <img src="${logo}" alt="${c.companyName || site?.name || 'Indigo Publicidad'}" class="h-10 md:h-12 w-auto object-contain" style="filter:brightness(0) invert(1)">
+          <img src="${logo}" alt="${c.companyName || site?.name || 'Indigo Publicidad'}" class="h-10 md:h-12 w-auto object-contain" ${isWhite ? 'style="filter:brightness(0) invert(1)"' : 'style="filter:brightness(0) invert(1)"'}>
         </a>
         <div class="hidden md:flex gap-8 font-semibold text-sm tracking-widest uppercase" style="font-family:Poppins,sans-serif">
-          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="hover:opacity-80 transition-colors" style="color:${B}">${l.label}</a>`).join("")}
+          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="transition-colors" style="color:${isWhite ? (l.active ? B : D) : B}" ${!isWhite ? '' : `onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${l.active ? B : D}'"`}>${l.label}</a>`).join("")}
         </div>
         <button id="indigoHamburger" class="md:hidden" style="color:${B}" aria-label="Menú">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -113,6 +114,17 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         </div>
         ${heroScript()}
       </nav>`;
+    }
+
+    case "page-hero": {
+      const title = c.title || "NUESTRA <span style='color:" + B + "'>AGENCIA</span>";
+      const desc = c.description || "Llevamos más de una década transformando ideas locas en marcas sólidas. Indigo no es una agencia, es tu brazo creativo.";
+      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${L}">
+        <div class="container mx-auto px-6 relative z-10 text-center">
+          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${D};font-family:Poppins,sans-serif">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto opacity-80" style="color:${D}">${desc}</p>` : ''}
+        </div>
+      </section>`;
     }
 
     case "hero": {
@@ -159,10 +171,11 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         { value: "10+", label: "Años de exp." },
         { value: "500", label: "Proyectos" },
       ];
-      return `<section id="${c.anchor || 'agencia'}" class="py-24 md:py-32 relative" style="background:white;border-bottom:1px solid rgba(0,0,0,0.1)">
+      const isShadow = c.imageStyle === "shadow";
+      return `<section id="${c.anchor || 'agencia'}" class="py-24 md:py-32 relative" style="background:${isShadow ? '#f9fafb' : 'white'};${isShadow ? 'border-top:1px solid rgba(0,0,0,0.1);border-bottom:1px solid rgba(0,0,0,0.1)' : 'border-bottom:1px solid rgba(0,0,0,0.1)'}">
         <div class="container mx-auto px-6">
           <div class="flex flex-col md:flex-row items-center gap-16">
-            <div class="w-full md:w-5/12 flex flex-col justify-center">
+            <div class="w-full ${c.reverse ? 'md:order-2' : 'md:w-5/12'} flex flex-col justify-center">
               <h2 class="font-extrabold text-5xl md:text-7xl mb-6 relative z-10" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
               <p class="text-xl font-light mb-8 opacity-80 relative z-10 leading-relaxed" style="color:${D}">${desc}</p>
               <div class="flex items-center gap-8 font-bold" style="color:${B};font-family:Poppins,sans-serif">
@@ -172,8 +185,10 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                 </div>`).join("")}
               </div>
             </div>
-            <div class="w-full md:w-7/12">
-              ${offsetImg(img, "Agencia Indigo", B, "right")}
+            <div class="w-full ${c.reverse ? 'md:order-1 md:w-7/12' : 'md:w-7/12'}">
+              ${isShadow ? `<div class="relative">
+                <img src="${img}" alt="Agencia" class="w-full h-auto border-4" style="border-color:${D};box-shadow:8px 8px 0 ${D}">
+              </div>` : offsetImg(img, "Agencia Indigo", B, "right")}
             </div>
           </div>
         </div>
@@ -182,6 +197,35 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
 
     case "features":
     case "services": {
+      const isPhilosophy = c.layout === "philosophy";
+      if (isPhilosophy) {
+        const title = c.title || "NUESTRA <span style='color:" + B + "'>FILOSOFÍA</span>";
+        const subtitle = c.subtitle || "El diseño no solo debe verse bien, debe funcionar, impactar y quedarse en la memoria.";
+        const items = c.items || [
+          { number: "01", title: "Disrupción", desc: "No seguimos tendencias, las creamos. Buscamos siempre el ángulo inesperado para que tu marca se desmarque de la competencia." },
+          { number: "02", title: "Calidad", desc: "Materiales premium y acabados meticulosos. Desde un logotipo vectorial hasta un letrero monumental en acero, la excelencia no es negociable." },
+          { number: "03", title: "Compromiso", desc: "Tu éxito es nuestro éxito. Nos involucramos en cada proyecto como si fuera nuestra propia marca, de principio a fin." },
+        ];
+        return `<section id="${c.anchor || 'filosofia'}" class="py-24" style="background:white">
+          <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+              <h2 class="font-extrabold text-5xl md:text-6xl mb-4" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+              <p class="text-xl font-light max-w-2xl mx-auto opacity-80" style="color:${D}">${subtitle}</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+              ${items.map((item: any, i: number) => {
+                const isMiddle = i === 1;
+                return `<div class="p-8 transition-transform duration-300 hover:-translate-y-2" style="border:4px solid ${D};${isMiddle ? `background:${B};color:${D}` : ''}">
+                  <div class="font-black text-6xl mb-6" style="font-family:Poppins,sans-serif;color:${isMiddle ? D : B}">${item.number || String(i + 1).padStart(2, "0")}</div>
+                  <h3 class="font-bold text-2xl mb-4 uppercase tracking-widest" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
+                  <p class="leading-relaxed" style="opacity:${isMiddle ? 0.9 : 0.8}">${item.desc || item.description || ''}</p>
+                </div>`;
+              }).join("")}
+            </div>
+          </div>
+        </section>`;
+      }
+
       const kicker = c.kicker || "01";
       const title = c.title || "LETRAS <span style='color:" + B + "'>3D</span>";
       const desc = c.description || "Dale volumen a tu identidad. Fabricamos letreros en 3D que capturan miradas y dominan el espacio. Materiales de primera, acabados surrealistas e iluminación impactante para que tu marca nunca pase desapercibida.";
@@ -353,12 +397,16 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         { value: "50+", label: "Clientes" },
         { value: "99%", label: "Satisfacción" },
       ];
-      return `<section class="py-16 lg:py-20" style="background:${D}">
-        <div class="container mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-          ${items.map((item: any) => `<div>
-            <div class="text-3xl lg:text-5xl font-black" style="color:${B};font-family:Poppins,sans-serif">${item.value || item.title}</div>
-            <div class="mt-2 text-sm uppercase tracking-widest opacity-60" style="color:${L}">${item.label || item.desc}</div>
-          </div>`).join("")}
+      const isDropShadow = c.style === "drop-shadow";
+      return `<section class="py-24" style="background:${D};border-top:1px solid ${B};border-bottom:1px solid ${B};position:relative;overflow:hidden">
+        ${isDropShadow ? `<div class="absolute pointer-events-none" style="top:-50%;left:-10%;width:24rem;height:24rem;background:${B};border-radius:50%;mix-blend-mode:multiply;opacity:0.2;filter:blur(3rem)"></div>` : ''}
+        <div class="container mx-auto px-6 relative z-10">
+          <div class="grid grid-cols-1 md:grid-cols-${items.length > 3 ? '3' : '4'} gap-12 text-center">
+            ${items.map((item: any) => `<div>
+              <div class="font-black text-6xl md:text-8xl" style="color:${B};font-family:Poppins,sans-serif;${isDropShadow ? 'text-shadow:4px 4px 0 white' : ''}">${item.value || item.title}</div>
+              <div class="uppercase tracking-widest text-sm font-bold mt-4 opacity-80" style="color:${L}">${item.label || item.desc}</div>
+            </div>`).join("")}
+          </div>
         </div>
       </section>`;
     }
