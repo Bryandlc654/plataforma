@@ -229,6 +229,44 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     }
   }
 
+  if (c.variant === "indigo") {
+    const { getIndigoHtml } = require("../../../lib/indigo-variants");
+    let html = getIndigoHtml(type, c);
+    if (html && type === "header") {
+      html = html.replace('class="fixed top-0 left-0 w-full z-50', 'class="relative top-0 left-0 w-full z-50');
+    }
+    if (html) {
+      return (
+        <div 
+          ref={revealRef}
+          dangerouslySetInnerHTML={{ __html: html }} 
+          onSubmit={async (e) => {
+            if (type !== "contact" && type !== "form") return;
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const data: Record<string, any> = {};
+            formData.forEach((v, k) => { data[k] = v; });
+            const tenantId = useAuthStore.getState().tenantId;
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+            if (btn) {
+              btn.innerHTML = '¡Mensaje enviado! <i class="bi bi-check-lg h-4 w-4"></i>'; 
+              btn.style.background = '#16a34a';
+              btn.disabled = true;
+            }
+            try {
+              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+              else await new Promise(res => setTimeout(res, 1000));
+            } catch (err) {
+              if (btn) btn.disabled = false;
+              alert("Error al enviar el formulario");
+            }
+          }}
+        />
+      );
+    }
+  }
+
   switch (type) {
     case "hero": {
       return (

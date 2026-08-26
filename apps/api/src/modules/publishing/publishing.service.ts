@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
-import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml } from "@plataforma/shared";
+import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml, getIndigoHtml } from "@plataforma/shared";
 import {
   resolvePublicSiteUrl,
   normalizePublicPath,
@@ -479,7 +479,7 @@ ${blocksHtml}
     const primary = site.primaryColor || "#2563EB";
     const secondary = site.secondaryColor || "#1E40AF";
     const variant = page?.blocks?.[0]?.content?.variant;
-    const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast";
+    const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo";
 
     const baseUrl = resolvePublicSiteUrl(site);
     const canonicalUrl =
@@ -528,6 +528,19 @@ ${blocksHtml}
       "rodri-border": "#e2e8f0",
       "rodri-input": "#e2e8f0",
       "rodri-primary-foreground": "#ffffff",
+    } : variant === "indigo" ? {
+      "indigo-brand": "#fdcb0c",
+      "indigo-dark": "#050505",
+      "indigo-light": "#fcfcfc",
+      "indigo-gray": "#999999",
+      "on-primary": "#fdcb0c",
+      "primary": "#fdcb0c",
+      "tertiary-container": "#050505",
+      "error-container": "#ffdad6",
+      "on-error": "#ffffff",
+      "surface-container-lowest": "#fcfcfc",
+      "primary-fixed-dim": "#fdcb0c",
+      "on-background": "#050505",
     } : variant === "art-culinaire" ? {
       "on-primary": "#ffffff",
       "tertiary-container": "#261900",
@@ -635,6 +648,15 @@ ${blocksHtml}
       "body-md": ["Inter"],
       "body-lg": ["Inter"],
       "label-sm": ["Inter"]
+    } : variant === "indigo" ? {
+      "display": ["Poppins"],
+      "headline-md": ["Poppins"],
+      "headline-lg": ["Poppins"],
+      "headline-lg-mobile": ["Poppins"],
+      "headline-display": ["Poppins"],
+      "body-md": ["Poppins"],
+      "body-lg": ["Poppins"],
+      "label-sm": ["Poppins"]
     } : variant === "art-culinaire" ? {
       "headline-md": ["Playfair Display"],
       "headline-lg": ["Playfair Display"],
@@ -831,6 +853,11 @@ ${apkButton}
 
     if (c.variant === "rodriplast") {
       const html = getRodriplastHtml(type, c, this.apiBaseUrl(), site);
+      if (html) return html;
+    }
+
+    if (c.variant === "indigo") {
+      const html = getIndigoHtml(type, c, this.apiBaseUrl(), site);
       if (html) return html;
     }
 
