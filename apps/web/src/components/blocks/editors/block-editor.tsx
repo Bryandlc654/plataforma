@@ -149,6 +149,22 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "header":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Menú Indigo (se muestra en todas las páginas como sección)</div>
+            <Field label="Estilo de menú">
+              <select value={content.navbarStyle || "dark"} onChange={(e) => set("navbarStyle", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="dark">Oscuro (transparente)</option>
+                <option value="white">Blanco (fondo claro)</option>
+              </select>
+            </Field>
+            <Field label="Nombre de la empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} /></Field>
+            <Field label="Logo (imagen)"><ImageField label="Logo" value={content.logoImage} onChange={(v) => set("logoImage", v)} /></Field>
+            <Field label="Enlaces del menú"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="URL del logo (inicio)"><TextInput value={content.logoUrl} onChange={(v) => set("logoUrl", v)} placeholder="/" /></Field>
+          </>;
+        }
         return <>
           <Field label="Estilo">
             <select value={content.variant || "classic"} onChange={(e) => set("variant", e.target.value)}
@@ -181,6 +197,18 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "footer":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Indigo (se muestra en todas las páginas como sección)</div>
+            <Field label="Nombre de la empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} /></Field>
+            <ImageField label="Logo (imagen)" value={content.logoImage} onChange={(v) => set("logoImage", v)} />
+            <Field label="Correo"><TextInput value={content.email} onChange={(v) => set("email", v)} /></Field>
+            <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} /></Field>
+            <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} /></Field>
+            <Field label="Enlaces"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="Redes sociales"><ArrayEditor value={content.social} onChange={(v) => set("social", v)} fields={[{ key: "label", label: "Nombre" }, { key: "url", label: "URL" }]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} /></Field>
           <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={2} /></Field>

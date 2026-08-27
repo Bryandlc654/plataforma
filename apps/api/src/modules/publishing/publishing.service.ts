@@ -201,7 +201,6 @@ export class PublishingService {
             orderBy: { sortOrder: "asc" },
           },
           tenant: { select: { settings: true } },
-          template: { select: { globalStyles: true } },
         },
       });
 
@@ -473,23 +472,7 @@ ${blocksHtml}
       page.blocks = await this.resolveLinktreeBlocks(page.blocks, site.tenantId);
     }
 
-    // Resolve global (shared) header/footer: site override > template globalStyles
-    const siteSettings = (site?.settings as any) || {};
-    const templateGlobal = (site?.template?.globalStyles as any) || {};
-    const sharedHeaderRaw = siteSettings.globalHeader || templateGlobal.header;
-    const sharedFooterRaw = siteSettings.globalFooter || templateGlobal.footer;
-
-    const currentPath = page?.path || "/";
-    const sharedHeader = this.renderSharedChrome(sharedHeaderRaw, "header", site, reviews, currentPath);
-    const sharedFooter = this.renderSharedChrome(sharedFooterRaw, "footer", site, reviews, currentPath);
-
     const blocksHtml = (page?.blocks || [])
-      .filter((block: any) => {
-        if ((block.type === "header" || block.type === "footer") && (sharedHeaderRaw || sharedFooterRaw)) {
-          return false;
-        }
-        return true;
-      })
       .map((block: any) =>
         this.renderBlock(block.type, this.resolveBlockUrls(block).content, block.styles, site, reviews)
       ).join("\n") || "";
@@ -849,38 +832,11 @@ document.addEventListener("DOMContentLoaded",function(){
 </script>
 </head>
 <body class="${isTemplate ? "bg-background text-on-background font-body-md text-body-md antialiased selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant" : ""}">
-${sharedHeader}
 ${blocksHtml}
-${sharedFooter}
 ${waButton}
 ${apkButton}
 </body>
 </html>`;
-  }
-
-  private renderSharedChrome(
-    raw: any,
-    type: "header" | "footer",
-    site?: any,
-    reviews: any[] = [],
-    currentPath?: string,
-  ): string {
-    if (!raw) return "";
-    const c = decodeUnicodeEscapes(raw ? { ...raw, variant: raw.variant || "indigo" } : null) || {};
-    if (c.variant !== "indigo") return "";
-
-    // Compute active state for nav/footer links based on current page path
-    const linkSets = [c.links, c.navLinks];
-    for (const links of linkSets) {
-      if (Array.isArray(links)) {
-        for (const l of links) {
-          const linkPath = (l.url || "").split("?")[0];
-          l.active = !!linkPath && normalizePublicPath(linkPath) === normalizePublicPath(currentPath || "/");
-        }
-      }
-    }
-
-    return this.renderBlock(type, this.resolveBlockUrls({ type, content: c }).content, c.styles, site, reviews);
   }
 
   private renderBlock(type: string, content: any, _styles?: any, site?: any, reviews: any[] = []): string {

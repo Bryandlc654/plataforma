@@ -7,13 +7,12 @@ import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/bl
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
-import { GlobalChromeEditor } from "@/components/admin/global-chrome-editor";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineArrowUp, HiOutlineArrowDown } from "react-icons/hi";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; settings?: any; template?: { id: string; name: string; globalStyles?: any }; }
+interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; }
 
 const blockCategories: Record<string, string[]> = {
   "Encabezado": ["hero", "header"],
@@ -120,8 +119,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [dirty, setDirty] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState({ name: "", primaryColor: "#2563EB", secondaryColor: "#1E40AF", logoUrl: "", faviconUrl: "", domain: "" });
-  const [chromeOverride, setChromeOverride] = useState<{ header?: any; footer?: any }>({});
-  const [showChromeModal, setShowChromeModal] = useState(false);
   const [history, setHistory] = useState<Site[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [dnsStatus, setDnsStatus] = useState<"idle"|"checking"|"ok"|"error">("idle");
@@ -139,7 +136,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const s = (res.data || res) as Site;
       setSite(s);
       setSiteSettings({ name: s.name, primaryColor: s.primaryColor || "#2563EB", secondaryColor: s.secondaryColor || "#1E40AF", logoUrl: s.logoUrl || "", faviconUrl: s.faviconUrl || "", domain: s.domain || "" });
-      setChromeOverride({ header: s.settings?.globalHeader, footer: s.settings?.globalFooter });
       if (s.pages.length > 0) setActivePageId(s.pages.find(p => p.isDefault)?.id || s.pages[0].id);
     } catch { setSite(null); }
     finally { setLoading(false); }
@@ -354,31 +350,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   const saveSiteSettings = async () => {
     try {
-      const settings: any = { ...(site?.settings || {}) };
-      const gs: any = {};
-      if (chromeOverride.header) gs.header = chromeOverride.header;
-      if (chromeOverride.footer) gs.footer = chromeOverride.footer;
-      settings.globalHeader = gs.header || null;
-      settings.globalFooter = gs.footer || null;
-      await api.put(`/sites/${siteId}`, { ...siteSettings, settings });
-      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined, settings } : p);
+      await api.put(`/sites/${siteId}`, siteSettings);
+      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined } : p);
       setToast("Configuración guardada");
       setDnsStatus("idle");
-    } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
-  };
-
-  const saveChromeOverride = async () => {
-    try {
-      const settings: any = { ...(site?.settings || {}) };
-      const gs: any = {};
-      if (chromeOverride.header) gs.header = chromeOverride.header;
-      if (chromeOverride.footer) gs.footer = chromeOverride.footer;
-      settings.globalHeader = gs.header || null;
-      settings.globalFooter = gs.footer || null;
-      await api.put(`/sites/${siteId}`, { settings });
-      setSite(p => p ? { ...p, settings } : p);
-      setShowChromeModal(false);
-      setToast("Header/footer guardado");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
   };
 
@@ -405,10 +380,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   };
   const hasPages = site.pages.length > 0;
   const publicUrl = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
-  const templateChrome = site.template?.globalStyles || {};
-  const effectiveHeader = chromeOverride.header || templateChrome.header;
-  const effectiveFooter = chromeOverride.footer || templateChrome.footer;
-  const chromeActive = activeBlockId === "__chrome__";
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
@@ -423,7 +394,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowPagesModal(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineDocumentText className="h-3.5 w-3.5" />Páginas ({site.pages.length})</button>
-          <button onClick={() => setShowChromeModal(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors"><HiOutlineCog className="h-3.5 w-3.5" />Header / Footer</button>
           <button onClick={openPreview} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineEye className="h-3.5 w-3.5" />Preview</button>
           <div className="flex items-center gap-1 border border-slate-200 rounded-lg">
             <button onClick={undo} disabled={historyIdx <= 0} className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
@@ -441,13 +411,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
       {/* CANVAS */}
       <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
-        {effectiveHeader && (
-          <div className={`max-w-6xl mx-auto ${chromeActive ? "p-4" : "p-4 pb-0"}`}>
-            <div onClick={() => { setActiveBlockId("__chrome__"); setShowChromeModal(true); }} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${chromeActive ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
-              <BlockRenderer type="header" content={{ ...effectiveHeader, variant: "indigo" }} />
-            </div>
-          </div>
-        )}
         {activePage && sortedBlocks.length > 0 ? (
           <div className="max-w-6xl mx-auto py-8 px-6 space-y-6">
             {sortedBlocks.map((block, idx) => (
@@ -469,13 +432,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full"><div className="text-center py-16 max-w-sm"><div className="h-20 w-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><svg className="h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div><h3 className="text-lg font-bold text-slate-700 mb-2">{hasPages?"Página vacía":"Creá tu primera página"}</h3><p className="text-sm text-slate-500 mb-6">Esta página no tiene bloques.</p><div className="flex flex-col gap-2">{hasPages ? <button onClick={() => setShowAddBlock(true)} className="btn-primary text-sm flex items-center justify-center gap-1.5"><HiOutlinePlus className="h-4 w-4" /> Agregar bloque</button> : <button onClick={()=>setShowPagesModal(true)} className="btn-primary text-sm">+ Crear página</button>}</div></div></div>
-        )}
-        {effectiveFooter && (
-          <div className={`max-w-6xl mx-auto ${chromeActive ? "p-4" : "p-4 pt-0"}`}>
-            <div onClick={() => { setActiveBlockId("__chrome__"); setShowChromeModal(true); }} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${chromeActive ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
-              <BlockRenderer type="footer" content={{ ...effectiveFooter, variant: "indigo" }} />
-            </div>
-          </div>
         )}
       </div>
 
@@ -520,35 +476,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                 {dnsStatus==="error"&&<div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5"><p className="text-xs font-medium text-amber-700">DNS no configurado</p><p className="text-xs text-amber-600 mt-0.5">Apunta tu dominio al servidor y verifica de nuevo.</p></div>}
               </div>
               <div className="flex gap-2"><input className="input-field text-xs flex-1" placeholder="Título SEO" value={site.seoTitle||""} onChange={e=>{setSite({...site,seoTitle:e.target.value});pendingSeoRef.current.seoTitle=e.target.value;setDirty(true);}}/><input className="input-field text-xs flex-1" placeholder="Descripción SEO" value={site.seoDesc||""} onChange={e=>{setSite({...site,seoDesc:e.target.value});pendingSeoRef.current.seoDesc=e.target.value;setDirty(true);}}/></div>
-              <div className="border-t border-slate-200 pt-4">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-700">Header / Footer global (override)</label>
-                  {(chromeOverride.header || chromeOverride.footer) && (
-                    <button onClick={() => setChromeOverride({})} className="text-[11px] font-semibold text-red-500 hover:text-red-600">Quitar override</button>
-                  )}
-                </div>
-                <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">Si no defines override, el sitio usa el header/footer global de su plantilla. Dejá esta sección vacía para heredarlos.</p>
-                <GlobalChromeEditor header={chromeOverride.header} footer={chromeOverride.footer} onChange={setChromeOverride} showOverrides />
-              </div>
               <button onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="w-full btn-primary text-xs">Guardar cambios</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* HEADER/FOOTER GLOBAL MODAL */}
-      {showChromeModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20" onClick={()=>setShowChromeModal(false)}>
-          <div className="absolute inset-0 bg-black/30"/>
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto m-4 z-10" onClick={e=>e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white"><h3 className="font-semibold text-sm text-slate-900">Header / Footer global</h3><button onClick={()=>setShowChromeModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
-            <div className="p-4">
-              <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">Si no defines un override, el sitio hereda el header/footer de su plantilla. Dejá esta sección vacía para heredarlos.</p>
-              <GlobalChromeEditor header={chromeOverride.header} footer={chromeOverride.footer} onChange={setChromeOverride} showOverrides />
-            </div>
-            <div className="flex gap-2 p-4 border-t border-slate-200 sticky bottom-0 bg-white">
-              <button onClick={()=>setShowChromeModal(false)} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
-              <button onClick={saveChromeOverride} className="flex-1 rounded-lg bg-primary-600 text-white text-xs font-semibold py-2 hover:bg-primary-700">Guardar</button>
             </div>
           </div>
         </div>

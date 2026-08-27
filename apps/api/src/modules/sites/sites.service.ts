@@ -174,7 +174,7 @@ export class SitesService {
           id: true, name: true, subdomain: true, domain: true, isPublished: true,
           primaryColor: true, logoUrl: true, faviconUrl: true, createdAt: true, updatedAt: true,
           _count: { select: { pages: true } },
-        template: { select: { id: true, name: true, globalStyles: true } },
+        template: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,

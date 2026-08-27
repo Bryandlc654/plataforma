@@ -687,7 +687,7 @@ export class TemplatesService {
       categoryId?: string | null;
       tags?: string[] | null;
       thumbnail?: string | null;
-    } & { globalStyles?: any }
+    }
   ) {
     const t = await this.prisma.template.findUnique({ where: { id } });
     if (!t) throw new NotFoundException("Template not found");
@@ -724,16 +724,6 @@ export class TemplatesService {
         patch.tags = tags;
       } else {
         throw new BadRequestException("tags must be an array");
-      }
-    }
-
-    if (data.globalStyles !== undefined) {
-      if (data.globalStyles === null) {
-        patch.globalStyles = null;
-      } else if (data.globalStyles && typeof data.globalStyles === "object") {
-        patch.globalStyles = data.globalStyles;
-      } else {
-        throw new BadRequestException("globalStyles must be an object");
       }
     }
 
