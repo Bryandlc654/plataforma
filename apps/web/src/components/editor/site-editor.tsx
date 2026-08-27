@@ -13,7 +13,7 @@ import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; settings?: any; }
+interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; settings?: any; template?: { id: string; name: string; globalStyles?: any }; }
 
 const blockCategories: Record<string, string[]> = {
   "Encabezado": ["hero", "header"],
@@ -405,6 +405,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   };
   const hasPages = site.pages.length > 0;
   const publicUrl = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
+  const templateChrome = site.template?.globalStyles || {};
+  const effectiveHeader = chromeOverride.header || templateChrome.header;
+  const effectiveFooter = chromeOverride.footer || templateChrome.footer;
+  const chromeActive = activeBlockId === "__chrome__";
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
@@ -437,6 +441,13 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
       {/* CANVAS */}
       <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
+        {effectiveHeader && (
+          <div className={`max-w-6xl mx-auto ${chromeActive ? "p-4" : "p-4 pb-0"}`}>
+            <div onClick={() => { setActiveBlockId("__chrome__"); setShowChromeModal(true); }} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${chromeActive ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
+              <BlockRenderer type="header" content={{ ...effectiveHeader, variant: "indigo" }} />
+            </div>
+          </div>
+        )}
         {activePage && sortedBlocks.length > 0 ? (
           <div className="max-w-6xl mx-auto py-8 px-6 space-y-6">
             {sortedBlocks.map((block, idx) => (
@@ -458,6 +469,13 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full"><div className="text-center py-16 max-w-sm"><div className="h-20 w-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><svg className="h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div><h3 className="text-lg font-bold text-slate-700 mb-2">{hasPages?"Página vacía":"Creá tu primera página"}</h3><p className="text-sm text-slate-500 mb-6">Esta página no tiene bloques.</p><div className="flex flex-col gap-2">{hasPages ? <button onClick={() => setShowAddBlock(true)} className="btn-primary text-sm flex items-center justify-center gap-1.5"><HiOutlinePlus className="h-4 w-4" /> Agregar bloque</button> : <button onClick={()=>setShowPagesModal(true)} className="btn-primary text-sm">+ Crear página</button>}</div></div></div>
+        )}
+        {effectiveFooter && (
+          <div className={`max-w-6xl mx-auto ${chromeActive ? "p-4" : "p-4 pt-0"}`}>
+            <div onClick={() => { setActiveBlockId("__chrome__"); setShowChromeModal(true); }} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${chromeActive ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
+              <BlockRenderer type="footer" content={{ ...effectiveFooter, variant: "indigo" }} />
+            </div>
+          </div>
         )}
       </div>
 
