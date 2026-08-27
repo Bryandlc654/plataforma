@@ -62,6 +62,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
   const renderFields = () => {
     switch (type) {
       case "hero":
+        if (content.variant === "indigo") {
+          return <>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Publicidad" /></Field>
+            <Field label="Subtítulo (amarillo)"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} placeholder="Creativa." /></Field>
+            <Field label="Párrafo (debajo del título)"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} placeholder="Rompemos las reglas del diseño..." /></Field>
+            <Field label="Imagen de fondo"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+          </>;
+        }
         return <>
           <Field label="Fondo">
             <select value={content.bgType || "gradient"} onChange={(e) => set("bgType", e.target.value)}
