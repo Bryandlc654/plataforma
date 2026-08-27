@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import api from "@/lib/api";
 import { AppIcon } from "@/components/ui/app-icon";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
+import { GlobalChromeEditor } from "@/components/admin/global-chrome-editor";
 
 interface Template {
   id: string;
@@ -57,6 +58,9 @@ export default function AdminTemplatesPage() {
   const [edit, setEdit] = useState({ id: "", name: "", description: "", categoryId: "", tags: "", thumbnail: "", isPremium: false, isActive: true });
   const [diversifyLoading, setDiversifyLoading] = useState(false);
   const [portfolioPresetLoading, setPortfolioPresetLoading] = useState(false);
+  const [showChromeModal, setShowChromeModal] = useState(false);
+  const [chrome, setChrome] = useState<{ header?: any; footer?: any }>({});
+  const [chromeSaving, setChromeSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -152,6 +156,32 @@ export default function AdminTemplatesPage() {
     } finally {
       setPortfolioPresetLoading(false);
     }
+  };
+
+  const openChromeModal = async () => {
+    if (!selected) return;
+    try {
+      const res: any = await api.get(`/templates/admin/${selected.id}`);
+      const t = res.data || res;
+      const gs = (t as any).globalStyles;
+      setChrome({ header: gs?.header, footer: gs?.footer });
+    } catch { setChrome({}); }
+    setShowChromeModal(true);
+  };
+
+  const saveChrome = async () => {
+    if (!selected) return;
+    setChromeSaving(true);
+    try {
+      const gs: any = {};
+      if (chrome.header) gs.header = chrome.header;
+      if (chrome.footer) gs.footer = chrome.footer;
+      await api.put(`/templates/${selected.id}`, { globalStyles: gs });
+      setShowChromeModal(false);
+      setToast("Header/footer global actualizado");
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Error");
+    } finally { setChromeSaving(false); }
   };
 
   const filtered = search ? templates.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.description?.toLowerCase().includes(search.toLowerCase())) : templates;
@@ -291,6 +321,12 @@ export default function AdminTemplatesPage() {
                 <button onClick={() => openEdit(selected)} className="flex-1 btn-secondary text-sm">Editar</button>
                 <button onClick={() => toggleTemplate(selected.id, selected.isActive)} className="flex-1 btn-primary text-sm">{selected.isActive ? "Desactivar" : "Activar"}</button>
               </div>
+              <button
+                onClick={openChromeModal}
+                className="w-full rounded-xl bg-slate-900 text-white text-sm font-semibold py-2.5 hover:bg-slate-800 transition-colors"
+              >
+                Header / Footer global
+              </button>
               {(selected.name || "").toLowerCase().includes("portafolio creativo") && (
                 <button
                   onClick={applyPortfolioPreset}
@@ -469,6 +505,30 @@ export default function AdminTemplatesPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowEditModal(false)} className="flex-1 btn-secondary text-sm">Cancelar</button>
               <button onClick={saveEdit} className="flex-1 btn-primary text-sm">Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChromeModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowChromeModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-semibold text-slate-900">Header / Footer global</h3>
+              <button onClick={() => setShowChromeModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                Estos se renderizan una sola vez en todas las páginas del sitio (los bloques header/footer de cada página se ignoran). Cada sitio puede sobrescribirlos desde su editor.
+              </p>
+              <GlobalChromeEditor header={chrome.header} footer={chrome.footer} onChange={setChrome} />
+            </div>
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex gap-3">
+              <button onClick={() => setShowChromeModal(false)} className="flex-1 btn-secondary text-sm">Cancelar</button>
+              <button onClick={saveChrome} disabled={chromeSaving} className="flex-1 btn-primary text-sm">{chromeSaving ? "Guardando..." : "Guardar"}</button>
             </div>
           </div>
         </div>

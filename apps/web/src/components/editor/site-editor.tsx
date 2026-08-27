@@ -7,12 +7,13 @@ import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/bl
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
+import { GlobalChromeEditor } from "@/components/admin/global-chrome-editor";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineArrowUp, HiOutlineArrowDown } from "react-icons/hi";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; }
+interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; settings?: any; }
 
 const blockCategories: Record<string, string[]> = {
   "Encabezado": ["hero", "header"],
@@ -119,6 +120,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [dirty, setDirty] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState({ name: "", primaryColor: "#2563EB", secondaryColor: "#1E40AF", logoUrl: "", faviconUrl: "", domain: "" });
+  const [chromeOverride, setChromeOverride] = useState<{ header?: any; footer?: any }>({});
   const [history, setHistory] = useState<Site[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [dnsStatus, setDnsStatus] = useState<"idle"|"checking"|"ok"|"error">("idle");
@@ -136,6 +138,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const s = (res.data || res) as Site;
       setSite(s);
       setSiteSettings({ name: s.name, primaryColor: s.primaryColor || "#2563EB", secondaryColor: s.secondaryColor || "#1E40AF", logoUrl: s.logoUrl || "", faviconUrl: s.faviconUrl || "", domain: s.domain || "" });
+      setChromeOverride({ header: s.settings?.globalHeader, footer: s.settings?.globalFooter });
       if (s.pages.length > 0) setActivePageId(s.pages.find(p => p.isDefault)?.id || s.pages[0].id);
     } catch { setSite(null); }
     finally { setLoading(false); }
@@ -350,8 +353,14 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   const saveSiteSettings = async () => {
     try {
-      await api.put(`/sites/${siteId}`, siteSettings);
-      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined } : p);
+      const settings: any = { ...(site?.settings || {}) };
+      const gs: any = {};
+      if (chromeOverride.header) gs.header = chromeOverride.header;
+      if (chromeOverride.footer) gs.footer = chromeOverride.footer;
+      settings.globalHeader = gs.header || null;
+      settings.globalFooter = gs.footer || null;
+      await api.put(`/sites/${siteId}`, { ...siteSettings, settings });
+      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined, settings } : p);
       setToast("Configuración guardada");
       setDnsStatus("idle");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
@@ -476,6 +485,16 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                 {dnsStatus==="error"&&<div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5"><p className="text-xs font-medium text-amber-700">DNS no configurado</p><p className="text-xs text-amber-600 mt-0.5">Apunta tu dominio al servidor y verifica de nuevo.</p></div>}
               </div>
               <div className="flex gap-2"><input className="input-field text-xs flex-1" placeholder="Título SEO" value={site.seoTitle||""} onChange={e=>{setSite({...site,seoTitle:e.target.value});pendingSeoRef.current.seoTitle=e.target.value;setDirty(true);}}/><input className="input-field text-xs flex-1" placeholder="Descripción SEO" value={site.seoDesc||""} onChange={e=>{setSite({...site,seoDesc:e.target.value});pendingSeoRef.current.seoDesc=e.target.value;setDirty(true);}}/></div>
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700">Header / Footer global (override)</label>
+                  {(chromeOverride.header || chromeOverride.footer) && (
+                    <button onClick={() => setChromeOverride({})} className="text-[11px] font-semibold text-red-500 hover:text-red-600">Quitar override</button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">Si no defines override, el sitio usa el header/footer global de su plantilla. Dejá esta sección vacía para heredarlos.</p>
+                <GlobalChromeEditor header={chromeOverride.header} footer={chromeOverride.footer} onChange={setChromeOverride} showOverrides />
+              </div>
               <button onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="w-full btn-primary text-xs">Guardar cambios</button>
             </div>
           </div>
