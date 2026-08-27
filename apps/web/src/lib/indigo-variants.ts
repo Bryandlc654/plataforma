@@ -63,6 +63,14 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
   const D = "#050505";
   const L = "#fcfcfc";
 
+  const siteBase = !site?.domain && site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
+  const toHref = (url?: string) => {
+    if (!url || url === "#") return "#";
+    if (url.startsWith("http") || url.startsWith("#")) return url;
+    if (!url.startsWith("/")) return `#${url}`;
+    return `${siteBase}${url}`;
+  };
+
   const offsetImg = (img: string, alt: string, borderColor?: string, direction?: string) => {
     const bc = borderColor || B;
     const tx = direction === "right" ? "translate-x-4 -translate-y-4" : "translate-x-4 translate-y-4";
@@ -100,7 +108,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
           <img src="${logo}" alt="${c.companyName || site?.name || 'Indigo Publicidad'}" class="h-10 md:h-12 w-auto object-contain" ${isWhite ? 'style="filter:brightness(0) invert(1)"' : 'style="filter:brightness(0) invert(1)"'}>
         </a>
         <div class="hidden md:flex gap-8 font-semibold text-sm tracking-widest uppercase" style="font-family:Poppins,sans-serif">
-          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="transition-colors" style="color:${isWhite ? (l.active ? B : D) : B}" ${!isWhite ? '' : `onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${l.active ? B : D}'"`}>${l.label}</a>`).join("")}
+          ${links.map((l: any) => `<a href="${toHref(l.url)}" class="transition-colors" style="color:${isWhite ? (l.active ? B : D) : B}" ${!isWhite ? '' : `onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${l.active ? B : D}'"`}>${l.label}</a>`).join("")}
         </div>
         <button id="indigoHamburger" class="md:hidden" style="color:${B}" aria-label="Menú">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -109,7 +117,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         <div id="indigoMobileNav" class="md:hidden absolute top-full left-0 w-full max-h-0 opacity-0 pointer-events-none overflow-hidden transition-all duration-300 z-50" style="background:${D}">
           <div class="px-6 py-8 flex flex-col gap-6">
             <button id="indigoNavClose" class="absolute top-4 right-6 text-2xl" style="color:${L}" aria-label="Cerrar">&times;</button>
-            ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-sm font-semibold uppercase tracking-widest" style="color:${L};font-family:Poppins,sans-serif">${l.label}</a>`).join("")}
+            ${links.map((l: any) => `<a href="${toHref(l.url)}" class="text-sm font-semibold uppercase tracking-widest" style="color:${L};font-family:Poppins,sans-serif">${l.label}</a>`).join("")}
           </div>
         </div>
         ${heroScript()}
@@ -690,7 +698,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <div>
               <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Agencia</h4>
               <ul class="space-y-4 font-light opacity-80" style="color:${D}">
-                ${links.map((l: any) => `<li><a href="${siteHref(l.url)}" class="hover:font-semibold transition-all" style="color:${D}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${l.label}</a></li>`).join("")}
+                ${links.map((l: any) => `<li><a href="${toHref(l.url)}" class="hover:font-semibold transition-all" style="color:${D}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${l.label}</a></li>`).join("")}
               </ul>
             </div>
             <div>
