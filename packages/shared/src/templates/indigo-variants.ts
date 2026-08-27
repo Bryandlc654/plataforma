@@ -122,8 +122,9 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const isBrand = c.background === "brand";
       const isContact = c.background === "contact";
       const isDark = c.background === "dark";
-      const bgColor = isBrand ? B : (isDark ? D : L);
-      const fgColor = isDark ? '#ffffff' : D;
+      const isDarkPlain = c.background === "dark-plain";
+      const bgColor = isBrand ? B : (isDark || isDarkPlain ? D : L);
+      const fgColor = isDark || isDarkPlain ? '#ffffff' : D;
       let marquee = '';
       if (isContact) {
         const word = c.marqueeText || "HABLEMOS";
@@ -131,10 +132,13 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
           <span class="font-black uppercase tracking-tighter" style="font-size:18rem;line-height:1;color:${B};font-family:Poppins,sans-serif">${word} ${word} ${word}</span>
         </div>`;
       }
-      const isDefault = !isBrand && !isContact && !isDark;
-      return `<section id="${c.anchor || ''}" class="pt-32 pb-16 relative overflow-hidden" style="background:${bgColor};color:${fgColor};${isContact ? 'border-bottom:8px solid ' + D : ''}">
+      const isDefault = !isBrand && !isContact && !isDark && !isDarkPlain;
+      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${bgColor};color:${fgColor};${isContact ? 'border-bottom:8px solid ' + D : ''}">
         ${marquee}
-        ${isDark ? `<div class="container mx-auto px-6 relative z-10 text-center">
+        ${isDarkPlain ? `<div class="container mx-auto px-6 relative z-10 text-center">
+          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto" style="opacity:0.8">${desc}</p>` : ''}
+        </div>` : isDark ? `<div class="container mx-auto px-6 relative z-10 text-center">
           <h1 class="font-black text-6xl md:text-[8rem] mb-4 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff;filter:drop-shadow(6px 6px 0 ${B})">${title}</h1>
           ${desc ? `<p class="text-xl md:text-3xl font-bold max-w-4xl mx-auto border-4 border-brand p-4 md:p-6 inline-block uppercase tracking-widest" style="background:${D};box-shadow:8px 8px 0 ${B};color:white">${desc}</p>` : ''}
         </div>` : `
@@ -331,11 +335,12 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const title = c.title || '¿Estás compitiendo solo por <span style="color:' + B + '">precio?</span>';
       const desc = c.description || "Cuando tu marca se ve igual a todas las demás en tu industria, el cliente no encuentra una razón para elegirte a ti, excepto si eres más barato. Un branding débil te hace invisible y reemplazable.";
       const highlight = c.highlight || "Es momento de subir el nivel.";
-      return `<section id="${c.anchor || ''}" class="py-24" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1);border-bottom:1px solid rgba(0,0,0,0.1)">
+      const isDark = c.highlightStyle === "dark";
+      return `<section id="${c.anchor || ''}" class="py-24" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1);${isDark ? '' : 'border-bottom:1px solid rgba(0,0,0,0.1);'}">
         <div class="container mx-auto px-6 text-center">
           <h2 class="font-extrabold text-4xl md:text-6xl mb-8 max-w-4xl mx-auto" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
           <p class="text-xl md:text-2xl font-light max-w-3xl mx-auto opacity-80 mb-12" style="color:${D}">${desc}</p>
-          <div class="inline-block font-bold text-2xl py-4 px-8 border-4 rotate-1" style="background:${B};color:${D};border-color:${D};box-shadow:8px 8px 0 ${D}">
+          <div class="inline-block font-bold text-2xl py-4 px-8 border-4 ${isDark ? '-rotate-2' : 'rotate-1'}" style="${isDark ? `background:${D};color:white;border-color:${B}` : `background:${B};color:${D};border-color:${D};box-shadow:8px 8px 0 ${D}`}">
             ${highlight}
           </div>
         </div>
@@ -349,13 +354,19 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         { number: "02", title: "Valor Percibido", desc: "Una marca fuerte te permite salir de la guerra de precios. Cuando conectas a nivel visual y emocional, puedes cobrar lo que realmente vales." },
         { number: "03", title: "Lealtad del Cliente", desc: "Las personas no solo compran productos, compran identidades con las que se alinean. Te ayudamos a crear una tribu alrededor de tu marca." },
       ];
+      const isBrand = c.accent === "brand";
+      const borderColor = isBrand ? B : '#ffffff';
+      const hoverBg = isBrand ? B : 'white';
+      const dotColor = isBrand ? B : L;
+      const numHover = isBrand ? D : B;
+      const titleColor = isBrand ? B : 'white';
       return `<section id="${c.anchor || ''}" class="py-24 relative overflow-hidden" style="background:${D};color:white">
-        <div class="absolute inset-0" style="opacity:0.1;background-image:radial-gradient(${L} 2px,transparent 2px);background-size:30px 30px"></div>
+        <div class="absolute inset-0" style="opacity:0.1;background-image:radial-gradient(${dotColor} 2px,transparent 2px);background-size:30px 30px"></div>
         <div class="container mx-auto px-6 relative z-10">
-          <h2 class="font-extrabold text-5xl md:text-6xl mb-16 text-center" style="font-family:Poppins,sans-serif;color:white">${title}</h2>
+          <h2 class="font-extrabold text-5xl md:text-6xl mb-16 text-center" style="font-family:Poppins,sans-serif;color:${titleColor}">${title}</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-            ${items.map((item: any) => `<div class="border-4 border-white p-8 transition-colors duration-300" style="background:${D}" onmouseover="this.style.background='white';this.style.color='${D}'" onmouseout="this.style.background='${D}';this.style.color='white'">
-              <div class="font-black text-6xl mb-6 transition-colors" style="font-family:Poppins,sans-serif;color:white" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='white'">${item.number}</div>
+            ${items.map((item: any) => `<div class="border-4 p-8 transition-colors duration-300" style="background:${D};border-color:${borderColor}" onmouseover="this.style.background='${hoverBg}';this.style.color='${D}'" onmouseout="this.style.background='${D}';this.style.color='white'">
+              <div class="font-black text-6xl mb-6 transition-colors" style="font-family:Poppins,sans-serif;color:${isBrand ? B : 'white'}" onmouseover="this.style.color='${numHover}'" onmouseout="this.style.color='${isBrand ? B : 'white'}'">${item.number}</div>
               <h3 class="font-bold text-2xl mb-4 uppercase" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
               <p class="font-medium text-lg">${item.desc || item.description || ''}</p>
             </div>`).join("")}
