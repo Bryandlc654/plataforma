@@ -81,9 +81,9 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     </div>`;
   };
 
-  const dotList = (items: string[]) =>
-    items.map((item: string) => `<li class="flex items-center gap-3">
-      <div class="w-2 h-2 rounded-full" style="background:${B}"></div> ${item}
+  const dotList = (items: any[]) =>
+    items.map((item: any) => `<li class="flex items-center gap-3">
+      <div class="w-2 h-2 rounded-full" style="background:${B}"></div> ${typeof item === "string" ? item : (item.text || item.desc || item.label || "")}
     </li>`).join("");
 
   const offsetBtn = (text: string, href: string) =>

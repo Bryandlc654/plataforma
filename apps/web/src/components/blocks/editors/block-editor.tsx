@@ -92,6 +92,18 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "services":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Servicio destacado Indigo (imagen + texto)</div>
+            <Field label="Número / Kicker"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="01" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="LETRAS 3D" /></Field>
+            <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
+            <Field label="Imagen"><ImageField label="Imagen" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
+            <Field label="Lista de items"><ArrayEditor value={content.features} onChange={(v) => set("features", v)} fields={[{ key: "text", label: "Item" }]} /></Field>
+            <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} /></Field>
+            <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} /></Field>
+          </>;
+        }
         return <>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
           <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} /></Field>
