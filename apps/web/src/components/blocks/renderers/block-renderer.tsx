@@ -236,7 +236,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     const { getIndigoHtml } = require("../../../lib/indigo-variants");
     let html = getIndigoHtml(type, c);
     if (html && type === "header") {
-      html = html.replace('class="fixed top-0 left-0 w-full z-50', 'class="relative top-0 left-0 w-full z-50');
+      html = html.replace('class="fixed w-full z-50 top-0 left-0 p-6 flex', 'class="relative w-full z-50 top-0 left-0 p-6 flex');
     }
     if (html) {
       return (
