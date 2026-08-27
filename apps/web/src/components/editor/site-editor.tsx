@@ -121,6 +121,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [toast, setToast] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState({ name: "", primaryColor: "#2563EB", secondaryColor: "#1E40AF", logoUrl: "", faviconUrl: "", domain: "" });
   const [chromeOverride, setChromeOverride] = useState<{ header?: any; footer?: any }>({});
+  const [showChromeModal, setShowChromeModal] = useState(false);
   const [history, setHistory] = useState<Site[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [dnsStatus, setDnsStatus] = useState<"idle"|"checking"|"ok"|"error">("idle");
@@ -366,6 +367,21 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
   };
 
+  const saveChromeOverride = async () => {
+    try {
+      const settings: any = { ...(site?.settings || {}) };
+      const gs: any = {};
+      if (chromeOverride.header) gs.header = chromeOverride.header;
+      if (chromeOverride.footer) gs.footer = chromeOverride.footer;
+      settings.globalHeader = gs.header || null;
+      settings.globalFooter = gs.footer || null;
+      await api.put(`/sites/${siteId}`, { settings });
+      setSite(p => p ? { ...p, settings } : p);
+      setShowChromeModal(false);
+      setToast("Header/footer guardado");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
+  };
+
   const checkDomainDns = async () => {
     if (!siteSettings.domain) return;
     setCheckingDns(true);
@@ -403,6 +419,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowPagesModal(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineDocumentText className="h-3.5 w-3.5" />Páginas ({site.pages.length})</button>
+          <button onClick={() => setShowChromeModal(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors"><HiOutlineCog className="h-3.5 w-3.5" />Header / Footer</button>
           <button onClick={openPreview} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"><HiOutlineEye className="h-3.5 w-3.5" />Preview</button>
           <div className="flex items-center gap-1 border border-slate-200 rounded-lg">
             <button onClick={undo} disabled={historyIdx <= 0} className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)">
@@ -496,6 +513,24 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                 <GlobalChromeEditor header={chromeOverride.header} footer={chromeOverride.footer} onChange={setChromeOverride} showOverrides />
               </div>
               <button onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="w-full btn-primary text-xs">Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER/FOOTER GLOBAL MODAL */}
+      {showChromeModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20" onClick={()=>setShowChromeModal(false)}>
+          <div className="absolute inset-0 bg-black/30"/>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto m-4 z-10" onClick={e=>e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white"><h3 className="font-semibold text-sm text-slate-900">Header / Footer global</h3><button onClick={()=>setShowChromeModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
+            <div className="p-4">
+              <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">Si no defines un override, el sitio hereda el header/footer de su plantilla. Dejá esta sección vacía para heredarlos.</p>
+              <GlobalChromeEditor header={chromeOverride.header} footer={chromeOverride.footer} onChange={setChromeOverride} showOverrides />
+            </div>
+            <div className="flex gap-2 p-4 border-t border-slate-200 sticky bottom-0 bg-white">
+              <button onClick={()=>setShowChromeModal(false)} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+              <button onClick={saveChromeOverride} className="flex-1 rounded-lg bg-primary-600 text-white text-xs font-semibold py-2 hover:bg-primary-700">Guardar</button>
             </div>
           </div>
         </div>
