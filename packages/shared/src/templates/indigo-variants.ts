@@ -120,12 +120,28 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const title = c.title || "NUESTRA <span style='color:" + B + "'>AGENCIA</span>";
       const desc = c.description || "Llevamos más de una década transformando ideas locas en marcas sólidas. Indigo no es una agencia, es tu brazo creativo.";
       const isBrand = c.background === "brand";
-      const strokeStyle = isBrand ? `-webkit-text-stroke:1px ${D};color:transparent` : '';
-      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${isBrand ? B : L}">
+      const isContact = c.background === "contact";
+      const isDark = c.background === "dark";
+      const bgColor = isBrand ? B : (isDark ? D : L);
+      const fgColor = isDark ? '#ffffff' : D;
+      let marquee = '';
+      if (isContact) {
+        const word = c.marqueeText || "HABLEMOS";
+        marquee = `<div class="absolute top-1/2 left-0 -translate-y-1/2 whitespace-nowrap overflow-hidden w-full pointer-events-none z-0" style="opacity:0.1">
+          <span class="font-black uppercase tracking-tighter" style="font-size:18rem;line-height:1;color:${B};font-family:Poppins,sans-serif">${word} ${word} ${word}</span>
+        </div>`;
+      }
+      const isDefault = !isBrand && !isContact && !isDark;
+      return `<section id="${c.anchor || ''}" class="pt-32 pb-16 relative overflow-hidden" style="background:${bgColor};color:${fgColor};${isContact ? 'border-bottom:8px solid ' + D : ''}">
+        ${marquee}
+        ${isDark ? `<div class="container mx-auto px-6 relative z-10 text-center">
+          <h1 class="font-black text-6xl md:text-[8rem] mb-4 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff;filter:drop-shadow(6px 6px 0 ${B})">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-3xl font-bold max-w-4xl mx-auto border-4 border-brand p-4 md:p-6 inline-block uppercase tracking-widest" style="background:${D};box-shadow:8px 8px 0 ${B};color:white">${desc}</p>` : ''}
+        </div>` : `
         <div class="container mx-auto px-6 relative z-10 text-center">
-          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${isBrand ? D : D};font-family:Poppins,sans-serif;${strokeStyle}">${title}</h1>
-          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto opacity-90" style="color:${isBrand ? D : D}">${desc}</p>` : ''}
-        </div>
+          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${fgColor};font-family:Poppins,sans-serif;${isBrand ? 'filter:drop-shadow(6px 6px 0 ' + D + ')' : ''}">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto opacity-90" style="color:${fgColor}">${desc}</p>` : ''}
+        </div>`}
       </section>`;
     }
 
@@ -343,6 +359,81 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               <h3 class="font-bold text-2xl mb-4 uppercase" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
               <p class="font-medium text-lg">${item.desc || item.description || ''}</p>
             </div>`).join("")}
+          </div>
+        </div>
+      </section>`;
+    }
+
+    case "contact-section": {
+      const title = c.title || "Información";
+      const email = c.email || "hola@indigopublicidad.com";
+      const emailLabel = c.emailLabel || "Email";
+      const phone = c.phone || "+1 (555) 123-4567";
+      const phoneLabel = c.phoneLabel || "Teléfono";
+      const address = c.address || "Distrito de Diseño 0987<br>Ciudad Creativa<br>CP 10010";
+      const addressLabel = c.addressLabel || "Estudio";
+      const formTitle = c.formTitle || "Escríbenos";
+      const submitText = c.submitText || "ENVIAR MENSAJE";
+      const serviceOptions = c.serviceOptions || ["Letras 3D", "Branding Estratégico", "Diseño Corporativo", "Otro"];
+      const serviceLabel = c.serviceLabel || "Servicio de interés";
+      const nameLabel = c.nameLabel || "Nombre";
+      const namePlaceholder = c.namePlaceholder || "TU NOMBRE";
+      const emailFieldLabel = c.emailFieldLabel || "Email";
+      const emailPlaceholder = c.emailPlaceholder || "TU@EMAIL.COM";
+      const messageLabel = c.messageLabel || "Mensaje";
+      const messagePlaceholder = c.messagePlaceholder || "CUÉNTANOS SOBRE TU PROYECTO...";
+      return `<section class="py-24" style="background:${B};border-top:1px solid ${D};border-bottom:1px solid ${D}">
+        <div class="container mx-auto px-6">
+          <div class="flex flex-col lg:flex-row gap-16">
+            <div class="w-full lg:w-5/12" style="color:${D}">
+              <h2 class="font-black text-5xl md:text-7xl mb-12 uppercase tracking-tighter" style="font-family:Poppins,sans-serif">${title}</h2>
+              <div class="space-y-12">
+                <div class="relative inline-block">
+                  <h4 class="font-bold uppercase tracking-widest mb-2" style="border-left:4px solid ${D};padding-left:1rem">${emailLabel}</h4>
+                  <a href="mailto:${email}" class="font-black text-3xl md:text-4xl transition-all" style="font-family:Poppins,sans-serif;color:${D}" onmouseover="this.style.color='white';this.style.textShadow='2px 2px 0 ${D}'" onmouseout="this.style.color='${D}';this.style.textShadow='none'">${email.replace('@', '@<br>')}</a>
+                </div>
+                <div class="relative inline-block">
+                  <h4 class="font-bold uppercase tracking-widest mb-2" style="border-left:4px solid ${D};padding-left:1rem">${phoneLabel}</h4>
+                  <p class="font-black text-3xl md:text-5xl" style="font-family:Poppins,sans-serif">${phone}</p>
+                </div>
+                <div class="relative inline-block">
+                  <h4 class="font-bold uppercase tracking-widest mb-2" style="border-left:4px solid ${D};padding-left:1rem">${addressLabel}</h4>
+                  <p class="font-bold text-2xl md:text-3xl uppercase leading-tight" style="font-family:Poppins,sans-serif">${address}</p>
+                </div>
+              </div>
+            </div>
+            <div class="w-full lg:w-7/12">
+              <form method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 md:p-12 border-4" style="background:white;border-color:${D};box-shadow:16px 16px 0 ${D}">
+                <h3 class="font-black text-4xl mb-8 uppercase" style="color:${D};font-family:Poppins,sans-serif">${formTitle}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <label class="block font-bold mb-3 uppercase tracking-widest text-sm" style="color:${D}">${nameLabel}</label>
+                    <input type="text" name="nombre" required placeholder="${namePlaceholder}" class="w-full p-5 border-4 transition-colors" style="border-color:${D};background:#f9fafb;font-weight:bold;font-size:1.125rem;color:${D}" onfocus="this.style.borderColor='${B}';this.style.background='white'" onblur="this.style.borderColor='${D}';this.style.background='#f9fafb'">
+                  </div>
+                  <div>
+                    <label class="block font-bold mb-3 uppercase tracking-widest text-sm" style="color:${D}">${emailFieldLabel}</label>
+                    <input type="email" name="email" required placeholder="${emailPlaceholder}" class="w-full p-5 border-4 transition-colors" style="border-color:${D};background:#f9fafb;font-weight:bold;font-size:1.125rem;color:${D}" onfocus="this.style.borderColor='${B}';this.style.background='white'" onblur="this.style.borderColor='${D}';this.style.background='#f9fafb'">
+                  </div>
+                </div>
+                <div class="mb-8 relative">
+                  <label class="block font-bold mb-3 uppercase tracking-widest text-sm" style="color:${D}">${serviceLabel}</label>
+                  <select name="servicio" style="border-color:${D};background:#f9fafb;font-weight:bold;font-size:1.125rem;color:${D}" class="w-full p-5 border-4 appearance-none transition-colors uppercase">
+                    ${serviceOptions.map((o: string) => `<option>${o}</option>`).join("")}
+                  </select>
+                  <div class="pointer-events-none absolute right-6 top-11 flex items-center" style="color:${D}">
+                    <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
+                <div class="mb-10">
+                  <label class="block font-bold mb-3 uppercase tracking-widest text-sm" style="color:${D}">${messageLabel}</label>
+                  <textarea name="mensaje" rows="5" required placeholder="${messagePlaceholder}" class="w-full p-5 border-4 transition-colors resize-none" style="border-color:${D};background:#f9fafb;font-weight:bold;font-size:1.125rem;color:${D}" onfocus="this.style.borderColor='${B}';this.style.background='white'" onblur="this.style.borderColor='${D}';this.style.background='#f9fafb'"></textarea>
+                </div>
+                <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D};background:white"></div>
+                <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_contact_submit" type="submit" class="w-full block text-center border-4 font-black uppercase tracking-widest py-6 text-2xl transition-all" style="border-color:${D};background:${D};color:white;box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='${B}';this.style.color='${D}';this.style.boxShadow='4px 4px 0 ${D}';this.style.transform='translate(1px,1px)'" onmouseout="this.style.background='${D}';this.style.color='white';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'">
+                  ${submitText}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </section>`;
