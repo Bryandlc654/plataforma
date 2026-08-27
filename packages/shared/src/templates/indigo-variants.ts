@@ -119,10 +119,12 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     case "page-hero": {
       const title = c.title || "NUESTRA <span style='color:" + B + "'>AGENCIA</span>";
       const desc = c.description || "Llevamos más de una década transformando ideas locas en marcas sólidas. Indigo no es una agencia, es tu brazo creativo.";
-      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${L}">
+      const isBrand = c.background === "brand";
+      const strokeStyle = isBrand ? `-webkit-text-stroke:1px ${D};color:transparent` : '';
+      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${isBrand ? B : L}">
         <div class="container mx-auto px-6 relative z-10 text-center">
-          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${D};font-family:Poppins,sans-serif">${title}</h1>
-          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto opacity-80" style="color:${D}">${desc}</p>` : ''}
+          <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${isBrand ? D : D};font-family:Poppins,sans-serif;${strokeStyle}">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-2xl font-light max-w-4xl mx-auto opacity-90" style="color:${isBrand ? D : D}">${desc}</p>` : ''}
         </div>
       </section>`;
     }
@@ -172,12 +174,16 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         { value: "500", label: "Proyectos" },
       ];
       const isShadow = c.imageStyle === "shadow";
+      const bullets = c.features || [];
       return `<section id="${c.anchor || 'agencia'}" class="py-24 md:py-32 relative" style="background:${isShadow ? '#f9fafb' : 'white'};${isShadow ? 'border-top:1px solid rgba(0,0,0,0.1);border-bottom:1px solid rgba(0,0,0,0.1)' : 'border-bottom:1px solid rgba(0,0,0,0.1)'}">
         <div class="container mx-auto px-6">
           <div class="flex flex-col md:flex-row items-center gap-16">
             <div class="w-full ${c.reverse ? 'md:order-2' : 'md:w-5/12'} flex flex-col justify-center">
               <h2 class="font-extrabold text-5xl md:text-7xl mb-6 relative z-10" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
               <p class="text-xl font-light mb-8 opacity-80 relative z-10 leading-relaxed" style="color:${D}">${desc}</p>
+              ${bullets.length ? `<div class="relative z-10 mb-8"><div class="space-y-4 font-semibold text-lg" style="color:${D}">
+                ${dotList(bullets.map((b: any) => typeof b === 'string' ? b : (b.label || b.name)))}
+              </div></div>` : ''}
               <div class="flex items-center gap-8 font-bold" style="color:${B};font-family:Poppins,sans-serif">
                 ${stats.map((s: any) => `<div>
                   <span class="block text-6xl">${s.value || s.title}</span>
@@ -305,8 +311,64 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       </section>`;
     }
 
+    case "awareness": {
+      const title = c.title || '¿Estás compitiendo solo por <span style="color:' + B + '">precio?</span>';
+      const desc = c.description || "Cuando tu marca se ve igual a todas las demás en tu industria, el cliente no encuentra una razón para elegirte a ti, excepto si eres más barato. Un branding débil te hace invisible y reemplazable.";
+      const highlight = c.highlight || "Es momento de subir el nivel.";
+      return `<section id="${c.anchor || ''}" class="py-24" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1);border-bottom:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6 text-center">
+          <h2 class="font-extrabold text-4xl md:text-6xl mb-8 max-w-4xl mx-auto" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
+          <p class="text-xl md:text-2xl font-light max-w-3xl mx-auto opacity-80 mb-12" style="color:${D}">${desc}</p>
+          <div class="inline-block font-bold text-2xl py-4 px-8 border-4 rotate-1" style="background:${B};color:${D};border-color:${D};box-shadow:8px 8px 0 ${D}">
+            ${highlight}
+          </div>
+        </div>
+      </section>`;
+    }
+
+    case "benefits": {
+      const title = c.title || "EL PODER DEL <span style='color:" + B + "'>BRANDING</span>";
+      const items = c.items || [
+        { number: "01", title: "Autoridad Inmediata", desc: "Un diseño profesional y cohesivo proyecta experiencia y tamaño. Las personas confían instintivamente en lo que se ve bien estructurado." },
+        { number: "02", title: "Valor Percibido", desc: "Una marca fuerte te permite salir de la guerra de precios. Cuando conectas a nivel visual y emocional, puedes cobrar lo que realmente vales." },
+        { number: "03", title: "Lealtad del Cliente", desc: "Las personas no solo compran productos, compran identidades con las que se alinean. Te ayudamos a crear una tribu alrededor de tu marca." },
+      ];
+      return `<section id="${c.anchor || ''}" class="py-24 relative overflow-hidden" style="background:${D};color:white">
+        <div class="absolute inset-0" style="opacity:0.1;background-image:radial-gradient(${L} 2px,transparent 2px);background-size:30px 30px"></div>
+        <div class="container mx-auto px-6 relative z-10">
+          <h2 class="font-extrabold text-5xl md:text-6xl mb-16 text-center" style="font-family:Poppins,sans-serif;color:white">${title}</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            ${items.map((item: any) => `<div class="border-4 border-white p-8 transition-colors duration-300" style="background:${D}" onmouseover="this.style.background='white';this.style.color='${D}'" onmouseout="this.style.background='${D}';this.style.color='white'">
+              <div class="font-black text-6xl mb-6 transition-colors" style="font-family:Poppins,sans-serif;color:white" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='white'">${item.number}</div>
+              <h3 class="font-bold text-2xl mb-4 uppercase" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
+              <p class="font-medium text-lg">${item.desc || item.description || ''}</p>
+            </div>`).join("")}
+          </div>
+        </div>
+      </section>`;
+    }
+
     case "cta":
     case "contact": {
+      if (c.style === "funnel") {
+        const title = c.title || "DOMINA TU <span style='color:" + B + "'>MERCADO.</span>";
+        const desc = c.description || "Deja de ser uno más del montón. Cuéntanos sobre tu negocio y diseñemos una identidad que nadie pueda ignorar.";
+        const btnText = c.buttonText || "INICIAR REBRANDING";
+        const btnUrl = c.buttonUrl || "#contacto";
+        const dropShadow = `drop-shadow(6px 6px 0 ${D})`;
+        return `<section id="${c.anchor || 'cta'}" class="py-32 relative overflow-hidden" style="background:${B};border-bottom:8px solid ${D}">
+          <div class="container mx-auto px-6 text-center relative z-10">
+            <h2 class="font-black text-6xl md:text-[7rem] leading-none mb-8 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:${D};filter:${dropShadow}">${title}</h2>
+            <p class="text-2xl font-bold mb-12 max-w-2xl mx-auto border-2 p-4" style="background:white;border-color:${D};box-shadow:4px 4px 0 ${D};color:${D}">
+              ${desc}
+            </p>
+            <a href="${siteHref(btnUrl)}" class="inline-flex items-center gap-4 border-4 font-black uppercase tracking-widest py-6 px-8 md:px-16 text-xl md:text-2xl transition-all inline-block" style="border-color:${D};background:${D};color:${B};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='${B}';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${btnUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+              ${btnText}
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </a>
+          </div>
+        </section>`;
+      }
       const kicker = c.kicker || "¿Listo para";
       const title = c.title || "destacar?";
       const subtitle = c.description || "Hagamos que tu marca sea imposible de ignorar.";
