@@ -121,19 +121,26 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const desc = c.description || "Llevamos más de una década transformando ideas locas en marcas sólidas. Indigo no es una agencia, es tu brazo creativo.";
       const isBrand = c.background === "brand";
       const isContact = c.background === "contact";
+      const isWorks = c.background === "works";
       const isDark = c.background === "dark";
       const isDarkPlain = c.background === "dark-plain";
-      const bgColor = isBrand ? B : (isDark || isDarkPlain ? D : L);
-      const fgColor = isDark || isDarkPlain ? '#ffffff' : D;
+      const bgColor = isBrand ? B : (isDark || isDarkPlain || isWorks ? D : L);
+      const fgColor = isDark || isDarkPlain || isWorks ? '#ffffff' : D;
+      const marqueeOpacity = c.marqueeOpacity != null ? c.marqueeOpacity : 0.1;
+      const marqueeShow = isContact || isWorks;
       let marquee = '';
-      if (isContact) {
+      if (marqueeShow) {
         const word = c.marqueeText || "HABLEMOS";
-        marquee = `<div class="absolute top-1/2 left-0 -translate-y-1/2 whitespace-nowrap overflow-hidden w-full pointer-events-none z-0" style="opacity:0.1">
-          <span class="font-black uppercase tracking-tighter" style="font-size:18rem;line-height:1;color:${B};font-family:Poppins,sans-serif">${word} ${word} ${word}</span>
+        marquee = `<div class="absolute top-1/2 left-0 -translate-y-1/2 whitespace-nowrap overflow-hidden w-full pointer-events-none z-0" style="opacity:${marqueeOpacity}">
+          <span class="font-black uppercase tracking-tighter" style="font-size:${c.marqueeSize || '18rem'};line-height:1;color:${B};font-family:Poppins,sans-serif">${word}</span>
         </div>`;
       }
-      const isDefault = !isBrand && !isContact && !isDark && !isDarkPlain;
-      return `<section id="${c.anchor || ''}" class="pt-32 pb-24 relative overflow-hidden" style="background:${bgColor};color:${fgColor};${isContact ? 'border-bottom:8px solid ' + D : ''}">
+      const isDefault = !isBrand && !isContact && !isDark && !isDarkPlain && !isWorks;
+      const borderColor = isWorks ? B : D;
+      const descBorder = isWorks ? '2' : '4';
+      const descShadow = isWorks ? `4px 4px 0 ${B}` : `8px 8px 0 ${B}`;
+      const dropShadow = c.titleShadow || (isWorks ? `drop-shadow(4px 4px 0 ${B})` : `drop-shadow(6px 6px 0 ${B})`);
+      return `<section id="${c.anchor || ''}" class="pt-32 pb-16 relative overflow-hidden" style="background:${bgColor};color:${fgColor};${marqueeShow ? 'border-bottom:8px solid ' + borderColor : ''}">
         ${marquee}
         ${isDarkPlain ? `<div class="container mx-auto px-6 relative z-10 text-center">
           <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff">${title}</h1>
@@ -141,6 +148,9 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         </div>` : isDark ? `<div class="container mx-auto px-6 relative z-10 text-center">
           <h1 class="font-black text-6xl md:text-[8rem] mb-4 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff;filter:drop-shadow(6px 6px 0 ${B})">${title}</h1>
           ${desc ? `<p class="text-xl md:text-3xl font-bold max-w-4xl mx-auto border-4 border-brand p-4 md:p-6 inline-block uppercase tracking-widest" style="background:${D};box-shadow:8px 8px 0 ${B};color:white">${desc}</p>` : ''}
+        </div>` : marqueeShow ? `<div class="container mx-auto px-6 relative z-10 text-center">
+          <h1 class="font-black text-6xl md:text-[8rem] mb-4 uppercase tracking-tighter" style="font-family:Poppins,sans-serif;color:#fff;filter:${dropShadow}">${title}</h1>
+          ${desc ? `<p class="text-xl md:text-3xl font-bold max-w-4xl mx-auto border-${descBorder} border-brand p-4 inline-block uppercase tracking-widest" style="background:${D};box-shadow:${descShadow};color:white">${desc}</p>` : ''}
         </div>` : `
         <div class="container mx-auto px-6 relative z-10 text-center">
           <h1 class="font-black text-6xl md:text-8xl mb-8 uppercase tracking-tighter" style="color:${fgColor};font-family:Poppins,sans-serif;${isBrand ? 'filter:drop-shadow(6px 6px 0 ' + D + ')' : ''}">${title}</h1>
@@ -370,6 +380,62 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               <h3 class="font-bold text-2xl mb-4 uppercase" style="font-family:Poppins,sans-serif">${item.title || item.name}</h3>
               <p class="font-medium text-lg">${item.desc || item.description || ''}</p>
             </div>`).join("")}
+          </div>
+        </div>
+      </section>`;
+    }
+
+    case "portfolio-grid": {
+      const title = c.title || "TU MARCA ES EL <br> PRÓXIMO CASO DE ÉXITO.";
+      const ctaText = c.ctaText || "EMPECEMOS AHORA";
+      const ctaUrl = c.ctaUrl || "#contacto";
+      const projects = c.projects || c.items || [
+        { number: "01", colSpan: "12", type: "slide", title: "Campaña Rebel", sub: "Branding & Letras 3D", img: "https://placehold.co/1600x900/fdcb0c/050505?text=PROYECTO+1", url: "#", imgHeight: "h-[500px] md:h-[700px]", hover: "slide", numberStyle: "brand" },
+        { number: "02", colSpan: "7", type: "overlay", title: "Nexus Synthesis", sub: "Identidad Visual", img: "https://placehold.co/800x900/fdcb0c/050505?text=PROYECTO+2", url: "#", imgHeight: "h-[400px] md:h-[600px]", hover: "overlay-brand", numberStyle: "dark", mt: "mt-12 md:mt-24" },
+        { number: "03", colSpan: "5", type: "overlay", title: "Create Studio", sub: "Letras 3D Neón", img: "https://placehold.co/600x900/fdcb0c/050505?text=PROYECTO+3", url: "#", imgHeight: "h-[400px] md:h-[500px]", hover: "overlay-dark", numberStyle: "dark", mt: "mt-12 md:mt-8" },
+      ];
+      const shadow = c.shadow || true;
+      return `<section class="py-24" style="background:#f9fafb;border-top:1px solid rgba(0,0,0,0.1);border-bottom:1px solid rgba(0,0,0,0.1)">
+        <div class="container mx-auto px-6">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+            ${projects.map((p: any) => {
+              const span = p.colSpan || "6";
+              const isSlide = p.hover === "slide" || p.type === "slide";
+              const numBg = p.numberStyle === "brand" ? `style="background:${B};color:${D}"` : `style="background:${D};color:white"`;
+              const shadowCls = shadow ? `${isSlide ? 'shadow-[12px_12px_0_rgba(5,5,5,1)]' : 'shadow-[8px_8px_0_rgba(5,5,5,1)]'} hover:shadow-none hover:translate-y-3 hover:translate-x-3` : '';
+              const numSize = isSlide ? 'text-4xl p-4' : 'text-3xl p-3';
+              return `<div class="md:col-span-${span} group relative overflow-hidden border-4 transition-all duration-300 block ${isSlide ? '' : (p.mt || 'mt-0')}" style="background:white;border-color:${D};${shadowCls}">
+                <a href="${siteHref(p.url)}" class="block cursor-pointer">
+                  <div class="absolute top-6 left-6 z-20 font-black ${numSize} border-4" style="border-color:${D}" ${numBg}>${p.number}</div>
+                  ${isSlide ? `<img src="${p.img}" alt="${p.title}" class="w-full ${p.imgHeight} object-cover transition-all duration-500 group-hover:grayscale" style="filter:contrast(1.25) saturate(1.5)">
+                  <div class="absolute bottom-0 left-0 w-full p-8 md:p-12 translate-y-full group-hover:translate-y-0 transition-transform duration-500 flex flex-col md:flex-row justify-between items-start md:items-end" style="background:${D}">
+                    <div>
+                      <h3 class="font-black text-4xl md:text-6xl uppercase tracking-tighter" style="color:${B};font-family:Poppins,sans-serif">${p.title}</h3>
+                      <p class="font-bold text-xl md:text-2xl mt-2 tracking-widest uppercase" style="color:white">${p.sub}</p>
+                    </div>
+                    <div class="mt-6 md:mt-0"><span class="border-2 font-bold uppercase tracking-widest py-3 px-8" style="border-color:${B};color:${B}">Ver Proyecto</span></div>
+                  </div>` : `<img src="${p.img}" alt="${p.title}" class="w-full ${p.imgHeight} object-cover transition-transform duration-700 group-hover:scale-105">
+                  ${p.hover === 'overlay-brand' ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" style="background:${B};opacity:0;transition:opacity 0.3s" onmouseover="this.style.opacity=0.95" onmouseout="this.style.opacity=0">
+                    <h3 class="font-black text-4xl md:text-5xl uppercase tracking-tighter mb-4" style="font-family:Poppins,sans-serif;color:${D}">${p.title}</h3>
+                    <p class="font-bold text-xl pb-1 uppercase tracking-widest" style="color:${D}">${p.sub}</p>
+                  </div>` : `<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" style="background:${D};opacity:0;transition:opacity 0.3s" onmouseover="this.style.opacity=0.95" onmouseout="this.style.opacity=0">
+                    <h3 class="font-black text-3xl md:text-4xl uppercase tracking-tighter mb-4" style="font-family:Poppins,sans-serif;color:${B}">${p.title}</h3>
+                    <p class="font-bold text-lg pb-1 uppercase tracking-widest" style="color:white">${p.sub}</p>
+                  </div>`}`}
+                </a>
+              </div>`;
+            }).join("")}
+            <div class="md:col-span-12 mt-24">
+              <div class="relative overflow-hidden group p-12 md:p-24 text-center border-4" style="background:${B};border-color:${D};box-shadow:12px 12px 0 ${D}">
+                <div class="absolute inset-0" style="opacity:0.1;background-image:radial-gradient(${D} 2px,transparent 2px);background-size:20px 20px"></div>
+                <div class="relative z-10">
+                  <h3 class="font-black text-5xl md:text-7xl uppercase tracking-tighter mb-12" style="font-family:Poppins,sans-serif;color:${D};filter:drop-shadow(4px 4px 0 white)">${title}</h3>
+                  <a href="${siteHref(ctaUrl)}" class="inline-block font-black text-xl md:text-2xl uppercase tracking-widest py-6 px-12 border-4 transition-all" style="background:${D};color:white;border-color:${D};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='white';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${ctaUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+                    ${ctaText}
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>`;
