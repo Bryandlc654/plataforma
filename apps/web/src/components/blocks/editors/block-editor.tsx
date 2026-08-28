@@ -421,6 +421,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "process":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Indigo (imagen + pasos)</div>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Cómo trabajamos" /></Field>
+            <Field label="Imagen de la sección"><ImageField label="Imagen de la sección" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
+            <Field label="Pasos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "title", label: "Título" }, { key: "desc", label: "Descripción", type: "textarea" }]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Proceso" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
