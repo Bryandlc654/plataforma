@@ -312,6 +312,16 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "features":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Indigo (imagen + texto)</div>
+            <Field label="Número / Kicker"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="02" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="STRATEGIC BRANDING" /></Field>
+            <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
+            <Field label="Imagen de la sección"><ImageField label="Imagen de la sección" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
+            <Field label="Items (grid)"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "title", label: "Título" }, { key: "desc", label: "Descripción", type: "textarea" }]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="¿Por qué elegirnos?" /></Field>
           <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} /></Field>
