@@ -452,6 +452,18 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
 
       case "form":
       case "contact":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección de contacto Indigo (título + párrafo + botón + formulario)</div>
+            <Field label="Kicker (etiqueta arriba del título)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="CONTACTO" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Trabajemos juntos" /></Field>
+            <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} placeholder="Cuéntanos tu proyecto y te responderemos en menos de 24 horas." /></Field>
+            <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Iniciar Proyecto" /></Field>
+            <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
+            <Field label="Texto del botón del formulario"><TextInput value={content.submitText} onChange={(v) => set("submitText", v)} placeholder="ENVIAR" /></Field>
+            <Field label="Campos del formulario"><ArrayEditor value={content.fields} onChange={(v) => set("fields", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "name", label: "Nombre" }, { key: "type", label: "Tipo (text, textarea, email)" }, { key: "required", label: "Requerido (true/false)" }]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Contacto" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Contáctanos" /></Field>

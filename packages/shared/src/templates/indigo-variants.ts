@@ -9,6 +9,7 @@ function siteHref(url?: string) {
 
 function actionUrl(site?: any, apiBaseUrl?: string) {
   const host = apiBaseUrl || "https://plataforma-api-71743315793.us-central1.run.app";
+  if (site?.tenantId) return `${host}/api/v1/leads/submit/${site.tenantId}`;
   return `${host}/api/v1/leads`;
 }
 
@@ -489,6 +490,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             </div>
             <div class="w-full lg:w-7/12">
               <form method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 md:p-12 border-4" style="background:white;border-color:${D};box-shadow:16px 16px 0 ${D}">
+                <input type="hidden" name="siteId" value="${site?.id || ''}" />
                 <h3 class="font-black text-4xl mb-8 uppercase" style="color:${D};font-family:Poppins,sans-serif">${formTitle}</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                   <div>
@@ -552,6 +554,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const btnUrl = c.buttonUrl || c.email ? `mailto:${c.email || 'hola@indigopublicidad.com'}` : "#";
       const phone = c.phone || "";
       const address = c.address || "";
+      const submitText = c.submitText || "ENVIAR";
       return `<section id="${c.anchor || 'contacto'}" class="py-32 md:py-48 relative overflow-hidden" style="background:${B}">
         <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(${D} 2px,transparent 2px);background-size:30px 30px"></div>
         <div class="absolute top-10 left-10 w-24 h-24 border-4 rounded-full animate-pulse" style="border-color:${D}"></div>
@@ -571,6 +574,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             </span>
           </a>
           <form id="contactForm" method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="mt-16 w-full max-w-lg text-left">
+            <input type="hidden" name="siteId" value="${site?.id || ''}" />
             <div class="space-y-4">
               ${(c.fields && c.fields.length ? c.fields : [
                 { label: "Nombre", name: "nombre", type: "text", required: true },
@@ -589,7 +593,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               </div>`}
               <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D};background:white"></div>
               <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_cta_submit" type="submit" class="w-full py-4 text-sm font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${D};background:${D};color:${B}" onmouseover="this.style.boxShadow='4px 4px 0 white'" onmouseout="this.style.boxShadow='none'">
-                ENVIAR <i class="bi bi-send ml-2"></i>
+                ${submitText} <i class="bi bi-send ml-2"></i>
               </button>
             </div>
           </form>
@@ -754,6 +758,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     case "form": {
       const kicker = c.kicker || "FORMULARIO";
       const title = c.title || "Contáctanos";
+      const submitText = c.submitText || "ENVIAR";
       return `<section id="${c.anchor || 'formulario'}" class="py-24 md:py-32" style="background:${c.background === 'dark' ? D : L}">
         <div class="max-w-2xl mx-auto px-6">
           <div class="text-center mb-10">
@@ -761,6 +766,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <h2 class="text-3xl lg:text-4xl font-black uppercase" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
           </div>
           <form method="POST" action="${actionUrl(site, apiBaseUrl)}" data-pub-form class="p-8 border-2" style="border-color:${D};background:white">
+            <input type="hidden" name="siteId" value="${site?.id || ''}" />
             <div class="space-y-5">
               ${(c.fields && c.fields.length ? c.fields : [
                 { label: "Nombre", name: "nombre", type: "text", required: true },
@@ -776,7 +782,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               </div>`).join("")}
               <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D}"></div>
               <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_form_submit" type="submit" class="w-full py-4 text-sm font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${D};background:${D};color:${B}" onmouseover="this.style.boxShadow='4px 4px 0 white'" onmouseout="this.style.boxShadow='none'">
-                ENVIAR <i class="bi bi-send ml-2"></i>
+                ${submitText} <i class="bi bi-send ml-2"></i>
               </button>
             </div>
           </form>
