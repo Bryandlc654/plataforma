@@ -395,6 +395,16 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "portfolio":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Portafolio Indigo (imagen grande + overlay)</div>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Proyectos destacados" /></Field>
+            <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={2} /></Field>
+            <Field label="Imagen de la sección"><ImageField label="Imagen de la sección" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
+            <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="VER TODOS" /></Field>
+            <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} /></Field>
+          </>;
+        }
         return <>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Productos" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
