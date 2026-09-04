@@ -87,6 +87,27 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         }
         return <p className="text-sm text-slate-400 py-8 text-center">Editor no disponible</p>;
 
+      case "marquee":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Cinta animada Indigo (amarilla con palabras)</div>
+          <Field label="Palabras (separadas por coma)"><TextInput value={(content.words || content.marqueeWords || []).join(", ")} onChange={(v) => set("words", v.split(",").map((s: string) => s.trim()).filter(Boolean))} placeholder="INDIGO PUBLICIDAD, LETRAS 3D, BRANDING, DISEÑO DISRUPTIVO" /></Field>
+        </>;
+
+      case "awareness":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Bloque de conciencia Indigo (pregunta + párrafo + destacado)</div>
+          <Field label="Título (pregunta)"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="¿Estás compitiendo solo por precio?" /></Field>
+          <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={4} placeholder="Cuando tu marca se ve igual a todas las demás..." /></Field>
+          <Field label="Texto destacado"><TextInput value={content.highlight} onChange={(v) => set("highlight", v)} placeholder="Es momento de subir el nivel." /></Field>
+          <Field label="Estilo del destacado">
+            <select value={content.highlightStyle || "default"} onChange={(e) => set("highlightStyle", e.target.value)}
+              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+              <option value="default">Amarillo</option>
+              <option value="dark">Oscuro</option>
+            </select>
+          </Field>
+        </>;
+
       case "hero":
         if (content.variant === "indigo") {
           return <>
@@ -160,7 +181,96 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           <Field label="Preguntas"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "question", label: "Pregunta" }, { key: "answer", label: "Respuesta", type: "textarea" }]} /></Field>
         </>;
 
+      case "portfolio-grid":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Grilla de proyectos Indigo</div>
+          <Field label="Título (CTA final)"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="TU MARCA ES EL PRÓXIMO CASO DE ÉXITO." /></Field>
+          <Field label="Texto del botón (CTA final)"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="EMPECEMOS AHORA" /></Field>
+          <Field label="URL del botón (CTA final)"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
+          <Field label="Sombra de los proyectos">
+            <select value={content.shadow === false ? "off" : "on"} onChange={(e) => set("shadow", e.target.value === "on")}
+              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+              <option value="on">Activada</option>
+              <option value="off">Desactivada</option>
+            </select>
+          </Field>
+          <Field label="Proyectos"><ArrayEditor value={content.projects || content.items} onChange={(v) => set("projects", v)} fields={[
+            { key: "number", label: "Número (ej: 01)" },
+            { key: "title", label: "Título" },
+            { key: "sub", label: "Subtítulo" },
+            { key: "hover", label: "Estilo (slide, overlay-brand, overlay-dark)" },
+            { key: "colSpan", label: "Columnas (5, 7 o 12)" },
+            { key: "imgHeight", label: "Altura imagen (ej: h-[400px] md:h-[600px])" },
+            { key: "img", label: "Imagen", type: "image" },
+            { key: "url", label: "URL del proyecto" },
+            { key: "numberStyle", label: "Color número (brand/dark)" },
+            { key: "mt", label: "Margen superior (ej: mt-12 md:mt-24)" },
+          ]} /></Field>
+        </>;
+
+      case "contact-section":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección de contacto Indigo (info + formulario)</div>
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Información (textos)</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+              <TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Información" />
+              <TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="hola@indigopublicidad.com" />
+              <TextInput value={content.emailLabel} onChange={(v) => set("emailLabel", v)} placeholder="Email" />
+              <TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="+1 (555) 123-4567" />
+              <TextInput value={content.phoneLabel} onChange={(v) => set("phoneLabel", v)} placeholder="Teléfono" />
+              <TextInput value={content.address} onChange={(v) => set("address", v)} type="textarea" rows={2} placeholder="Distrito de Diseño 0987..." />
+              <TextInput value={content.addressLabel} onChange={(v) => set("addressLabel", v)} placeholder="Estudio" />
+            </div>
+          </div>
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Formulario (textos)</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+              <TextInput value={content.formTitle} onChange={(v) => set("formTitle", v)} placeholder="Escríbenos" />
+              <TextInput value={content.submitText} onChange={(v) => set("submitText", v)} placeholder="ENVIAR MENSAJE" />
+              <TextInput value={content.nameLabel} onChange={(v) => set("nameLabel", v)} placeholder="Nombre" />
+              <TextInput value={content.namePlaceholder} onChange={(v) => set("namePlaceholder", v)} placeholder="TU NOMBRE" />
+              <TextInput value={content.emailFieldLabel} onChange={(v) => set("emailFieldLabel", v)} placeholder="Email" />
+              <TextInput value={content.emailPlaceholder} onChange={(v) => set("emailPlaceholder", v)} placeholder="TU@EMAIL.COM" />
+              <TextInput value={content.messageLabel} onChange={(v) => set("messageLabel", v)} placeholder="Mensaje" />
+              <TextInput value={content.messagePlaceholder} onChange={(v) => set("messagePlaceholder", v)} placeholder="CUÉNTANOS SOBRE TU PROYECTO..." />
+              <TextInput value={content.serviceLabel} onChange={(v) => set("serviceLabel", v)} placeholder="Servicio de interés" />
+              <Field label="Opciones de servicio (separadas por coma)"><TextInput value={(content.serviceOptions || []).join(", ")} onChange={(v) => set("serviceOptions", v.split(",").map((s: string) => s.trim()).filter(Boolean))} placeholder="Letras 3D, Branding Estratégico, Diseño Corporativo, Otro" /></Field>
+            </div>
+          </div>
+        </>;
+
       case "cta":
+        if (content.variant === "indigo") {
+          const isFunnel = content.style === "funnel";
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">CTA Indigo (contacto amarillo con formulario / funnel)</div>
+            <Field label="Estilo">
+              <select value={content.style || "contact"} onChange={(e) => set("style", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="contact">Contacto (amarillo + formulario)</option>
+                <option value="funnel">Funnel (botón grande)</option>
+              </select>
+            </Field>
+            {isFunnel ? <>
+              <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="DOMINA TU MERCADO." /></Field>
+              <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} placeholder="Deja de ser uno más del montón..." /></Field>
+              <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="INICIAR REBRANDING" /></Field>
+              <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
+            </> : <>
+              <Field label="Kicker (arriba del título)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="¿Listo para" /></Field>
+              <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="destacar?" /></Field>
+              <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} placeholder="Hagamos que tu marca sea imposible de ignorar." /></Field>
+              <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Iniciar Proyecto" /></Field>
+              <Field label="URL del botón (o vacío para mailto)"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
+              <Field label="Correo de contacto"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="hola@indigopublicidad.com" /></Field>
+              <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} /></Field>
+              <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} /></Field>
+              <Field label="Texto del botón del formulario"><TextInput value={content.submitText} onChange={(v) => set("submitText", v)} placeholder="ENVIAR" /></Field>
+              <Field label="Campos del formulario"><ArrayEditor value={content.fields} onChange={(v) => set("fields", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "name", label: "Nombre" }, { key: "type", label: "Tipo (text, textarea, email)" }, { key: "required", label: "Requerido (true/false)" }]} /></Field>
+            </>}
+          </>;
+        }
         return <>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
           <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
@@ -377,6 +487,20 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "image":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Imagen Indigo (con borde)</div>
+            <Field label="Imagen"><ImageField label="Imagen" value={content.imageUrl} onChange={(v) => { set("imageUrl", v); set("url", v); }} /></Field>
+            <Field label="Texto alternativo"><TextInput value={content.title || content.alt} onChange={(v) => { set("title", v); set("alt", v); }} placeholder="Describe la imagen" /></Field>
+            <Field label="Fondo">
+              <select value={content.background || "light"} onChange={(e) => set("background", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="light">Claro</option>
+                <option value="dark">Oscuro</option>
+              </select>
+            </Field>
+          </>;
+        }
         return <>
           <ImageField label="URL de la imagen" value={content.url} onChange={(v) => set("url", v)} />
           <Field label="Texto alternativo"><TextInput value={content.alt} onChange={(v) => set("alt", v)} placeholder="Describe la imagen" /></Field>
@@ -393,6 +517,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "video":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Video Indigo (fondo oscuro)</div>
+            <Field label="URL del video (embed)"><TextInput value={content.videoUrl} onChange={(v) => { set("videoUrl", v); set("url", v); }} placeholder="https://www.youtube.com/embed/..." /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
+            <Field label="Imagen de portada (si no hay video)"><ImageField label="Portada" value={content.thumbnail} onChange={(v) => { set("thumbnail", v); set("imageUrl", v); }} /></Field>
+          </>;
+        }
         return <>
           <Field label="URL del video (YouTube/Vimeo)"><TextInput value={content.url} onChange={(v) => set("url", v)} placeholder="https://www.youtube.com/watch?v=..." /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Título del video" /></Field>
@@ -415,6 +547,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "about":
+      case "agency":
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Agencia Indigo (imagen + texto + indicadores)</div>
@@ -504,6 +637,24 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "benefits":
+        if (content.variant === "indigo") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Beneficios Indigo (fondo oscuro + 3 columnas)</div>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="EL PODER DEL BRANDING" /></Field>
+            <Field label="Acento">
+              <select value={content.accent || "default"} onChange={(e) => set("accent", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="default">Amarillo</option>
+                <option value="brand">Marca completa</option>
+              </select>
+            </Field>
+            <Field label="Columnas"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "number", label: "Número (ej: 01)" },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Beneficios" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
@@ -520,7 +671,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Indigo (imagen + pasos)</div>
             <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Cómo trabajamos" /></Field>
             <Field label="Imagen de la sección"><ImageField label="Imagen de la sección" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
-            <Field label="Pasos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "title", label: "Título" }, { key: "desc", label: "Descripción", type: "textarea" }]} /></Field>
+            <Field label="Pasos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "number", label: "Número (ej: 01)" }, { key: "title", label: "Título" }, { key: "desc", label: "Descripción", type: "textarea" }]} /></Field>
           </>;
         }
         return <>
@@ -534,6 +685,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           ]} /></Field>
         </>;
 
+      case "sorteo-form":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Formulario de sorteo Indigo (título + descripción)</div>
+          <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="SORTEO" /></Field>
+          <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Participa y gana" /></Field>
+          <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
+        </>;
+
       case "form":
       case "contact":
         if (content.variant === "indigo") {
@@ -545,6 +704,13 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Iniciar Proyecto" /></Field>
             <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
             <Field label="Texto del botón del formulario"><TextInput value={content.submitText} onChange={(v) => set("submitText", v)} placeholder="ENVIAR" /></Field>
+            <Field label="Fondo de la sección">
+              <select value={content.background || "light"} onChange={(e) => set("background", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="light">Claro</option>
+                <option value="dark">Oscuro</option>
+              </select>
+            </Field>
             <Field label="Campos del formulario"><ArrayEditor value={content.fields} onChange={(v) => set("fields", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "name", label: "Nombre" }, { key: "type", label: "Tipo (text, textarea, email)" }, { key: "required", label: "Requerido (true/false)" }]} /></Field>
           </>;
         }

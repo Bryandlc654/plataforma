@@ -244,7 +244,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
           ref={revealRef}
           dangerouslySetInnerHTML={{ __html: html }} 
           onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form") return;
+            if (type !== "contact" && type !== "form" && type !== "cta" && type !== "contact-section") return;
             e.preventDefault();
             const form = e.target as HTMLFormElement;
             const formData = new FormData(form);
@@ -260,6 +260,37 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
             try {
               if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
               else await new Promise(res => setTimeout(res, 1000));
+            } catch (err) {
+              if (btn) btn.disabled = false;
+              alert("Error al enviar el formulario");
+            }
+          }}
+        />
+      );
+    }
+  }
+
+  if (c.variant === "dishora") {
+    const { getDishoraHtml } = require("../../../lib/dishora-variants");
+    const html = getDishoraHtml(type, c);
+    if (html) {
+      return (
+        <div 
+          dangerouslySetInnerHTML={{ __html: html }} 
+          onSubmit={async (e) => {
+            if (type !== "contact" && type !== "form") return;
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const data: Record<string, any> = {};
+            formData.forEach((v, k) => { data[k] = v; });
+            const tenantId = useAuthStore.getState().tenantId;
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+            if (btn) btn.disabled = true;
+            try {
+              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+              else await new Promise(res => setTimeout(res, 1000));
+              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
             } catch (err) {
               if (btn) btn.disabled = false;
               alert("Error al enviar el formulario");

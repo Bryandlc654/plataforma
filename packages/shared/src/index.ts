@@ -6,3 +6,4 @@ export * from "./templates/prestige-variants";
 export * from "./templates/art-culinaire-variants";
 export * from "./templates/rodriplast-variants";
 export * from "./templates/indigo-variants";
+export * from "./templates/dishora-variants";
