@@ -155,6 +155,7 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
     ],
     menuCtaText: c.menuCtaText || "Explore The Full Menu",
     menuCtaUrl: c.menuCtaUrl || "#full-menu",
+    menuCtaIcon: c.menuCtaIcon || "calendar",
 
     // Lunch menu
     lunchEyebrow: c.lunchEyebrow || "CHEF'S WORDS",
@@ -193,6 +194,18 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
   };
 
   const checkIcon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+  // Icons selectable for the reservation CTA button in the menu block.
+  const reservationIcons: Record<string, string> = {
+    calendar: '<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2zm16-7h-1V6a2 2 0 00-2-2H7a2 2 0 00-2 2v5H4a2 2 0 00-2 2v2h20v-2a2 2 0 00-2-2zM7 6h10v5H7V6z"></path></svg>',
+    "calendar-check": '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 8h18M5 6h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 15l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+    "arrow-right": '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+    phone: '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+    clock: '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+    cutlery: '<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M11 2a1 1 0 011 1v5.5a1 1 0 01-2 0V3a1 1 0 011-1zm1 6.5V20a1 1 0 01-2 0V8.5a1 1 0 012 0zM7 3a1 1 0 012 0v7H7V3zm-3 8h8v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9zM17 4a3 3 0 013 3v14a1 1 0 01-2 0v-6h-2V7a3 3 0 011-3z"></path></svg>',
+    "book-open": '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4H6.5A2.5 2.5 0 004 6.5v13z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+    users: '<svg class="w-4 h-4 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  };
 
   switch (type) {
     case "header": {
@@ -416,7 +429,10 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
   </div>
   <div class="mt-14 flex flex-col items-center justify-center text-center px-4">
     <div aria-hidden="true" class="w-[1.5px] h-12 bg-[#D96B4C] mb-6"></div>
-    <a class="inline-block bg-[#261D1A] hover:bg-[#17110F] text-white px-9 py-4 text-xs tracking-[0.18em] uppercase font-medium transition-colors duration-300 shadow-md hover:shadow-lg" href="${C.menuCtaUrl}">${C.menuCtaText}</a>
+    <a class="inline-flex items-center gap-2.5 bg-[#261D1A] hover:bg-[#17110F] text-white px-9 py-4 text-xs tracking-[0.18em] uppercase font-medium transition-colors duration-300 shadow-md hover:shadow-lg" href="${C.menuCtaUrl}">
+      ${reservationIcons[C.menuCtaIcon] || reservationIcons.calendar}
+      ${C.menuCtaText}
+    </a>
   </div>
 </section>`;
 
