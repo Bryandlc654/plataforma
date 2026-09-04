@@ -100,6 +100,7 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
     address: c.address || "296 Ridao Avenie Mor Berlin 251584",
     ctaText: c.ctaText || "Make a Reservation Online",
     ctaUrl: c.ctaUrl || "#reservation",
+    ctaIcon: c.ctaIcon || "calendar",
 
     // Hero story
     chefsWords: c.chefsWords || "CHEF'S WORDS",
@@ -247,7 +248,7 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
       </nav>
       <div>
         <a class="inline-flex items-center space-x-2.5 bg-[#DA370D] hover:bg-[#c43009] text-white px-6 py-3 text-sm font-semibold tracking-wide transition duration-200 shadow-sm" href="${C.ctaUrl}">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M4 18v3h2v-3h12v3h2v-3a2 2 0 00-2-2H6a2 2 0 00-2 2zm16-7h-1V6a2 2 0 00-2-2H7a2 2 0 00-2 2v5H4a2 2 0 00-2 2v2h20v-2a2 2 0 00-2-2zM7 6h10v5H7V6z"></path></svg>
+          ${reservationIcons[C.ctaIcon] || reservationIcons.calendar}
           <span>${C.ctaText}</span>
         </a>
       </div>

@@ -41,6 +41,11 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
               {fields.map((f) =>
                 f.type === "image" ? (
                   <ImageField key={f.key} label={f.label} value={item[f.key]} onChange={(v) => update(i, f.key, v)} />
+                ) : f.type === "checkbox" ? (
+                  <label key={f.key} className="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" checked={!!item[f.key]} onChange={(e) => update(i, f.key, e.target.checked)} className="h-4 w-4 accent-primary rounded border-slate-300" />
+                    <span className="text-sm text-slate-600">{f.label}</span>
+                  </label>
                 ) : (
                   <TextInput key={f.key} value={item[f.key]} onChange={(v) => update(i, f.key, v)} placeholder={f.label} type={f.type || "text"} />
                 )
@@ -323,6 +328,40 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "header":
+        if (content.variant === "dishora") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Dishora (barra de contacto + logo + navegación + botón de reserva)</div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Marca</p>
+            <Field label="Nombre / logo"><TextInput value={content.brand} onChange={(v) => set("brand", v)} placeholder="DISHORA" /></Field>
+            <Field label="URL del logo (inicio)"><TextInput value={content.logoUrl} onChange={(v) => set("logoUrl", v)} placeholder="# o /" /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Navegación</p>
+            <Field label="Enlaces del menú"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }, { key: "dropdown", label: "Tiene submenú (flecha)", type: "checkbox" }]} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Barra superior</p>
+            <Field label="Horario 1 (izquierda)"><TextInput value={content.topLeft} onChange={(v) => set("topLeft", v)} placeholder="Mon-Wed: 11a-9p" /></Field>
+            <Field label="Horario 2 (centro)"><TextInput value={content.topMiddle} onChange={(v) => set("topMiddle", v)} placeholder="Thurs-Sat: 11a-10p" /></Field>
+            <Field label="Correo"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="reservations@disora.com" /></Field>
+            <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="123 456 7899" /></Field>
+            <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} placeholder="296 Ridao Avenie Mor Berlin 251584" /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Botón de reserva</p>
+              <Field label="Texto del botón"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="Make a Reservation Online" /></Field>
+              <Field label="URL del botón"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#reservation" /></Field>
+              <Field label="Icono del botón">
+                <select value={content.ctaIcon || "calendar"} onChange={(e) => set("ctaIcon", e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                  <option value="calendar">Calendario (reserva)</option>
+                  <option value="calendar-check">Calendario con check</option>
+                  <option value="arrow-right">Flecha derecha</option>
+                  <option value="phone">Teléfono</option>
+                  <option value="clock">Reloj (horario)</option>
+                  <option value="cutlery">Cubiertos</option>
+                  <option value="book-open">Menú / libro</option>
+                  <option value="users">Personas (mesa)</option>
+                </select>
+              </Field>
+            </div>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Menú Indigo (se muestra en todas las páginas como sección)</div>
