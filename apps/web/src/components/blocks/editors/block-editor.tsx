@@ -370,6 +370,34 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           <Field label="URL del botón CTA"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
         </>;
 
+      case "menu":
+        if (content.variant === "dishora") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Carrusel de platos Dishora (el estilo es fijo de la plantilla)</div>
+            <Field label="Etiqueta (encabezado)"><TextInput value={content.menuEyebrow} onChange={(v) => set("menuEyebrow", v)} placeholder="Chef's Words" /></Field>
+            <Field label="Título (encabezado)"><TextInput value={content.menuTitle} onChange={(v) => set("menuTitle", v)} placeholder="What's On The Menu" /></Field>
+            <Field label="Texto del botón"><TextInput value={content.menuCtaText} onChange={(v) => set("menuCtaText", v)} placeholder="Explore The Full Menu" /></Field>
+            <Field label="URL del botón"><TextInput value={content.menuCtaUrl} onChange={(v) => set("menuCtaUrl", v)} placeholder="#full-menu" /></Field>
+            <Field label="Platos"><ArrayEditor value={content.dishes} onChange={(v) => set("dishes", v)} fields={[{ key: "name", label: "Nombre", type: "textarea" }, { key: "price", label: "Precio" }, { key: "image", label: "Imagen", type: "image" }]} /></Field>
+          </>;
+        }
+        return <>
+          <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} /></Field>
+          <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
+          <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" /></Field>
+          <Field label="Items"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "name", label: "Nombre" }, { key: "price", label: "Precio" }, { key: "image", label: "Imagen", type: "image" }]} /></Field>
+        </>;
+
+      case "lunch-menu":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Menú de almuerzo Dishora (el estilo es fijo de la plantilla)</div>
+          <Field label="Etiqueta (encabezado)"><TextInput value={content.lunchEyebrow} onChange={(v) => set("lunchEyebrow", v)} placeholder="CHEF'S WORDS" /></Field>
+          <Field label="Título (encabezado)"><TextInput value={content.lunchTitle} onChange={(v) => set("lunchTitle", v)} placeholder="LUNCH MENU" /></Field>
+          <Field label="Fondo (imagen)"><ImageField label="Fondo" value={content.diningBg} onChange={(v) => set("diningBg", v)} /></Field>
+          <Field label="Plato superpuesto (imagen)"><ImageField label="Plato" value={content.dishOverlapImg} onChange={(v) => set("dishOverlapImg", v)} /></Field>
+          <Field label="Items del menú"><ArrayEditor value={content.lunchItems} onChange={(v) => set("lunchItems", v)} fields={[{ key: "name", label: "Nombre" }, { key: "desc", label: "Descripción", type: "textarea" }, { key: "price", label: "Precio" }, { key: "thumb", label: "Imagen", type: "image" }]} /></Field>
+        </>;
+
       case "footer":
         if (content.variant === "indigo") {
           return <>
