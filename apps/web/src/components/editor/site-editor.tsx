@@ -382,7 +382,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const publicUrl = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white">
+    <div className="flex flex-col h-dvh overflow-hidden bg-white">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">{toast}</div>}
 
       {/* TOP TOOLBAR */}
