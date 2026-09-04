@@ -110,12 +110,21 @@ api.interceptors.response.use(
     if (status === 401) {
       const url = String(original?.url || "");
       const isAuthProbe = url.includes("/auth/me");
-      try { if (!isAuthProbe) useAuthStore.getState().logout(); } catch {}
-      const onAuthPage =
-        typeof window !== "undefined" &&
-        ["/login", "/register"].includes(window.location.pathname);
-      if (typeof window !== "undefined" && !isAuthProbe && !onAuthPage) {
-        window.location.href = "/login";
+      const isAuthEndpoint =
+        url.includes("/auth/login") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/refresh");
+      // For login/register/refresh, a 401 is just a failed credential (or
+      // invalid refresh), not an expired session — don't force a reload,
+      // so the form can show its own error message.
+      if (!isAuthEndpoint) {
+        try { if (!isAuthProbe) useAuthStore.getState().logout(); } catch {}
+        const onAuthPage =
+          typeof window !== "undefined" &&
+          ["/login", "/register"].includes(window.location.pathname);
+        if (typeof window !== "undefined" && !isAuthProbe && !onAuthPage) {
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

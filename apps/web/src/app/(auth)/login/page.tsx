@@ -19,9 +19,16 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, ensureSession } = useAuthStore();
-  const [error, setError] = useState<string | null>(null);
+  const toastState = useState<{ type: "error" | "success"; message: string } | null>(null);
+  const [toast, setToast] = toastState;
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), toast.type === "success" ? 1800 : 4000);
+    return () => clearTimeout(t);
+  }, [toast, setToast]);
 
   const {
     register,
@@ -40,13 +47,13 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setError(null);
       await login(data.email, data.password);
-      router.push("/dashboard");
+      setToast({ type: "success", message: "Sesión iniciada correctamente" });
+      setTimeout(() => router.push("/dashboard"), 1200);
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Credenciales incorrectas. Intenta de nuevo."
-      );
+      const msg =
+        err.response?.data?.message || "Credenciales incorrectas. Intenta de nuevo.";
+      setToast({ type: "error", message: msg });
     }
   };
 
@@ -105,20 +112,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Error toast */}
-            <div
-              className={`overflow-hidden transition-all duration-300 ${
-                error ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
-              }`}
-            >
-              <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
-                <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p>{error}</p>
-              </div>
-            </div>
-
             {/* Email */}
             <div>
               <label
@@ -249,6 +242,27 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Toast notification */}
+      <div
+        aria-live="polite"
+        className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-2xl transition-all duration-300 ${
+          toast ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
+        } ${
+          toast?.type === "success" ? "bg-emerald-600" : "bg-red-600"
+        }`}
+      >
+        {toast?.type === "success" ? (
+          <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )}
+        <p>{toast?.message}</p>
       </div>
     </div>
   );
