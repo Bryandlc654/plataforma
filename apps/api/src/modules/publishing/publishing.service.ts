@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
-import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml, getIndigoHtml, getDishoraHtml } from "@plataforma/shared";
+import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml, getIndigoHtml, getDishoraHtml, getGraduateHtml } from "@plataforma/shared";
 import {
   resolvePublicSiteUrl,
   normalizePublicPath,
@@ -480,7 +480,7 @@ ${blocksHtml}
     const primary = site.primaryColor || "#2563EB";
     const secondary = site.secondaryColor || "#1E40AF";
     const variant = page?.blocks?.[0]?.content?.variant;
-    const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora";
+    const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora" || variant === "graduate";
 
     const baseUrl = resolvePublicSiteUrl(site);
     const canonicalUrl =
@@ -875,6 +875,11 @@ ${apkButton}
 
     if (c.variant === "dishora") {
       const html = getDishoraHtml(type, c, this.apiBaseUrl(), site);
+      if (html) return html;
+    }
+
+    if (c.variant === "graduate") {
+      const html = getGraduateHtml(type, c, this.apiBaseUrl(), site);
       if (html) return html;
     }
 

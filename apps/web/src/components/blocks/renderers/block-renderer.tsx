@@ -301,6 +301,36 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     }
   }
 
+  if (c.variant === "graduate") {
+    const { getGraduateHtml } = require("../../../lib/graduate-variants");
+    const html = getGraduateHtml(type, c);
+    if (html) {
+      return (
+        <div 
+          dangerouslySetInnerHTML={{ __html: html }} 
+          onSubmit={async (e) => {
+            if (type !== "contact" && type !== "form" && type !== "cta") return;
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const data: Record<string, any> = {};
+            formData.forEach((v, k) => { data[k] = v; });
+            const tenantId = useAuthStore.getState().tenantId;
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+            if (btn) btn.disabled = true;
+            try {
+              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+              else await new Promise(res => setTimeout(res, 1000));
+            } catch (err) {
+              if (btn) btn.disabled = false;
+              alert("Error al enviar el formulario");
+            }
+          }}
+        />
+      );
+    }
+  }
+
   switch (type) {
     case "hero": {
       return (

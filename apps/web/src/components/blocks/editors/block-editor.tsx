@@ -114,6 +114,37 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "hero":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Graduate (fondo oscuro + carrusel 3D)</div>
+            <Field label="Imagen de fondo"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+            <Field label="Etiqueta (tag)"><TextInput value={content.tag} onChange={(v) => set("tag", v)} placeholder="Agencia & Academia Digital" /></Field>
+            <Field label="Título (línea 1)"><TextInput value={content.titleLine1} onChange={(v) => set("titleLine1", v)} placeholder="Revoluciona el" /></Field>
+            <Field label="Título (palabra destacada)"><TextInput value={content.titleHighlight} onChange={(v) => set("titleHighlight", v)} placeholder="Crecimiento" /></Field>
+            <Field label="Título (línea final)"><TextInput value={content.titleLine2} onChange={(v) => set("titleLine2", v)} placeholder="de tu negocio." /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={3} /></Field>
+            <Field label="Texto botón principal"><TextInput value={content.primaryButtonText} onChange={(v) => set("primaryButtonText", v)} placeholder="Escalar mi negocio" /></Field>
+            <Field label="URL botón principal"><TextInput value={content.primaryButtonUrl} onChange={(v) => set("primaryButtonUrl", v)} placeholder="#servicios" /></Field>
+            <Field label="Texto botón secundario"><TextInput value={content.secondaryButtonText} onChange={(v) => set("secondaryButtonText", v)} placeholder="Asesoría Gratuita" /></Field>
+            <Field label="URL botón secundario"><TextInput value={content.secondaryButtonUrl} onChange={(v) => set("secondaryButtonUrl", v)} placeholder="#contacto" /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tarjetas del carrusel</p>
+              <Field label="Tarjetas"><ArrayEditor value={content.cards} onChange={(v) => set("cards", v)} fields={[
+                { key: "badge", label: "Etiqueta (ej: Emprendedor)" },
+                { key: "color", label: "Color de la etiqueta (hex)" },
+                { key: "title", label: "Título" },
+                { key: "image", label: "Imagen", type: "image" },
+                { key: "alt", label: "Texto alternativo" },
+              ]} /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Insignia flotante</p>
+              <Field label="Icono (clase Font Awesome)"><TextInput value={content.badgeIcon} onChange={(v) => set("badgeIcon", v)} placeholder="fa-solid fa-graduation-cap" /></Field>
+              <Field label="Etiqueta"><TextInput value={content.badgeLabel} onChange={(v) => set("badgeLabel", v)} placeholder="Comunidad" /></Field>
+              <Field label="Valor"><TextInput value={content.badgeValue} onChange={(v) => set("badgeValue", v)} placeholder="+500 Alumnos" /></Field>
+            </div>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Publicidad" /></Field>
@@ -144,6 +175,38 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "services":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Servicios Graduate (grilla bento con tarjetas editables)</div>
+            <Field label="Etiqueta (eyebrow)"><TextInput value={content.servicesEyebrow} onChange={(v) => set("servicesEyebrow", v)} placeholder="Lo que hacemos por ti" /></Field>
+            <Field label="Icono del eyebrow (Font Awesome)"><TextInput value={content.servicesEyebrowIcon} onChange={(v) => set("servicesEyebrowIcon", v)} placeholder="fa-solid fa-fire" /></Field>
+            <Field label="Título (parte 1)"><TextInput value={content.servicesTitleLine1} onChange={(v) => set("servicesTitleLine1", v)} placeholder="Soluciones Integrales" /></Field>
+            <Field label="Título (parte 2, pequeña)"><TextInput value={content.servicesTitleLine2} onChange={(v) => set("servicesTitleLine2", v)} placeholder="de" /></Field>
+            <Field label="Título (palabra destacada)"><TextInput value={content.servicesHighlight} onChange={(v) => set("servicesHighlight", v)} placeholder="Marketing" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.servicesSubtitle} onChange={(v) => set("servicesSubtitle", v)} type="textarea" rows={2} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tarjetas del bento</p>
+              <Field label="Tarjetas"><ArrayEditor value={content.cards} onChange={(v) => set("cards", v)} fields={[
+                { key: "colSpan", label: "Columnas (ej: lg:col-span-2 o vacío)" },
+                { key: "dark", label: "Tarjeta oscura (true/false)", type: "text" },
+                { key: "badge", label: "Etiqueta (tarjeta oscura)" },
+                { key: "icon", label: "Icono (Font Awesome)" },
+                { key: "iconBg", label: "Gradiente del icono (ej: from-[#2d2e81] to-blue-600)" },
+                { key: "iconShadow", label: "Sombra del icono (ej: shadow-blue-500/30)" },
+                { key: "title", label: "Título" },
+                { key: "titleSize", label: "Tamaño del título (ej: text-3xl)" },
+                { key: "desc", label: "Descripción", type: "textarea" },
+                { key: "blob", label: "Blob de fondo (from-blue-100)" },
+                { key: "linkColor", label: "Color del enlace (text-[hex])" },
+                { key: "linkText", label: "Texto del enlace" },
+                { key: "linkUrl", label: "URL del enlace" },
+                { key: "buttonText", label: "Texto del botón (oscura)" },
+                { key: "buttonUrl", label: "URL del botón (oscura)" },
+                { key: "checks", label: "Checks (separados por coma)" },
+              ]} /></Field>
+            </div>
+          </>;
+        }
         if (content.variant === "indigo") {
           const isPhilosophy = content.layout === "philosophy";
           return <>
@@ -246,6 +309,26 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "cta":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">CTA Graduate (tarjeta de WhatsApp)</div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Sección</p>
+              <Field label="Etiqueta (badge)"><TextInput value={content.ctaBadge} onChange={(v) => set("ctaBadge", v)} placeholder="¿List@ para el siguiente nivel?" /></Field>
+              <Field label="Título (parte 1)"><TextInput value={content.ctaTitleLine1} onChange={(v) => set("ctaTitleLine1", v)} placeholder="Haz crecer tu" /></Field>
+              <Field label="Título (palabra destacada)"><TextInput value={content.ctaHighlight} onChange={(v) => set("ctaHighlight", v)} placeholder="negocio." /></Field>
+              <Field label="Título (parte degradada, opcional)"><TextInput value={content.ctaTitleGradient} onChange={(v) => set("ctaTitleGradient", v)} placeholder="con resultados reales" /></Field>
+              <Field label="Subtítulo"><TextInput value={content.ctaSubtitle} onChange={(v) => set("ctaSubtitle", v)} type="textarea" rows={2} /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tarjeta de WhatsApp</p>
+              <Field label="Título de la tarjeta"><TextInput value={content.cardTitle} onChange={(v) => set("cardTitle", v)} placeholder="¿Hablamos?" /></Field>
+              <Field label="Subtítulo de la tarjeta"><TextInput value={content.cardSubtitle} onChange={(v) => set("cardSubtitle", v)} placeholder="Conversemos sobre tu proyecto" /></Field>
+              <Field label="Texto del botón"><TextInput value={content.whatsappButtonText} onChange={(v) => set("whatsappButtonText", v)} placeholder="Agendar Asesoría" /></Field>
+              <Field label="Número de WhatsApp (formato internacional)"><TextInput value={content.whatsappNumber} onChange={(v) => set("whatsappNumber", v)} placeholder="593999999999" /></Field>
+            </div>
+          </>;
+        }
         if (content.variant === "indigo") {
           const isFunnel = content.style === "funnel";
           return <>
@@ -290,6 +373,38 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "testimonials":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Testimonios Graduate (muro de reseñas + marcas de confianza)</div>
+            <Field label="Etiqueta (eyebrow)"><TextInput value={content.testiEyebrow} onChange={(v) => set("testiEyebrow", v)} placeholder="Casos de Éxito" /></Field>
+            <Field label="Título (parte 1)"><TextInput value={content.testiTitleLine1} onChange={(v) => set("testiTitleLine1", v)} placeholder="Resultados que hablan por" /></Field>
+            <Field label="Título (palabra destacada)"><TextInput value={content.testiHighlight} onChange={(v) => set("testiHighlight", v)} placeholder="sí solos." /></Field>
+            <Field label="Subtítulo"><TextInput value={content.testiSubtitle} onChange={(v) => set("testiSubtitle", v)} type="textarea" rows={2} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Testimonios</p>
+              <Field label="Tarjetas"><ArrayEditor value={content.testimonials} onChange={(v) => set("testimonials", v)} fields={[
+                { key: "large", label: "Tarjeta grande (true/false)", type: "text" },
+                { key: "gradient", label: "Gradiente (ej: from-[#2d2e81] to-[#0a0b2e])" },
+                { key: "starColor", label: "Color estrellas (text-[hex])" },
+                { key: "quote", label: "Testimonio", type: "textarea" },
+                { key: "name", label: "Nombre" },
+                { key: "role", label: "Cargo" },
+                { key: "roleColor", label: "Color del cargo (text-[color])" },
+                { key: "avatar", label: "Avatar", type: "image" },
+                { key: "online", label: "Conectado (true/false)", type: "text" },
+              ]} /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Marcas de confianza</p>
+              <Field label="Marcas"><ArrayEditor value={content.brands} onChange={(v) => set("brands", v)} fields={[
+                { key: "title", label: "Nombre de la marca" },
+                { key: "accent", label: "Color del punto (class, ej: bg-[#fa7202])" },
+                { key: "color", label: "Color del texto (class)" },
+                { key: "classes", label: "Clases extra" },
+              ]} /></Field>
+            </div>
+          </>;
+        }
         return <>
           <Field label="Origen de reseñas">
             <select value={content.source || "manual"} onChange={(e) => set("source", e.target.value)}
@@ -328,6 +443,22 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "header":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Graduate (píldora flotante con navegación + CTA)</div>
+            <Field label="Nombre del logo"><TextInput value={content.brand} onChange={(v) => set("brand", v)} placeholder="graduate" /></Field>
+            <Field label="Inicial del logo (círculo)"><TextInput value={content.brandInitial} onChange={(v) => set("brandInitial", v)} placeholder="g" /></Field>
+            <Field label="Logo (imagen, opcional)"><ImageField label="Logo" value={content.logoUrl} onChange={(v) => set("logoUrl", v)} /></Field>
+            <Field label="URL del logo (inicio)"><TextInput value={content.brandUrl} onChange={(v) => set("brandUrl", v)} placeholder="#inicio" /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Navegación</p>
+            <Field label="Enlaces del menú"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Botón CTA</p>
+              <Field label="Texto"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="Agendar Cita" /></Field>
+              <Field label="URL"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
+            </div>
+          </>;
+        }
         if (content.variant === "dishora") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Dishora (barra de contacto + logo + navegación + botón de reserva)</div>
@@ -470,6 +601,34 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <Field label="Redes sociales"><ArrayEditor value={content.social} onChange={(v) => set("social", v)} fields={[{ key: "label", label: "Nombre" }, { key: "url", label: "URL" }]} /></Field>
           </>;
         }
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Graduate (fondo oscuro + tipografía gigante)</div>
+            <Field label="Nombre del logo"><TextInput value={content.brand} onChange={(v) => set("brand", v)} placeholder="Graduate." /></Field>
+            <Field label="Inicial del logo"><TextInput value={content.brandInitial} onChange={(v) => set("brandInitial", v)} placeholder="G" /></Field>
+            <Field label="Descripción de la marca"><TextInput value={content.brandDesc} onChange={(v) => set("brandDesc", v)} type="textarea" rows={2} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Redes sociales</p>
+            <Field label="Redes"><ArrayEditor value={content.socials} onChange={(v) => set("socials", v)} fields={[
+              { key: "icon", label: "Icono (fa-brands ...)" },
+              { key: "url", label: "URL" },
+              { key: "hover", label: "Hover (class tailwind)" },
+            ]} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Navegación</p>
+            <Field label="Título de columna"><TextInput value={content.navTitle} onChange={(v) => set("navTitle", v)} placeholder="Navegación" /></Field>
+            <Field label="Enlaces"><ArrayEditor value={content.navLinks} onChange={(v) => set("navLinks", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Contacto</p>
+            <Field label="Título"><TextInput value={content.contactTitle} onChange={(v) => set("contactTitle", v)} placeholder="Contacto" /></Field>
+            <Field label="Ubicación (ciudad)"><TextInput value={content.locationTitle} onChange={(v) => set("locationTitle", v)} placeholder="Quito, Ecuador" /></Field>
+            <Field label="Ubicación (detalle)"><TextInput value={content.locationSub} onChange={(v) => set("locationSub", v)} placeholder="Servicio remoto a nivel nacional." /></Field>
+            <Field label="Teléfono (mostrado)"><TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="+593 99 999 9999" /></Field>
+            <Field label="Teléfono (solo números, para el enlace)"><TextInput value={content.phoneTel} onChange={(v) => set("phoneTel", v)} placeholder="+593000000000" /></Field>
+            <Field label="Email"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="hola@graduate.com.ec" /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Barra inferior</p>
+            <Field label="Copyright"><TextInput value={content.copyright} onChange={(v) => set("copyright", v)} /></Field>
+            <Field label="Enlaces legales"><ArrayEditor value={content.legalLinks} onChange={(v) => set("legalLinks", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="Texto gigante de fondo"><TextInput value={content.giantText} onChange={(v) => set("giantText", v)} placeholder="GRADUATE" /></Field>
+          </>;
+        }
         return <>
           <Field label="Empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} /></Field>
           <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={2} /></Field>
@@ -561,6 +720,30 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <Field label="Párrafo"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
             <Field label="Imagen de la sección"><ImageField label="Imagen de la sección" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
             <Field label="Items (grid)"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "title", label: "Título" }, { key: "desc", label: "Descripción", type: "textarea" }]} /></Field>
+          </>;
+        }
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Academia Graduate (tarjetas de cursos)</div>
+            <Field label="Etiqueta (eyebrow)"><TextInput value={content.academiaEyebrow} onChange={(v) => set("academiaEyebrow", v)} placeholder="Nuestra Academia" /></Field>
+            <Field label="Icono del eyebrow (Font Awesome)"><TextInput value={content.academiaEyebrowIcon} onChange={(v) => set("academiaEyebrowIcon", v)} placeholder="fa-solid fa-graduation-cap" /></Field>
+            <Field label="Título (parte 1)"><TextInput value={content.academiaTitleLine1} onChange={(v) => set("academiaTitleLine1", v)} placeholder="Aprende con los" /></Field>
+            <Field label="Título (palabra destacada)"><TextInput value={content.academiaHighlight} onChange={(v) => set("academiaHighlight", v)} placeholder="mejores." /></Field>
+            <Field label="Texto del lado derecho"><TextInput value={content.academiaRightText} onChange={(v) => set("academiaRightText", v)} type="textarea" rows={2} /></Field>
+            <Field label="Texto del enlace"><TextInput value={content.academiaLinkText} onChange={(v) => set("academiaLinkText", v)} placeholder="Explorar todos los programas" /></Field>
+            <Field label="URL del enlace"><TextInput value={content.academiaLinkUrl} onChange={(v) => set("academiaLinkUrl", v)} placeholder="#contacto" /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Cursos</p>
+              <Field label="Cursos"><ArrayEditor value={content.courses} onChange={(v) => set("courses", v)} fields={[
+                { key: "number", label: "Número (ej: 01)" },
+                { key: "numberColor", label: "Color del número (ej: group-hover:text-[#2d2e81])" },
+                { key: "circleColor", label: "Color del círculo (ej: group-hover:bg-[#c4fca5])" },
+                { key: "title", label: "Título" },
+                { key: "titleColor", label: "Color del título (ej: group-hover:text-[#21b1fe])" },
+                { key: "desc", label: "Descripción", type: "textarea" },
+                { key: "badgesText", label: "Badges (uno por línea; [HL] = destacado; [I] = solo icono)" },
+              ]} /></Field>
+            </div>
           </>;
         }
         return <>
@@ -657,6 +840,37 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             </Field>
             <Field label="Lista (opcional)"><ArrayEditor value={content.features} onChange={(v) => set("features", v)} fields={[{ key: "label", label: "Texto" }]} /></Field>
             <Field label="Indicadores"><ArrayEditor value={content.stats} onChange={(v) => set("stats", v)} fields={[{ key: "value", label: "Valor (ej: 10+)" }, { key: "label", label: "Etiqueta" }]} /></Field>
+          </>;
+        }
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Nosotros Graduate (texto + imágenes apiladas + insignia)</div>
+            <Field label="Etiqueta (eyebrow)"><TextInput value={content.eyebrow} onChange={(v) => set("eyebrow", v)} placeholder="Nuestra Esencia" /></Field>
+            <Field label="Título (parte 1)"><TextInput value={content.aboutTitleLine1} onChange={(v) => set("aboutTitleLine1", v)} placeholder="Transformamos" /></Field>
+            <Field label="Título (parte destacada 1)"><TextInput value={content.aboutTitleHighlight1} onChange={(v) => set("aboutTitleHighlight1", v)} placeholder="seguidores en" /></Field>
+            <Field label="Título (parte destacada 2)"><TextInput value={content.aboutTitleHighlight2} onChange={(v) => set("aboutTitleHighlight2", v)} placeholder="clientes reales." /></Field>
+            <Field label="Descripción (HTML permitido)"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={5} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Características</p>
+              <Field label="Características"><ArrayEditor value={content.features} onChange={(v) => set("features", v)} fields={[
+                { key: "icon", label: "Icono (Font Awesome)" },
+                { key: "color", label: "Color (hex)" },
+                { key: "title", label: "Título" },
+                { key: "desc", label: "Descripción", type: "textarea" },
+              ]} /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Imágenes</p>
+              <Field label="Imagen principal"><ImageField label="Imagen principal" value={content.mainImage} onChange={(v) => set("mainImage", v)} /></Field>
+              <Field label="Texto alternativo principal"><TextInput value={content.mainImageAlt} onChange={(v) => set("mainImageAlt", v)} placeholder="Equipo" /></Field>
+              <Field label="Imagen secundaria (círculo)"><ImageField label="Imagen secundaria" value={content.secondaryImage} onChange={(v) => set("secondaryImage", v)} /></Field>
+              <Field label="Texto alternativo secundario"><TextInput value={content.secondaryImageAlt} onChange={(v) => set("secondaryImageAlt", v)} /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Insignia flotante</p>
+              <Field label="Valor (ej: +5)"><TextInput value={content.badgeValue} onChange={(v) => set("badgeValue", v)} placeholder="+5" /></Field>
+              <Field label="Etiqueta"><TextInput value={content.badgeLabel} onChange={(v) => set("badgeLabel", v)} placeholder="Años de<br/>Experiencia" /></Field>
+            </div>
           </>;
         }
         return <>
