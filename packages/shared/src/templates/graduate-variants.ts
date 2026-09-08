@@ -276,7 +276,6 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     ctaBadge: c.ctaBadge || "Disponibilidad Inmediata",
     ctaTitleLine1: c.ctaTitleLine1 || "¿Listo para dar el",
     ctaHighlight: c.ctaHighlight || "siguiente paso?",
-    ctaTitleGradient: c.ctaTitleGradient || "from-[#21b1fe] to-[#7dd958]",
     ctaSubtitle:
       c.ctaSubtitle ||
       "Digitaliza y promociona tu negocio hoy mismo. No dejes que tu competencia se quede con los clientes que te buscan.",
@@ -370,7 +369,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       </div>
       <h1 class="text-5xl md:text-6xl lg:text-[4.5rem] font-black leading-[1.05] tracking-tighter">
         ${C.titleLine1}<br/>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#fa7202] via-pink-500 to-[#21b1fe]">${C.titleHighlight}</span><br/>
+        <span class="text-[#fa7202]">${C.titleHighlight}</span><br/>
         ${C.titleLine2}
       </h1>
       <p class="text-lg md:text-xl text-gray-400 font-medium leading-relaxed max-w-lg">${C.subtitle}</p>
@@ -456,8 +455,8 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         </div>
         <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
           ${C.aboutTitleLine1}<br/>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2d2e81] to-[#21b1fe]">${C.aboutTitleHighlight1}</span><br/>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#fa7202] to-pink-500">${C.aboutTitleHighlight2}</span>
+          <span class="text-[#21b1fe]">${C.aboutTitleHighlight1}</span><br/>
+          <span class="text-[#fa7202]">${C.aboutTitleHighlight2}</span>
         </h2>
         <p class="text-lg text-gray-600 leading-relaxed">${C.aboutDesc}</p>
         <div class="grid sm:grid-cols-2 gap-6 pt-6">
@@ -479,7 +478,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         </div>
         <div class="absolute -left-4 top-1/4 z-30 bg-white px-6 py-4 rounded-2xl shadow-xl border border-gray-100 animate-[bounce_3s_infinite]">
           <div class="flex items-center gap-4">
-            <div class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#fa7202] to-[#ffb347]">${C.aboutBadgeValue}</div>
+            <div class="text-4xl font-black text-[#fa7202]">${C.aboutBadgeValue}</div>
             <div class="leading-tight text-sm font-bold text-gray-700">${C.aboutBadgeLabel}</div>
           </div>
         </div>
@@ -496,7 +495,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
       <div class="max-w-2xl">
         <span class="text-[#fa7202] font-bold tracking-widest uppercase text-sm mb-4 inline-flex items-center gap-2"><i class="${C.servicesEyebrowIcon}"></i> ${C.servicesEyebrow}</span>
-        <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.servicesTitleLine1}<br/>${C.servicesTitleLine2} <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#2d2e81] to-[#21b1fe]">${C.servicesHighlight}</span></h2>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.servicesTitleLine1}<br/>${C.servicesTitleLine2} <span class="text-[#21b1fe]">${C.servicesHighlight}</span></h2>
       </div>
       <p class="text-gray-500 max-w-md md:text-right pb-2">${C.servicesSubtitle}</p>
     </div>
@@ -575,7 +574,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 text-[#21b1fe]"><i class="${C.academiaEyebrowIcon}"></i> ${C.academiaEyebrow}</div>
-        <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">${C.academiaTitleLine1}<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-[#fa7202] to-pink-500">${C.academiaHighlight}</span></h2>
+        <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">${C.academiaTitleLine1}<br/><span class="text-[#fa7202]">${C.academiaHighlight}</span></h2>
       </div>
       <div class="max-w-sm text-gray-400">
         <p class="mb-6">${C.academiaRightText}</p>
@@ -593,7 +592,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
           </div>
           <div class="md:col-span-3 flex flex-wrap gap-2">
             ${(courseBadges(course) || []).map((b: any) => b.highlight
-              ? `<span class="px-3 py-1 bg-gradient-to-r from-[#fa7202] to-pink-500 rounded-full text-xs text-white font-bold border border-transparent">${b.text || ""}</span>`
+              ? `<span class="px-3 py-1 bg-[#fa7202] rounded-full text-xs text-white font-bold border border-transparent">${b.text || ""}</span>`
               : `<span class="px-3 py-1 bg-white/5 rounded-full text-xs text-gray-300 border border-white/10">${b.icon ? `<i class="${b.icon}"></i> ` : ""}${b.text || ""}</span>`).join("")}
           </div>
           <div class="md:col-span-3 flex justify-start md:justify-end">
@@ -616,7 +615,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
   <div class="container mx-auto px-6 relative z-10">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[#7dd958]/10 text-[#7dd958] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="fa-solid fa-star"></i> ${C.testiEyebrow}</div>
-      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">${C.testiTitleLine1} <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#7dd958] to-blue-500">${C.testiHighlight}</span></h2>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">${C.testiTitleLine1} <span class="text-[#7dd958]">${C.testiHighlight}</span></h2>
       <p class="text-gray-500 text-lg">${C.testiSubtitle}</p>
     </div>
     <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -682,7 +681,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
           <span class="w-2 h-2 rounded-full bg-[#7dd958] animate-pulse"></span>
           ${C.ctaBadge}
         </div>
-        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">${C.ctaTitleLine1}<br/><span class="text-transparent bg-clip-text bg-gradient-to-r ${C.ctaTitleGradient}">${C.ctaHighlight}</span></h2>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">${C.ctaTitleLine1}<br/><span class="text-[#21b1fe]">${C.ctaHighlight}</span></h2>
         <p class="text-lg text-gray-400 mb-8 max-w-md">${C.ctaSubtitle}</p>
       </div>
       <div class="relative z-10 md:w-1/2 flex flex-col items-center md:items-end">

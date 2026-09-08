@@ -466,8 +466,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Sección</p>
               <Field label="Etiqueta (badge)"><TextInput value={content.ctaBadge} onChange={(v) => set("ctaBadge", v)} placeholder="¿List@ para el siguiente nivel?" /></Field>
               <Field label="Título (parte 1)"><TextInput value={content.ctaTitleLine1} onChange={(v) => set("ctaTitleLine1", v)} placeholder="Haz crecer tu" /></Field>
-              <Field label="Título (palabra destacada)"><TextInput value={content.ctaHighlight} onChange={(v) => set("ctaHighlight", v)} placeholder="negocio." /></Field>
-              <Field label="Título (parte degradada, opcional)"><TextInput value={content.ctaTitleGradient} onChange={(v) => set("ctaTitleGradient", v)} placeholder="con resultados reales" /></Field>
+              <Field label="Título (palabra destacada)"><TextInput value={content.ctaHighlight} onChange={(v) => set("ctaHighlight", v)} placeholder="siguiente paso?" /></Field>
               <Field label="Subtítulo"><TextInput value={content.ctaSubtitle} onChange={(v) => set("ctaSubtitle", v)} type="textarea" rows={2} /></Field>
             </div>
             <div className="border-t border-slate-200 pt-4 mt-2">
