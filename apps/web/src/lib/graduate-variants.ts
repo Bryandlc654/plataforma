@@ -115,12 +115,13 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     aboutBadgeLabel: c.badgeLabel || "Años de<br/>Experiencia",
 
     // Services / bento grid
-    servicesEyebrow: c.eyebrow || "Lo que hacemos por ti",
-    servicesEyebrowIcon: c.eyebrowIcon || "fa-solid fa-fire",
+    servicesEyebrow: c.servicesEyebrow || c.eyebrow || "Lo que hacemos por ti",
+    servicesEyebrowIcon: c.servicesEyebrowIcon || c.eyebrowIcon || "fa-solid fa-fire",
     servicesTitleLine1: c.servicesTitleLine1 || "Soluciones Integrales",
     servicesTitleLine2: c.servicesTitleLine2 || "de",
     servicesHighlight: c.servicesHighlight || "Marketing",
     servicesSubtitle:
+      c.servicesSubtitle ||
       c.subtitle ||
       "No ofrecemos paquetes genéricos. Diseñamos ecosistemas digitales a medida para escalar las ventas de tu negocio.",
     servicesCards: c.cards || [
