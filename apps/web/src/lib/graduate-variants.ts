@@ -366,7 +366,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       return `${head}
 <header class="relative z-50">
   <div class="graduate-pill w-full bg-white/85 backdrop-blur-xl border-b border-gray-200/70 shadow-sm">
-    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
       <a href="${C.brandUrl}" class="flex items-center gap-2 group">
         <div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
         <span class="text-xl font-black text-gray-900 tracking-tight">${C.brand}</span>
@@ -393,7 +393,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
   <div class="absolute top-20 right-0 w-96 h-96 bg-[#21b1fe]/15 rounded-full blur-[120px] pointer-events-none"></div>
   <div class="absolute bottom-0 left-0 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
   <div class="absolute top-0 left-1/3 w-64 h-64 bg-[#7dd958]/10 rounded-full blur-[100px] pointer-events-none"></div>
-  <div class="container mx-auto px-6 py-28 lg:py-36 grid lg:grid-cols-2 gap-16 items-center relative z-10">
+  <div class="max-w-7xl mx-auto px-6 py-28 lg:py-36 grid lg:grid-cols-2 gap-16 items-center relative z-10">
     <div class="space-y-8 max-w-xl">
       <div class="inline-flex items-center gap-2 bg-[#2d2e81]/5 border border-[#2d2e81]/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-[#2d2e81] backdrop-blur-sm">
         <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
@@ -454,7 +454,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <section id="inicio" class="relative text-white overflow-hidden pt-40 pb-28 flex items-center bg-cover bg-center bg-no-repeat" style="background-image: url('${C.heroBg}');">
   <div class="absolute inset-0 bg-black/85"></div>
   <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
-  <div class="container mx-auto px-6 relative z-10 text-center max-w-4xl">
+  <div class="max-w-4xl mx-auto px-6 relative z-10 text-center">
     <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-[#21b1fe] backdrop-blur-sm">
       <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
       ${C.tag}
@@ -492,7 +492,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <section id="inicio" class="relative text-white overflow-hidden pt-32 pb-20 lg:min-h-screen flex items-center bg-cover bg-center bg-no-repeat" style="background-image: url('${C.heroBg}');">
   <div class="absolute inset-0 bg-black/80"></div>
   <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-  <div class="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
+  <div class="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
     <div class="space-y-10 max-w-2xl pt-10 lg:pt-0">
       <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-[#7dd958] backdrop-blur-sm">
         <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
@@ -577,7 +577,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <section class="py-20 bg-[#0a0b2e] relative overflow-hidden">
   <div class="absolute top-0 right-0 w-96 h-96 bg-[#2d2e81]/25 rounded-full blur-[120px] pointer-events-none"></div>
   <div class="absolute bottom-0 left-0 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
       ${stats.map((s: any) => `
       <div class="text-center group">
@@ -595,7 +595,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       return `
 <section id="historia" class="py-24 bg-white relative overflow-hidden">
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#21b1fe]/10 rounded-full blur-[120px] pointer-events-none"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-[#21b1fe]/10 text-[#21b1fe] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="${C.timelineEyebrowIcon}"></i> ${C.timelineEyebrow}</div>
       <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.timelineTitleLine1}<br/><span class="text-[#fa7202]">${C.timelineHighlight}</span></h2>
@@ -626,7 +626,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       const members = C.members || [];
       return `
 <section id="equipo" class="py-24 bg-[#f8fafc] relative overflow-hidden">
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fa7202]/10 text-[#fa7202] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="fa-solid fa-users"></i> ${C.teamEyebrow}</div>
       <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.teamTitleLine1}<br/><span class="text-[#21b1fe]">${C.teamTitleHighlight}</span></h2>
@@ -656,7 +656,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <section id="nosotros" class="py-24 bg-white relative overflow-hidden">
   <div class="absolute top-1/2 left-0 w-72 h-72 bg-[#21b1fe]/10 rounded-full blur-[100px] -translate-y-1/2"></div>
   <div class="absolute bottom-0 right-0 w-96 h-96 bg-[#fa7202]/5 rounded-full blur-[120px]"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
       <div class="space-y-8 order-2 lg:order-1">
         <div class="inline-flex items-center gap-2">
@@ -701,7 +701,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     case "services": {
       return `
 <section id="${C.servicesId}" class="py-24 bg-[#f8fafc] relative">
-  <div class="container mx-auto px-6">
+  <div class="max-w-7xl mx-auto px-6">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
       <div class="max-w-2xl">
         <span class="text-[#fa7202] font-bold tracking-widest uppercase text-sm mb-4 inline-flex items-center gap-2"><i class="${C.servicesEyebrowIcon}"></i> ${C.servicesEyebrow}</span>
@@ -780,7 +780,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <section id="academia" class="py-32 bg-[#05051e] text-white relative overflow-hidden">
   <div class="absolute top-0 right-1/4 w-96 h-96 bg-[#2d2e81]/20 rounded-full blur-[150px] pointer-events-none"></div>
   <div class="absolute bottom-0 left-10 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 text-[#21b1fe]"><i class="${C.academiaEyebrowIcon}"></i> ${C.academiaEyebrow}</div>
@@ -822,7 +822,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       return `
 <section class="py-24 bg-white relative overflow-hidden">
   <div class="absolute top-0 right-0 w-1/3 h-full bg-gray-50 -skew-x-12 transform origin-top border-l border-gray-100 z-0"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[#7dd958]/10 text-[#7dd958] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="fa-solid fa-star"></i> ${C.testiEyebrow}</div>
       <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">${C.testiTitleLine1} <span class="text-[#7dd958]">${C.testiHighlight}</span></h2>
@@ -881,7 +881,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     case "cta":
       return `
 <section class="py-24 bg-white relative overflow-hidden">
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="bg-[#0a0b2e] rounded-[3rem] p-10 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl">
       <div class="absolute -top-32 -left-32 w-96 h-96 bg-[#21b1fe]/30 rounded-full blur-[100px]"></div>
       <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-[#7dd958]/30 rounded-full blur-[100px]"></div>
@@ -911,7 +911,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 <footer id="contacto" class="bg-[#030312] text-white pt-20 pb-10 relative overflow-hidden">
   <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#fa7202]/50 to-transparent"></div>
   <div class="absolute -top-40 -right-40 w-96 h-96 bg-[#2d2e81]/10 rounded-full blur-[100px] pointer-events-none"></div>
-  <div class="container mx-auto px-6 relative z-10">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
       <div class="lg:col-span-4 space-y-8">
         <a href="${C.footerBrandUrl}" class="flex items-center gap-3 group inline-flex">
