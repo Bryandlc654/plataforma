@@ -400,7 +400,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         ${C.tag}
       </div>
       <h1 class="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.02] tracking-tighter text-gray-900">
-        ${C.titleLine1}<br/>
+        <span class="block text-3xl md:text-4xl xl:text-5xl leading-[1.1] tracking-tight text-gray-700">${C.titleLine1}</span><br/>
         <span class="text-[#fa7202]">${C.titleHighlight}</span> ${C.titleLine2}
       </h1>
       <p class="text-lg md:text-xl text-gray-500 font-medium leading-relaxed">${C.subtitle}</p>
