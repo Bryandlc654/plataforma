@@ -399,9 +399,9 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
         ${C.tag}
       </div>
-      <h1 class="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.02] tracking-tighter text-gray-900">
-        <span class="block text-3xl md:text-4xl xl:text-5xl leading-[1.1] tracking-tight text-gray-700">${C.titleLine1}</span><br/>
-        <span class="text-[#fa7202]">${C.titleHighlight}</span> ${C.titleLine2}
+      <h1 class="font-black tracking-tighter text-gray-900">
+        <span class="block text-3xl md:text-4xl xl:text-5xl leading-[1.15] tracking-tight text-gray-700">${C.titleLine1}</span>
+        <span class="block text-5xl md:text-6xl xl:text-7xl leading-[1.02] text-gray-900"><span class="text-[#fa7202]">${C.titleHighlight}</span> ${C.titleLine2}</span>
       </h1>
       <p class="text-lg md:text-xl text-gray-500 font-medium leading-relaxed">${C.subtitle}</p>
       <div class="flex flex-col sm:flex-row gap-4">
