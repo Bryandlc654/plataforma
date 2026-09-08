@@ -244,10 +244,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <Field label="Estilo del hero">
               <select value={content.heroStyle || content.sub || "carousel"} onChange={(e) => set("heroStyle", e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="light">Claro con imagen a la derecha</option>
                 <option value="carousel">Centrado + carrusel 3D</option>
                 <option value="intro">Intro simple (sin carrusel)</option>
               </select>
             </Field>
+            {(content.heroStyle || content.sub || "carousel") === "light" && (
+              <Field label="Imagen derecha"><ImageField label="Imagen derecha" value={content.heroImage} onChange={(v) => set("heroImage", v)} /></Field>
+            )}
             <Field label="Imagen de fondo"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
             <Field label="Etiqueta (tag)"><TextInput value={content.tag} onChange={(v) => set("tag", v)} placeholder="Agencia & Academia Digital" /></Field>
             <Field label="Título (línea 1)"><TextInput value={content.titleLine1} onChange={(v) => set("titleLine1", v)} placeholder="Revoluciona el" /></Field>

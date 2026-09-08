@@ -81,6 +81,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     badgeLabel: c.badgeLabel || "Comunidad",
     badgeValue: c.badgeValue || "+500 Alumnos",
     heroStyle: c.heroStyle || c.sub || "carousel",
+    heroImage: c.heroImage || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=900&auto=format&fit=crop",
 
     // About / Nosotros
     eyebrow: c.eyebrow || "Nuestra Esencia",
@@ -386,6 +387,68 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     }
 
     case "hero": {
+      if (C.heroStyle === "light") {
+        return `
+<section id="inicio" class="relative bg-[#f4f7ff] overflow-hidden">
+  <div class="absolute top-20 right-0 w-96 h-96 bg-[#21b1fe]/15 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="absolute top-0 left-1/3 w-64 h-64 bg-[#7dd958]/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="container mx-auto px-6 py-28 lg:py-36 grid lg:grid-cols-2 gap-16 items-center relative z-10">
+    <div class="space-y-8 max-w-xl">
+      <div class="inline-flex items-center gap-2 bg-[#2d2e81]/5 border border-[#2d2e81]/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-[#2d2e81] backdrop-blur-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
+        ${C.tag}
+      </div>
+      <h1 class="text-5xl md:text-6xl xl:text-7xl font-black leading-[1.02] tracking-tighter text-gray-900">
+        ${C.titleLine1}<br/>
+        <span class="text-[#fa7202]">${C.titleHighlight}</span> ${C.titleLine2}
+      </h1>
+      <p class="text-lg md:text-xl text-gray-500 font-medium leading-relaxed">${C.subtitle}</p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="${C.primaryButtonUrl}" class="relative group flex items-center justify-center gap-3 bg-[#2d2e81] text-white font-extrabold text-lg py-4 px-8 rounded-full overflow-hidden shadow-[0_20px_40px_rgba(45,46,129,0.35)] hover:shadow-[0_20px_50px_rgba(45,46,129,0.45)] transition-all hover:scale-105">
+          <span class="relative z-10">${C.primaryButtonText}</span>
+          <i class="fa-solid fa-arrow-right relative z-10 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+        <a href="${C.secondaryButtonUrl}" class="flex items-center justify-center gap-3 bg-white border border-gray-200 hover:border-[#fa7202]/40 hover:text-[#fa7202] text-gray-700 font-bold text-lg py-4 px-8 rounded-full shadow-sm transition-all">
+          <i class="fa-regular fa-circle-play"></i>
+          ${C.secondaryButtonText}
+        </a>
+      </div>
+      <div class="flex flex-wrap gap-6 pt-2">
+        <div class="flex items-center gap-2 text-sm font-semibold text-gray-500">
+          <div class="w-8 h-8 rounded-lg bg-[#7dd958]/10 border border-[#7dd958]/20 flex items-center justify-center text-[#58a83a]"><i class="fa-solid fa-certificate text-sm"></i></div>
+          Certificado avalado
+        </div>
+        <div class="flex items-center gap-2 text-sm font-semibold text-gray-500">
+          <div class="w-8 h-8 rounded-lg bg-[#21b1fe]/10 border border-[#21b1fe]/20 flex items-center justify-center text-[#21b1fe]"><i class="fa-solid fa-users text-sm"></i></div>
+          +500 graduados
+        </div>
+        <div class="flex items-center gap-2 text-sm font-semibold text-gray-500">
+          <div class="w-8 h-8 rounded-lg bg-[#fa7202]/10 border border-[#fa7202]/20 flex items-center justify-center text-[#fa7202]"><i class="fa-solid fa-bolt text-sm"></i></div>
+          100% práctico
+        </div>
+      </div>
+    </div>
+    <div class="relative">
+      <div class="absolute -inset-4 bg-gradient-to-tr from-[#2d2e81]/10 via-[#21b1fe]/10 to-[#7dd958]/10 rounded-[2.5rem] blur-2xl pointer-events-none"></div>
+      <div class="relative z-10 bg-white rounded-[2rem] p-3 shadow-2xl border border-gray-100">
+        <img src="${C.heroImage}" alt="Certificaciones Graduate" class="w-full h-[400px] lg:h-[520px] object-cover rounded-[1.6rem]"/>
+      </div>
+      <div class="absolute -bottom-6 left-6 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7dd958] to-[#68bd49] text-white flex items-center justify-center shadow-lg"><i class="${C.badgeIcon}"></i></div>
+        <div>
+          <p class="font-black text-gray-900 text-lg leading-none">${C.badgeValue}</p>
+          <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-1">${C.badgeLabel}</p>
+        </div>
+      </div>
+      <div class="absolute top-8 -right-4 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-[#21b1fe]/10 border border-[#21b1fe]/20 flex items-center justify-center text-[#21b1fe]"><i class="fa-solid fa-shield-halved text-sm"></i></div>
+        <p class="font-bold text-gray-800 text-sm">Programas<br/><span class="text-gray-400 font-medium">actualizados</span></p>
+      </div>
+    </div>
+  </div>
+</section>`;
+      }
       if (C.heroStyle === "intro") {
         return `
 <section id="inicio" class="relative text-white overflow-hidden pt-40 pb-28 flex items-center bg-cover bg-center bg-no-repeat" style="background-image: url('${C.heroBg}');">
