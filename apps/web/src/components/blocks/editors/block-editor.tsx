@@ -605,7 +605,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
       case "header":
         if (content.variant === "graduate") {
           return <>
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Graduate (píldora flotante con navegación + CTA)</div>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Graduate (barra superior de contacto + menú con logo y CTA)</div>
             <Field label="Nombre del logo"><TextInput value={content.brand} onChange={(v) => set("brand", v)} placeholder="graduate" /></Field>
             <Field label="Inicial del logo (círculo)"><TextInput value={content.brandInitial} onChange={(v) => set("brandInitial", v)} placeholder="g" /></Field>
             <Field label="Logo (imagen, opcional)"><ImageField label="Logo" value={content.logoUrl} onChange={(v) => set("logoUrl", v)} /></Field>
@@ -616,6 +616,13 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Botón CTA</p>
               <Field label="Texto"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="Agendar Cita" /></Field>
               <Field label="URL"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
+            </div>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Barra superior (fondo #2d2e81)</p>
+              <label className="flex items-center gap-2 text-sm text-slate-600 mb-3"><input type="checkbox" checked={content.topbarEnabled !== false} onChange={(e) => set("topbarEnabled", e.target.checked)} className="h-4 w-4 accent-primary rounded border-slate-300" /> Mostrar barra superior</label>
+              <Field label="Teléfono"><TextInput value={content.topbarPhone} onChange={(v) => set("topbarPhone", v)} placeholder="+593 99 123 4567" /></Field>
+              <Field label="Correo"><TextInput value={content.topbarEmail} onChange={(v) => set("topbarEmail", v)} placeholder="hola@graduate.ec" /></Field>
+              <Field label="Redes sociales"><ArrayEditor value={content.topbarSocials} onChange={(v) => set("topbarSocials", v)} fields={[{ key: "icon", label: "Icono", type: "icon", brand: true }, { key: "url", label: "URL" }]} /></Field>
             </div>
           </>;
         }

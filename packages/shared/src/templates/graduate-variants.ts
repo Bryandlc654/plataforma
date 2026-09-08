@@ -33,6 +33,15 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     brand: c.brand || c.companyName || "Graduate.",
     brandUrl: c.brandUrl || c.logoUrl || "#",
     logoImage: c.logo || c.logoUrl || c.logoImage || site?.logoUrl || "",
+    topbarEnabled: c.topbarEnabled !== false,
+    topbarPhone: c.topbarPhone || "+593 99 123 4567",
+    topbarEmail: c.topbarEmail || "hola@graduate.ec",
+    topbarSocials: c.topbarSocials || [
+      { icon: "fa-brands fa-facebook-f", url: "#" },
+      { icon: "fa-brands fa-instagram", url: "#" },
+      { icon: "fa-brands fa-whatsapp", url: "#" },
+      { icon: "fa-brands fa-tiktok", url: "#" },
+    ],
     links: c.links || [],
     ctaText: c.ctaText || "Hablemos",
     ctaUrl: c.ctaUrl || "#contacto",
@@ -364,12 +373,24 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         { label: "Servicios", url: "#servicios" },
         { label: "Academia", url: "#academia" },
       ];
-      return `${head}
+return `${head}
 <header class="absolute top-0 left-0 w-full z-50">
+  ${C.topbarEnabled ? `
+  <div class="w-full bg-[#2d2e81] text-white/90">
+    <div class="max-w-7xl mx-auto px-6 py-2 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[13px] font-semibold">
+        ${C.topbarPhone ? `<a href="tel:${C.topbarPhone.replace(/\s/g, "")}" class="flex items-center gap-2 hover:text-[#7dd958] transition-colors"><i class="fa-solid fa-phone-volume text-[#7dd958]"></i>${C.topbarPhone}</a>` : ""}
+        ${C.topbarEmail ? `<a href="mailto:${C.topbarEmail}" class="flex items-center gap-2 hover:text-[#7dd958] transition-colors"><i class="fa-solid fa-envelope text-[#fa7202]"></i>${C.topbarEmail}</a>` : ""}
+      </div>
+      <div class="flex items-center gap-2">
+        ${C.topbarSocials.map((s: any) => `<a href="${s.url || "#"}" class="w-7 h-7 rounded-md bg-white/10 hover:bg-[#fa7202] flex items-center justify-center text-xs hover:text-white transition-colors" aria-label="${s.icon || "social"}"><i class="${s.icon || "fa-brands fa-facebook-f"}"></i></a>`).join("")}
+      </div>
+    </div>
+  </div>` : ""}
   <div class="graduate-pill w-full bg-white/85 backdrop-blur-xl border-b border-gray-200/70 shadow-sm">
     <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
       <a href="${C.brandUrl}" class="flex items-center gap-2 group">
-        ${C.logoImage ? `<img src="${C.logoImage}" alt="${C.brand}" class="h-9 md:h-11 w-auto object-contain group-hover:scale-105 transition-transform"/>` : `<div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
+        ${C.logoImage ? `<img src="${C.logoImage}" alt="${C.brand}" class="h-11 md:h-14 w-auto object-contain group-hover:scale-105 transition-transform"/>` : `<div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
         <span class="text-xl font-black text-gray-900 tracking-tight">${C.brand}</span>`}
       </a>
       <nav class="hidden md:flex space-x-1 font-medium text-gray-600 text-sm">
@@ -432,9 +453,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     </div>
     <div class="relative">
       <div class="absolute -inset-4 bg-gradient-to-tr from-[#2d2e81]/10 via-[#21b1fe]/10 to-[#7dd958]/10 rounded-[2.5rem] blur-2xl pointer-events-none"></div>
-      <div class="relative z-10 bg-white rounded-[2rem] p-3 shadow-2xl border border-gray-100">
-        <img src="${C.heroImage}" alt="Certificaciones Graduate" class="w-full h-[400px] lg:h-[520px] object-cover rounded-[1.6rem]"/>
-      </div>
+      <img src="${C.heroImage}" alt="Certificaciones Graduate" class="relative z-10 w-full h-[420px] lg:h-[540px] object-cover rounded-[2rem] shadow-2xl"/>
       <div class="absolute -bottom-6 left-6 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7dd958] to-[#68bd49] text-white flex items-center justify-center shadow-lg"><i class="${C.badgeIcon}"></i></div>
         <div>
