@@ -485,8 +485,7 @@ async function main() {
 
   const existing = await p.template.findFirst({ where: { name: tpl.name } });
   if (existing) {
-    console.log("Eliminando plantilla existente para regenerarla...");
-    await p.template.delete({ where: { id: existing.id } });
+    console.log("Actualizando plantilla existente (se conserva el id para no romper vinculación de sitios)...");
   }
 
   let cat = await p.templateCategory.findUnique({ where: { slug: tpl.category.toLowerCase().replace(/\s+/g, "-") } });
@@ -500,15 +499,30 @@ async function main() {
     });
   }
 
-  const template = await p.template.create({
-    data: {
-      name: tpl.name,
-      description: tpl.description,
-      categoryId: cat.id,
-      isActive: true,
-      tags: JSON.stringify([tpl.category.toLowerCase()]),
-    },
-  });
+  let template;
+  if (existing) {
+    await p.templatePage.deleteMany({ where: { templateId: existing.id } });
+    template = await p.template.update({
+      where: { id: existing.id },
+      data: {
+        name: tpl.name,
+        description: tpl.description,
+        categoryId: cat.id,
+        isActive: true,
+        tags: JSON.stringify([tpl.category.toLowerCase()]),
+      },
+    });
+  } else {
+    template = await p.template.create({
+      data: {
+        name: tpl.name,
+        description: tpl.description,
+        categoryId: cat.id,
+        isActive: true,
+        tags: JSON.stringify([tpl.category.toLowerCase()]),
+      },
+    });
+  }
 
   for (const page of tpl.pages) {
     const tp = await p.templatePage.create({
