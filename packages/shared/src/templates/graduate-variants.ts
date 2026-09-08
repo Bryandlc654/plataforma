@@ -31,7 +31,8 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     // Brand / header
     brandInitial: c.brandInitial || "G",
     brand: c.brand || c.companyName || "Graduate.",
-    brandUrl: c.logoUrl || "#",
+    brandUrl: c.brandUrl || c.logoUrl || "#",
+    logoImage: c.logo || c.logoUrl || c.logoImage || site?.logoUrl || "",
     links: c.links || [],
     ctaText: c.ctaText || "Hablemos",
     ctaUrl: c.ctaUrl || "#contacto",
@@ -293,7 +294,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     // Footer
     footerBrandInitial: c.brandInitial || "G",
     footerBrand: c.brand || "Graduate.",
-    footerBrandUrl: c.logoUrl || "#",
+    footerBrandUrl: c.brandUrl || "#",
     footerDesc:
       c.brandDesc ||
       "Agencia y academia de marketing digital. Transformamos la manera en que los negocios crecen y se comunican en Ecuador.",
@@ -368,8 +369,8 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
   <div class="graduate-pill w-full bg-white/85 backdrop-blur-xl border-b border-gray-200/70 shadow-sm">
     <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
       <a href="${C.brandUrl}" class="flex items-center gap-2 group">
-        <div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
-        <span class="text-xl font-black text-gray-900 tracking-tight">${C.brand}</span>
+        ${C.logoImage ? `<img src="${C.logoImage}" alt="${C.brand}" class="h-9 md:h-11 w-auto object-contain group-hover:scale-105 transition-transform"/>` : `<div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
+        <span class="text-xl font-black text-gray-900 tracking-tight">${C.brand}</span>`}
       </a>
       <nav class="hidden md:flex space-x-1 font-medium text-gray-600 text-sm">
         ${navLinks.map((l: any) => `<a href="${l.url}" class="px-4 py-2 rounded-full hover:text-[#fa7202] hover:bg-[#fa7202]/5 transition-colors">${l.label}</a>`).join("")}
