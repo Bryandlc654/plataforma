@@ -240,7 +240,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
       case "hero":
         if (content.variant === "graduate") {
           return <>
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Graduate (fondo oscuro + carrusel 3D)</div>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Graduate (fondo oscuro, sin degradados de texto)</div>
+            <Field label="Estilo del hero">
+              <select value={content.heroStyle || content.sub || "carousel"} onChange={(e) => set("heroStyle", e.target.value)}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="carousel">Centrado + carrusel 3D</option>
+                <option value="intro">Intro simple (sin carrusel)</option>
+              </select>
+            </Field>
             <Field label="Imagen de fondo"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
             <Field label="Etiqueta (tag)"><TextInput value={content.tag} onChange={(v) => set("tag", v)} placeholder="Agencia & Academia Digital" /></Field>
             <Field label="Título (línea 1)"><TextInput value={content.titleLine1} onChange={(v) => set("titleLine1", v)} placeholder="Revoluciona el" /></Field>
@@ -829,7 +836,38 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           ]} /></Field>
         </>;
 
+      case "timeline":
+        return <>
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Línea de tiempo Graduate (historia de la marca)</div>
+          <Field label="Etiqueta (eyebrow)"><TextInput value={content.timelineEyebrow} onChange={(v) => set("timelineEyebrow", v)} placeholder="Nuestra Historia" /></Field>
+          <Field label="Icono del eyebrow"><IconPicker value={content.timelineEyebrowIcon} onChange={(v) => set("timelineEyebrowIcon", v)} /></Field>
+          <Field label="Título (parte 1)"><TextInput value={content.timelineTitleLine1} onChange={(v) => set("timelineTitleLine1", v)} placeholder="El camino que nos ha" /></Field>
+          <Field label="Título (palabra destacada)"><TextInput value={content.timelineHighlight} onChange={(v) => set("timelineHighlight", v)} placeholder="traído aquí." /></Field>
+          <Field label="Hitos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+            { key: "year", label: "Año (ej: 2019)" },
+            { key: "icon", label: "Icono (ej: fa-solid fa-lightbulb)", type: "icon" },
+            { key: "title", label: "Título del hito" },
+            { key: "desc", label: "Descripción", type: "textarea" },
+            { key: "color", label: "Color (año e icono)", type: "select", options: [{ label: "Naranja", value: "text-[#fa7202]" }, { label: "Azul", value: "text-[#21b1fe]" }, { label: "Verde", value: "text-[#7dd958]" }, { label: "Azul oscuro", value: "text-[#2d2e81]" }] },
+            { key: "borderColor", label: "Borde del punto", type: "select", options: [{ label: "Naranja", value: "border-[#fa7202]" }, { label: "Azul", value: "border-[#21b1fe]" }, { label: "Verde", value: "border-[#7dd958]" }, { label: "Azul oscuro", value: "border-[#2d2e81]" }] },
+          ]} /></Field>
+        </>;
+
       case "team":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Equipo Graduate (grilla de tarjetas)</div>
+            <Field label="Etiqueta (eyebrow)"><TextInput value={content.teamEyebrow} onChange={(v) => set("teamEyebrow", v)} placeholder="Conócenos" /></Field>
+            <Field label="Título (parte 1)"><TextInput value={content.teamTitleLine1} onChange={(v) => set("teamTitleLine1", v)} placeholder="El talento detrás de" /></Field>
+            <Field label="Título (palabra destacada)"><TextInput value={content.teamTitleHighlight} onChange={(v) => set("teamTitleHighlight", v)} placeholder="Graduate." /></Field>
+            <Field label="Miembros"><ArrayEditor value={content.members} onChange={(v) => set("members", v)} fields={[
+              { key: "name", label: "Nombre" },
+              { key: "role", label: "Cargo" },
+              { key: "image", label: "Foto", type: "image" },
+              { key: "roleColor", label: "Color cargo", type: "select", options: [{ label: "Azul oscuro", value: "text-[#2d2e81]" }, { label: "Naranja", value: "text-[#fa7202]" }, { label: "Azul", value: "text-[#21b1fe]" }, { label: "Verde", value: "text-[#7dd958]" }] },
+            ]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Nuestro equipo" /></Field>
           <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} /></Field>
@@ -1036,6 +1074,17 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "stats":
+        if (content.variant === "graduate") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Indicadores Graduate (banda oscura)</div>
+            <Field label="Indicadores"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Icono (ej: fa-solid fa-medal)", type: "icon" },
+              { key: "value", label: "Valor (ej: +500)" },
+              { key: "label", label: "Etiqueta" },
+              { key: "color", label: "Color del número", type: "select", options: [{ label: "Naranja", value: "text-[#fa7202]" }, { label: "Azul", value: "text-[#21b1fe]" }, { label: "Verde", value: "text-[#7dd958]" }, { label: "Azul oscuro", value: "text-[#2d2e81]" }] },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Indicadores Indigo</div>

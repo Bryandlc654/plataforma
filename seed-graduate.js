@@ -292,44 +292,58 @@ const tpl = {
 
         { type: "hero", content: {
           variant: "graduate",
+          heroStyle: "intro",
           backgroundImage: IMG.heroBg,
           tag: "Quiénes Somos",
           titleLine1: "Más que una",
           titleHighlight: "Agencia",
           titleLine2: "somos tu equipo.",
           subtitle: "Somos una comunidad de estrategas, creativos y docentes obsesionados con resultados. Acompañamos a emprendedores y empresas ecuatorianas a crecer con marketing digital y educación práctica.",
-          primaryButtonText: "Nuestros valores",
-          primaryButtonUrl: "#valores",
+          primaryButtonText: "Conoce al equipo",
+          primaryButtonUrl: "#equipo",
           secondaryButtonText: "Hablemos",
-          secondaryButtonUrl: "/#contacto",
-          cards: [
-            { badge: "Nuestro Equipo", color: "#fa7202", image: IMG.aboutMain, title: "Estrategas & Creativos", alt: "Equipo Graduate" },
-            { badge: "Agencia Digital", color: "#21b1fe", image: IMG.cardAgency, title: "Marketing de Resultados", alt: "Agencia Digital" },
-            { badge: "Academia", color: "#7dd958", image: IMG.cardCreative, title: "Educación Práctica", alt: "Academia Graduate" },
-          ],
+          secondaryButtonUrl: "#contacto",
           badgeIcon: "fa-solid fa-user-group",
           badgeLabel: "Comunidad",
           badgeValue: "+500 Marcas",
         }, sortOrder: 1 },
 
-        { type: "about", content: {
+        { type: "stats", content: {
           variant: "graduate",
-          eyebrow: "Nuestra Historia",
-          aboutTitleLine1: "Nacimos para",
-          aboutTitleHighlight1: "hacer crecer",
-          aboutTitleHighlight2: "a los tuyos.",
-          description: 'Academia Graduate nació de una idea simple: <strong>democratizar el marketing digital en Ecuador</strong>. Hoy somos una agencia y academia que combina estrategia de resultados con formación 100% práctica, para que tu negocio no dependa de nadie para vender en digital.',
-          features: [
-            { icon: "fa-solid fa-bullseye", color: "#7dd958", title: "Misión", desc: "Que cada negocio ecuatoriano aproveche el poder del marketing digital sin importar su tamaño." },
-            { icon: "fa-solid fa-eye", color: "#21b1fe", title: "Visión", desc: "Ser la comunidad de crecimiento digital más grande y confiable de la región." },
+          items: [
+            { icon: "fa-solid fa-medal", value: "+5", label: "Años de experiencia", color: "text-[#fa7202]" },
+            { icon: "fa-solid fa-rocket", value: "+500", label: "Marcas impulsadas", color: "text-[#21b1fe]" },
+            { icon: "fa-solid fa-arrow-trend-up", value: "40%", label: "Crecimiento promedio", color: "text-[#7dd958]" },
+            { icon: "fa-solid fa-headset", value: "24/7", label: "Acompañamiento", color: "text-[#2d2e81]" },
           ],
-          mainImage: IMG.aboutMain,
-          mainImageAlt: "Equipo Graduate",
-          secondaryImage: IMG.aboutSecondary,
-          secondaryImageAlt: "Colaboración en equipo",
-          badgeValue: "+5",
-          badgeLabel: "Años de<br/>Experiencia",
         }, sortOrder: 2 },
+
+        { type: "timeline", content: {
+          variant: "graduate",
+          timelineEyebrow: "Nuestra Historia",
+          timelineEyebrowIcon: "fa-solid fa-route",
+          timelineTitleLine1: "El camino que nos ha",
+          timelineHighlight: "traído aquí.",
+          items: [
+            { year: "2019", icon: "fa-solid fa-lightbulb", color: "text-[#fa7202]", borderColor: "border-[#fa7202]", title: "El inicio", desc: "Nacemos como un pequeño estudio de redes sociales para negocios locales de Quito." },
+            { year: "2021", icon: "fa-solid fa-users", color: "text-[#21b1fe]", borderColor: "border-[#21b1fe]", title: "Primer gran equipo", desc: "Sumamos estrategas, creativos y community managers. Superamos los 100 clientes activos." },
+            { year: "2023", icon: "fa-solid fa-graduation-cap", color: "text-[#7dd958]", borderColor: "border-[#7dd958]", title: "Nace la Academia", desc: "Lanzamos los primeros cursos de Meta Ads y marketing digital con metodología 100% práctica." },
+            { year: "2026", icon: "fa-solid fa-rocket", color: "text-[#2d2e81]", borderColor: "border-[#2d2e81]", title: "Hoy, hacia el futuro", desc: "Una comunidad de +500 marcas y miles de alumnos creciendo junto a nosotros." },
+          ],
+        }, sortOrder: 3 },
+
+        { type: "team", content: {
+          variant: "graduate",
+          teamEyebrow: "Conócenos",
+          teamTitleLine1: "El talento detrás de",
+          teamTitleHighlight: "Graduate.",
+          members: [
+            { name: "Alejandro Flores", role: "Fundador & CEO", image: "https://i.pravatar.cc/200?img=68", roleColor: "text-[#fa7202]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-instagram", url: "#" }] },
+            { name: "Valentina Paz", role: "Directora Creativa", image: "https://i.pravatar.cc/200?img=47", roleColor: "text-[#21b1fe]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-x-twitter", url: "#" }] },
+            { name: "Mateo Andrade", role: "Estratega Meta Ads", image: "https://i.pravatar.cc/200?img=59", roleColor: "text-[#7dd958]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-tiktok", url: "#" }] },
+            { name: "Camila Ruiz", role: "Head de Academia", image: "https://i.pravatar.cc/200?img=45", roleColor: "text-[#2d2e81]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-instagram", url: "#" }] },
+          ],
+        }, sortOrder: 4 },
 
         { type: "services", content: {
           variant: "graduate",
@@ -361,8 +375,8 @@ const tpl = {
               desc: "Nos mantenemos al día con cada cambio de algoritmo y nueva tendencia para que tu marca siempre esté un paso adelante.",
               blob: "from-orange-100",
               linkColor: "text-[#fa7202]",
-              linkText: "Nuestros servicios",
-              linkUrl: "#valores",
+              linkText: "Nuestros valores",
+              linkUrl: "#servicios",
             },
             {
               icon: "fa-solid fa-chart-line",
@@ -373,8 +387,8 @@ const tpl = {
               desc: "No trabajamos con \"likes\". Nos importan las ventas, los leads y el ROI. Cada estrategia se mide y se optimiza con datos reales.",
               blob: "from-sky-100",
               linkColor: "text-[#21b1fe]",
-              linkText: "Conoce la historia",
-              linkUrl: "#nosotros",
+              linkText: "Conoce al equipo",
+              linkUrl: "#equipo",
             },
             {
               colSpan: "lg:col-span-2",
@@ -387,7 +401,7 @@ const tpl = {
               buttonUrl: "/#academia",
             },
           ],
-        }, sortOrder: 3 },
+        }, sortOrder: 5 },
 
         { type: "testimonials", content: {
           variant: "graduate",
@@ -430,7 +444,7 @@ const tpl = {
             { classes: "text-xl md:text-2xl font-bold italic text-gray-600", title: "NaturaEcuador", accent: "", color: "#2d2e81" },
             { classes: "text-xl md:text-2xl font-black font-mono", title: "Tech", accent: "Corp", color: "#7dd958" },
           ],
-        }, sortOrder: 4 },
+        }, sortOrder: 6 },
 
         { type: "cta", content: {
           variant: "graduate",
@@ -442,7 +456,7 @@ const tpl = {
           cardSubtitle: "Te asesoramos sin compromiso sobre la mejor estrategia para ti.",
           whatsappButtonText: "Iniciar chat",
           whatsappNumber: "593000000000",
-        }, sortOrder: 5 },
+        }, sortOrder: 7 },
 
         { type: "footer", content: {
           variant: "graduate",
@@ -474,7 +488,7 @@ const tpl = {
             { label: "Privacidad", url: "#" },
           ],
           giantText: "GRADUATE",
-        }, sortOrder: 6 },
+        }, sortOrder: 8 },
       ]
     }
   ]

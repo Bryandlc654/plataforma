@@ -80,6 +80,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     badgeIcon: c.badgeIcon || "fa-solid fa-graduation-cap",
     badgeLabel: c.badgeLabel || "Comunidad",
     badgeValue: c.badgeValue || "+500 Alumnos",
+    heroStyle: c.heroStyle || c.sub || "carousel",
 
     // About / Nosotros
     eyebrow: c.eyebrow || "Nuestra Esencia",
@@ -319,6 +320,37 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       { label: "Privacidad", url: "#" },
     ],
     giantText: c.giantText || "GRADUATE",
+
+    // Stats band
+    stats: c.stats || c.items || [
+      { value: "+5", label: "Años de Experiencia", color: "text-[#fa7202]", icon: "fa-solid fa-medal" },
+      { value: "+500", label: "Marcas Impulsadas", color: "text-[#21b1fe]", icon: "fa-solid fa-rocket" },
+      { value: "40%", label: "Crecimiento Promedio", color: "text-[#7dd958]", icon: "fa-solid fa-arrow-trend-up" },
+      { value: "24/7", label: "Acompañamiento", color: "text-[#fa7202]", icon: "fa-solid fa-headset" },
+    ],
+
+    // Timeline / Historia
+    timelineEyebrow: c.timelineEyebrow || "Nuestra Historia",
+    timelineEyebrowIcon: c.timelineEyebrowIcon || "fa-solid fa-route",
+    timelineTitleLine1: c.timelineTitleLine1 || "El camino que nos ha",
+    timelineHighlight: c.timelineHighlight || "traído aquí.",
+    timeline: c.timeline || c.items || [
+      { year: "2019", icon: "fa-solid fa-lightbulb", color: "text-[#fa7202]", borderColor: "border-[#fa7202]", title: "El inicio", desc: "Nacemos como un pequeño estudio de redes sociales para negocios locales de Quito." },
+      { year: "2021", icon: "fa-solid fa-users", color: "text-[#21b1fe]", borderColor: "border-[#21b1fe]", title: "Primer gran equipo", desc: "Sumamos estrategas, creativos y community managers. Superamos los 100 clientes activos." },
+      { year: "2023", icon: "fa-solid fa-graduation-cap", color: "text-[#7dd958]", borderColor: "border-[#7dd958]", title: "Nace la Academia", desc: "Lanzamos los primeros cursos de Meta Ads y marketing digital con metodología 100% práctica." },
+      { year: "2026", icon: "fa-solid fa-rocket", color: "text-[#2d2e81]", borderColor: "border-[#2d2e81]", title: "Hoy, hacia el futuro", desc: "Una comunidad de +500 marcas y miles de alumnos creciendo junto a nosotros." },
+    ],
+
+    // Team
+    teamEyebrow: c.teamEyebrow || "Conócenos",
+    teamTitleLine1: c.teamTitleLine1 || "El talento detrás de",
+    teamTitleHighlight: c.teamTitleHighlight || "Graduate.",
+    members: c.members || c.items || [
+      { name: "Alejandro Flores", role: "Fundador & CEO", image: "https://i.pravatar.cc/150?img=68", roleColor: "text-[#fa7202]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-instagram", url: "#" }] },
+      { name: "Valentina Paz", role: "Directora Creativa", image: "https://i.pravatar.cc/150?img=47", roleColor: "text-[#21b1fe]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-x-twitter", url: "#" }] },
+      { name: "Mateo Andrade", role: "Estratega Meta Ads", image: "https://i.pravatar.cc/150?img=59", roleColor: "text-[#7dd958]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-tiktok", url: "#" }] },
+      { name: "Camila Ruiz", role: "Head de Academia", image: "https://i.pravatar.cc/150?img=45", roleColor: "text-[#2d2e81]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-instagram", url: "#" }] },
+    ],
   };
 
   switch (type) {
@@ -353,6 +385,40 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     }
 
     case "hero": {
+      if (C.heroStyle === "intro") {
+        return `
+<section id="inicio" class="relative text-white overflow-hidden pt-40 pb-28 flex items-center bg-cover bg-center bg-no-repeat" style="background-image: url('${C.heroBg}');">
+  <div class="absolute inset-0 bg-black/85"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+  <div class="container mx-auto px-6 relative z-10 text-center max-w-4xl">
+    <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase text-[#21b1fe] backdrop-blur-sm">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#7dd958] animate-pulse"></span>
+      ${C.tag}
+    </div>
+    <h1 class="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tighter mt-8">
+      ${C.titleLine1}<br/>
+      <span class="text-[#fa7202]">${C.titleHighlight}</span><br/>
+      ${C.titleLine2}
+    </h1>
+    <p class="text-lg md:text-xl text-gray-400 font-medium leading-relaxed max-w-2xl mx-auto mt-8">${C.subtitle}</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+      <a href="${C.primaryButtonUrl}" class="relative group flex items-center justify-center gap-3 bg-white text-gray-900 font-extrabold text-lg py-4 px-8 rounded-full overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all hover:scale-105">
+        <span class="relative z-10">${C.primaryButtonText}</span>
+        <i class="fa-solid fa-arrow-right relative z-10 group-hover:translate-x-1 transition-transform"></i>
+      </a>
+      <a href="${C.secondaryButtonUrl}" class="flex items-center justify-center gap-3 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-white/40 text-white font-bold text-lg py-4 px-8 rounded-full backdrop-blur-sm transition-all">
+        <i class="fa-regular fa-circle-play"></i>
+        ${C.secondaryButtonText}
+      </a>
+    </div>
+    <div class="mt-12 inline-flex items-center gap-3 bg-white/10 backdrop-blur-md py-3 px-6 rounded-full border border-white/10">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#7dd958] to-[#68bd49] text-white flex items-center justify-center text-sm shadow-lg"><i class="${C.badgeIcon}"></i></div>
+      <p class="font-extrabold text-white text-lg leading-none">${C.badgeValue}</p>
+      <p class="text-xs text-blue-200 uppercase tracking-widest font-bold">${C.badgeLabel}</p>
+    </div>
+  </div>
+</section>`;
+      }
       const cardPos = [
         "transform:translate3d(0,0,0) scale(1.1);z-index:30;opacity:1",
         "transform:translate3d(40px,-20px,-50px) scale(0.9) rotate(8deg);z-index:20;opacity:0.6",
@@ -439,6 +505,85 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initGraduateCarousel)}else{initGraduateCarousel()}
   })();
 </script>`;
+    }
+
+    case "stats": {
+      const stats = C.stats || [];
+      return `
+<section class="py-20 bg-[#0a0b2e] relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-96 h-96 bg-[#2d2e81]/25 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+      ${stats.map((s: any) => `
+      <div class="text-center group">
+        ${s.icon ? `<div class="w-12 h-12 mx-auto mb-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-lg ${s.color || "text-[#fa7202]"} group-hover:border-white/25 transition-colors"><i class="${s.icon}"></i></div>` : ""}
+        <div class="text-4xl md:text-5xl font-black ${s.color || "text-[#fa7202]"}">${s.value || ""}</div>
+        <div class="mt-2 text-gray-400 font-semibold uppercase tracking-wider text-sm">${s.label || ""}</div>
+      </div>`).join("")}
+    </div>
+  </div>
+</section>`;
+    }
+
+    case "timeline": {
+      const items = C.timeline || [];
+      return `
+<section id="historia" class="py-24 bg-white relative overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#21b1fe]/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-[#21b1fe]/10 text-[#21b1fe] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="${C.timelineEyebrowIcon}"></i> ${C.timelineEyebrow}</div>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.timelineTitleLine1}<br/><span class="text-[#fa7202]">${C.timelineHighlight}</span></h2>
+    </div>
+    <div class="relative">
+      <div class="absolute left-5 md:left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-gradient-to-b from-[#2d2e81]/20 via-[#fa7202]/40 to-[#7dd958]/30"></div>
+      <div class="space-y-8">
+        ${items.map((it: any, i: number) => `
+        <div class="relative md:grid md:grid-cols-2 md:gap-16 items-center">
+          <div class="absolute left-5 md:left-1/2 top-6 -translate-x-1/2 w-10 h-10 rounded-2xl bg-[#0a0b2e] border-2 ${it.borderColor || "border-[#fa7202]"} shadow-xl flex items-center justify-center z-10">
+            <i class="${it.icon || "fa-solid fa-bolt"} ${it.color || "text-[#fa7202]"} text-sm"></i>
+          </div>
+          <div class="pl-16 md:pl-0 ${i % 2 ? "md:col-start-2 md:pl-16" : "md:col-start-1 md:pr-16 md:text-right"}">
+            <div class="bg-gray-50 border border-gray-100 rounded-3xl p-7 hover:shadow-xl transition-all group">
+              <span class="inline-block text-sm font-black uppercase tracking-widest ${it.color || "text-[#2d2e81]"} mb-2">${it.year || ""}</span>
+              <h4 class="text-xl font-bold text-gray-900 mb-2">${it.title || ""}</h4>
+              <p class="text-sm text-gray-500 leading-relaxed">${it.desc || ""}</p>
+            </div>
+          </div>
+        </div>`).join("")}
+      </div>
+    </div>
+  </div>
+</section>`;
+    }
+
+    case "team": {
+      const members = C.members || [];
+      return `
+<section id="equipo" class="py-24 bg-[#f8fafc] relative overflow-hidden">
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-[#fa7202]/10 text-[#fa7202] rounded-full font-bold uppercase tracking-widest text-sm mb-4"><i class="fa-solid fa-users"></i> ${C.teamEyebrow}</div>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.teamTitleLine1}<br/><span class="text-[#21b1fe]">${C.teamTitleHighlight}</span></h2>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      ${members.map((m: any) => `
+      <div class="bg-white rounded-3xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+        <div class="relative w-24 h-24 mx-auto mb-5 rounded-2xl overflow-hidden border-4 border-white shadow-lg group-hover:scale-105 transition-transform">
+          <img src="${m.image || ""}" alt="${m.name || ""}" class="w-full h-full object-cover"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0a0b2e]/40 to-transparent"></div>
+        </div>
+        <h4 class="font-bold text-gray-900">${m.name || ""}</h4>
+        <p class="text-sm font-bold mt-1 ${m.roleColor || "text-[#2d2e81]"}">${m.role || ""}</p>
+        <div class="flex justify-center gap-2 mt-4">
+          ${(m.socials || [{ icon: "fa-brands fa-twitter", url: "#" }, { icon: "fa-brands fa-linkedin-in", url: "#" }]).map((s: any) => `
+          <a href="${s.url || "#"}" class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#2d2e81] hover:border-[#2d2e81] hover:text-white transition-all text-xs"><i class="${s.icon || "fa-brands fa-linkedin-in"}"></i></a>`).join("")}
+        </div>
+      </div>`).join("")}
+    </div>
+  </div>
+</section>`;
     }
 
     case "about": {
