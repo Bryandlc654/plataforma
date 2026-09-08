@@ -125,6 +125,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       c.servicesSubtitle ||
       c.subtitle ||
       "No ofrecemos paquetes genéricos. Diseñamos ecosistemas digitales a medida para escalar las ventas de tu negocio.",
+    servicesId: c.servicesId || "servicios",
     servicesCards: c.cards || [
       {
         colSpan: "lg:col-span-2",
@@ -636,7 +637,7 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
 
     case "services": {
       return `
-<section id="servicios" class="py-24 bg-[#f8fafc] relative">
+<section id="${C.servicesId}" class="py-24 bg-[#f8fafc] relative">
   <div class="container mx-auto px-6">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
       <div class="max-w-2xl">
