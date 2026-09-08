@@ -403,49 +403,6 @@ const tpl = {
           ],
         }, sortOrder: 5 },
 
-        { type: "testimonials", content: {
-          variant: "graduate",
-          testiEyebrow: "Casos de Éxito",
-          testiTitleLine1: "Resultados que hablan por",
-          testiHighlight: "sí solos.",
-          testiSubtitle: "Empresas y emprendedores que ya confían en nosotros y escalaron sus ventas en Ecuador.",
-          testimonials: [
-            {
-              large: true,
-              gradient: "from-[#2d2e81] to-[#0a0b2e]",
-              starColor: "text-[#fa7202]",
-              quote: '"Desde que aplicaron su estrategia y tomé su taller de ventas, nuestra facturación en la tienda física creció un 40% en apenas dos meses."',
-              name: "María Fernanda L.",
-              role: "Dueña de Boutique (Quito)",
-              roleColor: "text-blue-200",
-              avatar: IMG.avatar1,
-              online: true,
-            },
-            {
-              starColor: "text-[#21b1fe]",
-              borderHover: "hover:border-[#21b1fe]/30",
-              quote: '"El curso de Meta Ads fue un antes y un después. Por fin entiendo cómo funciona el Pixel y mis campañas ahora sí son rentables."',
-              name: "Carlos M.",
-              role: "Emprendedor E-commerce",
-              avatar: IMG.avatar2,
-            },
-            {
-              starColor: "text-[#fa7202]",
-              borderHover: "hover:border-[#fa7202]/30",
-              quote: '"La paciencia y el conocimiento del equipo Graduate es increíble. Nuestra clínica dental duplicó sus pacientes en 3 meses."',
-              name: "Dra. Andrea V.",
-              role: "Centro Odontológico",
-              avatar: IMG.avatar3,
-            },
-          ],
-          brands: [
-            { classes: "text-xl md:text-2xl font-black font-serif", title: "BRAND", accent: "ONE", color: "#2d2e81" },
-            { classes: "text-xl md:text-2xl font-black tracking-tighter", title: "STUDIO", accent: ".", color: "#fa7202" },
-            { classes: "text-xl md:text-2xl font-bold italic text-gray-600", title: "NaturaEcuador", accent: "", color: "#2d2e81" },
-            { classes: "text-xl md:text-2xl font-black font-mono", title: "Tech", accent: "Corp", color: "#7dd958" },
-          ],
-        }, sortOrder: 6 },
-
         { type: "cta", content: {
           variant: "graduate",
           ctaBadge: "Comunidad Abierta",
@@ -456,7 +413,7 @@ const tpl = {
           cardSubtitle: "Te asesoramos sin compromiso sobre la mejor estrategia para ti.",
           whatsappButtonText: "Iniciar chat",
           whatsappNumber: "593000000000",
-        }, sortOrder: 7 },
+        }, sortOrder: 6 },
 
         { type: "footer", content: {
           variant: "graduate",
@@ -488,7 +445,7 @@ const tpl = {
             { label: "Privacidad", url: "#" },
           ],
           giantText: "GRADUATE",
-        }, sortOrder: 8 },
+        }, sortOrder: 7 },
       ]
     }
   ]
