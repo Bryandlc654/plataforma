@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ImageField } from "./image-field";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -20,9 +21,9 @@ function TextInput({ value, onChange, placeholder, type = "text", rows }: { valu
     className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-300" />;
 }
 
-function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: any[]) => void; fields: Array<{ key: string; label: string; type?: string }> }) {
+function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: any[]) => void; fields: Array<{ key: string; label: string; type?: string; options?: { label: string; value: string }[]; brand?: boolean }> }) {
   const items = value || [];
-  const add = () => { const item: any = {}; fields.forEach((f) => (item[f.key] = "")); onChange([...items, item]); };
+  const add = () => { const item: any = {}; fields.forEach((f) => (item[f.key] = f.type === "checkbox" ? false : "")); onChange([...items, item]); };
   const update = (idx: number, key: string, val: any) => onChange(items.map((it, i) => i === idx ? { ...it, [key]: val } : it));
   const remove = (idx: number) => onChange(items.filter((_, i) => i !== idx));
 
@@ -46,6 +47,29 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
                     <input type="checkbox" checked={!!item[f.key]} onChange={(e) => update(i, f.key, e.target.checked)} className="h-4 w-4 accent-primary rounded border-slate-300" />
                     <span className="text-sm text-slate-600">{f.label}</span>
                   </label>
+                ) : f.type === "icon" ? (
+                  <div key={f.key} className="space-y-1">
+                    <label className="block text-xs font-medium text-slate-500">{f.label}</label>
+                    <IconPicker value={item[f.key]} onChange={(v) => update(i, f.key, v)} brand={f.brand} />
+                  </div>
+                ) : f.type === "select" ? (
+                  <div key={f.key} className="space-y-1">
+                    <label className="block text-xs font-medium text-slate-500">{f.label}</label>
+                    <select value={item[f.key] || ""} onChange={(e) => update(i, f.key, e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all bg-white">
+                      <option value="">—</option>
+                      {(f.options || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                ) : f.type === "color" ? (
+                  <div key={f.key}>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">{f.label}</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(item[f.key] || "") ? item[f.key] : "#2d2e81"}
+                        onChange={(e) => update(i, f.key, e.target.value)} className="h-10 w-14 rounded-lg border border-slate-200 cursor-pointer flex-shrink-0" />
+                      <TextInput value={item[f.key]} onChange={(v) => update(i, f.key, v)} placeholder="#2d2e81" />
+                    </div>
+                  </div>
                 ) : (
                   <TextInput key={f.key} value={item[f.key]} onChange={(v) => update(i, f.key, v)} placeholder={f.label} type={f.type || "text"} />
                 )
@@ -57,6 +81,106 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
       <button onClick={add} className="mt-3 w-full rounded-xl border-2 border-dashed border-slate-200 py-2.5 text-xs font-medium text-slate-400 hover:text-primary-600 hover:border-primary-200 hover:bg-primary-50/30 transition-all">
         + Agregar item
       </button>
+    </div>
+  );
+}
+
+const FA_ICONS = [
+  { value: "fa-solid fa-bullhorn", label: "Megáfono" },
+  { value: "fa-solid fa-fire", label: "Fuego" },
+  { value: "fa-solid fa-bolt", label: "Rayo" },
+  { value: "fa-solid fa-rocket", label: "Cohete" },
+  { value: "fa-solid fa-chart-line", label: "Gráfico de línea" },
+  { value: "fa-solid fa-chart-pie", label: "Gráfico de pastel" },
+  { value: "fa-solid fa-arrow-trend-up", label: "Tendencia al alza" },
+  { value: "fa-solid fa-comments", label: "Comentarios" },
+  { value: "fa-solid fa-thumbs-up", label: "Me gusta" },
+  { value: "fa-solid fa-heart", label: "Corazón" },
+  { value: "fa-solid fa-star", label: "Estrella" },
+  { value: "fa-solid fa-trophy", label: "Trofeo" },
+  { value: "fa-solid fa-award", label: "Premio" },
+  { value: "fa-solid fa-graduation-cap", label: "Graduación" },
+  { value: "fa-solid fa-book-open", label: "Libro" },
+  { value: "fa-solid fa-laptop-code", label: "Laptop con código" },
+  { value: "fa-solid fa-code", label: "Código" },
+  { value: "fa-solid fa-mobile-screen", label: "Móvil" },
+  { value: "fa-solid fa-globe", label: "Globo" },
+  { value: "fa-solid fa-bullseye", label: "Diana" },
+  { value: "fa-solid fa-crosshairs", label: "Precisión" },
+  { value: "fa-solid fa-pen-nib", label: "Pluma" },
+  { value: "fa-solid fa-palette", label: "Paleta" },
+  { value: "fa-solid fa-camera", label: "Cámara" },
+  { value: "fa-solid fa-video", label: "Video" },
+  { value: "fa-solid fa-clapperboard", label: "Claqueta" },
+  { value: "fa-solid fa-wand-magic-sparkles", label: "Varita mágica" },
+  { value: "fa-solid fa-user-plus", label: "Agregar usuario" },
+  { value: "fa-solid fa-users", label: "Usuarios" },
+  { value: "fa-solid fa-users-gear", label: "Usuarios con engranaje" },
+  { value: "fa-solid fa-handshake", label: "Apretón de manos" },
+  { value: "fa-solid fa-phone", label: "Teléfono" },
+  { value: "fa-solid fa-envelope", label: "Sobre" },
+  { value: "fa-solid fa-cart-shopping", label: "Carrito" },
+  { value: "fa-solid fa-bag-shopping", label: "Bolsa de compras" },
+  { value: "fa-solid fa-credit-card", label: "Tarjeta de crédito" },
+  { value: "fa-solid fa-money-bill-trend-up", label: "Dinero y crecimiento" },
+  { value: "fa-solid fa-coins", label: "Monedas" },
+  { value: "fa-solid fa-circle-check", label: "Check en círculo" },
+  { value: "fa-solid fa-check", label: "Check" },
+  { value: "fa-solid fa-lightbulb", label: "Bombilla" },
+  { value: "fa-solid fa-magnifying-glass", label: "Lupa" },
+  { value: "fa-solid fa-gear", label: "Engranaje" },
+  { value: "fa-solid fa-shield-halved", label: "Escudo" },
+  { value: "fa-solid fa-lock", label: "Candado" },
+  { value: "fa-solid fa-calendar-check", label: "Calendario con check" },
+  { value: "fa-solid fa-clock", label: "Reloj" },
+  { value: "fa-solid fa-paper-plane", label: "Avión de papel" },
+  { value: "fa-solid fa-sliders", label: "Controles / ajustes" },
+  { value: "fa-solid fa-spinner", label: "Carga / dinámico" },
+  { value: "fa-solid fa-download", label: "Descarga" },
+  { value: "fa-solid fa-receipt", label: "Recibo / factura" },
+];
+
+const FA_BRAND_ICONS = [
+  { value: "fa-brands fa-facebook-f", label: "Facebook" },
+  { value: "fa-brands fa-instagram", label: "Instagram" },
+  { value: "fa-brands fa-whatsapp", label: "WhatsApp" },
+  { value: "fa-brands fa-tiktok", label: "TikTok" },
+  { value: "fa-brands fa-x-twitter", label: "X (Twitter)" },
+  { value: "fa-brands fa-youtube", label: "YouTube" },
+  { value: "fa-brands fa-linkedin-in", label: "LinkedIn" },
+  { value: "fa-brands fa-telegram", label: "Telegram" },
+  { value: "fa-brands fa-discord", label: "Discord" },
+  { value: "fa-brands fa-github", label: "GitHub" },
+  { value: "fa-brands fa-spotify", label: "Spotify" },
+  { value: "fa-brands fa-google", label: "Google" },
+];
+
+function IconPicker({ value, onChange, brand = false }: { value?: string; onChange: (v: string) => void; brand?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const list = brand ? FA_BRAND_ICONS : FA_ICONS;
+  const matched = list.some((i) => i.value === value);
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => setOpen(!open)}
+          className="flex-shrink-0 inline-flex items-center justify-center w-12 h-11 text-lg text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">
+          <i className={`${value || "fa-solid fa-icons"}`} />
+        </button>
+        <TextInput value={value || ""} onChange={onChange} placeholder={matched ? "Icono Font Awesome" : "Clase personalizada (fa-...)"} />
+      </div>
+      {open && (
+        <div className="mt-2 rounded-xl border border-slate-200 bg-white shadow-lg p-2">
+          <div className="grid grid-cols-8 gap-1 max-h-44 overflow-y-auto pr-1">
+            {list.map((ic) => (
+              <button key={ic.value} type="button" title={ic.label} onClick={() => { onChange(ic.value); setOpen(false); }}
+                className={`p-2 rounded-lg text-center ${value === ic.value ? "bg-primary-100 text-primary-700 ring-2 ring-primary-300" : "text-slate-500 hover:bg-slate-100"}`}>
+                <i className={`${ic.value} text-base`} />
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setOpen(false)} className="mt-2 w-full py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600">Cerrar</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -131,7 +255,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tarjetas del carrusel</p>
               <Field label="Tarjetas"><ArrayEditor value={content.cards} onChange={(v) => set("cards", v)} fields={[
                 { key: "badge", label: "Etiqueta (ej: Emprendedor)" },
-                { key: "color", label: "Color de la etiqueta (hex)" },
+                { key: "color", label: "Color de la etiqueta", type: "color" },
                 { key: "title", label: "Título" },
                 { key: "image", label: "Imagen", type: "image" },
                 { key: "alt", label: "Texto alternativo" },
@@ -139,7 +263,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             </div>
             <div className="border-t border-slate-200 pt-4 mt-2">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Insignia flotante</p>
-              <Field label="Icono (clase Font Awesome)"><TextInput value={content.badgeIcon} onChange={(v) => set("badgeIcon", v)} placeholder="fa-solid fa-graduation-cap" /></Field>
+              <Field label="Icono"><IconPicker value={content.badgeIcon} onChange={(v) => set("badgeIcon", v)} /></Field>
               <Field label="Etiqueta"><TextInput value={content.badgeLabel} onChange={(v) => set("badgeLabel", v)} placeholder="Comunidad" /></Field>
               <Field label="Valor"><TextInput value={content.badgeValue} onChange={(v) => set("badgeValue", v)} placeholder="+500 Alumnos" /></Field>
             </div>
@@ -179,7 +303,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Servicios Graduate (grilla bento con tarjetas editables)</div>
             <Field label="Etiqueta (eyebrow)"><TextInput value={content.servicesEyebrow} onChange={(v) => set("servicesEyebrow", v)} placeholder="Lo que hacemos por ti" /></Field>
-            <Field label="Icono del eyebrow (Font Awesome)"><TextInput value={content.servicesEyebrowIcon} onChange={(v) => set("servicesEyebrowIcon", v)} placeholder="fa-solid fa-fire" /></Field>
+            <Field label="Icono del eyebrow"><IconPicker value={content.servicesEyebrowIcon} onChange={(v) => set("servicesEyebrowIcon", v)} /></Field>
             <Field label="Título (parte 1)"><TextInput value={content.servicesTitleLine1} onChange={(v) => set("servicesTitleLine1", v)} placeholder="Soluciones Integrales" /></Field>
             <Field label="Título (parte 2, pequeña)"><TextInput value={content.servicesTitleLine2} onChange={(v) => set("servicesTitleLine2", v)} placeholder="de" /></Field>
             <Field label="Título (palabra destacada)"><TextInput value={content.servicesHighlight} onChange={(v) => set("servicesHighlight", v)} placeholder="Marketing" /></Field>
@@ -187,17 +311,43 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <div className="border-t border-slate-200 pt-4 mt-2">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tarjetas del bento</p>
               <Field label="Tarjetas"><ArrayEditor value={content.cards} onChange={(v) => set("cards", v)} fields={[
-                { key: "colSpan", label: "Columnas (ej: lg:col-span-2 o vacío)" },
-                { key: "dark", label: "Tarjeta oscura (true/false)", type: "text" },
+                { key: "colSpan", label: "Ancho de la tarjeta", type: "select", options: [{ label: "1 columna", value: "" }, { label: "2 columnas (ancho doble)", value: "lg:col-span-2" }] },
+                { key: "dark", label: "Tarjeta oscura (para equipos y empresas)", type: "checkbox" },
                 { key: "badge", label: "Etiqueta (tarjeta oscura)" },
-                { key: "icon", label: "Icono (Font Awesome)" },
-                { key: "iconBg", label: "Gradiente del icono (ej: from-[#2d2e81] to-blue-600)" },
-                { key: "iconShadow", label: "Sombra del icono (ej: shadow-blue-500/30)" },
+                { key: "icon", label: "Icono", type: "icon" },
+                { key: "iconBg", label: "Gradiente del icono", type: "select", options: [
+                  { label: "Azul oscuro", value: "from-[#2d2e81] to-blue-600" },
+                  { label: "Naranja", value: "from-[#fa7202] to-[#ffb347]" },
+                  { label: "Celeste", value: "from-[#21b1fe] to-sky-400" },
+                  { label: "Verde lima", value: "from-[#7dd958] to-[#4ea837]" },
+                  { label: "Oscuro", value: "from-[#0a0b2e] to-[#2d2e81]" },
+                ] },
+                { key: "iconShadow", label: "Sombra del icono", type: "select", options: [
+                  { label: "Azul", value: "shadow-blue-500/30" },
+                  { label: "Naranja", value: "shadow-orange-500/30" },
+                  { label: "Celeste", value: "shadow-sky-500/30" },
+                  { label: "Verde", value: "shadow-green-500/30" },
+                ] },
                 { key: "title", label: "Título" },
-                { key: "titleSize", label: "Tamaño del título (ej: text-3xl)" },
+                { key: "titleSize", label: "Tamaño del título", type: "select", options: [
+                  { label: "Grande (text-3xl)", value: "text-3xl" },
+                  { label: "Mediano (text-2xl)", value: "text-2xl" },
+                  { label: "Pequeño (text-xl)", value: "text-xl" },
+                ] },
                 { key: "desc", label: "Descripción", type: "textarea" },
-                { key: "blob", label: "Blob de fondo (from-blue-100)" },
-                { key: "linkColor", label: "Color del enlace (text-[hex])" },
+                { key: "blob", label: "Blob de fondo", type: "select", options: [
+                  { label: "Azul", value: "from-blue-100" },
+                  { label: "Naranja", value: "from-orange-100" },
+                  { label: "Celeste", value: "from-sky-100" },
+                  { label: "Verde", value: "from-green-100" },
+                  { label: "Gris", value: "from-gray-100" },
+                ] },
+                { key: "linkColor", label: "Color del enlace", type: "select", options: [
+                  { label: "Naranja", value: "text-[#fa7202]" },
+                  { label: "Celeste", value: "text-[#21b1fe]" },
+                  { label: "Azul", value: "text-[#2d2e81]" },
+                  { label: "Verde", value: "text-[#7dd958]" },
+                ] },
                 { key: "linkText", label: "Texto del enlace" },
                 { key: "linkUrl", label: "URL del enlace" },
                 { key: "buttonText", label: "Texto del botón (oscura)" },
@@ -609,7 +759,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <Field label="Descripción de la marca"><TextInput value={content.brandDesc} onChange={(v) => set("brandDesc", v)} type="textarea" rows={2} /></Field>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Redes sociales</p>
             <Field label="Redes"><ArrayEditor value={content.socials} onChange={(v) => set("socials", v)} fields={[
-              { key: "icon", label: "Icono (fa-brands ...)" },
+              { key: "icon", label: "Icono", type: "icon", brand: true },
               { key: "url", label: "URL" },
               { key: "hover", label: "Hover (class tailwind)" },
             ]} /></Field>
@@ -726,7 +876,7 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Academia Graduate (tarjetas de cursos)</div>
             <Field label="Etiqueta (eyebrow)"><TextInput value={content.academiaEyebrow} onChange={(v) => set("academiaEyebrow", v)} placeholder="Nuestra Academia" /></Field>
-            <Field label="Icono del eyebrow (Font Awesome)"><TextInput value={content.academiaEyebrowIcon} onChange={(v) => set("academiaEyebrowIcon", v)} placeholder="fa-solid fa-graduation-cap" /></Field>
+            <Field label="Icono del eyebrow"><IconPicker value={content.academiaEyebrowIcon} onChange={(v) => set("academiaEyebrowIcon", v)} /></Field>
             <Field label="Título (parte 1)"><TextInput value={content.academiaTitleLine1} onChange={(v) => set("academiaTitleLine1", v)} placeholder="Aprende con los" /></Field>
             <Field label="Título (palabra destacada)"><TextInput value={content.academiaHighlight} onChange={(v) => set("academiaHighlight", v)} placeholder="mejores." /></Field>
             <Field label="Texto del lado derecho"><TextInput value={content.academiaRightText} onChange={(v) => set("academiaRightText", v)} type="textarea" rows={2} /></Field>
@@ -853,8 +1003,8 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <div className="border-t border-slate-200 pt-4 mt-2">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Características</p>
               <Field label="Características"><ArrayEditor value={content.features} onChange={(v) => set("features", v)} fields={[
-                { key: "icon", label: "Icono (Font Awesome)" },
-                { key: "color", label: "Color (hex)" },
+                { key: "icon", label: "Icono", type: "icon" },
+                { key: "color", label: "Color", type: "color" },
                 { key: "title", label: "Título" },
                 { key: "desc", label: "Descripción", type: "textarea" },
               ]} /></Field>
