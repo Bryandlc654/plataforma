@@ -364,23 +364,23 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
         { label: "Academia", url: "#academia" },
       ];
       return `${head}
-<header class="relative z-50 bg-[#0a0b2e] py-6 flex justify-center">
-  <div class="container max-w-5xl mx-auto px-4">
-    <div class="graduate-pill bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-6 py-3 flex justify-between items-center shadow-2xl">
+<header class="relative z-50">
+  <div class="graduate-pill w-full bg-white/85 backdrop-blur-xl border-b border-gray-200/70 shadow-sm">
+    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
       <a href="${C.brandUrl}" class="flex items-center gap-2 group">
         <div class="w-8 h-8 bg-gradient-to-br from-[#fa7202] to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform">${C.brandInitial}</div>
-        <span class="text-xl font-black text-white tracking-tight">${C.brand}</span>
+        <span class="text-xl font-black text-gray-900 tracking-tight">${C.brand}</span>
       </a>
-      <nav class="hidden md:flex space-x-1 font-medium text-gray-300 text-sm">
-        ${navLinks.map((l: any) => `<a href="${l.url}" class="px-4 py-2 rounded-full hover:bg-white/10 hover:text-white transition-colors">${l.label}</a>`).join("")}
+      <nav class="hidden md:flex space-x-1 font-medium text-gray-600 text-sm">
+        ${navLinks.map((l: any) => `<a href="${l.url}" class="px-4 py-2 rounded-full hover:text-[#fa7202] hover:bg-[#fa7202]/5 transition-colors">${l.label}</a>`).join("")}
       </nav>
       <div class="hidden sm:block">
-        <a href="${C.ctaUrl}" class="bg-white text-gray-900 font-bold text-sm py-2.5 px-6 rounded-full hover:bg-gray-200 transition-colors shadow-lg shadow-white/10">${C.ctaText}</a>
+        <a href="${C.ctaUrl}" class="bg-[#2d2e81] text-white font-bold text-sm py-2.5 px-6 rounded-full hover:bg-[#23246b] transition-colors shadow-lg shadow-[#2d2e81]/20">${C.ctaText}</a>
       </div>
-      <button class="md:hidden text-white text-xl" aria-label="Menú" type="button" onclick="this.closest('.graduate-pill').classList.toggle('graduate-menu-open')"><i class="fa-solid fa-bars"></i></button>
+      <button class="md:hidden text-gray-900 text-xl" aria-label="Menú" type="button" onclick="this.closest('.graduate-pill').classList.toggle('graduate-menu-open')"><i class="fa-solid fa-bars"></i></button>
     </div>
-    <nav class="graduate-mobile-nav hidden md:hidden flex-col gap-1 mt-2 p-3 rounded-2xl bg-[#0a0b2e]/95 border border-white/10 backdrop-blur-xl">
-      ${navLinks.map((l: any) => `<a href="${l.url}" class="px-4 py-2.5 rounded-xl hover:bg-white/10 text-white font-medium text-sm">${l.label}</a>`).join("")}
+    <nav class="graduate-mobile-nav hidden md:hidden flex-col gap-1 px-6 pb-5 bg-white/95 backdrop-blur-xl border-t border-gray-100">
+      ${navLinks.map((l: any) => `<a href="${l.url}" class="px-4 py-2.5 rounded-xl hover:bg-gray-100 text-gray-800 font-medium text-sm">${l.label}</a>`).join("")}
     </nav>
   </div>
 </header>`;
