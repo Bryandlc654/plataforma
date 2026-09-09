@@ -240,6 +240,10 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       },
     ],
 
+    // Clients / Formación
+    clientsTitle: c.clientsTitle || "Formación de calidad",
+    clients: c.clients || [],
+
     // Testimonials
     testiEyebrow: c.testiEyebrow || "Casos de Éxito",
     testiTitleLine1: c.testiTitleLine1 || "Resultados que hablan por",
@@ -453,7 +457,7 @@ return `${head}
     </div>
     <div class="relative">
       <div class="absolute -inset-4 bg-gradient-to-tr from-[#2d2e81]/10 via-[#21b1fe]/10 to-[#7dd958]/10 rounded-[2.5rem] blur-2xl pointer-events-none"></div>
-      <img src="${C.heroImage}" alt="Certificaciones Graduate" class="relative z-10 w-full h-[420px] lg:h-[540px] object-cover"/>
+      <img src="${C.heroImage}" alt="Certificaciones Graduate" class="relative z-10 w-full h-auto"/>
       <div class="absolute -bottom-6 left-6 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7dd958] to-[#68bd49] text-white flex items-center justify-center shadow-lg"><i class="${C.badgeIcon}"></i></div>
         <div>
@@ -589,6 +593,22 @@ return `${head}
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initGraduateCarousel)}else{initGraduateCarousel()}
   })();
 </script>`;
+    }
+
+    case "clients": {
+      const logos = C.clients || [];
+      if (!logos.length) return null;
+      return `
+<section class="bg-[#2d2e81] relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#fa7202]/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-6 py-20 text-center">
+    <h2 class="text-white text-3xl md:text-4xl font-black tracking-tight mb-12">${C.clientsTitle}</h2>
+    <div class="rounded-3xl border-2 border-white/60 py-12 px-6 md:px-12 bg-transparent grid grid-cols-2 md:grid-cols-4 gap-10 items-center justify-items-center">
+      ${logos.map((l: any) => `<img src="${l.image}" alt="${l.alt || "Logo"}" class="h-12 md:h-16 w-auto object-contain rounded-xl bg-white px-3 py-2 opacity-90 hover:opacity-100 transition-opacity"/>`).join("")}
+    </div>
+  </div>
+</section>`;
     }
 
     case "stats": {
