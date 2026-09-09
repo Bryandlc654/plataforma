@@ -32,6 +32,7 @@ export const BLOCK_META: Record<string, { label: string; icon: string; descripti
   benefits: { label: "Beneficios", icon: "Sparkles", description: "Ventajas o beneficios en carrusel" },
   process: { label: "Proceso", icon: "GitBranch", description: "Pasos de un proceso o metodología" },
   timeline: { label: "Línea de tiempo", icon: "CalendarClock", description: "Historia o hitos en línea de tiempo" },
+  clients: { label: "Logos / Formación", icon: "Award", description: "Sección con título y logos en rectángulo (fondo #2d2e81)" },
   image: { label: "Imagen", icon: "Image", description: "Imagen con texto alternativo, enlace y caption" },
   video: { label: "Video", icon: "Play", description: "Video de YouTube o Vimeo embebido" },
   "review-form": { label: "Formulario Reseñas", icon: "Star", description: "Captador de reseñas para clientes reales" },

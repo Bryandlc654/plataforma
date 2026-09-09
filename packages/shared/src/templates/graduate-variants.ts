@@ -363,6 +363,10 @@ export function getGraduateHtml(type: string, c: any, apiBaseUrl?: string, site?
       { name: "Mateo Andrade", role: "Estratega Meta Ads", image: "https://i.pravatar.cc/150?img=59", roleColor: "text-[#7dd958]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-tiktok", url: "#" }] },
       { name: "Camila Ruiz", role: "Head de Academia", image: "https://i.pravatar.cc/150?img=45", roleColor: "text-[#2d2e81]", socials: [{ icon: "fa-brands fa-linkedin-in", url: "#" }, { icon: "fa-brands fa-instagram", url: "#" }] },
     ],
+
+    // Clients / Logos
+    clientsTitle: c.clientsTitle || "Formación de calidad",
+    clients: c.clients || [],
   };
 
   switch (type) {
@@ -589,6 +593,22 @@ return `${head}
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initGraduateCarousel)}else{initGraduateCarousel()}
   })();
 </script>`;
+    }
+
+    case "clients": {
+      const logos = C.clients || [];
+      if (!logos.length) return null;
+      return `
+<section class="bg-[#2d2e81] relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#fa7202]/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-6 py-20 text-center">
+    <h2 class="text-white text-3xl md:text-4xl font-black tracking-tight mb-12">${C.clientsTitle}</h2>
+    <div class="rounded-3xl border-2 border-white/60 py-12 px-6 md:px-12 bg-transparent grid grid-cols-2 md:grid-cols-4 gap-10 items-center justify-items-center">
+      ${logos.map((l: any) => `<img src="${l.image}" alt="${l.alt || "Logo"}" class="h-12 md:h-16 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"/>`).join("")}
+    </div>
+  </div>
+</section>`;
     }
 
     case "stats": {

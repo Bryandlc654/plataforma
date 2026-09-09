@@ -55,6 +55,17 @@ const tpl = {
           badgeValue: "+500",
         }, sortOrder: 1 },
 
+        { type: "clients", content: {
+          variant: "graduate",
+          clientsTitle: "Formación de calidad",
+          clients: [
+            { image: "https://placehold.co/200x80/ffffff/6b7280?text=Graduate", alt: "Graduate" },
+            { image: "https://placehold.co/200x80/ffffff/6b7280?text=Meta Ads", alt: "Meta Ads" },
+            { image: "https://placehold.co/200x80/ffffff/6b7280?text=E-commerce", alt: "E-commerce" },
+            { image: "https://placehold.co/200x80/ffffff/6b7280?text=IA", alt: "Inteligencia Artificial" },
+          ],
+        }, sortOrder: 2 },
+
         { type: "about", content: {
           variant: "graduate",
           eyebrow: "Nuestra Esencia",
@@ -72,7 +83,7 @@ const tpl = {
           secondaryImageAlt: "Trabajo en equipo",
           badgeValue: "+5",
           badgeLabel: "Años de<br/>Experiencia",
-        }, sortOrder: 2 },
+        }, sortOrder: 3 },
 
         { type: "services", content: {
           variant: "graduate",
