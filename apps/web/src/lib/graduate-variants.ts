@@ -453,7 +453,7 @@ return `${head}
     </div>
     <div class="relative">
       <div class="absolute -inset-4 bg-gradient-to-tr from-[#2d2e81]/10 via-[#21b1fe]/10 to-[#7dd958]/10 rounded-[2.5rem] blur-2xl pointer-events-none"></div>
-      <img src="${C.heroImage}" alt="Certificaciones Graduate" class="relative z-10 w-full h-[420px] lg:h-[540px] object-cover rounded-[2rem] shadow-2xl"/>
+      <img src="${C.heroImage}" alt="Certificaciones Graduate" class="relative z-10 w-full h-[420px] lg:h-[540px] object-cover"/>
       <div class="absolute -bottom-6 left-6 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7dd958] to-[#68bd49] text-white flex items-center justify-center shadow-lg"><i class="${C.badgeIcon}"></i></div>
         <div>
