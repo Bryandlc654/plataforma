@@ -933,13 +933,13 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
             <div className="border-t border-slate-200 pt-4 mt-2">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Cursos</p>
               <Field label="Cursos"><ArrayEditor value={content.courses} onChange={(v) => set("courses", v)} fields={[
-                { key: "number", label: "Número (ej: 01)" },
-                { key: "numberColor", label: "Color del número (ej: group-hover:text-[#2d2e81])" },
-                { key: "circleColor", label: "Color del círculo (ej: group-hover:bg-[#c4fca5])" },
+                { key: "image", label: "Imagen (URL)" },
+                { key: "badge", label: "Etiqueta superior (ej: Más solicitado)" },
                 { key: "title", label: "Título" },
-                { key: "titleColor", label: "Color del título (ej: group-hover:text-[#21b1fe])" },
                 { key: "desc", label: "Descripción", type: "textarea" },
-                { key: "badgesText", label: "Badges (uno por línea; [HL] = destacado; [I] = solo icono)" },
+                { key: "duration", label: "Duración (ej: 12 Horas)" },
+                { key: "buttonText", label: "Texto del botón (ej: Inscríbete)" },
+                { key: "buttonUrl", label: "URL del botón" },
               ]} /></Field>
             </div>
           </>;

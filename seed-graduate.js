@@ -66,6 +66,44 @@ const tpl = {
           ],
         }, sortOrder: 2 },
 
+        { type: "features", content: {
+          variant: "graduate",
+          academiaEyebrow: "Nuestra Formación",
+          academiaEyebrowIcon: "fa-solid fa-graduation-cap",
+          academiaTitleLine1: "Nuestros",
+          academiaHighlight: "Cursos.",
+          academiaRightText: "Programas 100% prácticos que te preparan para vender, comunicar y crecer en el mundo digital.",
+          academiaLinkText: "Ver todos los programas",
+          academiaLinkUrl: "#contacto",
+          courses: [
+            {
+              image: "https://placehold.co/600x400/f97316/white?text=Meta+Ads",
+              badge: "Más solicitado",
+              title: "Master en Meta Ads",
+              desc: "Domina campañas rentables en Facebook e Instagram. Segmentación, Pixel y optimización real.",
+              duration: "12 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
+            },
+            {
+              image: "https://placehold.co/600x400/2d2e81/white?text=Marketing+Digital",
+              title: "Marketing Digital Ecuador",
+              desc: "Aprende a vender con WhatsApp Business, contenido y la mejor estrategia para el mercado local.",
+              duration: "16 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
+            },
+            {
+              image: "https://placehold.co/600x400/e86602/white?text=Contenido",
+              title: "Estrategia de Contenido",
+              desc: "Crea un plan de contenido infalible para vender con Reels, TikToks y posts de alto impacto.",
+              duration: "10 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
+            },
+          ],
+        }, sortOrder: 3 },
+
         { type: "about", content: {
           variant: "graduate",
           eyebrow: "Nuestra Esencia",
@@ -83,7 +121,7 @@ const tpl = {
           secondaryImageAlt: "Trabajo en equipo",
           badgeValue: "+5",
           badgeLabel: "Años de<br/>Experiencia",
-        }, sortOrder: 3 },
+        }, sortOrder: 4 },
 
         { type: "services", content: {
           variant: "graduate",
@@ -141,54 +179,7 @@ const tpl = {
               buttonUrl: "#contacto",
             },
           ],
-        }, sortOrder: 3 },
-
-        { type: "features", content: {
-          variant: "graduate",
-          academiaEyebrow: "Nuestra Academia",
-          academiaEyebrowIcon: "fa-solid fa-graduation-cap",
-          academiaTitleLine1: "Aprende con los",
-          academiaHighlight: "mejores.",
-          academiaRightText: "Capacítate tú mismo para dominar el ecosistema digital de tu negocio. Metodología 100% práctica y aplicable.",
-          academiaLinkText: "Explorar todos los programas",
-          academiaLinkUrl: "#contacto",
-          courses: [
-            {
-              number: "01",
-              numberColor: "group-hover:text-[#2d2e81]",
-              title: "Master en Meta Ads",
-              titleColor: "group-hover:text-[#21b1fe]",
-              desc: "Domina campañas rentables en Facebook e Instagram. Segmentación y Pixel.",
-              badges: [
-                { text: "12 Horas", icon: "fa-regular fa-clock" },
-                { text: "Online", icon: "fa-solid fa-globe", dot: "bg-[#7dd958]" },
-                { text: "Meta Blueprint", icon: "fa-solid fa-certificate", highlight: true, bg: "bg-[#f4d0b3]", textColor: "text-[#8b3d1d]" },
-              ],
-            },
-            {
-              number: "02",
-              numberColor: "group-hover:text-[#21b1fe]",
-              title: "Marketing Digital Ecuador",
-              titleColor: "group-hover:text-[#2d2e81]",
-              desc: "Aprende a vender con Redis, WhatsApp Business y la mejor estrategia para el mercado local.",
-              badges: [
-                { text: "16 Horas", icon: "fa-regular fa-clock" },
-                { text: "Presencial", icon: "fa-solid fa-location-dot" },
-              ],
-            },
-            {
-              number: "03",
-              numberColor: "group-hover:text-[#21b1fe]",
-              title: "Estrategia de Contenido",
-              titleColor: "group-hover:text-[#fa7202]",
-              desc: "Crea un plan de contenido infalible para vender con Reels, TikToks y posts de alto impacto.",
-              badges: [
-                { text: "Diploma", icon: "fa-solid fa-award", highlight: true, bg: "bg-[#02136f]", textColor: "text-white" },
-                { text: "Flexible", icon: "fa-regular fa-calendar-check" },
-              ],
-            },
-          ],
-        }, sortOrder: 4 },
+        }, sortOrder: 5 },
 
         { type: "testimonials", content: {
           variant: "graduate",
@@ -231,7 +222,7 @@ const tpl = {
             { classes: "text-xl md:text-2xl font-bold italic text-gray-600", title: "NaturaEcuador", accent: "", color: "#2d2e81" },
             { classes: "text-xl md:text-2xl font-black font-mono", title: "Tech", accent: "Corp", color: "#7dd958" },
           ],
-        }, sortOrder: 5 },
+        }, sortOrder: 6 },
 
         { type: "cta", content: {
           variant: "graduate",
@@ -244,7 +235,7 @@ const tpl = {
           cardSubtitle: "Te asesoramos sin compromiso sobre la mejor estrategia para ti.",
           whatsappButtonText: "Iniciar chat",
           whatsappNumber: "593000000000",
-        }, sortOrder: 6 },
+        }, sortOrder: 7 },
 
         { type: "footer", content: {
           variant: "graduate",
@@ -276,7 +267,7 @@ const tpl = {
             { label: "Privacidad", url: "#" },
           ],
           giantText: "GRADUATE",
-        }, sortOrder: 7 },
+        }, sortOrder: 8 },
       ]
     },
     {
@@ -493,47 +484,38 @@ const tpl = {
 
         { type: "features", content: {
           variant: "graduate",
-          academiaEyebrow: "Nuestra Academia",
+          academiaEyebrow: "Nuestra Formación",
           academiaEyebrowIcon: "fa-solid fa-graduation-cap",
-          academiaTitleLine1: "Aprende con los",
-          academiaHighlight: "mejores.",
+          academiaTitleLine1: "Nuestros",
+          academiaHighlight: "Cursos.",
           academiaRightText: "Metodología 100% práctica: después de cada clase aplicas lo aprendido en un caso real. Acceso a la comunidad, mentoría y certificado avalado.",
           academiaLinkText: "Ver todo el catálogo",
           academiaLinkUrl: "#cursos",
           courses: [
             {
-              number: "01",
-              numberColor: "group-hover:text-[#2d2e81]",
+              image: "https://placehold.co/600x400/f97316/white?text=Meta+Ads",
+              badge: "Más solicitado",
               title: "Master en Meta Ads",
-              titleColor: "group-hover:text-[#21b1fe]",
-              desc: "Domina campañas rentables en Facebook e Instagram. Segmentación y Pixel.",
-              badges: [
-                { text: "12 Horas", icon: "fa-regular fa-clock" },
-                { text: "Online", icon: "fa-solid fa-globe", dot: "bg-[#7dd958]" },
-                { text: "Meta Blueprint", icon: "fa-solid fa-certificate", highlight: true, bg: "bg-[#f4d0b3]", textColor: "text-[#8b3d1d]" },
-              ],
+              desc: "Domina campañas rentables en Facebook e Instagram. Segmentación, Pixel y optimización real.",
+              duration: "12 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
             },
             {
-              number: "02",
-              numberColor: "group-hover:text-[#21b1fe]",
+              image: "https://placehold.co/600x400/2d2e81/white?text=Marketing+Digital",
               title: "Marketing Digital Ecuador",
-              titleColor: "group-hover:text-[#2d2e81]",
-              desc: "Aprende a vender con Redes, WhatsApp Business y la mejor estrategia para el mercado local.",
-              badges: [
-                { text: "16 Horas", icon: "fa-regular fa-clock" },
-                { text: "Presencial", icon: "fa-solid fa-location-dot" },
-              ],
+              desc: "Aprende a vender con WhatsApp Business, contenido y la mejor estrategia para el mercado local.",
+              duration: "16 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
             },
             {
-              number: "03",
-              numberColor: "group-hover:text-[#21b1fe]",
+              image: "https://placehold.co/600x400/e86602/white?text=Contenido",
               title: "Estrategia de Contenido",
-              titleColor: "group-hover:text-[#fa7202]",
               desc: "Crea un plan de contenido infalible para vender con Reels, TikToks y posts de alto impacto.",
-              badges: [
-                { text: "Diploma", icon: "fa-solid fa-award", highlight: true, bg: "bg-[#02136f]", textColor: "text-white" },
-                { text: "Flexible", icon: "fa-regular fa-calendar-check" },
-              ],
+              duration: "10 Horas",
+              buttonText: "Inscríbete",
+              buttonUrl: "#contacto",
             },
           ],
         }, sortOrder: 2 },
@@ -609,8 +591,8 @@ const tpl = {
           cardTitle: "Reserva tu cupo",
           cardSubtitle: "Te contamos todo sobre los cursos y te ayudamos a elegir el ideal para ti.",
           whatsappButtonText: "Iniciar chat",
-          whatsappNumber: "593000000000",
-        }, sortOrder: 4 },
+whatsappNumber: "593000000000",
+        }, sortOrder: 7 },
 
         { type: "footer", content: {
           variant: "graduate",

@@ -807,51 +807,34 @@ return `${head}
 
     case "features": {
       const courses = (C.courses && C.courses.length ? C.courses : C.courses) || [];
-      const courseBadges = (course: any) => Array.isArray(course.badges)
-        ? course.badges
-        : (course.badgesText || "").split("\n").map((l: string) => {
-            const t = l.trim();
-            if (!t) return null;
-            if (t.startsWith("[HL]")) return { text: t.slice(4).trim(), highlight: true };
-            if (t.startsWith("[I]")) return { icon: t.slice(3).trim(), text: "" };
-            return { text: t };
-          }).filter(Boolean);
       return `
-<section id="academia" class="py-32 bg-[#05051e] text-white relative overflow-hidden">
-  <div class="absolute top-0 right-1/4 w-96 h-96 bg-[#2d2e81]/20 rounded-full blur-[150px] pointer-events-none"></div>
-  <div class="absolute bottom-0 left-10 w-72 h-72 bg-[#fa7202]/10 rounded-full blur-[120px] pointer-events-none"></div>
+<section id="academia" class="py-24 bg-white relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-96 h-96 bg-[#fa7202]/5 rounded-full blur-[120px] pointer-events-none"></div>
   <div class="max-w-7xl mx-auto px-6 relative z-10">
-    <div class="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
-      <div class="max-w-3xl">
-        <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6 text-[#21b1fe]"><i class="${C.academiaEyebrowIcon}"></i> ${C.academiaEyebrow}</div>
-        <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">${C.academiaTitleLine1}<br/><span class="text-[#fa7202]">${C.academiaHighlight}</span></h2>
-      </div>
-      <div class="max-w-sm text-gray-400">
-        <p class="mb-6">${C.academiaRightText}</p>
-        <a href="${C.academiaLinkUrl}" class="text-white border-b border-white hover:border-[#fa7202] hover:text-[#fa7202] transition-colors pb-1 font-bold">${C.academiaLinkText}</a>
-      </div>
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 bg-[#fa7202]/10 text-[#fa7202] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6"><i class="${C.academiaEyebrowIcon}"></i> ${C.academiaEyebrow}</div>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">${C.academiaTitleLine1}<br/><span class="text-[#fa7202]">${C.academiaHighlight}</span></h2>
+      <p class="mt-5 text-gray-500 text-lg">${C.academiaRightText}</p>
     </div>
-    <div class="border-t border-white/10">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
       ${(courses || []).map((course: any) => `
-      <a href="${course.url || C.academiaLinkUrl}" class="group block border-b border-white/10 py-10 hover:bg-white/[0.02] transition-colors relative">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          <div class="md:col-span-1 text-4xl text-gray-700 font-black ${course.numberColor || "group-hover:text-[#2d2e81]"} transition-colors">${course.number || ""}</div>
-          <div class="md:col-span-5">
-            <h3 class="text-3xl md:text-4xl font-bold mb-2 ${course.titleColor || "group-hover:text-[#21b1fe]"} transition-colors">${course.title || ""}</h3>
-            <p class="text-gray-400">${course.desc || ""}</p>
-          </div>
-          <div class="md:col-span-3 flex flex-wrap gap-2">
-            ${(courseBadges(course) || []).map((b: any) => b.highlight
-              ? `<span class="px-3 py-1 bg-[#fa7202] rounded-full text-xs text-white font-bold border border-transparent">${b.text || ""}</span>`
-              : `<span class="px-3 py-1 bg-white/5 rounded-full text-xs text-gray-300 border border-white/10">${b.icon ? `<i class="${b.icon}"></i> ` : ""}${b.text || ""}</span>`).join("")}
-          </div>
-          <div class="md:col-span-3 flex justify-start md:justify-end">
-            <div class="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center text-xl ${course.circleColor || "group-hover:bg-[#2d2e81] group-hover:border-[#2d2e81]"} transition-all duration-300">
-              <i class="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition-transform duration-300"></i>
-            </div>
+      <div class="group bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col">
+        <div class="relative overflow-hidden h-52">
+          <img src="${course.image || "https://placehold.co/600x400/f97316/white?text=Curso"}" alt="${course.title || "Curso"}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+          ${course.badge ? `<span class="absolute top-4 left-4 px-3 py-1 bg-[#fa7202] rounded-full text-xs text-white font-bold shadow-lg">${course.badge}</span>` : ""}
+        </div>
+        <div class="p-6 flex flex-col flex-1">
+          <h3 class="text-xl font-bold text-gray-900 mb-2">${course.title || ""}</h3>
+          <p class="text-gray-500 text-sm leading-relaxed mb-5 flex-1">${course.desc || ""}</p>
+          <div class="flex items-center justify-between">
+            ${course.duration ? `<span class="text-sm font-semibold text-gray-400 flex items-center gap-1.5"><i class="fa-regular fa-clock"></i>${course.duration}</span>` : `<span></span>`}
+            <a href="${course.buttonUrl || C.academiaLinkUrl}" class="inline-flex items-center gap-2 bg-[#fa7202] text-white text-sm font-bold py-2.5 px-5 rounded-full hover:bg-[#e86602] transition-colors shadow-lg shadow-[#fa7202]/25">${course.buttonText || "Inscríbete"}<i class="fa-solid fa-arrow-right"></i></a>
           </div>
         </div>
-      </a>`).join("")}
+      </div>`).join("")}
+    </div>
+    <div class="text-center mt-12">
+      <a href="${C.academiaLinkUrl}" class="inline-flex items-center gap-2 text-[#fa7202] font-bold hover:underline">${C.academiaLinkText}<i class="fa-solid fa-arrow-right"></i></a>
     </div>
   </div>
 </section>`;
