@@ -272,7 +272,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const addBlock = async (type: string) => {
     if (!activePageId) return;
     try {
-      const content = getBlockDefaultContent(type as any);
+      let content = getBlockDefaultContent(type as any);
+      const tmplVariant = activePage?.blocks?.[0]?.content?.variant;
+      if (tmplVariant && !content.variant) content = { ...content, variant: tmplVariant };
       const res: any = await api.post(`/pages/${activePageId}/blocks`, { type, content });
       const newBlock = res.data || res;
       setSite(p => {

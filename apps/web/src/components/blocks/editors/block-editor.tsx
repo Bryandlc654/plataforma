@@ -21,7 +21,7 @@ function TextInput({ value, onChange, placeholder, type = "text", rows }: { valu
     className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-300" />;
 }
 
-function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: any[]) => void; fields: Array<{ key: string; label: string; type?: string; options?: { label: string; value: string }[]; brand?: boolean }> }) {
+function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: any[]) => void; fields: Array<{ key: string; label: string; type?: string; options?: { label: string; value: string }[]; brand?: boolean; bi?: boolean }> }) {
   const items = value || [];
   const add = () => { const item: any = {}; fields.forEach((f) => (item[f.key] = f.type === "checkbox" ? false : "")); onChange([...items, item]); };
   const update = (idx: number, key: string, val: any) => onChange(items.map((it, i) => i === idx ? { ...it, [key]: val } : it));
@@ -50,7 +50,7 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
                 ) : f.type === "icon" ? (
                   <div key={f.key} className="space-y-1">
                     <label className="block text-xs font-medium text-slate-500">{f.label}</label>
-                    <IconPicker value={item[f.key]} onChange={(v) => update(i, f.key, v)} brand={f.brand} />
+                    <IconPicker value={item[f.key]} onChange={(v) => update(i, f.key, v)} brand={f.brand} bi={f.bi} />
                   </div>
                 ) : f.type === "select" ? (
                   <div key={f.key} className="space-y-1">
@@ -155,18 +155,70 @@ const FA_BRAND_ICONS = [
   { value: "fa-brands fa-google", label: "Google" },
 ];
 
-function IconPicker({ value, onChange, brand = false }: { value?: string; onChange: (v: string) => void; brand?: boolean }) {
+const BI_ICONS = [
+  { value: "bi-arrow-repeat", label: "Reciclaje / repetir" },
+  { value: "bi-arrow-right", label: "Flecha derecha" },
+  { value: "bi-arrow-up-right", label: "Flecha diagonal" },
+  { value: "bi-award", label: "Premio" },
+  { value: "bi-box-seam", label: "Caja / paquete" },
+  { value: "bi-building", label: "Edificio" },
+  { value: "bi-calendar-check", label: "Calendario" },
+  { value: "bi-check-lg", label: "Check" },
+  { value: "bi-check2-circle", label: "Check en círculo" },
+  { value: "bi-clock", label: "Reloj" },
+  { value: "bi-crosshair", label: "Precisión / diana" },
+  { value: "bi-cup-straw", label: "Sorbete / bebida" },
+  { value: "bi-envelope", label: "Sobre" },
+  { value: "bi-flag", label: "Bandera" },
+  { value: "bi-flower1", label: "Flor" },
+  { value: "bi-gear", label: "Engranaje" },
+  { value: "bi-geo-alt", label: "Ubicación" },
+  { value: "bi-geo-alt-fill", label: "Ubicación rellena" },
+  { value: "bi-globe-americas", label: "Globo América" },
+  { value: "bi-heart", label: "Corazón" },
+  { value: "bi-house", label: "Casa" },
+  { value: "bi-lightbulb", label: "Bombilla" },
+  { value: "bi-map", label: "Mapa" },
+  { value: "bi-patch-check", label: "Certificado" },
+  { value: "bi-pencil", label: "Lápiz" },
+  { value: "bi-people", label: "Personas" },
+  { value: "bi-person", label: "Persona" },
+  { value: "bi-play-circle", label: "Reproducir" },
+  { value: "bi-quote", label: "Comillas" },
+  { value: "bi-rocket-takeoff", label: "Cohete" },
+  { value: "bi-send", label: "Enviar" },
+  { value: "bi-shield-check", label: "Escudo verificado" },
+  { value: "bi-speedometer2", label: "Velocímetro" },
+  { value: "bi-star", label: "Estrella" },
+  { value: "bi-star-fill", label: "Estrella rellena" },
+  { value: "bi-sun", label: "Sol" },
+  { value: "bi-telephone", label: "Teléfono" },
+  { value: "bi-box-arrow-up-right", label: "Enlace externo" },
+];
+
+const BI_BRAND_ICONS = [
+  { value: "bi-facebook", label: "Facebook" },
+  { value: "bi-instagram", label: "Instagram" },
+  { value: "bi-whatsapp", label: "WhatsApp" },
+  { value: "bi-tiktok", label: "TikTok" },
+  { value: "bi-twitter-x", label: "X (Twitter)" },
+  { value: "bi-youtube", label: "YouTube" },
+  { value: "bi-linkedin", label: "LinkedIn" },
+  { value: "bi-telegram", label: "Telegram" },
+];
+
+function IconPicker({ value, onChange, brand = false, bi = false }: { value?: string; onChange: (v: string) => void; brand?: boolean; bi?: boolean }) {
   const [open, setOpen] = useState(false);
-  const list = brand ? FA_BRAND_ICONS : FA_ICONS;
+  const list = brand ? (bi ? BI_BRAND_ICONS : FA_BRAND_ICONS) : (bi ? BI_ICONS : FA_ICONS);
   const matched = list.some((i) => i.value === value);
   return (
     <div>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => setOpen(!open)}
           className="flex-shrink-0 inline-flex items-center justify-center w-12 h-11 text-lg text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all">
-          <i className={`${value || "fa-solid fa-icons"}`} />
+          <i className={`${bi ? `bi ${value}` : value || "fa-solid fa-icons"}`} />
         </button>
-        <TextInput value={value || ""} onChange={onChange} placeholder={matched ? "Icono Font Awesome" : "Clase personalizada (fa-...)"} />
+        <TextInput value={value || ""} onChange={onChange} placeholder={bi ? "Icono Bootstrap (bi-...)" : (matched ? "Icono Font Awesome" : "Clase personalizada (fa-...)")} />
       </div>
       {open && (
         <div className="mt-2 rounded-xl border border-slate-200 bg-white shadow-lg p-2">
@@ -174,7 +226,7 @@ function IconPicker({ value, onChange, brand = false }: { value?: string; onChan
             {list.map((ic) => (
               <button key={ic.value} type="button" title={ic.label} onClick={() => { onChange(ic.value); setOpen(false); }}
                 className={`p-2 rounded-lg text-center ${value === ic.value ? "bg-primary-100 text-primary-700 ring-2 ring-primary-300" : "text-slate-500 hover:bg-slate-100"}`}>
-                <i className={`${ic.value} text-base`} />
+                <i className={`${bi ? `bi ${ic.value}` : ic.value} text-base`} />
               </button>
             ))}
           </div>
@@ -238,6 +290,21 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "hero":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Rodriplast (pantalla completa con slider de fondo)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="inicio" /></Field>
+            <Field label="Slides del fondo (imagen de cada slide)"><ArrayEditor value={content.slides} onChange={(v) => set("slides", v)} fields={[{ key: "backgroundImage", label: "Imagen del slide", type: "image" }]} /></Field>
+            <Field label="Imagen de respaldo"><ImageField label="Imagen de respaldo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Fabricado en Ecuador · 100% reciclado" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Mangueras del futuro, hechas del plástico de ayer." /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={3} /></Field>
+            <Field label="Texto botón principal"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Solicitar cotización" /></Field>
+            <Field label="URL botón principal"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
+            <Field label="Texto botón secundario"><TextInput value={content.secondaryButtonText} onChange={(v) => set("secondaryButtonText", v)} placeholder="Conocer más" /></Field>
+            <Field label="URL botón secundario"><TextInput value={content.secondaryButtonUrl} onChange={(v) => set("secondaryButtonUrl", v)} placeholder="#nosotros" /></Field>
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Graduate (fondo oscuro, sin degradados de texto)</div>
@@ -310,6 +377,23 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "services":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Productos Rodriplast (tarjetas con imagen de fondo + icono bi)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="productos" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Productos" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Soluciones que se adaptan a cada industria" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+            <Field label="Tarjetas"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "image", label: "Imagen de fondo", type: "image" },
+              { key: "tag", label: "Etiqueta (ej: Agrícola)" },
+              { key: "title", label: "Título" },
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "link", label: "URL de enlace" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Servicios Graduate (grilla bento con tarjetas editables)</div>
@@ -533,6 +617,15 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "testimonials":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Testimonios Rodriplast (marquee de citas)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="clientes" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Testimonios" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Lo que dicen nuestros clientes" /></Field>
+            <Field label="Testimonios"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[{ key: "name", label: "Nombre" }, { key: "role", label: "Cargo" }, { key: "quote", label: "Testimonio", type: "textarea" }]} /></Field>
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Testimonios Graduate (muro de reseñas + marcas de confianza)</div>
@@ -595,6 +688,16 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "gallery":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Galería Rodriplast (detrás de escena)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="galeria" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Detrás de escena" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Así nace cada manguera" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+            <Field label="Imágenes"><ArrayEditor value={content.images} onChange={(v) => set("images", v)} fields={[{ key: "url", label: "Imagen", type: "image" }, { key: "alt", label: "Texto alternativo" }]} /></Field>
+          </>;
+        }
         return <>
           <Field label="Kicker (etiqueta opcional)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Detrás de escena" /></Field>
           <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} /></Field>
@@ -603,6 +706,21 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "header":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Rodriplast (logo que cambia al hacer scroll)</div>
+            <Field label="Nombre del logo"><TextInput value={content.logoText} onChange={(v) => set("logoText", v)} placeholder="RODRIPLAST" /></Field>
+            <Field label="Logo (imagen)"><ImageField label="Logo" value={content.logoImage} onChange={(v) => set("logoImage", v)} /></Field>
+            <Field label="Logo al hacer scroll"><ImageField label="Logo scrolled" value={content.logoScrolled} onChange={(v) => set("logoScrolled", v)} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Navegación</p>
+            <Field label="Enlaces del menú"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Botón CTA</p>
+              <Field label="Texto"><TextInput value={content.ctaText} onChange={(v) => set("ctaText", v)} placeholder="Solicitar cotización" /></Field>
+              <Field label="URL"><TextInput value={content.ctaUrl} onChange={(v) => set("ctaUrl", v)} placeholder="#contacto" /></Field>
+            </div>
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Graduate (barra superior de contacto + menú con logo y CTA)</div>
@@ -756,6 +874,28 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "footer":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Rodriplast (fondo oscuro, logo, marca, navegación, contacto y redes)</div>
+            <Field label="Nombre de la empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} placeholder="Rodriplast" /></Field>
+            <ImageField label="Logo (imagen)" value={content.logoImage} onChange={(v) => set("logoImage", v)} />
+            <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
+            <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} placeholder="Parque Industrial · Guayaquil, Ecuador" /></Field>
+            <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="+593 4 000 0000" /></Field>
+            <Field label="Correo"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="ventas@rodriplast.com" /></Field>
+            <Field label="Horario"><TextInput value={content.schedule} onChange={(v) => set("schedule", v)} placeholder="Lun – Vie · 8:00 – 17:00" /></Field>
+            <Field label="Título de la columna de navegación"><TextInput value={content.columns?.[0]?.title} onChange={(v) => set("columns", [{ ...(content.columns?.[0] || {}), title: v }])} placeholder="Navegación" /></Field>
+            <Field label="Enlaces de navegación"><ArrayEditor value={content.navLinks} onChange={(v) => set("navLinks", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="Redes sociales"><ArrayEditor value={content.social} onChange={(v) => set("social", v)} fields={[{ key: "icon", label: "Icono", type: "icon", bi: true, brand: true }, { key: "url", label: "URL" }, { key: "label", label: "Etiqueta (accesibilidad)" }]} /></Field>
+            <Field label="Copyright"><TextInput value={content.copyright} onChange={(v) => set("copyright", v)} /></Field>
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <Field label="Imagen flotante (opcional)">
+                <ImageField label="Imagen flotante" value={content.floatingImage} onChange={(v) => set("floatingImage", v)} />
+                <div className="mt-2"><TextInput value={content.floatingImageAlt} onChange={(v) => set("floatingImageAlt", v)} placeholder="Texto alternativo" /></div>
+              </Field>
+            </div>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Indigo (se muestra en todas las páginas como sección)</div>
@@ -910,6 +1050,20 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "features":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Proceso Rodriplast (fondo oscuro, 4 pasos numerados)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="proceso" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Proceso" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="De residuo a manguera: cuatro pasos con propósito" /></Field>
+            <Field label="Imagen de fondo (opcional)"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+            <Field label="Pasos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Indigo (imagen + texto)</div>
@@ -1016,6 +1170,21 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
 
       case "about":
       case "agency":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Nosotros Rodriplast (imagen + insignia ISO + checklist + CTA)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="nosotros" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Nosotros" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Una industria ecuatoriana que transforma residuos en soluciones." /></Field>
+            <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={4} /></Field>
+            <Field label="Imagen"><ImageField label="Imagen" value={content.imageUrl} onChange={(v) => set("imageUrl", v)} /></Field>
+            <Field label="Insignia (valor, ej: ISO 9001)"><TextInput value={content.badgeTitle} onChange={(v) => set("badgeTitle", v)} placeholder="ISO 9001" /></Field>
+            <Field label="Insignia (subtítulo)"><TextInput value={content.badgeSubtitle} onChange={(v) => set("badgeSubtitle", v)} placeholder="Calidad certificada" /></Field>
+            <Field label="Checklist"><ArrayEditor value={content.features} onChange={(v) => set("features", v)} fields={[{ key: "text", label: "Item" }]} /></Field>
+            <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Conocer más" /></Field>
+            <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#contacto" /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Agencia Indigo (imagen + texto + indicadores)</div>
@@ -1103,6 +1272,17 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "stats":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Indicadores Rodriplast (tarjetas con contador animado)</div>
+            <Field label="Indicadores"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "value", label: "Valor (ej: 2500)" },
+              { key: "suffix", label: "Sufijo (ej: +, Tn, %)" },
+              { key: "label", label: "Etiqueta" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Indicadores Graduate (banda oscura)</div>
@@ -1140,6 +1320,23 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "portfolio":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Productos Rodriplast (tarjetas con imagen de fondo + icono bi)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="productos" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Productos" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Soluciones que se adaptan a cada industria" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+            <Field label="Tarjetas"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "image", label: "Imagen de fondo", type: "image" },
+              { key: "tag", label: "Etiqueta (ej: Agrícola)" },
+              { key: "title", label: "Título" },
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "link", label: "URL de enlace" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Portafolio Indigo (imagen grande + overlay)</div>
@@ -1165,6 +1362,19 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "benefits":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Beneficios Rodriplast (marquee de tarjetas con iconos)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="beneficios" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Beneficios" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Ventajas que marcan la diferencia" /></Field>
+            <Field label="Tarjetas"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Beneficios Indigo (fondo oscuro + 3 columnas)</div>
@@ -1194,6 +1404,20 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "process":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Proceso Rodriplast (fondo oscuro, 4 pasos numerados)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="proceso" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Proceso" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="De residuo a manguera: cuatro pasos con propósito" /></Field>
+            <Field label="Imagen de fondo (opcional)"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+            <Field label="Pasos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Icono", type: "icon", bi: true },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección Indigo (imagen + pasos)</div>
@@ -1223,6 +1447,21 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
 
       case "form":
       case "contact":
+        if (content.variant === "rodriplast") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Contacto Rodriplast (formulario + tarjetas + mapa)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="contacto" /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Contacto" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Solicita tu cotización" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+            <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Enviar solicitud" /></Field>
+            <Field label="Dirección"><TextInput value={content.address} onChange={(v) => set("address", v)} placeholder="Parque Industrial · Guayaquil, Ecuador" /></Field>
+            <Field label="Teléfono"><TextInput value={content.phone} onChange={(v) => set("phone", v)} placeholder="+593 4 000 0000" /></Field>
+            <Field label="Correo"><TextInput value={content.email} onChange={(v) => set("email", v)} placeholder="ventas@rodriplast.com" /></Field>
+            <Field label="URL del mapa (OpenStreetMap o Google)"><TextInput value={content.mapUrl} onChange={(v) => set("mapUrl", v)} placeholder="https://www.openstreetmap.org/export/embed.html?..." /></Field>
+            <Field label="Campos del formulario"><ArrayEditor value={content.fields} onChange={(v) => set("fields", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "name", label: "Nombre" }, { key: "type", label: "Tipo (text, textarea, email, tel)" }, { key: "required", label: "Requerido (true/false)" }, { key: "placeholder", label: "Placeholder (opcional)" }]} /></Field>
+          </>;
+        }
         if (content.variant === "indigo") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Sección de contacto Indigo (título + párrafo + botón + formulario)</div>
