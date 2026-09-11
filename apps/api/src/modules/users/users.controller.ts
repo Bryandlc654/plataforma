@@ -96,4 +96,11 @@ export class UsersController {
     @Param("userId") userId: string,
     @Param("tenantId") tenantId: string
   ) { return this.usersService.adminRemoveTenant(userId, tenantId); }
+
+  @Delete("admin/:id")
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @ApiOperation({ summary: "Admin: delete (soft) a user" })
+  async adminDelete(@CurrentUser() user: any, @Param("id") id: string) {
+    return this.usersService.adminDelete(id, user.id);
+  }
 }

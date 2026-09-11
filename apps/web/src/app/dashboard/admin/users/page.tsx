@@ -55,7 +55,11 @@ export default function AdminUsersPage() {
   const confirmAction = async () => {
     if (!showConfirm) return;
     try {
-      await api.put(`/users/admin/${showConfirm.id}/toggle-block`);
+      if (showConfirm.action === "delete") {
+        await api.delete(`/users/admin/${showConfirm.id}`);
+      } else {
+        await api.put(`/users/admin/${showConfirm.id}/toggle-block`);
+      }
       setShowConfirm(null); setSelected(null); fetchUsers();
     } catch (err: any) { alert(err.response?.data?.message || "Error"); }
   };
@@ -267,16 +271,25 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => setShowConfirm({ id: u.id, name: `${u.firstName} ${u.lastName}`, action: u.isActive ? "block" : "unblock" })}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            u.isActive
-                              ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200"
-                              : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200"
-                          }`}
-                        >
-                          {u.isActive ? "Bloquear" : "Desbloquear"}
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setShowConfirm({ id: u.id, name: `${u.firstName} ${u.lastName}`, action: u.isActive ? "block" : "unblock" })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              u.isActive
+                                ? "text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200"
+                                : "text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200"
+                            }`}
+                          >
+                            {u.isActive ? "Bloquear" : "Desbloquear"}
+                          </button>
+                          <button
+                            onClick={() => { setSelected(null); setShowConfirm({ id: u.id, name: `${u.firstName} ${u.lastName}`, action: "delete" }); }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 transition-colors"
+                            title="Eliminar usuario"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -388,6 +401,12 @@ export default function AdminUsersPage() {
                 >
                   {selected.isActive ? "Bloquear cuenta" : "Desbloquear cuenta"}
                 </button>
+                <button
+                  onClick={() => { setShowConfirm({ id: selected.id, name: `${selected.firstName} ${selected.lastName}`, action: "delete" }); setSelected(null); }}
+                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors mt-2"
+                >
+                  Eliminar usuario
+                </button>
               </div>
             </div>
           </div>
@@ -400,19 +419,31 @@ export default function AdminUsersPage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowConfirm(null)} />
           <div className="relative bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
             <div className="text-center mb-4">
-              <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-3 ${showConfirm.action === "block" ? "bg-red-100" : "bg-green-100"}`}>
-                {showConfirm.action === "block" ? (
+              <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-3 ${
+                showConfirm.action === "delete" ? "bg-red-100" : showConfirm.action === "block" ? "bg-red-100" : "bg-green-100"
+              }`}>
+                {showConfirm.action === "delete" ? (
+                  <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                ) : showConfirm.action === "block" ? (
                   <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
                 ) : (
                   <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 )}
               </div>
-              <h4 className="text-lg font-semibold text-slate-900">{showConfirm.action === "block" ? "Bloquear usuario" : "Desbloquear usuario"}</h4>
-              <p className="text-sm text-slate-500 mt-1">{showConfirm.action === "block" ? `¿Bloquear a ${showConfirm.name}? No podrá iniciar sesión.` : `¿Desbloquear a ${showConfirm.name}? Podrá iniciar sesión nuevamente.`}</p>
+              <h4 className="text-lg font-semibold text-slate-900">{showConfirm.action === "delete" ? "Eliminar usuario" : showConfirm.action === "block" ? "Bloquear usuario" : "Desbloquear usuario"}</h4>
+              <p className="text-sm text-slate-500 mt-1">
+                {showConfirm.action === "delete"
+                  ? `¿Eliminar permanentemente a ${showConfirm.name}? Se le quitará el acceso a sus negocios y no podrá iniciar sesión.`
+                  : showConfirm.action === "block"
+                    ? `¿Bloquear a ${showConfirm.name}? No podrá iniciar sesión.`
+                    : `¿Desbloquear a ${showConfirm.name}? Podrá iniciar sesión nuevamente.`}
+              </p>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(null)} className="flex-1 btn-secondary text-sm">Cancelar</button>
-              <button onClick={confirmAction} className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors ${showConfirm.action === "block" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}`}>Confirmar</button>
+              <button onClick={confirmAction} className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors ${
+                showConfirm.action === "delete" || showConfirm.action === "block" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+              }`}>Confirmar</button>
             </div>
           </div>
         </div>

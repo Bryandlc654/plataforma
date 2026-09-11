@@ -198,4 +198,49 @@ export class UsersService {
     await this.prisma.userTenant.delete({ where: { id: userTenant.id } });
     return { deleted: true };
   }
+
+  async adminDelete(userId: string, actorUserId?: string) {
+    if (actorUserId && actorUserId === userId) {
+      throw new ForbiddenException("You cannot delete your own account");
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, deletedAt: true, email: true, userTenants: { select: { id: true, tenant: { select: { id: true, name: true } } } } },
+    });
+
+    if (!user || user.deletedAt) throw new NotFoundException("User not found");
+
+    const isSystemUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { userTenants: { select: { roles: { select: { role: { select: { name: true } } } } } } },
+    });
+
+    const systemRoles = (isSystemUser?.userTenants || [])
+      .flatMap((ut) => ut.roles.map((r) => r.role.name))
+      .filter((r) => r === "super_admin" || r === "support");
+
+    if (systemRoles.length > 0) {
+      throw new ForbiddenException(`Cannot delete a user with role ${systemRoles[0]}`);
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.userTenant.deleteMany({ where: { userId } }),
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
+      this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      this.prisma.pushToken.deleteMany({ where: { userId } }),
+      this.prisma.auditLog.create({
+        data: {
+          userId: actorUserId || null,
+          action: "user.deleted",
+          resource: "User",
+          resourceId: userId,
+          metadata: { deletedEmail: user.email, tenants: user.userTenants.map((ut) => ut.tenant.name) } as any,
+        },
+      }),
+      this.prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date(), isActive: false } }),
+    ]);
+
+    return { deleted: true };
+  }
 }
