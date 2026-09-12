@@ -207,6 +207,9 @@ const useAuthStore = create<AuthState>()(
 );
 
 if (typeof window !== "undefined" && useAuthStore.persist) {
+  if (useAuthStore.persist.hasHydrated()) {
+    useAuthStore.setState({ hasHydrated: true });
+  }
   useAuthStore.persist.onFinishHydration(() => {
     useAuthStore.setState({ hasHydrated: true });
   });
