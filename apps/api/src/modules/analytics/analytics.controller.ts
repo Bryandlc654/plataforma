@@ -7,6 +7,8 @@ import { AnalyticsService } from "./analytics.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { RequirePermissions } from "../../common/decorators/permissions.decorator";
+import { PERMISSIONS } from "../../shared/index";
 
 @ApiTags("analytics")
 @Controller("analytics")
@@ -46,5 +48,18 @@ export class AnalyticsController {
     @Query("period") period?: string
   ) {
     return this.analyticsService.getOverview(user.tenantId, siteId, period);
+  }
+
+  @Get("admin/:tenantId")
+  @UseGuards(JwtAuthGuard)
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Admin: get analytics overview for any tenant" })
+  async adminGetOverview(
+    @Param("tenantId") tenantId: string,
+    @Query("siteId") siteId?: string,
+    @Query("period") period?: string
+  ) {
+    return this.analyticsService.getOverview(tenantId, siteId, period);
   }
 }

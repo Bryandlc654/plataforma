@@ -13,6 +13,19 @@ interface Tenant {
 
 interface Plan { id: string; name: string; slug: string; }
 
+interface AnalyticsData {
+  summary: { totalViews: number; totalConversions: number; totalClicks: number };
+  dailyViews: Array<{ date: string; views: number }>;
+  topPages: Array<{ path: string; views: number }>;
+  referrers: Array<{ referrer: string; count: number }>;
+}
+
+const analyticsPeriods = [
+  { label: "7d", value: "7d" },
+  { label: "30d", value: "30d" },
+  { label: "90d", value: "90d" },
+];
+
 export default function AdminTenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [filtered, setFiltered] = useState<Tenant[]>([]);
@@ -26,6 +39,9 @@ export default function AdminTenantsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<{ id: string; action: string } | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", subdomain: "", planId: "" });
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState("30d");
 
   useEffect(() => { fetchData(); }, []);
 
@@ -109,6 +125,31 @@ export default function AdminTenantsPage() {
     setEditing(true);
     setEditingId(t.id);
     setShowModal(true);
+  };
+
+  const fetchAnalytics = async (tenantId: string, period?: string) => {
+    const p = period || analyticsPeriod;
+    setAnalyticsLoading(true);
+    setAnalytics(null);
+    try {
+      const params = new URLSearchParams({ period: p });
+      const res: any = await api.get(`/analytics/admin/${tenantId}?${params.toString()}`);
+      setAnalytics(res.data || res);
+    } catch {
+      setAnalytics(null);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selected) fetchAnalytics(selected.id, analyticsPeriod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
+
+  const changeAnalyticsPeriod = (p: string) => {
+    setAnalyticsPeriod(p);
+    if (selected) fetchAnalytics(selected.id, p);
   };
 
   const stats = {
@@ -333,6 +374,90 @@ export default function AdminTenantsPage() {
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${selected.isActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>{selected.isActive ? "Activo" : "Suspendido"}</span>
                   </div>
                 </div>
+              </div>
+
+              <hr className="border-slate-100" />
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-medium text-slate-500 uppercase">Estadísticas de visita</p>
+                  <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                    {analyticsPeriods.map((p) => (
+                      <button
+                        key={p.value}
+                        onClick={() => changeAnalyticsPeriod(p.value)}
+                        className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all ${
+                          analyticsPeriod === p.value
+                            ? "bg-white shadow-sm text-slate-900"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {analyticsLoading ? (
+                  <div className="py-8 flex justify-center">
+                    <svg className="animate-spin h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  </div>
+                ) : analytics ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Visitas</p>
+                        <p className="text-lg font-bold text-primary-700">{analytics.summary.totalViews}</p>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Conversiones</p>
+                        <p className="text-lg font-bold text-green-700">{analytics.summary.totalConversions}</p>
+                      </div>
+                      <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Clics</p>
+                        <p className="text-lg font-bold text-purple-700">{analytics.summary.totalClicks}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 mb-2">Visitas diarias</p>
+                      {analytics.dailyViews && analytics.dailyViews.length > 0 ? (
+                        <div className="flex items-end gap-1 h-28">
+                          {analytics.dailyViews.map((day) => {
+                            const max = Math.max(...analytics.dailyViews.map((d) => d.views), 1);
+                            const pct = (day.views / max) * 100;
+                            return (
+                              <div key={day.date} className="flex-1 flex items-end" title={`${day.date}: ${day.views} visitas`}>
+                                <div className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600" style={{ height: `${Math.max(pct, 3)}%` }} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 text-center py-4">Sin datos de visitas</p>
+                      )}
+                    </div>
+
+                    {analytics.topPages && analytics.topPages.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 mb-2">Páginas más visitadas</p>
+                        <div className="space-y-1.5">
+                          {analytics.topPages.slice(0, 5).map((p, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs">
+                              <span className="text-slate-700 truncate">{p.path || "/"}</span>
+                              <span className="text-slate-500 font-medium ml-2">{p.views}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-6">Sin datos de analytics</p>
+                )}
               </div>
 
               <hr className="border-slate-100" />
