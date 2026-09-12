@@ -18,7 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, ensureSession } = useAuthStore();
+  const { login, isLoading, ensureSession, hasHydrated } = useAuthStore();
   const toastState = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [toast, setToast] = toastState;
   const [showPassword, setShowPassword] = useState(false);
@@ -39,11 +39,12 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
+    if (!hasHydrated) return;
     (async () => {
       const ok = await ensureSession();
       if (ok) router.replace("/dashboard");
     })();
-  }, [ensureSession, router]);
+  }, [ensureSession, hasHydrated, router]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {

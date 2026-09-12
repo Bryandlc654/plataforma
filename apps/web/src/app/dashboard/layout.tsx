@@ -12,7 +12,7 @@ function hasRole(user: any, role: string) { return user?.roles?.includes(role) |
 function hasPermission(user: any, perm: string) { return user?.permissions?.includes(perm) || hasRole(user, "super_admin"); }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, tenant, tenantId, isAuthenticated, logout, selectTenant, ensureSession } = useAuthStore();
+  const { user, tenant, tenantId, isAuthenticated, hasHydrated, logout, selectTenant, ensureSession } = useAuthStore();
   const router = useRouter();
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
@@ -21,6 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!isAuthenticated) { router.push("/login"); return; }
     (async () => {
       const ok = await ensureSession();
@@ -28,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const u = useAuthStore.getState().user;
       if (!hasRole(u, "super_admin")) fetchTenants();
     })();
-  }, [ensureSession, isAuthenticated, router]);
+  }, [ensureSession, hasHydrated, isAuthenticated, router]);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -107,6 +108,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ]
     }
   ];
+
+  if (!hasHydrated) {
+    return <div className="flex h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
+  }
 
   return (
     <div className="flex min-h-screen">

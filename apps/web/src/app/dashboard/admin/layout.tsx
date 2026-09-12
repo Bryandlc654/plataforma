@@ -7,7 +7,7 @@ import { AppIcon } from "@/components/ui/app-icon";
 import Link from "next/link";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, ensureSession } = useAuthStore();
+  const { user, isAuthenticated, hasHydrated, ensureSession } = useAuthStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isSupport = user?.roles?.includes("support");
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !hasHydrated) return;
     (async () => {
       const ok = await ensureSession();
       if (!ok) { router.push("/login"); return; }
@@ -26,9 +26,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const support = u?.roles?.includes("support");
       if (!superAdmin && !support) { router.push("/dashboard"); }
     })();
-  }, [ensureSession, mounted, isAuthenticated, isSuperAdmin, isSupport, router]);
+  }, [ensureSession, hasHydrated, mounted, isAuthenticated, isSuperAdmin, isSupport, router]);
 
-  if (!mounted || (!isSuperAdmin && !isSupport)) {
+  if (!mounted || !hasHydrated || (!isSuperAdmin && !isSupport)) {
     return <div className="flex h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
   }
 

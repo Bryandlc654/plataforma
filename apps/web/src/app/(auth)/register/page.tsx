@@ -25,7 +25,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register: registerUser, isLoading, ensureSession } = useAuthStore();
+  const { register: registerUser, isLoading, ensureSession, hasHydrated } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -37,11 +37,12 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
+    if (!hasHydrated) return;
     (async () => {
       const ok = await ensureSession();
       if (ok) router.replace("/dashboard");
     })();
-  }, [ensureSession, router]);
+  }, [ensureSession, hasHydrated, router]);
 
   const onSubmit = async (data: RegisterFormData) => {
     try {

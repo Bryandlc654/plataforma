@@ -36,7 +36,7 @@ function hasPermission(user: any, perm: string) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, tenant, tenantId, isAuthenticated, logout, selectTenant, isLoading, ensureSession } = useAuthStore();
+  const { user, tenant, tenantId, isAuthenticated, hasHydrated, logout, selectTenant, isLoading, ensureSession } = useAuthStore();
   const [tenantData, setTenantData] = useState<TenantStats | null>(null);
   const [adminData, setAdminData] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,6 +74,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     (async () => {
       const ok = await ensureSession();
       if (!ok) { router.push("/login"); return; }
@@ -83,7 +84,7 @@ export default function DashboardPage() {
       else if (tenantId) { fetchTenantDashboard(); fetchTenants(); }
       else { setLoading(false); }
     })();
-  }, [ensureSession, fetchAdminDashboard, fetchTenants, fetchTenantDashboard, isAuthenticated, tenantId, router]);
+  }, [ensureSession, fetchAdminDashboard, fetchTenants, fetchTenantDashboard, hasHydrated, isAuthenticated, tenantId, router]);
 
   const handleSelectTenant = (t: any) => {
     selectTenant({ id: t.id, name: t.name, slug: t.slug, isOwner: t.isOwner });

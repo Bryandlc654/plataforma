@@ -29,6 +29,7 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasHydrated: boolean;
 
   setUser: (user: User) => void;
   ensureSession: () => Promise<boolean>;
@@ -46,7 +47,7 @@ interface AuthState {
   fetchTenants: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
+const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
@@ -57,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
+      hasHydrated: false,
 
       setUser: (user: User) => {
         set({ user, isAuthenticated: true });
@@ -203,3 +205,9 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+useAuthStore.persist.onFinishHydration(() => {
+  useAuthStore.setState({ hasHydrated: true });
+});
+
+export { useAuthStore };
