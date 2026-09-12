@@ -45,6 +45,17 @@ const DEFAULT_FIELDS: SorteoField[] = [
   { name: "telefono", label: "Teléfono", type: "tel", required: false },
 ];
 
+function availabilityOf(s: Sorteo): { label: string; className: string } {
+  const now = new Date();
+  if (s.startDate && now < new Date(s.startDate)) {
+    return { label: "No iniciado", className: "bg-amber-100 text-amber-700" };
+  }
+  if (s.endDate && now > new Date(s.endDate)) {
+    return { label: "Finalizado", className: "bg-red-100 text-red-700" };
+  }
+  return { label: "Disponible", className: "bg-green-100 text-green-700" };
+}
+
 export default function SorteosPage() {
   const [sorteos, setSorteos] = useState<Sorteo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -317,14 +328,18 @@ export default function SorteosPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold text-slate-900">{s.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${s.isActive ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
-                    {s.isActive ? "Activo" : "Inactivo"}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${availabilityOf(s).className}`}>
+                    {availabilityOf(s).label}
                   </span>
+                  {!s.isActive && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Inactivo</span>
+                  )}
                 </div>
                 <p className="text-sm text-slate-500 mt-1">/{s.slug} · {s.fields?.length || 0} campos</p>
                 <div className="flex gap-3 mt-2 text-xs text-slate-400">
                   <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {s.participantCount} participantes</span>
                   <span>Creado: {new Date(s.createdAt).toLocaleDateString()}</span>
+                  {s.startDate && <span>Inicio: {new Date(s.startDate).toLocaleDateString()}</span>}
                   {s.endDate && <span>Fin: {new Date(s.endDate).toLocaleDateString()}</span>}
                 </div>
               </div>

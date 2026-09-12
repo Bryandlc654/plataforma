@@ -146,10 +146,14 @@ export class SorteosService {
   async findPublic(tenantId: string, slug: string) {
     const sorteo = await this.prisma.sorteo.findFirst({
       where: { tenantId, slug, isActive: true },
-      select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
+      select: { id: true, title: true, slug: true, description: true, fields: true, startDate: true, endDate: true },
     });
     if (!sorteo) throw new NotFoundException("Sorteo no encontrado");
-    return sorteo;
+
+    const now = new Date();
+    const available = !(sorteo.startDate && now < new Date(sorteo.startDate))
+      && !(sorteo.endDate && now > new Date(sorteo.endDate));
+    return { ...sorteo, available };
   }
 
   async participate(tenantId: string, slug: string, data: any, ip?: string, ua?: string) {
@@ -158,7 +162,11 @@ export class SorteosService {
     });
     if (!sorteo) throw new NotFoundException("Sorteo no encontrado o inactivo");
 
-    if (sorteo.endDate && new Date() > sorteo.endDate) {
+    const now = new Date();
+    if (sorteo.startDate && now < new Date(sorteo.startDate)) {
+      throw new BadRequestException("Este sorteo no está disponible todavía");
+    }
+    if (sorteo.endDate && now > new Date(sorteo.endDate)) {
       throw new BadRequestException("Este sorteo ha finalizado");
     }
 

@@ -214,7 +214,7 @@ export class PublishingService {
         const cleanPath = normalizePublicPath(path).replace(/^\//, "");
         const sorteo = await this.prisma.sorteo.findFirst({
           where: { tenantId: site.tenantId, slug: cleanPath, isActive: true },
-          select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
+          select: { id: true, title: true, slug: true, description: true, fields: true, startDate: true, endDate: true },
         });
         if (sorteo) sorteoSlug = sorteo.slug;
 
@@ -260,7 +260,7 @@ export class PublishingService {
       if (sorteoSlug) {
         const sorteo = await this.prisma.sorteo.findFirst({
           where: { tenantId: site.tenantId, slug: sorteoSlug, isActive: true },
-          select: { id: true, title: true, slug: true, description: true, fields: true, endDate: true },
+          select: { id: true, title: true, slug: true, description: true, fields: true, startDate: true, endDate: true },
         });
         if (sorteo) {
           site.pages.push({
@@ -1028,7 +1028,17 @@ ${items.map(cardHtml).join("")}
         const apiUrl = this.apiBaseUrl();
         const fields = (sorteo?.fields || []) as any[];
         const bg = (sorteo?.background || {}) as any;
-        const fieldHtml = fields.map((f: any) => {
+
+        const now = new Date();
+        const notStarted = sorteo?.startDate && now < new Date(sorteo.startDate);
+        const ended = sorteo?.endDate && now > new Date(sorteo.endDate);
+        const available = !notStarted && !ended;
+        const statusMessage = ended ? "Sorteo finalizado" : "El sorteo aún no está disponible";
+        const statusSub = ended
+          ? "Este sorteo ya ha concluido. ¡Gracias por participar!"
+          : `Este sorteo se abrirá el ${new Date(sorteo.startDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}. Vuelve pronto.`;
+
+        const fieldHtml = available ? fields.map((f: any) => {
           const req = f.required ? "required" : "";
           const reqStar = f.required ? '<span style="color:#ef4444"> *</span>' : "";
           const label = escapeHtml(f.label || f.name);
@@ -1041,10 +1051,10 @@ ${items.map(cardHtml).join("")}
           }
           const inputType = f.type === "tel" ? "tel" : f.type === "email" ? "email" : f.type === "number" ? "number" : "text";
           return `<div style="display:flex;flex-direction:column;gap:.4rem"><label style="font-weight:600;color:#334155;font-size:.9rem">${label}${reqStar}</label><input type="${inputType}" name="${escapeHtml(f.name)}" ${req} style="padding:.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:.95rem"></div>`;
-        }).join("\n");
+        }).join("\n") : "";
 
         const desc = sorteo?.description ? `<p style="text-align:center;color:#64748b;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">${escapeHtml(sorteo.description)}</p>` : "";
-        const endDate = sorteo?.endDate ? `<p style="text-align:center;color:#94a3b8;font-size:.85rem;margin-bottom:1.5rem">Fecha límite: ${new Date(sorteo.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}</p>` : "";
+        const endDate = sorteo?.endDate && !ended ? `<p style="text-align:center;color:#94a3b8;font-size:.85rem;margin-bottom:1.5rem">Fecha límite: ${new Date(sorteo.endDate).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}</p>` : "";
 
         let sectionBg = "background:#f8fafc;";
         let titleColor = "#0f172a";
@@ -1067,17 +1077,24 @@ ${items.map(cardHtml).join("")}
         const wrapperOpen = bg.type === "image" ? `<div style="position:relative;${sectionBg}min-height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(3rem,10vw,5rem) clamp(1rem,5vw,2rem)">${imageOverlay}<div style="position:relative;z-index:1;width:100%;max-width:600px">` : "";
         const wrapperClose = bg.type === "image" ? `</div></div>` : "";
         const sectionStyle = bg.type === "image" ? "" : `style="${sectionBg}padding:clamp(5rem,12vw,8rem) clamp(1rem,5vw,2rem);width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center"`;
+        const formStatus = available
+          ? `<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:${formBg};padding:2rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.2)">
+${fieldHtml}
+  <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
+  <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Participar</button>
+</form>`
+          : `<div style="display:flex;flex-direction:column;gap:.5rem;background:${formBg};padding:2rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.2);text-align:center">
+  <div style="font-size:2.5rem">${ended ? "🎉" : "⏰"}</div>
+  <h3 style="margin:0;font-size:1.25rem;font-weight:700;color:${titleColor}">${statusMessage}</h3>
+  <p style="margin:0;color:#64748b;font-size:.95rem;max-width:420px;margin-left:auto;margin-right:auto">${statusSub}</p>
+</div>`;
 
         return `<section ${sectionStyle}>
 ${wrapperOpen}
 <h2 style="text-align:center;font-size:clamp(1.5rem,4vw,2.25rem);font-weight:800;margin-bottom:.5rem;color:${titleColor}">${escapeHtml(sorteo?.title || "Sorteo")}</h2>
 ${sorteo?.description ? `<p style="text-align:center;color:${titleColor};opacity:0.8;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">${escapeHtml(sorteo.description)}</p>` : ""}
 ${endDate}
-<form action="${apiUrl}/api/v1/sorteos/public/${tenantId}/${sorteo?.slug}/participate" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.1rem;background:${formBg};padding:2rem;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.2)">
-${fieldHtml}
-  <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
-  <button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Participar</button>
-</form>
+${formStatus}
 ${wrapperClose}
 </section>`;
       }
