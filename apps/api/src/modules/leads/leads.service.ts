@@ -11,10 +11,11 @@ export class LeadsService {
     private notifications: NotificationsService
   ) {}
 
-  async findAll(tenantId: string, filters?: { status?: string; search?: string; siteId?: string; from?: string; to?: string }, page = 1, pageSize = 25) {
+  async findAll(tenantId: string, filters?: { status?: string; search?: string; siteId?: string; source?: string; from?: string; to?: string }, page = 1, pageSize = 25) {
     const where: any = { tenantId };
     if (filters?.status) where.status = filters.status;
     if (filters?.siteId) where.siteId = filters.siteId;
+    if (filters?.source) where.source = filters.source;
     if (filters?.search) {
       const term = filters.search;
       where.OR = [
@@ -137,6 +138,32 @@ export class LeadsService {
 
     if (rows.length === 0) return "Sin datos";
     return `\uFEFF${header}\${rows.join("\n")}`;
+  }
+
+  async createManualLead(tenantId: string, data: any) {
+    const name = (data.name || "").trim() || "Sin nombre";
+    const email = (data.email || "").trim();
+    const phone = (data.phone || "").trim();
+    const notes = (data.notes || "").trim();
+
+    const lead = await this.prisma.lead.create({
+      data: {
+        tenantId,
+        name,
+        email,
+        phone,
+        source: "manual",
+        data: notes ? { notes, manual: true } : { manual: true },
+      },
+    });
+
+    this.notifications.sendPushNotificationToTenant(
+      tenantId, "¡Lead Manual Registrado!",
+      `Has registrado un nuevo prospecto manual: ${name}`,
+      { leadId: lead.id, url: "/leads" }
+    ).catch(() => {});
+
+    return lead;
   }
 
   async submitPublicLead(tenantId: string, siteId: string, data: any) {

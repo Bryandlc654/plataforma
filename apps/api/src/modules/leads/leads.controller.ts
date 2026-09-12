@@ -8,6 +8,8 @@ import { LeadsService } from "./leads.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
+import { RequirePermissions } from "../../common/decorators/permissions.decorator";
+import { PERMISSIONS } from "../../shared/index";
 
 @ApiTags("leads")
 @Controller("leads")
@@ -16,6 +18,13 @@ import { Public } from "../../common/decorators/public.decorator";
 export class LeadsController {
   constructor(private leadsService: LeadsService) {}
 
+  @Post()
+  @RequirePermissions(PERMISSIONS.LEAD_CREATE)
+  @ApiOperation({ summary: "Create a lead manually (not from web form)" })
+  async createManual(@CurrentUser() user: any, @Body() body: any) {
+    return this.leadsService.createManualLead(user.tenantId, body);
+  }
+
   @Get()
   @ApiOperation({ summary: "List leads with filters (paginated)" })
   async findAll(
@@ -23,6 +32,7 @@ export class LeadsController {
     @Query("status") status?: string,
     @Query("search") search?: string,
     @Query("siteId") siteId?: string,
+    @Query("source") source?: string,
     @Query("from") from?: string,
     @Query("to") to?: string,
     @Query("page") page?: string,
@@ -30,7 +40,7 @@ export class LeadsController {
   ) {
     const p = Math.max(1, parseInt(page || "1", 10) || 1);
     const ps = Math.min(100, Math.max(1, parseInt(pageSize || "25", 10) || 25));
-    return this.leadsService.findAll(user.tenantId, { status, search, siteId, from, to }, p, ps);
+    return this.leadsService.findAll(user.tenantId, { status, search, siteId, source, from, to }, p, ps);
   }
 
   @Get("stats")

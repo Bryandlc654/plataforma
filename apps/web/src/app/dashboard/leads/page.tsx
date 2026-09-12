@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface Lead {
   id: string;
@@ -15,25 +16,39 @@ interface Lead {
   createdAt: string;
 }
 
+const SOURCE_LABELS: Record<string, string> = {
+  website_contact: "Web",
+  manual: "Manual",
+};
+
 const PAGE_SIZE = 25;
 
 export default function LeadsPage() {
+  const user = useAuthStore((s) => s.user);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<Lead | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [formError, setFormError] = useState("");
   const debounceRef = useRef<any>(null);
+
+  const canCreate = user?.permissions?.includes("lead.create") || user?.roles?.includes("super_admin");
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
     try {
       const params: any = { page, pageSize: PAGE_SIZE };
       if (statusFilter) params.status = statusFilter;
+      if (sourceFilter) params.source = sourceFilter;
       if (search) params.search = search;
       const res: any = await api.get("/leads", { params });
       const body = res?.data || res;
@@ -42,7 +57,7 @@ export default function LeadsPage() {
     } catch { setLeads([]); setTotal(0); }
     finally { setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, statusFilter, search]);
+  }, [page, statusFilter, sourceFilter, search]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -101,6 +116,39 @@ export default function LeadsPage() {
     return colors[status] || "bg-slate-50 text-slate-700";
   };
 
+  const sourceLabel = (source: string) => SOURCE_LABELS[source] || source || "-";
+
+  const openCreate = () => {
+    setForm({ name: "", email: "", phone: "", notes: "" });
+    setFormError("");
+    setShowCreate(true);
+  };
+
+  const handleCreate = async () => {
+    if (!form.name.trim() && !form.email.trim() && !form.phone.trim()) {
+      setFormError("Ingresa al menos un nombre, email o teléfono.");
+      return;
+    }
+    setSaving(true);
+    setFormError("");
+    try {
+      await api.post("/leads", {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        notes: form.notes,
+      });
+      setShowCreate(false);
+      setPage(1);
+      await fetchLeads();
+      fetchStats();
+    } catch (e: any) {
+      setFormError(e?.response?.data?.message || "No se pudo guardar el lead.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
 
@@ -108,7 +156,12 @@ export default function LeadsPage() {
     <main className="flex-1 p-8 bg-slate-50 overflow-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
-        <button onClick={exportCsv} className="btn-secondary text-sm">Exportar CSV</button>
+        <div className="flex items-center gap-3">
+          {canCreate && (
+            <button onClick={openCreate} className="btn-primary text-sm">+ Agregar lead</button>
+          )}
+          <button onClick={exportCsv} className="btn-secondary text-sm">Exportar CSV</button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -154,6 +207,15 @@ export default function LeadsPage() {
           <option value="converted">Convertido</option>
           <option value="archived">Archivado</option>
         </select>
+        <select
+          value={sourceFilter}
+          onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
+          className="input-field w-44"
+        >
+          <option value="">Todos los orígenes</option>
+          <option value="website_contact">Web</option>
+          <option value="manual">Manual</option>
+        </select>
         <button onClick={() => { setPage(1); fetchLeads(); }} className="btn-secondary text-sm">Buscar</button>
       </div>
 
@@ -163,7 +225,7 @@ export default function LeadsPage() {
       ) : leads.length === 0 ? (
         <div className="card text-center py-12">
           <h3 className="font-semibold text-slate-900 mb-2">Sin leads</h3>
-          <p className="text-sm text-slate-600">Los leads aparecerán cuando alguien envíe un formulario</p>
+          <p className="text-sm text-slate-600">Los leads aparecerán cuando alguien envíe un formulario o cuando agregues uno manualmente</p>
         </div>
       ) : (
         <div className="card overflow-x-auto">
@@ -210,7 +272,7 @@ export default function LeadsPage() {
                       <option value="archived">Archivado</option>
                     </select>
                   </td>
-                  <td className="py-3 px-4 text-slate-500">{lead.source || "-"}</td>
+                  <td className="py-3 px-4 text-slate-500">{sourceLabel(lead.source)}</td>
                   <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(lead.createdAt)}</td>
                   <td className="py-3 px-4">
                     {lead.data && Object.keys(lead.data as object).length > 0 && (
@@ -281,6 +343,70 @@ export default function LeadsPage() {
                 className="btn-primary text-xs"
               >
                 Marcar como contactado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create manual lead modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !saving && setShowCreate(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="font-semibold text-slate-900">Agregar lead manual</h3>
+              <button onClick={() => !saving && setShowCreate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-500 -mt-2">Se guardará como origen <span className="font-medium">Manual</span>, separado de los leads de la web.</p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  className="input-field w-full"
+                  placeholder="Nombre del contacto"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                <input
+                  type="email"
+                  className="input-field w-full"
+                  placeholder="correo@ejemplo.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
+                <input
+                  type="tel"
+                  className="input-field w-full"
+                  placeholder="+52 ..."
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Notas <span className="font-normal text-slate-400">(opcional)</span></label>
+                <textarea
+                  className="input-field w-full"
+                  rows={3}
+                  placeholder="Detalles del prospecto..."
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                />
+              </div>
+              {formError && <p className="text-sm text-red-600">{formError}</p>}
+            </div>
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
+              <button onClick={() => setShowCreate(false)} disabled={saving} className="btn-secondary text-sm disabled:opacity-50">Cancelar</button>
+              <button onClick={handleCreate} disabled={saving} className="btn-primary text-sm disabled:opacity-50">
+                {saving ? "Guardando..." : "Guardar lead"}
               </button>
             </div>
           </div>
