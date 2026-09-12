@@ -221,12 +221,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <p className="text-xs text-slate-500 truncate">{user?.email}</p>
               </div>
             </div>
-            <button onClick={logout} className="mt-3 w-full text-left text-xs text-slate-500 hover:text-red-600 transition-colors px-1">Cerrar sesión</button>
+            <div className="mt-3 flex flex-col gap-1">
+              <Link href="/dashboard/profile" className="w-full text-left text-xs text-slate-500 hover:text-primary-600 transition-colors px-1">Mi perfil</Link>
+              <button onClick={logout} className="w-full text-left text-xs text-slate-500 hover:text-red-600 transition-colors px-1">Cerrar sesión</button>
+            </div>
           </div>
         )}
         {collapsed && (
           <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-xs flex-shrink-0" title={`${user?.firstName} ${user?.lastName}`}>{user?.firstName?.[0] || "U"}</div>
+            <Link href="/dashboard/profile" title="Mi perfil" className="text-slate-400 hover:text-primary-600 transition-colors">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </Link>
             <button onClick={logout} title="Cerrar sesión" className="text-slate-400 hover:text-red-500 transition-colors">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>

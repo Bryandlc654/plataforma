@@ -79,6 +79,10 @@ export class CreateTenantDto {
 
 export class UpdateUserDto {
   @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
   @IsString()
   @MaxLength(50)
   firstName?: string;
@@ -87,6 +91,11 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(50)
   lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  avatarUrl?: string;
 
   @IsOptional()
   @IsString()
@@ -100,4 +109,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   timezone?: string;
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  currentPassword: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(64)
+  newPassword: string;
 }

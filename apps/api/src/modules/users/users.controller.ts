@@ -14,7 +14,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
-import { UpdateUserDto, PERMISSIONS } from "../../shared/index";
+import { UpdateUserDto, ChangePasswordDto, PERMISSIONS } from "../../shared/index";
 import { RequirePermissions } from "../../common/decorators/permissions.decorator";
 
 @ApiTags("users")
@@ -43,10 +43,9 @@ export class UsersController {
   @ApiOperation({ summary: "Change password" })
   async changePassword(
     @CurrentUser() user: any,
-    @Body("currentPassword") currentPassword: string,
-    @Body("newPassword") newPassword: string
+    @Body() dto: ChangePasswordDto
   ) {
-    return this.usersService.changePassword(user.id, currentPassword, newPassword);
+    return this.usersService.changePassword(user.id, dto.currentPassword, dto.newPassword);
   }
 
   @Get("tenants")

@@ -36,9 +36,27 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
+    const { email, ...rest } = dto;
+
+    if (email) {
+      const existing = await this.prisma.user.findUnique({ where: { email }, select: { id: true } });
+      if (existing && existing.id !== userId) {
+        throw new ForbiddenException("Email is already in use");
+      }
+    }
+
+    const data: any = {};
+    for (const [key, value] of Object.entries(rest)) {
+      if (value !== undefined && value !== null && value !== "") data[key] = value;
+    }
+    if (email) {
+      data.email = email.toLowerCase().trim();
+      data.isVerified = false;
+    }
+
     return this.prisma.user.update({
       where: { id: userId },
-      data: dto,
+      data,
       select: { id: true, email: true, firstName: true, lastName: true, avatarUrl: true, phone: true, locale: true, timezone: true },
     });
   }
