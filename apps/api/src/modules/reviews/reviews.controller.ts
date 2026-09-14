@@ -64,6 +64,7 @@ export class ReviewsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @RequirePermissions('reviews.manage')
   @ApiBearerAuth()
   @Patch(':id/publish')
   @ApiOperation({ summary: 'Toggle publish status' })
@@ -76,6 +77,7 @@ export class ReviewsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @RequirePermissions('reviews.manage')
   @ApiBearerAuth()
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a review' })
