@@ -18,6 +18,8 @@ import {
   LoginDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  VerifyEmailDto,
+  ResendVerificationDto,
 } from "../../shared/index";
 import { Public } from "../../common/decorators/public.decorator";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -71,15 +73,32 @@ export class AuthController {
 
   @Public()
   @Post("register")
-  @ApiOperation({ summary: "Register new user with tenant" })
-  async register(
-    @Body() dto: RegisterUserDto,
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Register new user with tenant (requires email verification)" })
+  async register(@Body() dto: RegisterUserDto) {
+    return this.authService.register(dto);
+  }
+
+  @Public()
+  @Post("verify-email")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Verify email with code and log the user in" })
+  async verifyEmail(
+    @Body() dto: VerifyEmailDto,
     @Res({ passthrough: true }) res: Response
   ) {
-    const result: any = await this.authService.register(dto);
+    const result: any = await this.authService.verifyEmail(dto);
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
     const { accessToken, refreshToken, ...safe } = result;
     return { ...safe, accessToken, refreshToken };
+  }
+
+  @Public()
+  @Post("resend-verification")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Resend verification code" })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto);
   }
 
   @Public()

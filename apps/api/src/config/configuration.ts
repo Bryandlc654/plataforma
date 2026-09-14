@@ -30,7 +30,7 @@ export default () => ({
   },
 
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || "https://build.icebergup.com",
   },
 
   smtp: {
@@ -38,7 +38,7 @@ export default () => ({
     port: parseInt(process.env.SMTP_PORT || "587", 10),
     user: process.env.SMTP_USER,
     password: process.env.SMTP_PASSWORD,
-    from: process.env.MAIL_FROM || "noreply@plataforma.com",
+    from: process.env.MAIL_FROM || "noreply@icebergup.com",
   },
 
   storage: {

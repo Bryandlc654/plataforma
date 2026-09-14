@@ -4,6 +4,7 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
+  Matches,
 } from "class-validator";
 
 export class RegisterUserDto {
@@ -45,6 +46,20 @@ export class RefreshTokenDto {
 }
 
 export class ForgotPasswordDto {
+  @IsEmail()
+  email!: string;
+}
+
+export class VerifyEmailDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @Matches(/^\d{6}$/, { message: "El código debe tener 6 dígitos" })
+  code!: string;
+}
+
+export class ResendVerificationDto {
   @IsEmail()
   email!: string;
 }

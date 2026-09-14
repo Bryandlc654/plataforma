@@ -63,8 +63,8 @@ export class TenantsService {
         },
       });
 
-      const ownerRole = await tx.role.findUnique({
-        where: { name: "owner" },
+      const ownerRole = await tx.role.findFirst({
+        where: { name: "owner", tenantId: null, isSystem: true },
       });
 
       const userTenant = await tx.userTenant.create({

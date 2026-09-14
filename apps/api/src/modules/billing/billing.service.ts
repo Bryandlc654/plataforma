@@ -11,6 +11,10 @@ export class BillingService {
     private configService: ConfigService
   ) {}
 
+  private getFrontendUrl(): string {
+    return this.configService.get<string>("FRONTEND_URL", "https://build.icebergup.com");
+  }
+
   async createInvoice(tenantId: string, subscriptionId: string, amount: number, currency = "USD") {
     return this.prisma.invoice.create({
       data: {
@@ -72,7 +76,7 @@ export class BillingService {
       this.logger.warn("Payphone not configured, using mock payment");
 
       return {
-        paymentUrl: `http://localhost:3000/dashboard/billing/pay?plan=${planSlug}&tenant=${tenantId}`,
+        paymentUrl: `${this.getFrontendUrl()}/dashboard/billing/pay?plan=${planSlug}&tenant=${tenantId}`,
         amount: Number(plan.price),
         currency: "USD",
         plan: plan.name,
@@ -92,8 +96,8 @@ export class BillingService {
           amountWithoutTax: Number(plan.price),
           clientTransactionId: `${tenantId}_${Date.now()}`,
           reference: `Plan ${plan.name} - Monthly`,
-          responseUrl: `http://localhost:3000/dashboard/billing/success`,
-          cancellationUrl: `http://localhost:3000/dashboard/billing/cancel`,
+          responseUrl: `${this.getFrontendUrl()}/dashboard/billing/success`,
+          cancellationUrl: `${this.getFrontendUrl()}/dashboard/billing/cancel`,
         }),
       });
 

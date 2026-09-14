@@ -509,7 +509,10 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
   </div>
   <div class="w-full border-t border-white/10 relative">
     <div class="max-w-[1720px] mx-auto px-8 md:px-12 lg:px-16 py-6 flex items-center justify-between">
-      <p class="text-[14px] font-medium text-white/90 font-sans tracking-wide">${C.copyright}</p>
+      <div class="flex items-center gap-6">
+        <p class="text-[14px] font-medium text-white/90 font-sans tracking-wide">${C.copyright}</p>
+        <a href="/dejar-opinion" class="text-[14px] font-medium text-white/70 hover:text-white font-sans tracking-wide transition-colors">Dejar una reseña</a>
+      </div>
       <button aria-label="Scroll to top" class="w-11 h-11 rounded-full bg-[#d0451b] hover:bg-[#b83b14] text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 flex-shrink-0" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
         <svg class="w-5 h-5 stroke-current stroke-[2.4] fill-none" viewBox="0 0 24 24"><path d="M5 10l7-7m0 0l7 7m-7-7v18" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       </button>

@@ -139,7 +139,7 @@ async function main() {
   }
 
   // Asignar rol super_admin al admin
-  const superAdminRole = await prisma.role.findUnique({ where: { name: "super_admin" } });
+  const superAdminRole = await prisma.role.findFirst({ where: { name: "super_admin", tenantId: null, isSystem: true } });
   if (superAdminRole) {
     let ut = await prisma.userTenant.findFirst({ where: { userId: superAdmin.id } });
     if (!ut) {
@@ -159,35 +159,74 @@ async function main() {
     }
   }
 
-  // Owner
-  let owner = await prisma.user.findUnique({ where: { email: "owner@negocio.com" } });
-  if (owner) {
-    console.log("Owner ya existe: owner@negocio.com");
-  } else {
-    const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
-    const ownerRole = await prisma.role.findUnique({ where: { name: "owner" } });
+  // Tenant demo con roles reales y asignaciones reales
+  const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
+  const ownerRole = await prisma.role.findFirst({ where: { name: "owner", tenantId: null, isSystem: true } });
+  const adminRole = await prisma.role.findFirst({ where: { name: "admin", tenantId: null, isSystem: true } });
+  const editorRole = await prisma.role.findFirst({ where: { name: "editor", tenantId: null, isSystem: true } });
+  const marketingRole = await prisma.role.findFirst({ where: { name: "marketing", tenantId: null, isSystem: true } });
 
-    const slug = "mi-negocio-" + Math.random().toString(36).substring(2, 6);
-    owner = await prisma.user.create({ data: { email: "owner@negocio.com", passwordHash: hashedPassword, firstName: "Carlos", lastName: "Dueño", isVerified: true } });
+  const demoUsers = [
+    { email: "owner@negocio.com", firstName: "Carlos", lastName: "Dueño", role: ownerRole, isOwner: true },
+    { email: "admin@negocio.com", firstName: "María", lastName: "Admin", role: adminRole, isOwner: false },
+    { email: "editor@negocio.com", firstName: "Lucía", lastName: "Editora", role: editorRole, isOwner: false },
+    { email: "marketing@negocio.com", firstName: "Jorge", lastName: "Mkt", role: marketingRole, isOwner: false },
+  ];
 
-    const tenant = await prisma.tenant.create({
-      data: { name: "Mi Negocio", slug, subdomain: slug, planId: freePlan?.id, maxUsers: freePlan?.maxUsers ?? 3, maxSites: freePlan?.maxSites ?? 1, maxStorage: freePlan?.maxStorage ?? BigInt(52428800) },
+  let demoTenant = await prisma.tenant.findUnique({ where: { slug: "mi-negocio-demo" } });
+  if (!demoTenant) {
+    demoTenant = await prisma.tenant.create({
+      data: {
+        name: "Mi Negocio (Demo)",
+        slug: "mi-negocio-demo",
+        subdomain: "mi-negocio-demo",
+        planId: freePlan?.id,
+        maxUsers: 10,
+        maxSites: freePlan?.maxSites ?? 1,
+        maxStorage: freePlan?.maxStorage ?? BigInt(52428800),
+      },
     });
+    console.log("Tenant demo creado: Mi Negocio (Demo)");
+  }
 
-    const userTenant = await prisma.userTenant.create({
-      data: { userId: owner.id, tenantId: tenant.id, isOwner: true },
-    });
-
-    if (ownerRole) {
-      await prisma.userTenantRole.create({ data: { userTenantId: userTenant.id, roleId: ownerRole.id } });
+  for (const u of demoUsers) {
+    let user = await prisma.user.findUnique({ where: { email: u.email } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email: u.email, passwordHash: hashedPassword, firstName: u.firstName, lastName: u.lastName, isVerified: true },
+      });
+      console.log(`Usuario creado: ${u.email}`);
     }
 
-    console.log("Owner creado: owner@negocio.com → Tenant: Mi Negocio");
+    let ut = await prisma.userTenant.findUnique({
+      where: { userId_tenantId: { userId: user.id, tenantId: demoTenant.id } },
+    });
+    if (!ut) {
+      ut = await prisma.userTenant.create({
+        data: { userId: user.id, tenantId: demoTenant.id, isOwner: u.isOwner },
+      });
+    }
+
+    if (u.role) {
+      const hasRole = await prisma.userTenantRole.findFirst({
+        where: { userTenantId: ut.id, roleId: u.role.id },
+      });
+      if (!hasRole) {
+        await prisma.userTenantRole.create({ data: { userTenantId: ut.id, roleId: u.role.id } });
+        console.log(`Rol ${u.role.name} asignado a ${u.email} en tenant demo`);
+      }
+    }
   }
+
+  const demoMembers = await prisma.userTenant.count({ where: { tenantId: demoTenant.id } });
+  console.log(`Tenant demo listo: Mi Negocio (Demo) · ${demoMembers} miembros con roles asignados`);
 
   console.log("\n=== Usuarios ===");
   console.log("Super Admin: admin@plataforma.com / Admin123!");
   console.log("Owner:       owner@negocio.com  / Admin123!");
+  console.log("Admin:       admin@negocio.com  / Admin123!");
+  console.log("Editor:      editor@negocio.com / Admin123!");
+  console.log("Marketing:   marketing@negocio.com / Admin123!");
   console.log("\nSeed completado.");
 }
 

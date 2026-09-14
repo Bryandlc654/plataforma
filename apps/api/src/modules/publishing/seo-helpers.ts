@@ -10,7 +10,7 @@ export function publicBaseUrl(): string {
     process.env.NEXT_PUBLIC_APP_URL;
   const base = explicit && !/localhost/.test(explicit)
     ? explicit.replace(/\/+$/, "")
-    : "https://www.nextboostperu.cloud";
+    : "https://build.icebergup.com";
   return base;
 }
 

@@ -991,6 +991,7 @@ ${items.map(cardHtml).join("")}
 <form action="${apiUrl}/api/v1/reviews/public" method="POST" data-pub-form class="pub-form" style="display:flex;flex-direction:column;gap:1.25rem;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);border:1px solid #e2e8f0">
   <input type="hidden" name="tenantId" value="${tenantId}">
   <input type="hidden" name="siteId" value="${siteId}">
+  <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden" />
   <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;margin-bottom:1rem">
     <label style="font-weight:600;color:#334155;font-size:.95rem">Calificación</label>
     <div style="display:flex;flex-direction:row-reverse;gap:0.25rem" class="star-rating">
@@ -1177,7 +1178,7 @@ ${(c.columns || []).map((col: any) => `<div>
 ${(col.links || []).map((link: any) => `<div style="margin-bottom:.5rem"><a href="${link.url || "#"}" style="color:#94a3b8;text-decoration:none;font-size:clamp(.78rem,1.2vw,.85rem);transition:color .2s">${link.label || ""}</a></div>`).join("")}
 </div>`).join("")}
 </div>
-<div style="text-align:center;padding-top:clamp(1.5rem,3vw,2rem);margin-top:clamp(1.5rem,3vw,2rem);border-top:1px solid #334155;font-size:clamp(.7rem,1.1vw,.8rem);opacity:.7">${c.copyright || ""}</div>
+<div style="text-align:center;padding-top:clamp(1.5rem,3vw,2rem);margin-top:clamp(1.5rem,3vw,2rem);border-top:1px solid #334155;font-size:clamp(.7rem,1.1vw,.8rem);opacity:.7">${c.copyright || ""} <span style="display:inline-block;margin:0 .5rem">•</span> <a href="/dejar-opinion" data-analytics-click data-analytics-type="click" data-analytics-label="footer_reviews" style="color:#94a3b8;text-decoration:none;transition:color .2s">Dejar una reseña</a></div>
 </footer>`;
 
       case "about":

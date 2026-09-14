@@ -185,6 +185,7 @@ ${f.type === "textarea" ? `
 </div>
 <div class="flex gap-8">
   ${c.columns?.[0]?.links?.map((l: any) => `<a class="font-label-sm text-label-sm uppercase tracking-widest text-on-primary/60 dark:text-on-background/60 hover:text-tertiary-fixed dark:hover:text-tertiary transition-colors duration-200" href="${l.url}">${l.label}</a>`).join("") || ""}
+  <a class="font-label-sm text-label-sm uppercase tracking-widest text-on-primary/60 dark:text-on-background/60 hover:text-tertiary-fixed dark:hover:text-tertiary transition-colors duration-200" href="/dejar-opinion">Dejar una reseña</a>
 </div>
 <div class="font-body-md text-body-md text-on-primary dark:text-on-background opacity-50">
     ${c.copyright || "© 2024 L'ART CULINAIRE. ALL RIGHTS RESERVED."}

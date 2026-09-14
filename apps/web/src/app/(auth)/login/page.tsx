@@ -18,11 +18,14 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, ensureSession, hasHydrated } = useAuthStore();
+  const { login, resendVerification, isLoading, ensureSession, hasHydrated } = useAuthStore();
   const toastState = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [toast, setToast] = toastState;
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [sendCountdown, setSendCountdown] = useState(0);
 
   useEffect(() => {
     if (!toast) return;
@@ -46,15 +49,39 @@ export default function LoginPage() {
     })();
   }, [ensureSession, hasHydrated, router]);
 
+  useEffect(() => {
+    if (sendCountdown <= 0) return;
+    const t = setTimeout(() => setSendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [sendCountdown]);
+
   const onSubmit = async (data: LoginFormData) => {
     try {
+      setUnverifiedEmail(null);
+      setResendMessage(null);
       await login(data.email, data.password);
       setToast({ type: "success", message: "Sesión iniciada correctamente" });
       setTimeout(() => router.push("/dashboard"), 1200);
     } catch (err: any) {
       const msg =
         err.response?.data?.message || "Credenciales incorrectas. Intenta de nuevo.";
+      if (err.response?.status === 403 && data.email) {
+        setUnverifiedEmail(data.email);
+      }
       setToast({ type: "error", message: msg });
+    }
+  };
+
+  const onResendCode = async () => {
+    if (!unverifiedEmail || isLoading || sendCountdown > 0) return;
+    try {
+      setResendMessage("Enviando código...");
+      const message = await resendVerification(unverifiedEmail);
+      setResendMessage(message);
+      setSendCountdown(30);
+    } catch (err: any) {
+      setResendMessage(err.response?.data?.message || "No se pudo reenviar el código.");
+      setSendCountdown(0);
     }
   };
 
@@ -207,6 +234,32 @@ export default function LoginPage() {
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
+
+            {/* Unverified email */}
+            {unverifiedEmail && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                <p className="font-medium">
+                  Tu correo aún no ha sido verificado.
+                </p>
+                <p className="mt-1">
+                  Ingresa el código de 6 dígitos que enviamos a{" "}
+                  <span className="font-semibold">{unverifiedEmail}</span>.
+                </p>
+                {resendMessage && (
+                  <p className="mt-2 text-xs text-amber-700">{resendMessage}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={onResendCode}
+                  disabled={isLoading || sendCountdown > 0}
+                  className="mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {sendCountdown > 0
+                    ? `Reenviar código en ${sendCountdown}s`
+                    : "Reenviar código"}
+                </button>
+              </div>
+            )}
 
             {/* Submit */}
             <button

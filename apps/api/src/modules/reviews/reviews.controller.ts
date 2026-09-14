@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { CreateReviewDto } from '../../shared';
+
+const HONEYPOT_FIELDS = ['website', 'hp_company', 'company'];
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -15,11 +19,18 @@ export class ReviewsController {
   @Public()
   @Post('public')
   @ApiOperation({ summary: 'Submit a public review' })
-  async createPublic(@Body() body: any) {
-    if (!body.tenantId || !body.content || !body.authorName) {
+  async createPublic(@Body() body: any, @Req() req: any) {
+    if (body && HONEYPOT_FIELDS.some((f) => body[f])) {
+      return { success: true, id: null };
+    }
+    if (!body || !body.tenantId || !body.content || !body.authorName) {
       throw new HttpException('Faltan campos requeridos', HttpStatus.BAD_REQUEST);
     }
-    return this.reviewsService.create(body);
+    return this.reviewsService.create({
+      ...body,
+      ipAddress: req?.ip || null,
+      userAgent: req?.get?.('user-agent') || null,
+    });
   }
 
   @Public()
@@ -41,6 +52,15 @@ export class ReviewsController {
     const p = Math.max(1, parseInt(page || '1', 10) || 1);
     const l = Math.min(100, Math.max(1, parseInt(limit || '30', 10) || 30));
     return this.reviewsService.findAll(user.tenantId, p, l);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @RequirePermissions('reviews.manage')
+  @ApiBearerAuth()
+  @Post()
+  @ApiOperation({ summary: 'Create a review manually' })
+  async createManual(@CurrentUser() user: any, @Body() dto: CreateReviewDto) {
+    return this.reviewsService.createManual(user.tenantId, dto);
   }
 
   @UseGuards(JwtAuthGuard)

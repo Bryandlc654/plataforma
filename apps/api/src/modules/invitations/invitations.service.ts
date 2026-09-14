@@ -15,6 +15,9 @@ export class InvitationsService {
     if (role.level !== "tenant" || role.name === "owner") {
       throw new ForbiddenException("No puedes invitar con este rol");
     }
+    if (role.tenantId !== null && role.tenantId !== tenantId) {
+      throw new ForbiddenException("No puedes usar un rol de otro negocio");
+    }
 
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {

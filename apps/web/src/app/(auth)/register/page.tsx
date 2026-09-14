@@ -25,8 +25,22 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register: registerUser, isLoading, ensureSession, hasHydrated } = useAuthStore();
+  const {
+    register: registerUser,
+    verifyEmail,
+    resendVerification,
+    isLoading,
+    ensureSession,
+    hasHydrated,
+  } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [step, setStep] = useState<"form" | "code">("form");
+  const [pendingEmail, setPendingEmail] = useState<string>("");
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const {
     register,
@@ -47,17 +61,45 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setError(null);
-      await registerUser({
+      const result = await registerUser({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      router.push("/dashboard");
+      setPendingEmail(result.email);
+      setInfo(result.message);
+      setStep("code");
     } catch (err: any) {
       setError(
         err.response?.data?.message || "Error al crear la cuenta"
       );
+    }
+  };
+
+  const onVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code.trim().length !== 6) {
+      setCodeError("Ingresa el código de 6 dígitos");
+      return;
+    }
+    try {
+      setCodeError(null);
+      await verifyEmail(pendingEmail, code.trim());
+      router.push("/dashboard");
+    } catch (err: any) {
+      setCodeError(err.response?.data?.message || "Código incorrecto");
+    }
+  };
+
+  const onResend = async () => {
+    try {
+      setCodeError(null);
+      setInfo("Enviando código...");
+      const message = await resendVerification(pendingEmail);
+      setInfo(message);
+    } catch (err: any) {
+      setCodeError(err.response?.data?.message || "No se pudo reenviar el código");
     }
   };
 
@@ -66,120 +108,209 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
-            Crear cuenta
+            {step === "form" ? "Crear cuenta" : "Verifica tu correo"}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Comienza a construir tu presencia digital
+            {step === "form"
+              ? "Comienza a construir tu presencia digital"
+              : `Te enviamos un código de 6 dígitos a ${pendingEmail}`}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200">
-              {error}
-            </div>
-          )}
+        {step === "form" ? (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {error && (
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label" htmlFor="firstName">
+                  Nombre
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  className="input-field"
+                  placeholder="Juan"
+                  {...register("firstName")}
+                />
+                {errors.firstName && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.firstName.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="label" htmlFor="lastName">
+                  Apellido
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  className="input-field"
+                  placeholder="Pérez"
+                  {...register("lastName")}
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.lastName.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <label className="label" htmlFor="firstName">
-                Nombre
+              <label className="label" htmlFor="email">
+                Correo electrónico
               </label>
               <input
-                id="firstName"
-                type="text"
+                id="email"
+                type="email"
                 className="input-field"
-                placeholder="Juan"
-                {...register("firstName")}
+                placeholder="tu@correo.com"
+                {...register("email")}
               />
-              {errors.firstName && (
+              {errors.email && (
                 <p className="mt-1 text-xs text-red-600">
-                  {errors.firstName.message}
+                  {errors.email.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="label" htmlFor="lastName">
-                Apellido
+              <label className="label" htmlFor="password">
+                Contraseña
               </label>
-              <input
-                id="lastName"
-                type="text"
-                className="input-field"
-                placeholder="Pérez"
-                {...register("lastName")}
-              />
-              {errors.lastName && (
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="input-field pr-12"
+                  placeholder="Mínimo 8 caracteres"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && (
                 <p className="mt-1 text-xs text-red-600">
-                  {errors.lastName.message}
+                  {errors.password.message}
                 </p>
               )}
             </div>
-          </div>
 
-          <div>
-            <label className="label" htmlFor="email">
-              Correo electrónico
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="input-field"
-              placeholder="tu@correo.com"
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.email.message}
-              </p>
+            <div>
+              <label className="label" htmlFor="confirmPassword">
+                Confirmar contraseña
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirm ? "text" : "password"}
+                  className="input-field pr-12"
+                  placeholder="Repite tu contraseña"
+                  {...register("confirmPassword")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary w-full"
+            >
+              {isLoading ? "Creando cuenta..." : "Crear cuenta"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={onVerify} className="space-y-4">
+            {info && (
+              <div className="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700 border border-blue-200">
+                {info}
+              </div>
             )}
-          </div>
-
-          <div>
-            <label className="label" htmlFor="password">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="input-field"
-              placeholder="Mínimo 8 caracteres"
-              {...register("password")}
-            />
-            {errors.password && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.password.message}
-              </p>
+            {codeError && (
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200">
+                {codeError}
+              </div>
             )}
-          </div>
 
-          <div>
-            <label className="label" htmlFor="confirmPassword">
-              Confirmar contraseña
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              className="input-field"
-              placeholder="Repite tu contraseña"
-              {...register("confirmPassword")}
-            />
-            {errors.confirmPassword && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
+            <div>
+              <label className="label" htmlFor="code">
+                Código de verificación
+              </label>
+              <input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                className="input-field text-center text-2xl tracking-[0.5em]"
+                placeholder="••••••"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary w-full"
-          >
-            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading || code.trim().length !== 6}
+              className="btn-primary w-full"
+            >
+              {isLoading ? "Verificando..." : "Verificar y entrar"}
+            </button>
+
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={isLoading}
+              className="w-full text-center text-sm text-primary-600 hover:text-primary-500"
+            >
+              Reenviar código
+            </button>
+          </form>
+        )}
 
         <div className="mt-6 text-center text-sm text-slate-600">
           ¿Ya tienes cuenta?{" "}

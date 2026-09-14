@@ -47,6 +47,30 @@ export class EmailService {
     return this.configService.get<string>("FRONTEND_URL", "https://build.icebergup.com");
   }
 
+  get isConfigured(): boolean {
+    const user = this.configService.get<string>("smtp.user");
+    const pass = this.configService.get<string>("smtp.password");
+    return Boolean(user && pass);
+  }
+
+  async sendVerificationEmail(to: string, code: string) {
+    await this.send({
+      to,
+      subject: "Tu código de verificación - Plataforma",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563EB;">Verifica tu correo</h1>
+          <p>Hola,</p>
+          <p>Ingresa el siguiente código para confirmar tu dirección de correo y activar tu cuenta:</p>
+          <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563EB;">${code}</span>
+          </div>
+          <p style="color: #666; font-size: 14px;">Este código expirará en 15 minutos. Si no solicitaste este registro, ignora este mensaje.</p>
+        </div>
+      `,
+    });
+  }
+
   async sendWelcomeEmail(to: string, name: string) {
     const dashboardUrl = `${this.getFrontendUrl()}/dashboard`;
     await this.send({

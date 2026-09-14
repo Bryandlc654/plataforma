@@ -725,6 +725,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <div class="flex gap-6 text-sm font-semibold opacity-60" style="color:${D}">
               <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Privacidad</a>
               <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Términos</a>
+              <a href="/dejar-opinion" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Dejar una reseña</a>
             </div>
           </div>
         </div>

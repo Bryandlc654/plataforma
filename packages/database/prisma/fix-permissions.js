@@ -4,8 +4,8 @@ const p = new PrismaClient();
 async function main() {
   // Get roles and permissions
   const [adminRole, marketingRole] = await Promise.all([
-    p.role.findUnique({ where: { name: "admin" } }),
-    p.role.findUnique({ where: { name: "marketing" } }),
+    p.role.findFirst({ where: { name: "admin", tenantId: null } }),
+    p.role.findFirst({ where: { name: "marketing", tenantId: null } }),
   ]);
 
   const [integrationPerm, siteReadPerm] = await Promise.all([

@@ -41,7 +41,9 @@ interface AuthState {
     password: string;
     firstName: string;
     lastName: string;
-  }) => Promise<{ success: boolean }>;
+  }) => Promise<{ message: string; email: string; requiresVerification: boolean }>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<string>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
   fetchTenants: () => Promise<void>;
@@ -122,9 +124,25 @@ const useAuthStore = create<AuthState>()(
           const response: any = await api.post("/auth/register", data);
           const payload = response.data || response;
 
+          return {
+            message: payload.message || "Revisa tu correo para verificar tu cuenta.",
+            email: payload.email || data.email,
+            requiresVerification: payload.requiresVerification ?? true,
+          };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      verifyEmail: async (email: string, code: string) => {
+        set({ isLoading: true });
+        try {
+          const response: any = await api.post("/auth/verify-email", { email, code });
+          const payload = response.data || response;
+
           set({
             user: payload.user,
-            tenants: payload.tenants || (payload.tenant ? [{ ...payload.tenant, isOwner: true }] : []),
+            tenants: payload.tenants || [],
             accessToken: payload.accessToken || null,
             refreshToken: payload.refreshToken || null,
             isAuthenticated: true,
@@ -134,17 +152,22 @@ const useAuthStore = create<AuthState>()(
             document.cookie = `auth_session=1; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
           }
 
-          if (payload.tenant) {
+          if (payload.tenants?.length > 0) {
+            const firstTenant = payload.tenants[0];
             set({
-              tenant: { ...payload.tenant, isOwner: true },
-              tenantId: payload.tenant.id,
+              tenant: firstTenant,
+              tenantId: firstTenant.id,
             });
           }
-
-          return { success: true };
         } finally {
           set({ isLoading: false });
         }
+      },
+
+      resendVerification: async (email: string) => {
+        const response: any = await api.post("/auth/resend-verification", { email });
+        const payload = response.data || response;
+        return payload.message || "Te enviamos un nuevo código a tu correo.";
       },
 
       logout: () => {
@@ -202,6 +225,7 @@ const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      skipHydration: true,
     }
   )
 );

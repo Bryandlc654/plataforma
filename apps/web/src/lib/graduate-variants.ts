@@ -978,6 +978,7 @@ return `${head}
       <div class="text-gray-500 text-sm">${C.copyright}</div>
       <div class="flex gap-6 text-sm font-medium text-gray-500">
         ${(C.legalLinks || []).map((l: any) => `<a href="${l.url || "#"}" class="hover:text-white transition-colors">${l.label}</a>`).join("")}
+        <a href="/dejar-opinion" class="hover:text-white transition-colors">Dejar una reseña</a>
       </div>
     </div>
   </div>

@@ -28,76 +28,93 @@ export class SeedService implements OnModuleInit {
   }
 
   private async seedPermissions() {
-    const existing = await this.prisma.permission.count();
-    if (existing > 0) {
-      this.logger.log("Permissions already seeded, skipping");
-      return;
-    }
-
     const permissionEntries = (Object.values(PERMISSIONS) as string[]).map((name: string) => {
       const [resource, action] = name.split(".");
       return { name, resource, action };
     });
 
-    await this.prisma.permission.createMany({
-      data: permissionEntries,
-      skipDuplicates: true,
-    });
+    let synced = 0;
+    for (const entry of permissionEntries) {
+      try {
+        await this.prisma.permission.upsert({
+          where: { name: entry.name },
+          update: {},
+          create: entry,
+        });
+        synced++;
+      } catch (err: any) {
+        this.logger.warn(`Permission ${entry.name} sync failed: ${err?.message}`);
+      }
+    }
 
-    this.logger.log(`Seeded ${permissionEntries.length} permissions`);
+    this.logger.log(`Permissions synced (${synced}/${permissionEntries.length})`);
   }
 
   private async seedRoles() {
-    const existing = await this.prisma.role.count();
-    if (existing > 0) {
-      this.logger.log("Roles already seeded, skipping");
-      return;
-    }
-
-    const roleEntries = (Object.entries(ROLES) as Array<[string, string]>).map(([key, name]: [string, string]) => ({
+    const roleEntries = (Object.entries(ROLES) as Array<[string, string]>).map(([, name]: [string, string]) => ({
       name,
       description: this.getRoleDescription(name),
       level: name === "super_admin" || name === "support" ? "platform" : "tenant",
       isSystem: true,
     }));
 
-    await this.prisma.role.createMany({
-      data: roleEntries,
-      skipDuplicates: true,
-    });
-
-    this.logger.log(`Seeded ${roleEntries.length} roles`);
-  }
-
-  private async seedRolePermissions() {
-    const existing = await this.prisma.rolePermission.count();
-    if (existing > 0) {
-      this.logger.log("Role permissions already seeded, skipping");
-      return;
-    }
-
-    const roles = await this.prisma.role.findMany({ select: { id: true, name: true } });
-    const permissions = await this.prisma.permission.findMany({ select: { id: true, name: true } });
-
-    const roleMap = new Map(roles.map((r) => [r.name, r.id]));
-    const permMap = new Map(permissions.map((p) => [p.name, p.id]));
-
-    const entries: Array<{ roleId: string; permissionId: string }> = [];
-
-    for (const [roleName, permNames] of Object.entries(ROLE_PERMISSIONS) as Array<[string, string[]]>) {
-      const roleId = roleMap.get(roleName);
-      if (!roleId) continue;
-      for (const permName of permNames) {
-        const permissionId = permMap.get(permName);
-        if (permissionId) entries.push({ roleId, permissionId });
+    let synced = 0;
+    for (const entry of roleEntries) {
+      try {
+        const existing = await this.prisma.role.findFirst({
+          where: { name: entry.name, tenantId: null },
+        });
+        if (existing) {
+          await this.prisma.role.update({
+            where: { id: existing.id },
+            data: {
+              description: entry.description,
+              level: entry.level,
+              isSystem: true,
+            },
+          });
+        } else {
+          await this.prisma.role.create({ data: entry });
+        }
+        synced++;
+      } catch (err: any) {
+        this.logger.warn(`Role ${entry.name} sync failed: ${err?.message}`);
       }
     }
 
-    if (entries.length > 0) {
-      await this.prisma.rolePermission.createMany({ data: entries, skipDuplicates: true });
+    this.logger.log(`System roles synced (${synced}/${roleEntries.length})`);
+  }
+
+  private async seedRolePermissions() {
+    const roles = await this.prisma.role.findMany({
+      where: { isSystem: true },
+      select: { id: true, name: true },
+    });
+    const permissions = await this.prisma.permission.findMany({
+      select: { id: true, name: true },
+    });
+
+    const permByName = new Map(permissions.map((p) => [p.name, p.id]));
+
+    let total = 0;
+    for (const role of roles) {
+      const canonical =
+        role.name === "super_admin"
+          ? permissions.map((p) => p.id)
+          : (ROLE_PERMISSIONS[role.name as keyof typeof ROLE_PERMISSIONS] || [])
+              .map((name) => permByName.get(name))
+              .filter((id): id is string => !!id);
+
+      await this.prisma.$transaction([
+        this.prisma.rolePermission.deleteMany({ where: { roleId: role.id } }),
+        this.prisma.rolePermission.createMany({
+          data: canonical.map((permissionId) => ({ roleId: role.id, permissionId })),
+        }),
+      ]);
+      total += canonical.length;
     }
 
-    this.logger.log(`Seeded ${entries.length} role permissions`);
+    this.logger.log(`System role-permissions reconciled (${total} assignments)`);
   }
 
   private async seedPlans() {

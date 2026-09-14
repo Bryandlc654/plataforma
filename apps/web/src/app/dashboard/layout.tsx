@@ -77,6 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       title: "Administración",
       links: [
         { href: "/dashboard/users", label: "Usuarios", icon: "users", perms: ["user.read"] },
+        { href: "/dashboard/roles", label: "Roles y permisos", icon: "apikeys", perms: ["role.manage"] },
         { href: "/dashboard/billing", label: "Facturación", icon: "billing", perms: ["billing.read"] },
         { href: "/dashboard/settings", label: "Configuración", icon: "settings", perms: ["config.tenant"] },
         { href: "/dashboard/audit", label: "Auditoría", icon: "audit", perms: ["audit.view"] },

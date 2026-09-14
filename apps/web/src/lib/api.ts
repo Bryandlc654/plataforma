@@ -13,6 +13,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
+  timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {
@@ -67,7 +68,7 @@ async function attemptRefresh(): Promise<string | null> {
       const { data }: any = await axios.post(
         `${api.defaults.baseURL}/auth/refresh`,
         { refreshToken },
-        { withCredentials: true }
+        { withCredentials: true, timeout: 15000 }
       );
 
       const payload = data?.data || data;

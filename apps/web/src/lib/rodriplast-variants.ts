@@ -600,7 +600,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
             </div>
             <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
                 <div>${copyright}</div>
-                <div class="flex gap-6"><a href="#" class="hover:text-white/70 transition-colors">Política de privacidad</a><a href="#" class="hover:text-white/70 transition-colors">Términos y condiciones</a></div>
+                <div class="flex gap-6"><a href="#" class="hover:text-white/70 transition-colors">Política de privacidad</a><a href="#" class="hover:text-white/70 transition-colors">Términos y condiciones</a><a href="/dejar-opinion" class="hover:text-white/70 transition-colors">Dejar una reseña</a></div>
             </div>
         </div>
     </footer>`;

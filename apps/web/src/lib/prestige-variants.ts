@@ -149,6 +149,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
     </div>
     <div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-8 gap-y-4 md:justify-end">
       ${c.columns?.[0]?.links?.map((l: any) => `<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-2 underline-offset-4 font-body-md text-body-md" href="${l.url}">${l.label}</a>`).join("") || ""}
+      <a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-2 underline-offset-4 font-body-md text-body-md" href="/dejar-opinion">Dejar una reseña</a>
     </div>
   </div>
 </footer>`;

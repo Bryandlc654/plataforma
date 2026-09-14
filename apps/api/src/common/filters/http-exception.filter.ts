@@ -30,7 +30,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
           : (body as any).message || message;
       error = (body as any).error || exception.message || error;
     } else if (exception instanceof Error) {
-      message = exception.message;
+      this.logger.error(
+        `${request.method} ${request.url} - 500 - ${exception.stack}`,
+        exception.stack
+      );
+      response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: "Internal Server Error",
+        message: "Error interno del servidor. Inténtalo de nuevo más tarde.",
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+      return;
     }
 
     this.logger.error(

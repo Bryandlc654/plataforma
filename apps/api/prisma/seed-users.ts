@@ -139,7 +139,7 @@ async function main() {
   }
 
   // Asignar rol super_admin al admin
-  const superAdminRole = await prisma.role.findUnique({ where: { name: "super_admin" } });
+  const superAdminRole = await prisma.role.findFirst({ where: { name: "super_admin", tenantId: null } });
   if (superAdminRole) {
     let ut = await prisma.userTenant.findFirst({ where: { userId: superAdmin.id } });
     if (!ut) {
@@ -165,7 +165,7 @@ async function main() {
     console.log("Owner ya existe: owner@negocio.com");
   } else {
     const freePlan = await prisma.plan.findUnique({ where: { slug: "free" } });
-    const ownerRole = await prisma.role.findUnique({ where: { name: "owner" } });
+    const ownerRole = await prisma.role.findFirst({ where: { name: "owner", tenantId: null } });
 
     const slug = "mi-negocio-" + Math.random().toString(36).substring(2, 6);
     owner = await prisma.user.create({ data: { email: "owner@negocio.com", passwordHash: hashedPassword, firstName: "Carlos", lastName: "Dueño", isVerified: true } });

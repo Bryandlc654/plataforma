@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -755,6 +756,8 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
           <div className="border-t border-white/10">
             <div className="max-w-6xl mx-auto px-6 py-6 text-center text-xs text-slate-500">
               {c.copyright || `© ${new Date().getFullYear()} Todos los derechos reservados.`}
+              <span className="mx-1.5">•</span>
+              <Link href="/dejar-opinion" className="hover:text-white transition-colors">Dejar una reseña</Link>
             </div>
           </div>
         </footer>
@@ -996,6 +999,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
                       ))}
                     </div>
                     <input type="hidden" id="review-rating-hidden" name="rating" value={String(reviewRating)} />
+                    <input type="text" name="website" value="" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] w-px h-px opacity-0 overflow-hidden" readOnly />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Tu nombre <span className="text-red-400">*</span></label>

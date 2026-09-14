@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   Logger,
   OnModuleInit,
   OnModuleDestroy,
@@ -19,6 +20,8 @@ import {
   RefreshTokenDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  VerifyEmailDto,
+  ResendVerificationDto,
 } from "../../shared/index";
 
 @Injectable()
@@ -51,7 +54,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     });
 
     if (existing) {
-      throw new ConflictException("Email already registered");
+      throw new ConflictException("Este correo ya está registrado");
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 12);
@@ -65,6 +68,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
           firstName: dto.firstName,
           lastName: dto.lastName,
           phone: dto.phone,
+          isVerified: false,
         },
       });
 
@@ -84,8 +88,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       });
 
-      const ownerRole = await tx.role.findUnique({
-        where: { name: "owner" },
+      const ownerRole = await tx.role.findFirst({
+        where: { name: "owner", tenantId: null, isSystem: true },
       });
 
       const userTenant = await tx.userTenant.create({
@@ -120,41 +124,113 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       { maxWait: 10_000, timeout: 30_000 }
     );
 
-    const rp = await this.getUserRolesAndPermissions(result.user.id);
-    const tokens = await this.generateTokens(result.user, rp);
-    const user = await this.enrichUser(result.user, rp);
+    await this.createVerificationCode(result.user.id, result.user.email);
 
     return {
-      user,
-      tenant: {
-        id: result.tenant.id,
-        name: result.tenant.name,
-        slug: result.tenant.slug,
-        subdomain: result.tenant.subdomain,
-      },
-      ...tokens,
+      message: "Revisa tu correo para ingresar el código de verificación y activar tu cuenta.",
+      email: result.user.email,
+      requiresVerification: true,
     };
   }
 
-  async login(dto: LoginDto, ipAddress?: string, userAgent?: string) {
+  async verifyEmail(dto: VerifyEmailDto) {
+    const verification = await this.prisma.emailVerification.findFirst({
+      where: { email: dto.email, usedAt: null },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!verification) {
+      throw new BadRequestException("No hay un código pendiente para este correo. Solicita uno nuevo.");
+    }
+
+    if (verification.expiresAt < new Date()) {
+      throw new BadRequestException("El código ha expirado. Solicita uno nuevo.");
+    }
+
+    if (verification.code !== dto.code) {
+      throw new BadRequestException("El código es incorrecto. Revisa el correo enviado.");
+    }
+
     const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException("No existe una cuenta con este correo.");
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+
+      await tx.emailVerification.updateMany({
+        where: { email: dto.email, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+    });
+
+    return this.buildAuthPayload(user);
+  }
+
+  async resendVerification(dto: ResendVerificationDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      select: { id: true, email: true, isVerified: true },
+    });
+
+    if (!user) {
+      return { message: "Si el correo existe, recibirás un código de verificación." };
+    }
+
+    if (user.isVerified) {
+      return { message: "Tu correo ya está verificado. Ya puedes iniciar sesión." };
+    }
+
+    await this.createVerificationCode(user.id, user.email);
+
+    return { message: "Te enviamos un nuevo código a tu correo." };
+  }
+
+  async login(dto: LoginDto, ipAddress?: string, userAgent?: string) {
+    let user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
     if (!user || !user.passwordHash) {
       await this.logFailedAttempt(dto.email, ipAddress, userAgent, "user_not_found");
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException("Credenciales incorrectas");
     }
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isValid) {
       await this.logFailedAttempt(dto.email, ipAddress, userAgent, "invalid_password");
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException("Credenciales incorrectas");
     }
 
     if (!user.isActive) {
       await this.logFailedAttempt(dto.email, ipAddress, userAgent, "account_disabled");
-      throw new UnauthorizedException("Account is disabled");
+      throw new UnauthorizedException("La cuenta está desactivada");
+    }
+
+    if (!user.isVerified) {
+      const pending = await this.prisma.emailVerification.findFirst({
+        where: { email: user.email, usedAt: null },
+      });
+
+      if (pending) {
+        await this.logFailedAttempt(dto.email, ipAddress, userAgent, "email_not_verified");
+        throw new ForbiddenException(
+          "Tu correo aún no ha sido verificado. Revisa tu bandeja de entrada e ingresa el código de verificación."
+        );
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+      user = { ...user, isVerified: true };
     }
 
     await this.prisma.user.update({
@@ -165,27 +241,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    const rp = await this.getUserRolesAndPermissions(user.id);
-    const tokens = await this.generateTokens(user, rp);
-
-    const userTenants = await this.prisma.userTenant.findMany({
-      where: { userId: user.id },
-      include: { tenant: { select: { id: true, name: true, slug: true, subdomain: true } } },
-    });
-
-    const enriched = await this.enrichUser(user, rp);
-
-    return {
-      user: enriched,
-      tenants: userTenants.map((ut) => ({
-        id: ut.tenant.id,
-        name: ut.tenant.name,
-        slug: ut.tenant.slug,
-        subdomain: ut.tenant.subdomain,
-        isOwner: ut.isOwner,
-      })),
-      ...tokens,
-    };
+    return this.buildAuthPayload(user);
   }
 
   async refreshToken(dto: RefreshTokenDto) {
@@ -228,11 +284,21 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     });
 
     if (!user) {
-      return { message: "If the email exists, a reset link will be sent" };
+      return { message: "Si el correo existe, recibirás un enlace para restablecer tu contraseña." };
     }
 
     const resetToken = uuid();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.updateMany({
+        where: { userId: user.id, usedAt: null },
+        data: { usedAt: new Date() },
+      }),
+      this.prisma.passwordResetToken.create({
+        data: { token: resetToken, userId: user.id, expiresAt },
+      }),
+    ]);
 
     await this.prisma.auditLog.create({
       data: {
@@ -240,7 +306,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         action: "auth.password_reset_requested",
         resource: "User",
         resourceId: user.id,
-        metadata: { token: resetToken, expiresAt: expiresAt.toISOString() } as any,
         ipAddress,
         userAgent,
       },
@@ -254,57 +319,51 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn(`Failed to send reset email: ${err.message}`);
     }
 
-    return { message: "If the email exists, a reset link will be sent" };
+    return { message: "Si el correo existe, recibirás un enlace para restablecer tu contraseña." };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-    const log = await this.prisma.auditLog.findFirst({
-      where: {
-        action: "auth.password_reset_requested",
-        createdAt: { gte: oneHourAgo },
-      },
-      orderBy: { createdAt: "desc" },
+    const resetRecord = await this.prisma.passwordResetToken.findUnique({
+      where: { token: dto.token },
     });
 
-    if (!log?.metadata) {
-      throw new BadRequestException("Invalid or expired reset token");
+    if (!resetRecord || resetRecord.usedAt) {
+      throw new BadRequestException("El enlace de restablecimiento es inválido o ya fue usado.");
     }
 
-    const metadata = log.metadata as any;
-    if (metadata.token !== dto.token) {
-      throw new BadRequestException("Invalid reset token");
-    }
-
-    if (metadata.expiresAt && new Date(metadata.expiresAt) < new Date()) {
-      throw new BadRequestException("Reset token has expired");
+    if (resetRecord.expiresAt < new Date()) {
+      throw new BadRequestException("El enlace ha expirado. Solicita uno nuevo.");
     }
 
     const hashedPassword = await bcrypt.hash(dto.newPassword, 12);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
-        where: { id: log.userId! },
+        where: { id: resetRecord.userId },
         data: { passwordHash: hashedPassword },
+      });
+
+      await tx.passwordResetToken.update({
+        where: { id: resetRecord.id },
+        data: { usedAt: new Date() },
       });
 
       await tx.auditLog.create({
         data: {
-          userId: log.userId,
+          userId: resetRecord.userId,
           action: "auth.password_reset",
           resource: "User",
-          resourceId: log.userId,
+          resourceId: resetRecord.userId,
         },
       });
 
       await tx.refreshToken.updateMany({
-        where: { userId: log.userId!, revokedAt: null },
+        where: { userId: resetRecord.userId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
     });
 
-    return { message: "Password reset successfully" };
+    return { message: "Contraseña restablecida correctamente. Ya puedes iniciar sesión." };
   }
 
   async googleLogin(profile: any) {
@@ -346,9 +405,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
           },
         });
 
-        const ownerRole = await tx.role.findUnique({
-          where: { name: "owner" },
-        });
+        const ownerRole = await tx.role.findFirst({
+            where: { name: "owner", tenantId: null, isSystem: true },
+          });
 
         const userTenant = await tx.userTenant.create({
           data: {
@@ -376,6 +435,59 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       });
     }
 
+    return this.buildAuthPayload(user);
+  }
+
+  async logout(refreshToken: string, userId?: string) {
+    if (refreshToken) {
+      await this.prisma.refreshToken.updateMany({
+        where: { token: refreshToken },
+        data: { revokedAt: new Date() },
+      });
+    }
+    // Also revoke all tokens for this user on explicit logout
+    if (userId) {
+      await this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
+    return { message: "Logged out successfully" };
+  }
+
+  private generateVerificationCode(): string {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  private async createVerificationCode(userId: string, email: string) {
+    const code = this.generateVerificationCode();
+
+    await this.prisma.$transaction([
+      this.prisma.emailVerification.updateMany({
+        where: { email, usedAt: null },
+        data: { usedAt: new Date() },
+      }),
+      this.prisma.emailVerification.create({
+        data: {
+          email,
+          code,
+          userId,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        },
+      }),
+    ]);
+
+    try {
+      await this.emailService.sendVerificationEmail(email, code);
+    } catch (err: any) {
+      this.logger.warn(`Failed to send verification email: ${err.message}`);
+      if (!this.emailService.isConfigured) {
+        this.logger.warn(`[DEV] Verification code for ${email}: ${code}`);
+      }
+    }
+  }
+
+  private async buildAuthPayload(user: any) {
     const rp = await this.getUserRolesAndPermissions(user.id);
     const tokens = await this.generateTokens(user, rp);
 
@@ -397,23 +509,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       })),
       ...tokens,
     };
-  }
-
-  async logout(refreshToken: string, userId?: string) {
-    if (refreshToken) {
-      await this.prisma.refreshToken.updateMany({
-        where: { token: refreshToken },
-        data: { revokedAt: new Date() },
-      });
-    }
-    // Also revoke all tokens for this user on explicit logout
-    if (userId) {
-      await this.prisma.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-    }
-    return { message: "Logged out successfully" };
   }
 
   private async generateTokens(user: any, rp?: { roles: string[]; permissions: string[] }): Promise<{ accessToken: string; refreshToken: string }> {

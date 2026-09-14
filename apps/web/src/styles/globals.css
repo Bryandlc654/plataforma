@@ -147,3 +147,76 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== Landing page animations ===== */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+@keyframes floatX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(12px); }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.15); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes marqueeX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes shineSweep {
+  0% { transform: translateX(-160%) skewX(-20deg); }
+  55%, 100% { transform: translateX(220%) skewX(-20deg); }
+}
+@keyframes barGrow {
+  from { transform: scaleY(0.2); opacity: 0.3; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+@keyframes spinSlow {
+  to { transform: rotate(360deg); }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.85) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.anim-float { animation: floatY 5s ease-in-out infinite; }
+.anim-float-slow { animation: floatY 7.5s ease-in-out infinite; }
+.anim-float-x { animation: floatX 6s ease-in-out infinite; }
+.anim-glow { animation: glowPulse 6s ease-in-out infinite; }
+.anim-gradient-text { background-size: 220% auto; animation: gradientShift 7s ease-in-out infinite; }
+.anim-marquee { animation: marqueeX 32s linear infinite; }
+.anim-shine { position: relative; overflow: hidden; }
+.anim-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 15%, rgba(255,255,255,0.4) 50%, transparent 85%);
+  transform: translateX(-160%) skewX(-20deg);
+  animation: shineSweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.anim-spin-slow { animation: spinSlow 14s linear infinite; }
+.anim-pop { animation: popIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-visible { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-float, .anim-float-slow, .anim-float-x, .anim-glow, .anim-marquee, .anim-shine::after, .anim-spin-slow, .anim-pop {
+    animation: none;
+  }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

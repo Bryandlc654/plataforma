@@ -83,9 +83,9 @@ export class SitesService {
 
     if (dto.domain) {
       const cleanDomain = dto.domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
-      const reserved = ["build.icebergup.com", "backplat.nextboostbusiness", "backplat.nextboostperu.com", "apiplat.nextboostperu.com"];
+      const reserved = ["build.icebergup.com", "icebergup.com", "plataforma-api-71743315793.us-central1.run.app"];
       if (reserved.includes(cleanDomain)) throw new ConflictException("Este dominio está reservado para la plataforma.");
-      if (cleanDomain.endsWith(".build.icebergup.com") || cleanDomain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
+      if (cleanDomain.endsWith(".icebergup.com") || cleanDomain.endsWith(".run.app") || cleanDomain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
       const existingDomain = await this.prisma.site.findUnique({ where: { domain: cleanDomain }, select: { id: true } });
       if (existingDomain) throw new ConflictException(`Domain "${cleanDomain}" is already in use`);
       dto.domain = cleanDomain;
@@ -270,9 +270,9 @@ export class SitesService {
 
     if (data.domain) {
       data.domain = data.domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
-      const reserved = ["build.icebergup.com", "backplat.nextboostbusiness", "backplat.nextboostperu.com", "apiplat.nextboostperu.com"];
+      const reserved = ["build.icebergup.com", "icebergup.com", "plataforma-api-71743315793.us-central1.run.app"];
       if (reserved.includes(data.domain)) throw new ConflictException("Este dominio está reservado para la plataforma.");
-      if (data.domain.endsWith(".build.icebergup.com") || data.domain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
+      if (data.domain.endsWith(".icebergup.com") || data.domain.endsWith(".run.app") || data.domain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
       const existing = await this.prisma.site.findUnique({ where: { domain: data.domain }, select: { id: true } });
       if (existing && existing.id !== id) throw new ConflictException("Domain already in use");
     }
