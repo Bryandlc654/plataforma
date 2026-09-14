@@ -237,6 +237,10 @@ if (typeof window !== "undefined" && useAuthStore.persist) {
   useAuthStore.persist.onFinishHydration(() => {
     useAuthStore.setState({ hasHydrated: true });
   });
+  // skipHydration difiere la rehidratación del persist: sin esto, hasHydrated
+  // jamás pasa a true en el navegador y pantallas como el login/dashboard se
+  // quedan en "Cargando..." para siempre tras iniciar sesión en sesión fresca.
+  void useAuthStore.persist.rehydrate();
 }
 
 export { useAuthStore };
