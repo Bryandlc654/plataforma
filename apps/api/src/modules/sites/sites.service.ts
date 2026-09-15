@@ -227,6 +227,14 @@ export class SitesService {
       if (bookings && ecommerce) break;
     }
 
+    if (!ecommerce) {
+      const [productCount, orderCount] = await Promise.all([
+        this.prisma.product.count({ where: { tenantId } }),
+        this.prisma.order.count({ where: { tenantId } }),
+      ]);
+      if (productCount > 0 || orderCount > 0) ecommerce = true;
+    }
+
     return { bookings, ecommerce };
   }
 
