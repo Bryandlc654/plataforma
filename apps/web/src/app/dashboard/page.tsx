@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; slug: string; isOwner: boolean; roles: string[] }> | null>(null);
   const [error, setError] = useState("");
+  const [analyticsData, setAnalyticsData] = useState<{ summary: { totalViews: number; totalClicks: number }; dailyViews: Array<{ date: string; views: number }> } | null>(null);
 
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
@@ -65,6 +66,14 @@ export default function DashboardPage() {
     } finally { setLoading(false); }
   }, [tenantId]);
 
+  const fetchAnalytics = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      const res: any = await api.get(`/analytics/overview?period=30d`);
+      setAnalyticsData(res.data || res);
+    } catch { setAnalyticsData(null); }
+  }, [tenantId]);
+
   const fetchAdminDashboard = useCallback(async () => {
     try {
       const res: any = await api.get("/dashboard/admin");
@@ -81,10 +90,10 @@ export default function DashboardPage() {
       const u = useAuthStore.getState().user;
       const superAdmin = hasRole(u, "super_admin");
       if (superAdmin) { fetchAdminDashboard(); fetchTenants(); setLoading(false); }
-      else if (tenantId) { fetchTenantDashboard(); fetchTenants(); }
+      else if (tenantId) { fetchTenantDashboard(); fetchAnalytics(); fetchTenants(); }
       else { setLoading(false); }
     })();
-  }, [ensureSession, fetchAdminDashboard, fetchTenants, fetchTenantDashboard, hasHydrated, isAuthenticated, tenantId, router]);
+  }, [fetchAnalytics, ensureSession, fetchAdminDashboard, fetchTenants, fetchTenantDashboard, hasHydrated, isAuthenticated, tenantId, router]);
 
   const handleSelectTenant = (t: any) => {
     selectTenant({ id: t.id, name: t.name, slug: t.slug, isOwner: t.isOwner });
@@ -237,17 +246,29 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {tenantData?.recentActivity && tenantData.recentActivity.length > 0 && (
+                {analyticsData && (
                   <div className="card">
-                    <h3 className="font-semibold text-slate-900 mb-4">Actividad reciente</h3>
-                    <div className="space-y-3">
-                      {tenantData.recentActivity.map((a) => (
-                        <div key={a.id} className="flex items-center gap-3 text-sm">
-                          <div className="h-2 w-2 rounded-full bg-primary-400 flex-shrink-0" />
-                          <div className="flex-1"><span className="text-slate-700">{a.user}</span><span className="text-slate-500"> · {a.action} {a.resource}</span></div>
-                          <span className="text-slate-400 text-xs">{formatDate(a.createdAt)}</span>
-                        </div>
-                      ))}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-slate-900">Visitas (30 días)</h3>
+                      <Link href="/dashboard/analytics" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver Analytics →</Link>
+                    </div>
+                    {analyticsData.dailyViews && analyticsData.dailyViews.length > 0 ? (
+                      <div className="flex items-end gap-1 h-40 mb-2">
+                        {(() => {
+                          const max = Math.max(...analyticsData.dailyViews.map((d) => d.views));
+                          return analyticsData.dailyViews.map((d, i) => (
+                            <div key={i} className="flex-1 group relative">
+                              <div className="w-full rounded-t bg-primary-500 group-hover:bg-primary-600 transition-colors" style={{ height: `${max > 0 ? (d.views / max) * 100 : 0}%` }} title={`${d.date}: ${d.views} visitas`} />
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500">Sin datos de visitas todavía</p>
+                    )}
+                    <div className="flex items-center justify-between text-sm mt-2 pt-3 border-t border-slate-100">
+                      <span className="text-slate-500">Total de visitas</span>
+                      <span className="font-bold text-primary-700">{analyticsData.summary?.totalViews ?? 0}</span>
                     </div>
                   </div>
                 )}
