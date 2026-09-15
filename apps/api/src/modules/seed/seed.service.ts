@@ -141,7 +141,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log(`Seeded ${DEFAULT_PLANS.length} plans`);
   }
 
-  private async seedEcommerceTemplate() {
+  async seedEcommerceTemplate() {
     const category = await this.prisma.templateCategory.upsert({
       where: { slug: "ecommerce" },
       update: {},
