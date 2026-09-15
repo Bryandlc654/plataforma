@@ -1,16 +1,20 @@
 import {
-  Controller, Post, Get, Param, UseGuards, Res, Header, Query,
+  Controller, Post, Get, Param, UseGuards, Res, Header, Query, Body, BadRequestException, NotFoundException,
 } from "@nestjs/common";
 import { Response } from "express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { PublishingService } from "./publishing.service";
+import { OrdersService } from "../orders/orders.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
 
 @ApiTags("publishing")
 @Controller()
 export class PublishingController {
-  constructor(private publishingService: PublishingService) {}
+  constructor(
+    private publishingService: PublishingService,
+    private ordersService: OrdersService,
+  ) {}
 
   @Post("sites/:id/publish")
   @UseGuards(JwtAuthGuard)
@@ -66,5 +70,42 @@ export class PublishingController {
     const txt = await this.publishingService.getPublicRobots(subdomain);
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.send(txt);
+  }
+
+  @Public()
+  @Post("p/:subdomain/orders")
+  @ApiOperation({ summary: "Public checkout - creates order (cash on delivery)" })
+  async checkout(
+    @Param("subdomain") subdomain: string,
+    @Body() body: any,
+  ) {
+    const tenantId = await this.publishingService.resolveTenantBySubdomain(subdomain);
+    if (!tenantId) throw new NotFoundException("Sitio no encontrado");
+
+    const itemsRaw = Array.isArray(body?.items) ? body.items : [];
+    if (itemsRaw.length === 0 || itemsRaw.length > 50) {
+      throw new BadRequestException("Carrito vacío o demasiados ítems");
+    }
+    const items = itemsRaw.map((i: any) => ({
+      productId: String(i?.productId || ""),
+      quantity: Math.floor(Number(i?.quantity) || 0),
+    }));
+    if (items.some((i: any) => !i.productId || i.quantity < 1 || i.quantity > 999)) {
+      throw new BadRequestException("Ítems inválidos");
+    }
+
+    const str = (v: any, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const address = str(body?.address, 300);
+
+    const order = await this.ordersService.create(tenantId, {
+      items,
+      customerName: str(body?.customerName, 120) || undefined,
+      customerEmail: str(body?.customerEmail, 120) || undefined,
+      customerPhone: str(body?.customerPhone, 40) || undefined,
+      notes: address ? `${address}${body?.notes ? `\n${str(body?.notes, 300)}` : ""}` : str(body?.notes, 300),
+      paymentMethod: body?.paymentMethod === "cod" ? "cod" : "cod",
+    });
+
+    return { id: order.id, status: order.status, totalAmount: String(order.totalAmount), paymentMethod: order.paymentMethod };
   }
 }

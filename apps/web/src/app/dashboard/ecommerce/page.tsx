@@ -8,7 +8,7 @@ import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Product { id: string; name: string; slug: string; price: string; comparePrice?: string | null; stock: number; isActive: boolean; isFeatured: boolean; description?: string | null; images?: any; categoryId?: string | null; category: { id: string; name: string } | null; }
 interface Category { id: string; name: string; slug: string; }
-interface Order { id: string; status: string; totalAmount: string; customerName: string; customerEmail: string; discount: string; createdAt: string; items: Array<{ quantity: number; price: string; product: { name: string } }>; }
+interface Order { id: string; status: string; totalAmount: string; customerName: string; customerEmail: string; customerPhone?: string; discount: string; paymentMethod?: string; notes?: string; createdAt: string; items: Array<{ quantity: number; price: string; product: { name: string } }>; }
 interface Coupon { id: string; code: string; type: string; value: string; usedCount: number; maxUses: number; isActive: boolean; expiresAt: string; }
 
 function firstImage(images: any): string {
@@ -217,10 +217,12 @@ export default function EcommercePage() {
         {tab === "orders" && orders.length === 0 ? <div className="card text-center py-8"><p className="text-slate-500">Sin pedidos</p></div> : tab === "orders" && (
           <div className="space-y-3">{orders.map((o) => (
             <div key={o.id} className="card">
-              <div className="flex items-center justify-between mb-3"><div><span className="font-semibold">{o.customerName || "Cliente"}</span><span className="text-xs text-slate-400 ml-2">{formatDate(o.createdAt)}</span></div>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span>
+              <div className="flex items-center justify-between mb-3"><div><span className="font-semibold">{o.customerName || "Cliente"}</span><span className="text-xs text-slate-400 ml-2">{formatDate(o.createdAt)}</span>{o.customerPhone ? <span className="text-xs text-slate-400 ml-2">· {o.customerPhone}</span> : null}</div>
+                <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod || "—"}</span></div>
               </div>
-              <div className="text-sm text-slate-600 space-y-1 mb-3">{o.items.map((i, idx) => <div key={idx}>{i.quantity}x {i.product.name} - {formatCurrency(Number(i.price))}</div>)}</div>
+              <div className="text-sm text-slate-600 space-y-1 mb-3">{o.items.map((i, idx) => <div key={idx}>{i.quantity}x {i.product.name} - {formatCurrency(Number(i.price))}</div>)}
+                {o.notes && <p className="text-xs text-slate-400 whitespace-pre-line pt-1 border-t border-slate-100">{o.notes}</p>}
+              </div>
               <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <p className="font-bold text-lg">{formatCurrency(Number(o.totalAmount))}{Number(o.discount) > 0 && <span className="text-xs text-green-600 ml-2">(-{formatCurrency(Number(o.discount))})</span>}</p>
                 {o.status === "pending" && <button onClick={() => updateOrderStatus(o.id, "paid")} className="btn-primary text-xs">Marcar pagado</button>}

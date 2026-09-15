@@ -5,7 +5,7 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(tenantId: string, dto: { items: Array<{ productId: string; quantity: number }>; customerName?: string; customerEmail?: string; customerPhone?: string; couponCode?: string; notes?: string }) {
+  async create(tenantId: string, dto: { items: Array<{ productId: string; quantity: number }>; customerName?: string; customerEmail?: string; customerPhone?: string; couponCode?: string; notes?: string; paymentMethod?: string }) {
     let coupon: any = null;
 
     if (dto.couponCode) {
@@ -51,6 +51,7 @@ export class OrdersService {
         couponCode: dto.couponCode,
         discount,
         notes: dto.notes,
+        paymentMethod: dto.paymentMethod || "cod",
         items: { create: orderItems },
       },
       include: { items: { include: { product: true } } },

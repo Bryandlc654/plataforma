@@ -483,6 +483,7 @@ ${blocksHtml}
         tag = "Nuevo";
       }
       return {
+        id: p.id,
         title: p.name,
         desc: p.description
           ? (p.description.length > 60 ? `${p.description.slice(0, 60)}…` : p.description)
@@ -521,6 +522,195 @@ ${blocksHtml}
     return `https://placehold.co/600x800/111827/FFFFFF?text=${label || "Producto"}`;
   }
 
+  private urbanNoirCartHtml(subdomain: string): string {
+    const api = this.apiV1Url();
+    const cfg = `window.UN_CART_CFG = { subdomain: "${subdomain}", apiBase: "${api}" };`;
+    return `
+<div id="un-cart-overlay" class="fixed inset-0 bg-black/50 z-[10000] hidden" aria-hidden="true"></div>
+<aside id="un-cart-drawer" aria-label="Carrito" class="fixed top-0 right-0 z-[10001] h-full w-full max-w-md bg-white flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
+  <div class="flex items-center justify-between px-6 py-5 border-b border-black">
+    <h3 class="font-display font-bold uppercase tracking-widest text-lg">Tu carrito</h3>
+    <button type="button" id="un-cart-close" aria-label="Cerrar carrito" class="hover:opacity-60">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+  </div>
+  <div id="un-cart-body" class="flex-1 overflow-y-auto">
+    <div id="un-cart-view" class="px-6 py-4"></div>
+    <div id="un-cart-checkout" class="px-6 py-6 hidden">
+      <h4 class="font-display font-bold uppercase tracking-widest text-base mb-4">Datos de entrega</h4>
+      <form id="un-checkout-form" class="space-y-4">
+        <input name="customerName" required maxlength="120" placeholder="Nombre completo" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+        <input name="customerPhone" required maxlength="40" placeholder="Teléfono / WhatsApp" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+        <input name="customerEmail" type="email" maxlength="120" placeholder="Correo electrónico (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+        <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
+        <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
+        <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
+          <div>
+            <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
+            <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido</button>
+        <button type="button" id="un-back-to-cart" class="w-full border border-black py-3 uppercase tracking-widest text-xs hover:bg-gray-50">Volver al carrito</button>
+      </form>
+    </div>
+    <div id="un-cart-done" class="px-6 py-10 text-center hidden">
+      <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-green-50 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+      </div>
+      <h3 class="font-display font-bold uppercase text-xl mb-2">Pedido recibido</h3>
+      <p class="text-gray-500 text-sm mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
+      <p class="text-gray-500 text-sm mb-6">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
+      <button id="un-done-close" class="bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors">Seguir comprando</button>
+    </div>
+  </div>
+  <div id="un-cart-summary" class="border-t border-black px-6 py-5">
+    <div class="flex justify-between items-baseline mb-1">
+      <span class="uppercase tracking-widest text-sm">Subtotal</span>
+      <span id="un-cart-subtotal" class="font-bold text-lg">$0.00</span>
+    </div>
+    <button id="un-go-checkout" class="mt-4 w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Finalizar pedido · Contra entrega</button>
+    <button id="un-cart-vaciar" class="mt-2 w-full text-xs uppercase tracking-widest text-gray-500 hover:text-black transition-colors">Vaciar carrito</button>
+  </div>
+</aside>
+<script>
+${cfg}
+(function(){
+  var cfg = window.UN_CART_CFG || {};
+  var STORE = "un_cart_v1";
+  var cart = [];
+  try { cart = JSON.parse(localStorage.getItem(STORE) || "[]") || []; } catch (e) { cart = []; }
+  if (!Array.isArray(cart)) cart = [];
+  function money(n){ return Number(n || 0).toFixed(2); }
+  function count(){ var s = 0; for (var i = 0; i < cart.length; i++) { s += (Number(cart[i].qty) || 0); } return s; }
+  function save(){ try { localStorage.setItem(STORE, JSON.stringify(cart)); } catch (e) {} }
+  var overlay = document.getElementById("un-cart-overlay");
+  var drawer = document.getElementById("un-cart-drawer");
+  var viewEl = document.getElementById("un-cart-view");
+  var checkoutEl = document.getElementById("un-cart-checkout");
+  var doneEl = document.getElementById("un-cart-done");
+  var summary = document.getElementById("un-cart-summary");
+  var subtotalEl = document.getElementById("un-cart-subtotal");
+  var badge = document.querySelector("#un-cart-btn [data-count]");
+  function open(){ if (overlay) { overlay.classList.remove("hidden"); } if (drawer) { drawer.classList.remove("translate-x-full"); } document.body.style.overflow = "hidden"; }
+  function close(){ if (overlay) { overlay.classList.add("hidden"); } if (drawer) { drawer.classList.add("translate-x-full"); } document.body.style.overflow = ""; }
+  function render(){
+    if (badge) { badge.textContent = String(count()); badge.style.display = count() ? "block" : "none"; }
+    if (summary) { summary.style.display = cart.length ? "block" : "none"; }
+    if (!viewEl) return;
+    if (!cart.length) {
+      viewEl.innerHTML = '<div class="py-16 text-center"><p class="text-gray-400 uppercase tracking-widest text-sm mb-4">Tu carrito está vacío</p><p class="text-xs text-gray-400">Explora el catálogo y añade tus piezas.</p></div>';
+      if (subtotalEl) { subtotalEl.textContent = "$0.00"; }
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < cart.length; i++) {
+      var it = cart[i];
+      html += '<div class="flex gap-4 py-4 border-b border-gray-100">' +
+        (it.image ? '<img src="' + it.image + '" alt="" class="w-20 h-24 object-cover grayscale">' : '<div class="w-20 h-24 bg-gray-100"></div>') +
+        '<div class="flex-1 min-w-0">' +
+          '<p class="font-bold text-sm uppercase tracking-wider truncate">' + (it.title || "") + '</p>' +
+          '<p class="text-sm font-bold mt-1">$' + money(it.price) + '</p>' +
+          '<div class="flex items-center gap-3 mt-3">' +
+            '<button type="button" data-dec="' + i + '" aria-label="Quitar uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">-</button>' +
+            '<span class="text-sm font-bold w-5 text-center">' + (Number(it.qty) || 0) + '</span>' +
+            '<button type="button" data-inc="' + i + '" aria-label="Añadir uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">+</button>' +
+            '<button type="button" data-rm="' + i + '" class="ml-auto text-xs uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">Quitar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+    viewEl.innerHTML = html;
+    var total = 0;
+    for (var j = 0; j < cart.length; j++) { total += (Number(cart[j].price) || 0) * (Number(cart[j].qty) || 0); }
+    if (subtotalEl) { subtotalEl.textContent = "$" + money(total); }
+  }
+  function goCheckout(){
+    if (!cart.length) return;
+    if (viewEl) { viewEl.classList.add("hidden"); }
+    if (checkoutEl) { checkoutEl.classList.remove("hidden"); }
+    if (summary) { summary.style.display = "none"; }
+  }
+  function backToCart(){
+    if (viewEl) { viewEl.classList.remove("hidden"); }
+    if (checkoutEl) { checkoutEl.classList.add("hidden"); }
+    if (summary) { summary.style.display = cart.length ? "block" : "none"; }
+  }
+  function showDone(id){
+    if (viewEl) { viewEl.classList.add("hidden"); }
+    if (checkoutEl) { checkoutEl.classList.add("hidden"); }
+    if (doneEl) { doneEl.classList.remove("hidden"); }
+    var oid = document.getElementById("un-order-id");
+    if (oid && id) { oid.textContent = "#" + String(id).slice(0, 8).toUpperCase(); }
+  }
+  document.addEventListener("click", function(e){
+    var t = e.target ? e.target : null;
+    if (!t || !t.closest) return;
+    var add = t.closest("[data-add-cart]");
+    if (add) {
+      var addId = add.getAttribute("data-id");
+      if (!addId) return;
+      var found = false;
+      for (var k = 0; k < cart.length; k++) { if (cart[k].id === addId) { cart[k].qty = (Number(cart[k].qty) || 0) + 1; found = true; break; } }
+      if (!found) { cart.push({ id: addId, title: add.getAttribute("data-title"), price: add.getAttribute("data-price"), image: add.getAttribute("data-image"), qty: 1 }); }
+      save(); render(); open();
+      return;
+    }
+    if (t.closest("#un-cart-close") || t.closest("#un-done-close") || t.closest("#un-cart-overlay")) { close(); return; }
+    if (t.closest("#un-cart-btn")) { render(); open(); return; }
+    if (t.closest("#un-go-checkout")) { goCheckout(); return; }
+    if (t.closest("#un-back-to-cart")) { backToCart(); return; }
+    if (t.closest("#un-cart-vaciar")) { cart = []; save(); render(); return; }
+    var dec = t.closest("[data-dec]"), inc = t.closest("[data-inc]"), rm = t.closest("[data-rm]");
+    if (dec || inc || rm) {
+      var idx = Number((dec || inc || rm).getAttribute(dec ? "data-dec" : inc ? "data-inc" : "data-rm"));
+      if (cart[idx]) {
+        if (dec) { cart[idx].qty = Math.max(1, (Number(cart[idx].qty) || 1) - 1); }
+        else if (inc) { cart[idx].qty = (Number(cart[idx].qty) || 0) + 1; }
+        else { cart.splice(idx, 1); }
+        save(); render();
+      }
+      return;
+    }
+  });
+  var form = document.getElementById("un-checkout-form");
+  if (form) {
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var btn = form.querySelector("button[type=submit]");
+      if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
+      var data = { items: [], paymentMethod: "cod" };
+      for (var i2 = 0; i2 < cart.length; i2++) { data.items.push({ productId: cart[i2].id, quantity: Number(cart[i2].qty) || 1 }); }
+      Array.prototype.forEach.call(form.querySelectorAll("[name]"), function(inp){ if (inp.name) { data[inp.name] = inp.value.trim(); } });
+      fetch((cfg.apiBase || "") + "/p/" + (cfg.subdomain || "") + "/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+        .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+        .then(function(res){
+          if (!res.ok || res.j.error) { throw new Error(res.j.message || "Error al procesar el pedido"); }
+          cart = []; save();
+          if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
+          showDone(res.j.id || res.j.orderId || "");
+        })
+        .catch(function(err){ if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } alert(err.message || "Ocurrió un error al enviar el pedido"); });
+    });
+  }
+  render();
+})();
+</script>`;
+  }
+
+  async resolveTenantBySubdomain(subdomain: string): Promise<string | null> {
+    const site = await this.prisma.site.findFirst({
+      where: {
+        OR: [{ subdomain }, { domain: subdomain }],
+        isPublished: true,
+        deletedAt: null,
+      },
+      select: { tenantId: true, id: true },
+    });
+    return site?.tenantId || null;
+  }
+
   private async renderFullSite(site: any, requestedPath?: string, reviews: any[] = []): Promise<string> {
     const wanted = requestedPath ? normalizePublicPath(requestedPath) : "/";
     const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
@@ -543,6 +733,7 @@ ${blocksHtml}
     const secondary = site.secondaryColor || "#1E40AF";
     const variant = page?.blocks?.[0]?.content?.variant;
     const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora" || variant === "graduate" || variant === "urban-noir";
+    const isUrbanNoir = variant === "urban-noir";
 
     const baseUrl = resolvePublicSiteUrl(site);
     const canonicalUrl =
@@ -906,6 +1097,7 @@ document.addEventListener("DOMContentLoaded",function(){
 </head>
 <body class="${isTemplate ? "bg-background text-on-background font-body-md text-body-md antialiased selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant" : ""}">
 ${blocksHtml}
+${isUrbanNoir ? this.urbanNoirCartHtml(site.subdomain || site.domain || "") : ""}
 ${waButton}
 ${apkButton}
 </body>

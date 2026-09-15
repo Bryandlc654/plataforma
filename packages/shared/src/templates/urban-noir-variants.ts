@@ -2,6 +2,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
   if (c.variant !== "urban-noir") return null;
 
   const nl = (s: any) => String(s || "").replace(/\n/g, "<br>");
+  const esc = (s: any) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
   const siteBase = !site?.domain && site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
   const homeUrl = site?.domain ? `https://${site.domain}` : (site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "/");
@@ -60,9 +61,9 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
               <button type="button" aria-label="Buscar" class="hover:text-gray-500 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
-              <button type="button" aria-label="Carrito" class="hover:text-gray-500 transition relative">
+              <button type="button" id="un-cart-btn" aria-label="Carrito" class="hover:text-gray-500 transition relative">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                <span class="absolute -top-1 -right-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                <span data-count class="absolute -top-1 -right-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="display:none">0</span>
               </button>
               <button type="button" aria-label="Menú" class="md:hidden hover:text-gray-500 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -182,7 +183,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                   ${item.tag ? `<span class="absolute top-4 left-4 z-10 ${badgeDark ? 'bg-black text-white' : 'bg-white text-black border border-black'} text-xs font-bold px-2 py-1 uppercase">${item.tag}</span>` : ""}
                   <img src="${item.image}" alt="${item.title}" loading="lazy" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
                   <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <button type="button" class="bg-black text-white px-6 py-3 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition">Añadir al carrito</button>
+                    <button type="button" data-add-cart data-id="${esc(item.id)}" data-title="${esc(item.title)}" data-price="${esc(item.price)}" data-image="${esc(item.image)}" class="bg-black text-white px-6 py-3 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition">Añadir al carrito</button>
                   </div>
                 </div>
                 <div class="flex justify-between items-start">
