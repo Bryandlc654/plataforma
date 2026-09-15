@@ -37,7 +37,15 @@ export default function SitesPage() {
     fetchSites();
   };
 
-  if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando sitios...</p></div>;
+  if (loading) return (
+    <div className="p-8 animate-pulse">
+      <div className="h-6 w-48 rounded-lg bg-slate-200 mb-2" />
+      <div className="h-4 w-72 rounded-lg bg-slate-200 mb-8" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white rounded-xl border border-slate-200 h-44" />)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

@@ -315,7 +315,7 @@ export default function SorteosPage() {
         </div>
       )}
 
-      {loading ? <p className="text-slate-500">Cargando...</p> : sorteos.length === 0 ? (
+      {loading ? <div className="space-y-4 animate-pulse"><div className="h-40 rounded-xl bg-slate-200" /><div className="h-40 rounded-xl bg-slate-200" /></div> : sorteos.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-slate-500 mb-2">Sin sorteos</p>
           <p className="text-sm text-slate-400 mb-4">Crea sorteos personalizados para captar participantes</p>

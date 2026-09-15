@@ -35,7 +35,7 @@ export default function WhatsAppPage() {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
+  if (loading) return <div className="p-8 animate-pulse space-y-6"><div className="h-9 w-64 rounded-lg bg-slate-200" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[...Array(6)].map((_,i)=><div key={i} className="h-32 rounded-xl bg-slate-200" />)}</div><div className="h-48 rounded-xl bg-slate-200" /></div>;
   }
 
   return (

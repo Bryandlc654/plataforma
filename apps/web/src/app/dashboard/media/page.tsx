@@ -118,7 +118,7 @@ export default function MediaPage() {
           </select>
         </div>
 
-        {loading ? <p className="text-slate-500">Cargando...</p> : items.length === 0 ? (
+        {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">{[...Array(8)].map((_, i) => <div key={i} className="aspect-square rounded-xl bg-slate-200" />)}</div> : items.length === 0 ? (
           <div className="card text-center py-16"><p className="text-slate-500 mb-2">Sin archivos</p><p className="text-sm text-slate-400">Sube imágenes o documentos (PDF) para usar en tus sitios web</p></div>
         ) : (
           <>

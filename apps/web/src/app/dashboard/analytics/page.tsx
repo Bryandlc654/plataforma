@@ -44,7 +44,22 @@ export default function AnalyticsPage() {
   const changePeriod = (p: string) => { setPeriod(p); setLoading(true); fetchData(p); };
   const changeSite = (siteId: string) => { setSelectedSiteId(siteId); setLoading(true); fetchData(period, siteId); };
 
-  if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando analytics...</p></div>;
+  if (loading) return (
+    <div className="p-8 max-w-7xl mx-auto animate-pulse">
+      <div className="space-y-2 mb-8">
+        <div className="h-8 w-48 rounded-lg bg-slate-200" />
+        <div className="h-4 w-72 rounded-lg bg-slate-200" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bg-white rounded-xl border border-slate-200 h-24" />)}
+      </div>
+      <div className="bg-white rounded-xl border border-slate-200 h-72 mb-8" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="bg-white rounded-xl border border-slate-200 h-48" />
+        <div className="bg-white rounded-xl border border-slate-200 h-48" />
+      </div>
+    </div>
+  );
 
   if (!data) return <div className="p-8 text-center"><p className="text-slate-500">Sin datos de analytics</p><p className="text-sm text-slate-400 mt-1">Los datos aparecerán cuando tus sitios reciban visitas</p></div>;
 

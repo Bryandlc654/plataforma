@@ -55,7 +55,7 @@ export default function AuditPage() {
     return labels[action] || action;
   };
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando...</div>;
+  if (loading) return <div className="p-8 animate-pulse space-y-3"><div className="h-6 w-52 rounded-lg bg-slate-200" />{[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl bg-slate-200" />)}</div>;
 
   return (
       <main className="flex-1 p-8 bg-slate-50 overflow-auto">

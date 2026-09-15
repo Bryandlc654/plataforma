@@ -125,7 +125,24 @@ export default function DashboardPage() {
   ];
 
   if (isLoading || loading) {
-    return <div className="flex min-h-screen items-center justify-center"><div className="text-slate-500">Cargando...</div></div>;
+    return (
+      <main className="flex-1 p-8 bg-slate-50 overflow-auto animate-pulse">
+        <div className="space-y-2 mb-8">
+          <div className="h-8 w-64 rounded-lg bg-slate-200" />
+          <div className="h-4 w-96 rounded-lg bg-slate-200" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 h-24" />
+          ))}
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 h-72 mb-8" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="bg-white rounded-xl border border-slate-200 h-48" />
+          <div className="bg-white rounded-xl border border-slate-200 h-48" />
+        </div>
+      </main>
+    );
   }
 
   return (

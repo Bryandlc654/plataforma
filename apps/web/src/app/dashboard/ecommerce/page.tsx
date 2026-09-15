@@ -51,7 +51,7 @@ export default function EcommercePage() {
   const updateOrderStatus = async (id: string, status: string) => { await api.put(`/orders/${id}/status`, { status }); fetchData(); };
   const deleteCoupon = async (id: string) => { if (!(await confirm("¿Eliminar cupón?"))) return; await api.delete(`/coupons/${id}`); fetchData(); };
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando...</div>;
+  if (loading) return <div className="p-8 animate-pulse space-y-4"><div className="h-8 w-56 rounded-lg bg-slate-200" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[...Array(6)].map((_,i)=><div key={i} className="h-40 rounded-xl bg-slate-200" />)}</div></div>;
 
   return (
       <main className="flex-1 p-8 bg-slate-50 overflow-auto">
