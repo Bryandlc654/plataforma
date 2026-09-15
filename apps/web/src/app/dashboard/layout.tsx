@@ -71,6 +71,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard/analytics", label: "Analytics", icon: "analytics", perms: ["analytics.view"] },
         { href: "/dashboard/seo", label: "SEO", icon: "seo", perms: ["site.read"] },
+        { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
+        { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
       ]
     },
     {

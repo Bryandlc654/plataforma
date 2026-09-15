@@ -1,4 +1,4 @@
-import { HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray } from "react-icons/hi2";
+import { HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone } from "react-icons/hi2";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: HiHome,
@@ -17,10 +17,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   apikeys: HiKey,
   automations: HiBolt,
   ai: HiSparkles,
+  popups: HiMegaphone,
   ecommerce: HiShoppingCart,
   bookings: HiCalendarDays,
   support: HiTicket,
   media: HiPhoto,
+  popups: HiMegaphone,
   admintenants: HiSquares2X2,
   adminplans: HiCurrencyDollar,
   admintemplates: HiPhoto,
