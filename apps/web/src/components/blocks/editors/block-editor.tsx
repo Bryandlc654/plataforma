@@ -290,6 +290,17 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "hero":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Urban Noir (pantalla completa negra, imagen en escala de grises)</div>
+            <Field label="Imagen de fondo"><ImageField label="Imagen de fondo" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+            <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Colección Fall/Winter" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="REDEFINE YOUR STREETS" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={3} /></Field>
+            <Field label="Texto botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Explorar Colección" /></Field>
+            <Field label="URL botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#catalogo" /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Hero Rodriplast (pantalla completa con slider de fondo)</div>
@@ -554,6 +565,32 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "cta":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">CTA Urban Noir (promoción oscura / newsletter)</div>
+            <Field label="Tipo">
+              <select value={content.newsletter ? "newsletter" : "promo"} onChange={(e) => set("newsletter", e.target.value === "newsletter")}
+                className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all">
+                <option value="promo">Promoción (fondo negro + imagen)</option>
+                <option value="newsletter">Newsletter (formulario de suscripción)</option>
+              </select>
+            </Field>
+            {content.newsletter ? <>
+              <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="ÚNETE AL CLUB" /></Field>
+              <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={3} /></Field>
+              <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Suscribirse" /></Field>
+            </> : <>
+              <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="promociones" /></Field>
+              <Field label="Kicker (etiqueta)"><TextInput value={content.kicker} onChange={(v) => set("kicker", v)} placeholder="Oferta Especial" /></Field>
+              <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="HASTA 50% DE DESCUENTO" /></Field>
+              <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+              <Field label="Texto del botón"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Comprar Ahora" /></Field>
+              <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#" /></Field>
+              <Field label="Imagen (derecha)"><ImageField label="Imagen" value={content.backgroundImage} onChange={(v) => set("backgroundImage", v)} /></Field>
+              <Field label="Texto de fondo (watermark)"><TextInput value={content.watermark} onChange={(v) => set("watermark", v)} placeholder="SALE SALE SALE" /></Field>
+            </>}
+          </>;
+        }
         if (content.variant === "graduate") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">CTA Graduate (tarjeta de WhatsApp)</div>
@@ -706,6 +743,14 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "header":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Urban Noir (barra blanca fija con logo tipográfico + enlaces)</div>
+            <Field label="Logo (texto)"><TextInput value={content.logoText} onChange={(v) => set("logoText", v)} placeholder="URBAN NOIR" /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Navegación</p>
+            <Field label="Enlaces del menú"><ArrayEditor value={content.links} onChange={(v) => set("links", v)} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Header Rodriplast (logo que cambia al hacer scroll)</div>
@@ -874,6 +919,18 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "footer":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Urban Noir (fondo negro, 4 columnas)</div>
+            <Field label="Nombre de la empresa"><TextInput value={content.companyName} onChange={(v) => set("companyName", v)} placeholder="URBAN NOIR" /></Field>
+            <Field label="Descripción"><TextInput value={content.description} onChange={(v) => set("description", v)} type="textarea" rows={3} /></Field>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Columnas de enlaces</p>
+            <Field label="Títulos de las columnas"><ArrayEditor value={content.columns} onChange={(v) => set("columns", v)} fields={[{ key: "title", label: "Título" }]} /></Field>
+            <Field label="Enlaces de la primera columna"><ArrayEditor value={content.navLinks || content.columns?.[0]?.links} onChange={(v) => { set("navLinks", v); set("columns", content.columns?.map((col: any, i: number) => i === 0 ? { ...col, links: v } : col) || [{ title: content.columns?.[0]?.title || "Tienda", links: v }]); }} fields={[{ key: "label", label: "Etiqueta" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="Redes sociales"><ArrayEditor value={content.social} onChange={(v) => set("social", v)} fields={[{ key: "label", label: "Nombre (Instagram, Twitter)" }, { key: "url", label: "URL" }]} /></Field>
+            <Field label="Copyright"><TextInput value={content.copyright} onChange={(v) => set("copyright", v)} /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Footer Rodriplast (fondo oscuro, logo, marca, navegación, contacto y redes)</div>
@@ -1050,6 +1107,20 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "features":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Catálogo Urban Noir (tarjetas de categoría con imagen en escala de grises)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="catalogo" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="Catálogo" /></Field>
+            <Field label="Texto del enlace (arriba a la derecha)"><TextInput value={content.linkText} onChange={(v) => set("linkText", v)} placeholder="Ver todas las categorías" /></Field>
+            <Field label="URL del enlace"><TextInput value={content.linkUrl} onChange={(v) => set("linkUrl", v)} placeholder="#" /></Field>
+            <Field label="Categorías"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "image", label: "Imagen", type: "image" },
+              { key: "title", label: "Título" },
+              { key: "link", label: "URL de enlace" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Proceso Rodriplast (fondo oscuro, 4 pasos numerados)</div>
@@ -1320,6 +1391,24 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "portfolio":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Productos Urban Noir (grid de productos en escala de grises)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="productos" /></Field>
+            <Field label="Título"><TextInput value={content.title} onChange={(v) => set("title", v)} placeholder="MÁS BUSCADOS" /></Field>
+            <Field label="Subtítulo"><TextInput value={content.subtitle} onChange={(v) => set("subtitle", v)} type="textarea" rows={2} /></Field>
+            <Field label="Productos"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "image", label: "Imagen", type: "image" },
+              { key: "tag", label: "Etiqueta (ej: Nuevo, -20%)" },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+              { key: "price", label: "Precio (ej: 45.00)" },
+              { key: "compareAt", label: "Precio antiguo (opcional, ej: 95.00)" },
+            ]} /></Field>
+            <Field label="Texto del botón (abajo)"><TextInput value={content.buttonText} onChange={(v) => set("buttonText", v)} placeholder="Ver Todo el Catálogo" /></Field>
+            <Field label="URL del botón"><TextInput value={content.buttonUrl} onChange={(v) => set("buttonUrl", v)} placeholder="#" /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Productos Rodriplast (tarjetas con imagen de fondo + icono bi)</div>
@@ -1362,6 +1451,17 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
         </>;
 
       case "benefits":
+        if (content.variant === "urban-noir") {
+          return <>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Beneficios Urban Noir (3 columnas con íconos en círculo negro)</div>
+            <Field label="Ancla / ID"><TextInput value={content.anchor} onChange={(v) => set("anchor", v)} placeholder="beneficios" /></Field>
+            <Field label="Items"><ArrayEditor value={content.items} onChange={(v) => set("items", v)} fields={[
+              { key: "icon", label: "Ícono (emoji o texto)" },
+              { key: "title", label: "Título" },
+              { key: "desc", label: "Descripción", type: "textarea" },
+            ]} /></Field>
+          </>;
+        }
         if (content.variant === "rodriplast") {
           return <>
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 mb-4 text-xs text-amber-700">Beneficios Rodriplast (marquee de tarjetas con iconos)</div>

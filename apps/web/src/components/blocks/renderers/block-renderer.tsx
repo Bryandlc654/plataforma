@@ -332,6 +332,41 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     }
   }
 
+  if (c.variant === "urban-noir") {
+    const { getUrbanNoirHtml } = require("../../../lib/urban-noir-variants");
+    let html = getUrbanNoirHtml(type, c);
+    // In the editor the fixed header overlaps the project header; render it static here
+    if (html && type === "header") {
+      html = html.replace('class="fixed w-full z-50', 'class="relative w-full z-50');
+    }
+    if (html) {
+      return (
+        <div 
+          ref={revealRef}
+          dangerouslySetInnerHTML={{ __html: html }} 
+          onSubmit={async (e) => {
+            if (type !== "contact" && type !== "form" && type !== "cta" && type !== "contact-section") return;
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const data: Record<string, any> = {};
+            formData.forEach((v, k) => { data[k] = v; });
+            const tenantId = useAuthStore.getState().tenantId;
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+            if (btn) btn.disabled = true;
+            try {
+              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+              else await new Promise(res => setTimeout(res, 1000));
+            } catch (err) {
+              if (btn) btn.disabled = false;
+              alert("Error al enviar el formulario");
+            }
+          }}
+        />
+      );
+    }
+  }
+
   switch (type) {
     case "hero": {
       return (
