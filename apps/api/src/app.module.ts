@@ -38,6 +38,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AppDownloadModule } from './modules/app-download/app-download.module';
 import { SorteosModule } from './modules/sorteos/sorteos.module';
 import { LinktreesModule } from './modules/linktrees/linktrees.module';
+import { PopupsModule } from './modules/popups/popups.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { LinktreesModule } from './modules/linktrees/linktrees.module';
     AppDownloadModule,
     SorteosModule,
     LinktreesModule,
+    PopupsModule,
   ],
   providers: [
     {
