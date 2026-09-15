@@ -221,37 +221,40 @@ export class SeedService implements OnModuleInit {
           buttonUrl: "#productos",
           secondaryButtonText: "Ver el catalogo",
           secondaryButtonUrl: "#categorias",
-          primaryColor: "#F1F1F1",
-          secondaryColor: "#0A0A0B",
-          image:
+          primaryColor: "#0A0A0B",
+          secondaryColor: "#111827",
+          backgroundImage:
             "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1600&q=80",
         },
-        styles: { height: "80vh" },
       },
       {
-        type: "image",
+        type: "hero",
         sortOrder: 2,
         content: {
+          kicker: "CATEGORIA · HOMBRES",
           title: "Hombres",
           subtitle: "Corte recto, telas pesadas y detalles de taller",
-          image:
-            "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=1200&q=80",
           buttonText: "Ver productos",
           buttonUrl: "#hombres",
-          link: "#hombres",
+          primaryColor: "#0A0A0B",
+          secondaryColor: "#1F2937",
+          backgroundImage:
+            "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=1600&q=80",
         },
       },
       {
-        type: "image",
+        type: "hero",
         sortOrder: 3,
         content: {
+          kicker: "CATEGORIA · MUJERES",
           title: "Mujeres",
           subtitle: "Siluetas limpias con actitud de calle",
-          image:
-            "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1200&q=80",
           buttonText: "Ver productos",
           buttonUrl: "#mujeres",
-          link: "#mujeres",
+          primaryColor: "#0A0A0B",
+          secondaryColor: "#1F2937",
+          backgroundImage:
+            "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1600&q=80",
         },
       },
       {
@@ -261,9 +264,9 @@ export class SeedService implements OnModuleInit {
           title: "El drop de la temporada",
           subtitle: "Piezas en edicion limitada. Cuando se acaban, se acaban.",
           items: [
-            { icon: "truck", title: "Envio en 24h", desc: "Gratis en pedidos superiores a $50" },
-            { icon: "shield", title: "Pago seguro", desc: "Checkout cifrado y multiples medios" },
-            { icon: "rotate", title: "Devolucion facil", desc: "30 dias sin preguntas" },
+            { icon: "🚚", title: "Envio en 24h", desc: "Gratis en pedidos superiores a $50" },
+            { icon: "🛡️", title: "Pago seguro", desc: "Checkout cifrado y multiples medios" },
+            { icon: "🔄", title: "Devolucion facil", desc: "30 dias sin preguntas" },
           ],
         },
       },
@@ -276,7 +279,8 @@ export class SeedService implements OnModuleInit {
           subtitle: "Usa el codigo NOIR24 antes de que termine el dia.",
           buttonText: "Suscribirme y comprar",
           buttonUrl: "#oferta",
-          accent: "#F1F1F1",
+          primaryColor: "#0A0A0B",
+          secondaryColor: "#1F2937",
         },
       },
       {
