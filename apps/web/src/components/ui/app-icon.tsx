@@ -22,7 +22,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   bookings: HiCalendarDays,
   support: HiTicket,
   media: HiPhoto,
-  popups: HiMegaphone,
   admintenants: HiSquares2X2,
   adminplans: HiCurrencyDollar,
   admintemplates: HiPhoto,

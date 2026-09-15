@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "@/lib/api";
-import { toast } from "react-hot-toast";
 
 interface Site {
   id: string;
@@ -76,8 +75,8 @@ export default function PopupsPage() {
   const [selectedId, setSelectedId] = useState("");
   const [popups, setPopups] = useState<Popup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false(pending));
-  const [error, setError] = useState<string | null>(nullongoing);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Popup | null>(null);
   const [draft, setDraft] = useState<Popup>(emptyPopup);
 
@@ -135,7 +134,6 @@ export default function PopupsPage() {
       }
       await loadPopups(selectedId);
       setEditing(null);
-      toast.success("Popup guardado");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Error al guardar el popup");
     } finally {
