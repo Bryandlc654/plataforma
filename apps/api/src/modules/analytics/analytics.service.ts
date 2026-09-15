@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
 
@@ -47,31 +48,31 @@ export class AnalyticsService {
     const days = period === "90d" ? 90 : period === "7d" ? 7 : 30;
     const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-    const siteFilter = siteId ? this.prisma.$queryRaw` AND site_id = ${siteId}` : this.prisma.$queryRaw``;
+    const siteFilter = siteId ? Prisma.sql` AND site_id = ${siteId}` : Prisma.empty;
 
     const [summaryRows, dailyRows, topPages, referrers] = await Promise.all([
       this.prisma.$queryRaw<{ type: string; count: bigint }[]>`
         SELECT type, COUNT(*) as count FROM analytics_events
         WHERE tenant_id = ${tenantId} AND created_at >= ${start}
-        ${siteId ? this.prisma.$queryRaw` AND site_id = ${siteId}` : this.prisma.$queryRaw``}
+        ${siteFilter}
         GROUP BY type
       `,
       this.prisma.$queryRaw<{ date: string; views: bigint }[]>`
         SELECT DATE(created_at) as date, COUNT(*) as views FROM analytics_events
         WHERE tenant_id = ${tenantId} AND type = 'pageview' AND created_at >= ${start}
-        ${siteId ? this.prisma.$queryRaw` AND site_id = ${siteId}` : this.prisma.$queryRaw``}
+        ${siteFilter}
         GROUP BY DATE(created_at) ORDER BY date ASC
       `,
       this.prisma.$queryRaw<{ path: string; views: bigint }[]>`
         SELECT path, COUNT(*) as views FROM analytics_events
         WHERE tenant_id = ${tenantId} AND type = 'pageview' AND path IS NOT NULL AND created_at >= ${start}
-        ${siteId ? this.prisma.$queryRaw` AND site_id = ${siteId}` : this.prisma.$queryRaw``}
+        ${siteFilter}
         GROUP BY path ORDER BY views DESC LIMIT 10
       `,
       this.prisma.$queryRaw<{ referrer: string; count: bigint }[]>`
         SELECT referrer, COUNT(*) as count FROM analytics_events
         WHERE tenant_id = ${tenantId} AND referrer IS NOT NULL AND referrer != '' AND created_at >= ${start}
-        ${siteId ? this.prisma.$queryRaw` AND site_id = ${siteId}` : this.prisma.$queryRaw``}
+        ${siteFilter}
         GROUP BY referrer ORDER BY count DESC LIMIT 10
       `,
     ]);
