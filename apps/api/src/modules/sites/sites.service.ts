@@ -189,7 +189,11 @@ export class SitesService {
   async getCapabilities(tenantId: string) {
     const sites = await this.prisma.site.findMany({
       where: { tenantId, deletedAt: null },
-      select: { template: { select: { name: true, description: true, tags: true } } },
+      select: {
+        template: {
+          select: { name: true, description: true, tags: true, category: { select: { slug: true } } },
+        },
+      },
       take: 20,
     });
 
@@ -214,9 +218,10 @@ export class SitesService {
       }
 
       if (!ecommerce) {
+        const isEcommerceCat = t.category?.slug === "ecommerce" || t.category?.slug === "e-commerce";
         const tagged = tags.some((x) => ["ecommerce", "e-commerce", "tienda", "shop"].includes(x));
         const named = /ecommerce|e-commerce|tienda online|shop|cat[aá]logo de productos|venta online|carrito/.test(haystack);
-        if (tagged || named) ecommerce = true;
+        if (isEcommerceCat || tagged || named) ecommerce = true;
       }
 
       if (bookings && ecommerce) break;
