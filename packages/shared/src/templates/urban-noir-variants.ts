@@ -32,6 +32,57 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
   };
 
   switch (type) {
+    case "checkout": {
+      const baseHome = c.checkoutBase || (site?.domain ? `https://${site.domain}` : (apiBaseUrl ? `${apiBaseUrl}/p/${site?.subdomain || ""}` : "#"));
+      return `
+      <div class="bg-white min-h-[60vh] pt-28">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <a href="${baseHome}" class="inline-flex items-center gap-2 text-sm uppercase tracking-widest font-bold text-black hover:text-gray-500 transition mb-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Volver a la tienda
+          </a>
+          <h1 class="font-display font-bold text-4xl mb-2 uppercase tracking-tight">Checkout</h1>
+          <p class="text-gray-500 mb-10">Revisa tu pedido y completa tus datos. Pagarás en efectivo contra entrega.</p>
+          <div id="un-co-empty" class="hidden text-center py-16 border border-black bg-gray-50">
+            <p class="uppercase tracking-widest text-sm font-bold mb-4">Tu carrito está vacío</p>
+            <a href="${baseHome}" class="inline-block bg-black text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors">Volver a la tienda</a>
+          </div>
+          <div id="un-co-wrap">
+            <div id="un-co-items" class="border border-black divide-y divide-gray-100 mb-6"></div>
+            <div class="flex justify-between items-baseline border-t-2 border-black pt-4 mb-8">
+              <span class="uppercase tracking-widest font-bold">Total a pagar</span>
+              <span id="un-co-total" class="font-display font-bold text-3xl">$0.00</span>
+            </div>
+            <form id="un-checkout-form" class="space-y-4">
+              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2">Datos de entrega</h2>
+              <input name="customerName" required maxlength="120" placeholder="Nombre completo" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+              <input name="customerPhone" required maxlength="40" placeholder="Teléfono / WhatsApp" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+              <input name="customerEmail" type="email" maxlength="120" placeholder="Correo electrónico (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
+              <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
+              <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
+              <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
+                <div>
+                  <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
+                  <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido · $<span id="un-co-btn-amount">0.00</span></button>
+            </form>
+          </div>
+          <div id="un-co-done" class="hidden text-center py-16">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-green-50 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <h3 class="font-display font-bold uppercase text-2xl mb-2">Pedido recibido</h3>
+            <p class="text-gray-500 mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
+            <p class="text-gray-500 mb-8">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
+            <a href="${baseHome}" class="inline-block bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors">Seguir comprando</a>
+          </div>
+        </div>
+      </div>`;
+    }
+
     case "header": {
       const links = c.links && c.links.length ? c.links : [
         { label: "Inicio", url: "/" },

@@ -207,6 +207,7 @@ export class PublishingService {
       if (!site) throw new NotFoundException("Site not found");
 
       const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
+      const isCheckoutRoute = !!path && normalizePublicPath(path) === "/checkout";
 
       let sorteoSlug: string | null = null;
       let linktreeSlug: string | null = null;
@@ -226,7 +227,7 @@ export class PublishingService {
         }
       }
 
-      if (path && !isReviewFormRoute && !sorteoSlug && !linktreeSlug) {
+      if (path && !isReviewFormRoute && !isCheckoutRoute && !sorteoSlug && !linktreeSlug) {
         const wanted = normalizePublicPath(path);
         const match = site.pages.find(
           (p: any) => normalizePublicPath(p.path) === wanted
@@ -240,6 +241,27 @@ export class PublishingService {
           path: "/dejar-opinion",
           isDefault: false,
           blocks: [{ type: "review-form", content: { tenantId: site.tenantId, siteId: site.id }, styles: {} } as any]
+        } as any);
+      }
+
+      if (isCheckoutRoute) {
+        const hasUrbanNoir = site.pages.some(
+          (p: any) => (p.blocks || []).some((b: any) => b.content && b.content.variant === "urban-noir")
+        );
+        if (!hasUrbanNoir) throw new NotFoundException("Page not found");
+        const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
+        const headerBlock = defaultPage?.blocks?.find((b: any) => b.type === "header");
+        const footerBlock = defaultPage?.blocks?.find((b: any) => b.type === "footer");
+        const blocks: any[] = [
+          headerBlock ? ({ ...headerBlock } as any) : null,
+          { type: "checkout", content: { variant: "urban-noir", tenantId: site.tenantId, checkoutBase: `${this.apiV1Url()}/p/${subdomain}` }, styles: {} } as any,
+          footerBlock ? ({ ...footerBlock } as any) : null,
+        ].filter(Boolean) as any[];
+        site.pages.push({
+          name: "Checkout",
+          path: "/checkout",
+          isDefault: false,
+          blocks,
         } as any);
       }
 
@@ -536,34 +558,6 @@ ${blocksHtml}
   </div>
   <div id="un-cart-body" class="flex-1 overflow-y-auto">
     <div id="un-cart-view" class="px-6 py-4"></div>
-    <div id="un-cart-checkout" class="px-6 py-6 hidden">
-      <h4 class="font-display font-bold uppercase tracking-widest text-base mb-4">Datos de entrega</h4>
-      <form id="un-checkout-form" class="space-y-4">
-        <input name="customerName" required maxlength="120" placeholder="Nombre completo" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
-        <input name="customerPhone" required maxlength="40" placeholder="Teléfono / WhatsApp" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
-        <input name="customerEmail" type="email" maxlength="120" placeholder="Correo electrónico (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
-        <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
-        <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
-        <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
-          <div>
-            <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
-            <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
-          </div>
-        </div>
-        <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido</button>
-        <button type="button" id="un-back-to-cart" class="w-full border border-black py-3 uppercase tracking-widest text-xs hover:bg-gray-50">Volver al carrito</button>
-      </form>
-    </div>
-    <div id="un-cart-done" class="px-6 py-10 text-center hidden">
-      <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-green-50 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-      </div>
-      <h3 class="font-display font-bold uppercase text-xl mb-2">Pedido recibido</h3>
-      <p class="text-gray-500 text-sm mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
-      <p class="text-gray-500 text-sm mb-6">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
-      <button id="un-done-close" class="bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors">Seguir comprando</button>
-    </div>
   </div>
   <div id="un-cart-summary" class="border-t border-black px-6 py-5">
     <div class="flex justify-between items-baseline mb-1">
@@ -584,65 +578,83 @@ ${cfg}
   if (!Array.isArray(cart)) cart = [];
   function money(n){ return Number(n || 0).toFixed(2); }
   function count(){ var s = 0; for (var i = 0; i < cart.length; i++) { s += (Number(cart[i].qty) || 0); } return s; }
+  function totalSum(){ var s = 0; for (var j = 0; j < cart.length; j++) { s += (Number(cart[j].price) || 0) * (Number(cart[j].qty) || 0); } return s; }
   function save(){ try { localStorage.setItem(STORE, JSON.stringify(cart)); } catch (e) {} }
   var overlay = document.getElementById("un-cart-overlay");
   var drawer = document.getElementById("un-cart-drawer");
   var viewEl = document.getElementById("un-cart-view");
-  var checkoutEl = document.getElementById("un-cart-checkout");
-  var doneEl = document.getElementById("un-cart-done");
   var summary = document.getElementById("un-cart-summary");
   var subtotalEl = document.getElementById("un-cart-subtotal");
   var badge = document.querySelector("#un-cart-btn [data-count]");
+  var coItemsEl = document.getElementById("un-co-items");
+  var coTotalEl = document.getElementById("un-co-total");
+  var coEmptyEl = document.getElementById("un-co-empty");
+  var coWrapEl = document.getElementById("un-co-wrap");
+  var coDoneEl = document.getElementById("un-co-done");
+  var coBtnAmount = document.getElementById("un-co-btn-amount");
+  var checkoutBase = (cfg.apiBase || "") + "/p/" + (cfg.subdomain || "");
   function open(){ if (overlay) { overlay.classList.remove("hidden"); } if (drawer) { drawer.classList.remove("translate-x-full"); } document.body.style.overflow = "hidden"; }
   function close(){ if (overlay) { overlay.classList.add("hidden"); } if (drawer) { drawer.classList.add("translate-x-full"); } document.body.style.overflow = ""; }
-  function render(){
-    if (badge) { badge.textContent = String(count()); badge.style.display = count() ? "block" : "none"; }
-    if (summary) { summary.style.display = cart.length ? "block" : "none"; }
-    if (!viewEl) return;
+  function renderCo(){
+    if (!coItemsEl) return;
     if (!cart.length) {
-      viewEl.innerHTML = '<div class="py-16 text-center"><p class="text-gray-400 uppercase tracking-widest text-sm mb-4">Tu carrito está vacío</p><p class="text-xs text-gray-400">Explora el catálogo y añade tus piezas.</p></div>';
-      if (subtotalEl) { subtotalEl.textContent = "$0.00"; }
+      if (coEmptyEl) { coEmptyEl.classList.remove("hidden"); }
+      if (coWrapEl) { coWrapEl.classList.add("hidden"); }
+      if (coDoneEl) { coDoneEl.classList.add("hidden"); }
+      if (coTotalEl) { coTotalEl.textContent = "$0.00"; }
+      if (coBtnAmount) { coBtnAmount.textContent = "0.00"; }
       return;
     }
+    if (coEmptyEl) { coEmptyEl.classList.add("hidden"); }
+    if (coWrapEl) { coWrapEl.classList.remove("hidden"); }
     var html = "";
     for (var i = 0; i < cart.length; i++) {
       var it = cart[i];
-      html += '<div class="flex gap-4 py-4 border-b border-gray-100">' +
+      html += '<div class="flex gap-4 py-4">' +
         (it.image ? '<img src="' + it.image + '" alt="" class="w-20 h-24 object-cover grayscale">' : '<div class="w-20 h-24 bg-gray-100"></div>') +
         '<div class="flex-1 min-w-0">' +
           '<p class="font-bold text-sm uppercase tracking-wider truncate">' + (it.title || "") + '</p>' +
+          '<p class="text-gray-500 text-xs mt-0.5">Cantidad: ' + (Number(it.qty) || 0) + '</p>' +
           '<p class="text-sm font-bold mt-1">$' + money(it.price) + '</p>' +
-          '<div class="flex items-center gap-3 mt-3">' +
-            '<button type="button" data-dec="' + i + '" aria-label="Quitar uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">-</button>' +
-            '<span class="text-sm font-bold w-5 text-center">' + (Number(it.qty) || 0) + '</span>' +
-            '<button type="button" data-inc="' + i + '" aria-label="Añadir uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">+</button>' +
-            '<button type="button" data-rm="' + i + '" class="ml-auto text-xs uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">Quitar</button>' +
-          '</div>' +
         '</div>' +
+        '<span class="font-bold text-sm self-center">$' + money((Number(it.price) || 0) * (Number(it.qty) || 0)) + '</span>' +
       '</div>';
     }
-    viewEl.innerHTML = html;
-    var total = 0;
-    for (var j = 0; j < cart.length; j++) { total += (Number(cart[j].price) || 0) * (Number(cart[j].qty) || 0); }
-    if (subtotalEl) { subtotalEl.textContent = "$" + money(total); }
+    coItemsEl.innerHTML = html;
+    var total = totalSum();
+    if (coTotalEl) { coTotalEl.textContent = "$" + money(total); }
+    if (coBtnAmount) { coBtnAmount.textContent = money(total); }
   }
-  function goCheckout(){
-    if (!cart.length) return;
-    if (viewEl) { viewEl.classList.add("hidden"); }
-    if (checkoutEl) { checkoutEl.classList.remove("hidden"); }
-    if (summary) { summary.style.display = "none"; }
-  }
-  function backToCart(){
-    if (viewEl) { viewEl.classList.remove("hidden"); }
-    if (checkoutEl) { checkoutEl.classList.add("hidden"); }
+  function render(){
+    if (badge) { badge.textContent = String(count()); badge.style.display = count() ? "block" : "none"; }
     if (summary) { summary.style.display = cart.length ? "block" : "none"; }
-  }
-  function showDone(id){
-    if (viewEl) { viewEl.classList.add("hidden"); }
-    if (checkoutEl) { checkoutEl.classList.add("hidden"); }
-    if (doneEl) { doneEl.classList.remove("hidden"); }
-    var oid = document.getElementById("un-order-id");
-    if (oid && id) { oid.textContent = "#" + String(id).slice(0, 8).toUpperCase(); }
+    if (viewEl) {
+      if (!cart.length) {
+        viewEl.innerHTML = '<div class="py-16 text-center"><p class="text-gray-400 uppercase tracking-widest text-sm mb-4">Tu carrito está vacío</p><p class="text-xs text-gray-400">Explora el catálogo y añade tus piezas.</p></div>';
+        if (subtotalEl) { subtotalEl.textContent = "$0.00"; }
+      } else {
+        var html = "";
+        for (var i = 0; i < cart.length; i++) {
+          var it = cart[i];
+          html += '<div class="flex gap-4 py-4 border-b border-gray-100">' +
+            (it.image ? '<img src="' + it.image + '" alt="" class="w-20 h-24 object-cover grayscale">' : '<div class="w-20 h-24 bg-gray-100"></div>') +
+            '<div class="flex-1 min-w-0">' +
+              '<p class="font-bold text-sm uppercase tracking-wider truncate">' + (it.title || "") + '</p>' +
+              '<p class="text-sm font-bold mt-1">$' + money(it.price) + '</p>' +
+              '<div class="flex items-center gap-3 mt-3">' +
+                '<button type="button" data-dec="' + i + '" aria-label="Quitar uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">-</button>' +
+                '<span class="text-sm font-bold w-5 text-center">' + (Number(it.qty) || 0) + '</span>' +
+                '<button type="button" data-inc="' + i + '" aria-label="Añadir uno" class="w-7 h-7 border border-black hover:bg-black hover:text-white transition-colors">+</button>' +
+                '<button type="button" data-rm="' + i + '" class="ml-auto text-xs uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors">Quitar</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }
+        viewEl.innerHTML = html;
+        if (subtotalEl) { subtotalEl.textContent = "$" + money(totalSum()); }
+      }
+    }
+    renderCo();
   }
   document.addEventListener("click", function(e){
     var t = e.target ? e.target : null;
@@ -657,10 +669,9 @@ ${cfg}
       save(); render(); open();
       return;
     }
-    if (t.closest("#un-cart-close") || t.closest("#un-done-close") || t.closest("#un-cart-overlay")) { close(); return; }
+    if (t.closest("#un-cart-close") || t.closest("#un-cart-overlay")) { close(); return; }
     if (t.closest("#un-cart-btn")) { render(); open(); return; }
-    if (t.closest("#un-go-checkout")) { goCheckout(); return; }
-    if (t.closest("#un-back-to-cart")) { backToCart(); return; }
+    if (t.closest("#un-go-checkout")) { window.location.href = checkoutBase + "/checkout"; return; }
     if (t.closest("#un-cart-vaciar")) { cart = []; save(); render(); return; }
     var dec = t.closest("[data-dec]"), inc = t.closest("[data-inc]"), rm = t.closest("[data-rm]");
     if (dec || inc || rm) {
@@ -683,14 +694,18 @@ ${cfg}
       var data = { items: [], paymentMethod: "cod" };
       for (var i2 = 0; i2 < cart.length; i2++) { data.items.push({ productId: cart[i2].id, quantity: Number(cart[i2].qty) || 1 }); }
       Array.prototype.forEach.call(form.querySelectorAll("[name]"), function(inp){ if (inp.name) { data[inp.name] = inp.value.trim(); } });
-      fetch((cfg.apiBase || "") + "/p/" + (cfg.subdomain || "") + "/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+      fetch(checkoutBase + "/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
         .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
         .then(function(res){
           if (!res.ok || res.j.error) { throw new Error(res.j.message || "Error al procesar el pedido"); }
           cart = []; save();
           if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
           var createdId = (res.j && res.j.data && res.j.data.id) || res.j.id || res.j.orderId || "";
-          showDone(createdId);
+          if (coWrapEl) { coWrapEl.classList.add("hidden"); }
+          if (coDoneEl) { coDoneEl.classList.remove("hidden"); }
+          var oid = document.getElementById("un-order-id");
+          if (oid && createdId) { oid.textContent = "#" + String(createdId).slice(0, 8).toUpperCase(); }
+          if (badge) { badge.textContent = "0"; badge.style.display = "none"; }
         })
         .catch(function(err){ if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } alert(err.message || "Ocurrió un error al enviar el pedido"); });
     });

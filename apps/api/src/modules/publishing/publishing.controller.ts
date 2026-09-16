@@ -64,6 +64,16 @@ export class PublishingController {
   }
 
   @Public()
+  @Get("p/:subdomain/checkout")
+  @Header("Content-Type", "text/html; charset=utf-8")
+  @ApiOperation({ summary: "Public checkout page - cart summary + cod form" })
+  async getPublicCheckout(@Param("subdomain") subdomain: string, @Res() res: Response) {
+    const html = await this.publishingService.getPublicHtml(subdomain, "/checkout");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
+  }
+
+  @Public()
   @Get("p/:subdomain/robots.txt")
   @ApiOperation({ summary: "Public robots.txt" })
   async getRobots(@Param("subdomain") subdomain: string, @Res() res: Response) {
