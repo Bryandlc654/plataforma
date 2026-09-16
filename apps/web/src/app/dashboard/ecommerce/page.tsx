@@ -8,7 +8,7 @@ import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Product { id: string; name: string; slug: string; price: string; comparePrice?: string | null; stock: number; isActive: boolean; isFeatured: boolean; description?: string | null; images?: any; categoryId?: string | null; category: { id: string; name: string } | null; }
 interface Category { id: string; name: string; slug: string; }
-interface Order { id: string; status: string; totalAmount: string; customerName: string; customerEmail: string; customerPhone?: string; discount: string; paymentMethod?: string; notes?: string; createdAt: string; items: Array<{ quantity: number; price: string; product: { name: string } }>; }
+interface Order { id: string; status: string; totalAmount: string; customerName: string; customerEmail: string; customerPhone?: string; customerAddress?: string; discount: string; paymentMethod?: string; paymentReference?: string; notes?: string; createdAt: string; items: Array<{ id: string; quantity: number; price: string; product: { id: string; name: string; images?: any } }>; }
 interface Coupon { id: string; code: string; type: string; value: string; usedCount: number; maxUses: number; isActive: boolean; expiresAt: string; }
 
 function firstImage(images: any): string {
@@ -237,7 +237,18 @@ export default function EcommercePage() {
               <div className="flex items-center justify-between mb-3"><div><span className="font-semibold">{o.customerName || "Cliente"}</span><span className="text-xs text-slate-400 ml-2">{formatDate(o.createdAt)}</span>{o.customerPhone ? <span className="text-xs text-slate-400 ml-2">· {o.customerPhone}</span> : null}</div>
                 <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod === "paypal" ? "PayPal" : o.paymentMethod || "—"}</span></div>
               </div>
-              <div className="text-sm text-slate-600 space-y-1 mb-3">{o.items.map((i, idx) => <div key={idx}>{i.quantity}x {i.product.name} - {formatCurrency(Number(i.price))}</div>)}
+<div className="text-sm space-y-2">{o.items.map((i, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  {(() => {
+                    const imgs = i.product?.images;
+                    const url = typeof imgs === "string" ? imgs : Array.isArray(imgs) && imgs[0] ? (typeof imgs[0] === "string" ? imgs[0] : imgs[0]?.url || "") : "";
+                    return url ? <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-100"><img src={url} alt={i.product?.name || ""} className="w-full h-full object-cover" /></div> : <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 grid place-items-center shrink-0 text-sm font-bold">{String(i.product?.name || "?").charAt(0)}</div>;
+                  })()}
+                  <div className="flex-1 min-w-0"><p className="font-medium truncate">{i.product?.name}</p></div>
+                  <div className="text-right shrink-0"><p className="text-slate-500 text-xs">{i.quantity} × {formatCurrency(Number(i.price))}</p><p className="font-semibold">{formatCurrency(Number(i.price) * i.quantity)}</p></div>
+                </div>
+              ))}
+              {o.customerEmail && <div className="flex items-center gap-1.5 text-xs text-slate-500 pt-1 border-t border-slate-100"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.9 5.26a2 2 0 002.2 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg><span className="truncate">{o.customerEmail}</span></div>}
                 {o.notes && <p className="text-xs text-slate-400 whitespace-pre-line pt-1 border-t border-slate-100">{o.notes}</p>}
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-slate-100">
