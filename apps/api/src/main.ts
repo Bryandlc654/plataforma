@@ -54,12 +54,12 @@ async function bootstrap() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.paypal.com", "https://www.sandbox.paypal.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https:"],
-        frameSrc: ["'none'"],
+        imgSrc: ["'self'", "data:", "https:", "https://www.paypal.com", "https://www.sandbox.paypal.com"],
+        connectSrc: ["'self'", "https:", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com"],
+        frameSrc: ["'self'", "https://www.paypal.com", "https://www.sandbox.paypal.com"],
         objectSrc: ["'none'"],
       },
     },
