@@ -138,6 +138,7 @@ export class PaymentsService {
     const paypal = pgw.providers.paypal;
     if (!paypal.enabled) throw new BadRequestException("Pago con PayPal no está activo para este sitio");
     await this.paypalCredentials(paypal);
+    const accessToken = await this.getAccessToken(paypal);
 
     const itemsRaw = Array.isArray(body?.items) ? body.items : [];
     if (itemsRaw.length === 0 || itemsRaw.length > 50) {
@@ -164,7 +165,6 @@ export class PaymentsService {
     });
 
     const totalAmount = Number(order.totalAmount).toFixed(2);
-    const accessToken = await this.getAccessToken(paypal);
     const base = this.paypalApiBase(paypal.mode);
 
     const createRes = await fetch(`${base}/v2/checkout/orders`, {
