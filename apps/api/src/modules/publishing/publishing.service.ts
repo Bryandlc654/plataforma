@@ -689,7 +689,8 @@ ${cfg}
           if (!res.ok || res.j.error) { throw new Error(res.j.message || "Error al procesar el pedido"); }
           cart = []; save();
           if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
-          showDone(res.j.id || res.j.orderId || "");
+          var createdId = (res.j && res.j.data && res.j.data.id) || res.j.id || res.j.orderId || "";
+          showDone(createdId);
         })
         .catch(function(err){ if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } alert(err.message || "Ocurrió un error al enviar el pedido"); });
     });
