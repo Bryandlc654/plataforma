@@ -23,11 +23,12 @@ function firstImage(images: any): string {
 }
 
 export default function EcommercePage() {
-  const [tab, setTab] = useState<"products" | "orders" | "coupons">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "coupons" | "payments">("products");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [payForm, setPayForm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,6 +43,11 @@ export default function EcommercePage() {
         setProducts(pRes.data || pRes); setCategories(cRes.data || cRes);
       } else if (tab === "orders") {
         const res: any = await api.get("/orders"); setOrders(res.data || res);
+      } else if (tab === "payments") {
+        const res: any = await api.get("/payments/config");
+        const cfg = res.data || res || {};
+        const p = cfg?.providers?.paypal || {};
+        setPayForm({ defaultMethod: cfg?.defaultMethod || "cod", paypalEnabled: !!p.enabled, paypalMode: p.mode || "sandbox", paypalClientId: p.clientId || "", hasSecret: !!p.hasSecret, paypalSecret: "" });
       } else {
         const res: any = await api.get("/coupons"); setCoupons(res.data || res);
       }
@@ -112,6 +118,17 @@ export default function EcommercePage() {
     catch (err: any) { alert(err.response?.data?.message || "Error"); }
   };
 
+  const savePayConfig = async () => {
+    if (!payForm) return;
+    const body: any = {
+      defaultMethod: payForm.defaultMethod,
+      providers: { paypal: { enabled: !!payForm.paypalEnabled, mode: payForm.paypalMode, clientId: (payForm.paypalClientId || "").trim() } },
+    };
+    if (payForm.paypalSecret?.trim()) body.providers.paypal.secret = payForm.paypalSecret.trim();
+    try { await api.put("/payments/config", body); fetchData(); alert("Configuración de pagos guardada."); }
+    catch (err: any) { alert(err.response?.data?.message || "Error al guardar la configuración de pagos"); }
+  };
+
   const updateOrderStatus = async (id: string, status: string) => { await api.put(`/orders/${id}/status`, { status }); fetchData(); };
   const deleteCoupon = async (id: string) => { if (!(await confirm("¿Eliminar cupón?"))) return; await api.delete(`/coupons/${id}`); fetchData(); };
 
@@ -128,9 +145,9 @@ export default function EcommercePage() {
         </div>
 
         <div className="flex gap-2 mb-6">
-          {(["products", "orders", "coupons"] as const).map((t) => (
+          {(["products", "orders", "coupons", "payments"] as const).map((t) => (
             <button key={t} onClick={() => { setTab(t); setShowCreate(false); }} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}>
-              {t === "products" ? "Productos" : t === "orders" ? "Pedidos" : "Cupones"}
+              {t === "products" ? "Productos" : t === "orders" ? "Pedidos" : t === "coupons" ? "Cupones" : "Pagos"}
             </button>
           ))}
         </div>
@@ -218,7 +235,7 @@ export default function EcommercePage() {
           <div className="space-y-3">{orders.map((o) => (
             <div key={o.id} className="card">
               <div className="flex items-center justify-between mb-3"><div><span className="font-semibold">{o.customerName || "Cliente"}</span><span className="text-xs text-slate-400 ml-2">{formatDate(o.createdAt)}</span>{o.customerPhone ? <span className="text-xs text-slate-400 ml-2">· {o.customerPhone}</span> : null}</div>
-                <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod || "—"}</span></div>
+                <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod === "paypal" ? "PayPal" : o.paymentMethod || "—"}</span></div>
               </div>
               <div className="text-sm text-slate-600 space-y-1 mb-3">{o.items.map((i, idx) => <div key={idx}>{i.quantity}x {i.product.name} - {formatCurrency(Number(i.price))}</div>)}
                 {o.notes && <p className="text-xs text-slate-400 whitespace-pre-line pt-1 border-t border-slate-100">{o.notes}</p>}
@@ -241,6 +258,70 @@ export default function EcommercePage() {
               <button onClick={() => deleteCoupon(c.id)} className="text-xs text-red-500">Eliminar</button>
             </div>
           ))}</div>
+        )}
+
+        {/* Payments */}
+        {tab === "payments" && (
+          <div className="max-w-3xl space-y-4">
+            <div className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold">Pago contra entrega</h3>
+                  <p className="text-sm text-slate-500 mt-1">Activado por defecto. El cliente paga en efectivo al recibir el pedido en la dirección indicada. No requiere credenciales.</p>
+                </div>
+                <span className="rounded-full bg-green-50 text-green-700 text-xs px-2 py-0.5">Siempre activo</span>
+              </div>
+            </div>
+
+            <div className="card space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold">PayPal</h3>
+                  <p className="text-sm text-slate-500 mt-1">Acepta pagos con PayPal en el checkout. Para activarlo obtén tus credenciales en <span className="font-medium text-slate-700">PayPal Developer</span> (aplicación tipo <span className="font-medium text-slate-700">Business / API REST</span>): copia el <span className="font-medium text-slate-700">Client ID</span> y el <span className="font-medium text-slate-700">Secret</span>. Éstas vinculan tu cuenta de PayPal a este negocio.</p>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
+                  <input type="checkbox" checked={payForm?.paypalEnabled || false} onChange={(e) => setPayForm({ ...payForm, paypalEnabled: e.target.checked })} className="h-4 w-4" />
+                  Activar PayPal
+                </label>
+              </div>
+
+              {(!payForm?.paypalEnabled) && <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">PayPal desactivado. El checkout mostrará solo "Pago contra entrega".</p>}
+
+              {payForm?.paypalEnabled && (
+                <div className="grid sm:grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                  <div>
+                    <label className="label">Modo</label>
+                    <select className="input-field" value={payForm.paypalMode} onChange={(e) => setPayForm({ ...payForm, paypalMode: e.target.value })}>
+                      <option value="sandbox">Sandbox (pruebas)</option>
+                      <option value="live">Producción (Live)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Client ID</label>
+                    <input className="input-field" value={payForm.paypalClientId || ""} onChange={(e) => setPayForm({ ...payForm, paypalClientId: e.target.value })} placeholder="AaB...TuClientId" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="label">Secret</label>
+                    <input className="input-field" type="password" value={payForm.paypalSecret || ""} onChange={(e) => setPayForm({ ...payForm, paypalSecret: e.target.value })} placeholder={payForm.hasSecret ? "•••••••• (dejar vacío para conservar)" : "Tu secret"} />
+                    <p className="text-xs text-slate-400 mt-1">{payForm.hasSecret ? "Ya tienes un secret guardado. Déjalo vacío si no quieres cambiarlo." : "El secret no se muestra de nuevo; se guarda cifrado en tu configuración."}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="card">
+              <label className="label">Método de pago preseleccionado en el checkout</label>
+              <select className="input-field" value={payForm?.defaultMethod || "cod"} onChange={(e) => setPayForm({ ...payForm, defaultMethod: e.target.value })}>
+                <option value="cod">Pago contra entrega</option>
+                {payForm?.paypalEnabled && <option value="paypal">PayPal</option>}
+              </select>
+              <p className="text-xs text-slate-400 mt-1">El cliente siempre puede elegir otro método disponible.</p>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={savePayConfig} className="btn-primary text-sm">Guardar cambios</button>
+            </div>
+          </div>
         )}
       </main>
     );

@@ -252,9 +252,21 @@ export class PublishingService {
         const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
         const headerBlock = defaultPage?.blocks?.find((b: any) => b.type === "header");
         const footerBlock = defaultPage?.blocks?.find((b: any) => b.type === "footer");
+        const tenantSettings = (site.tenant?.settings as any) || {};
+        const paymentGateway = tenantSettings.paymentGateway || {};
+        const paypalCfg = paymentGateway.providers?.paypal || {};
+        const paymentConfig = {
+          defaultMethod: paymentGateway.defaultMethod === "paypal" ? "paypal" : "cod",
+          currency: "USD",
+          paypal: {
+            enabled: paypalCfg.enabled === true && !!paypalCfg.clientId,
+            clientId: String(paypalCfg.clientId || ""),
+            mode: paypalCfg.mode === "live" ? "live" : "sandbox",
+          },
+        };
         const blocks: any[] = [
           headerBlock ? ({ ...headerBlock } as any) : null,
-          { type: "checkout", content: { variant: "urban-noir", tenantId: site.tenantId, checkoutBase: `${this.apiV1Url()}/p/${subdomain}` }, styles: {} } as any,
+          { type: "checkout", content: { variant: "urban-noir", tenantId: site.tenantId, checkoutBase: `${this.apiV1Url()}/p/${subdomain}`, payment: paymentConfig }, styles: {} } as any,
           footerBlock ? ({ ...footerBlock } as any) : null,
         ].filter(Boolean) as any[];
         site.pages.push({
@@ -564,7 +576,7 @@ ${blocksHtml}
       <span class="uppercase tracking-widest text-sm">Subtotal</span>
       <span id="un-cart-subtotal" class="font-bold text-lg">$0.00</span>
     </div>
-    <button id="un-go-checkout" class="mt-4 w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Finalizar pedido · Contra entrega</button>
+    <button id="un-go-checkout" class="mt-4 w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Finalizar pedido</button>
     <button id="un-cart-vaciar" class="mt-2 w-full text-xs uppercase tracking-widest text-gray-500 hover:text-black transition-colors">Vaciar carrito</button>
   </div>
 </aside>
@@ -593,6 +605,103 @@ ${cfg}
   var coDoneEl = document.getElementById("un-co-done");
   var coBtnAmount = document.getElementById("un-co-btn-amount");
   var checkoutBase = (cfg.apiBase || "") + "/p/" + (cfg.subdomain || "");
+  var paymentBox = document.getElementById("un-payment-box");
+  var paypalEnabled = paymentBox && paymentBox.getAttribute("data-paypal-enabled") === "1";
+  var paypalBtnBox = document.getElementById("un-paypal-box");
+  var codPayBox = document.getElementById("un-cod-pay");
+  var paypalRendered = false;
+  var pendingOrderId = null;
+  function selectedMethod(){ var r = document.querySelector('input[name="payment"]:checked'); return r ? r.value : "cod"; }
+  function paypalNote(msg){
+    if (msg) {
+      var el = document.getElementById("un-paypal-note");
+      if (el) { el.textContent = msg; el.classList.remove("hidden"); }
+    }
+  }
+  function setMethod(m){
+    var isPaypal = m === "paypal" && paypalEnabled;
+    if (isPaypal) { if (codPayBox) { codPayBox.classList.add("hidden"); } if (paypalBtnBox) { paypalBtnBox.classList.remove("hidden"); } initPaypal(); }
+    else { if (paypalBtnBox) { paypalBtnBox.classList.add("hidden"); } if (codPayBox) { codPayBox.classList.remove("hidden"); } }
+  }
+  function buildPayload(method){
+    var data = { items: [], paymentMethod: method };
+    for (var p = 0; p < cart.length; p++) { data.items.push({ productId: cart[p].id, quantity: Number(cart[p].qty) || 1 }); }
+    var f = document.getElementById("un-checkout-form");
+    if (!f) return null;
+    Array.prototype.forEach.call(f.querySelectorAll("[name]"), function(inp){
+      if (!inp.name) return;
+      if (inp.name === "payment") return;
+      data[inp.name] = (inp.value || "").trim();
+    });
+    if (method !== "cod" && !(data.customerName && data.customerPhone && data.address)) {
+      throw new Error("Completa tus datos de entrega antes de pagar");
+    }
+    return data;
+  }
+  function postJson(url, payload){
+    return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); });
+  }
+  function showDone(msg, orderId){
+    cart = []; save();
+    if (coWrapEl) { coWrapEl.classList.add("hidden"); }
+    if (coDoneEl) { coDoneEl.classList.remove("hidden"); }
+    var oid = document.getElementById("un-order-id");
+    if (oid && orderId) { oid.textContent = "#" + String(orderId).slice(0, 8).toUpperCase(); }
+    var dm = document.getElementById("un-co-done-msg");
+    if (dm) { dm.textContent = msg; }
+    if (badge) { badge.textContent = "0"; badge.style.display = "none"; }
+  }
+  function renderPaypalBtn(box){
+    if (paypalRendered) return;
+    paypalRendered = true;
+    window.paypal.Buttons({
+      style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
+      createOrder: function(data, actions){
+        var payload;
+        try { payload = buildPayload("paypal"); } catch (err) { return Promise.reject(err.message || "Datos incompletos"); }
+        return postJson(checkoutBase + "/paypal/create-order", payload)
+          .then(function(res){
+            if (!res.ok || res.j.error || !res.j.data || !res.j.data.paypalOrderId) {
+              throw new Error((res.j && (res.j.message || (res.j.data && res.j.data.message))) || "Error al iniciar el pago con PayPal");
+            }
+            pendingOrderId = res.j.data.orderId || null;
+            return res.j.data.paypalOrderId;
+          });
+      },
+      onApprove: function(data, actions){
+        return postJson(checkoutBase + "/paypal/capture-order", { paypalOrderId: data.orderID, orderId: pendingOrderId || "" })
+          .then(function(res){
+            if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al confirmar el pago"); }
+            pendingOrderId = null;
+            showDone("Pago confirmado con PayPal. Te contactaremos para coordinar la entrega de tu pedido.", (res.j.data && res.j.data.orderId) || "");
+          })
+          .catch(function(err){ alert(err.message || "Ocurrió un error al confirmar el pago"); });
+      },
+      onCancel: function(data){ pendingOrderId = null; }
+    }).render("#paypal-button-container").catch(function(err){
+      paypalNotifying(err);
+    });
+  }
+  function paypalNotifying(err){
+    paypalNote("No se pudo cargar el botón de PayPal: " + ((err && err.message) ? err.message : "revisa la configuración de pagos"));
+    paypalRendered = false;
+  }
+  function initPaypal(){
+    var box = document.getElementById("paypal-button-container");
+    if (!box) return;
+    if (!window.paypal) {
+      paypalNote("Cargando PayPal...");
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        if (window.paypal) { clearInterval(timer); renderPaypalBtn(box); }
+        else if (tries > 40) { clearInterval(timer); paypalNote("No se pudo cargar PayPal. Revisa la configuración de pagos del sitio."); }
+      }, 500);
+      return;
+    }
+    renderPaypalBtn(box);
+  }
   function open(){ if (overlay) { overlay.classList.remove("hidden"); } if (drawer) { drawer.classList.remove("translate-x-full"); } document.body.style.overflow = "hidden"; }
   function close(){ if (overlay) { overlay.classList.add("hidden"); } if (drawer) { drawer.classList.add("translate-x-full"); } document.body.style.overflow = ""; }
   function renderCo(){
@@ -691,26 +800,28 @@ ${cfg}
       ev.preventDefault();
       var btn = form.querySelector("button[type=submit]");
       if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
-      var data = { items: [], paymentMethod: "cod" };
-      for (var i2 = 0; i2 < cart.length; i2++) { data.items.push({ productId: cart[i2].id, quantity: Number(cart[i2].qty) || 1 }); }
-      Array.prototype.forEach.call(form.querySelectorAll("[name]"), function(inp){ if (inp.name) { data[inp.name] = inp.value.trim(); } });
-      fetch(checkoutBase + "/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
-        .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      var data;
+      try { data = buildPayload("cod"); } catch (err) { if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } return; }
+      if (!data) { if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } return; }
+      postJson(checkoutBase + "/orders", data)
         .then(function(res){
-          if (!res.ok || res.j.error) { throw new Error(res.j.message || "Error al procesar el pedido"); }
-          cart = []; save();
+          if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al procesar el pedido"); }
           if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
-          var createdId = (res.j && res.j.data && res.j.data.id) || res.j.id || res.j.orderId || "";
-          if (coWrapEl) { coWrapEl.classList.add("hidden"); }
-          if (coDoneEl) { coDoneEl.classList.remove("hidden"); }
-          var oid = document.getElementById("un-order-id");
-          if (oid && createdId) { oid.textContent = "#" + String(createdId).slice(0, 8).toUpperCase(); }
-          if (badge) { badge.textContent = "0"; badge.style.display = "none"; }
+          showDone("Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.", (res.j.data && res.j.data.id) || res.j.id || "");
         })
-        .catch(function(err){ if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } alert(err.message || "Ocurrió un error al enviar el pedido"); });
+        .catch(function(err){
+          if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
+          alert(err.message || "Ocurrió un error al enviar el pedido");
+        });
+    });
+  }
+  if (paymentBox) {
+    Array.prototype.forEach.call(paymentBox.querySelectorAll('input[name="payment"]'), function(r){
+      r.addEventListener("change", function(){ setMethod(selectedMethod()); });
     });
   }
   render();
+  setMethod(selectedMethod());
 })();
 </script>`;
   }

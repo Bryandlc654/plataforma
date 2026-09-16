@@ -34,6 +34,11 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
   switch (type) {
     case "checkout": {
       const baseHome = c.checkoutBase || (site?.domain ? `https://${site.domain}` : (apiBaseUrl ? `${apiBaseUrl}/p/${site?.subdomain || ""}` : "#"));
+      const pmPaypal = (c.payment && c.payment.paypal) || {};
+      const hasPaypal = pmPaypal.enabled === true && !!pmPaypal.clientId;
+      const defaultMethod = c.payment?.defaultMethod === "paypal" && hasPaypal ? "paypal" : "cod";
+      const currency = c.payment?.currency || "USD";
+      const paypalSdkUrl = `${pmPaypal.mode === "live" ? "https://www.paypal.com" : "https://www.sandbox.paypal.com"}/sdk/js?client-id=${encodeURIComponent(pmPaypal.clientId)}&intent=capture&currency=${encodeURIComponent(currency)}&components=buttons`;
       return `
       <div class="bg-white min-h-[60vh] pt-28">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -42,7 +47,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             Volver a la tienda
           </a>
           <h1 class="font-display font-bold text-4xl mb-2 uppercase tracking-tight">Checkout</h1>
-          <p class="text-gray-500 mb-10">Revisa tu pedido y completa tus datos. Pagarás en efectivo contra entrega.</p>
+          <p class="text-gray-500 mb-10">Revisa tu pedido, completa tus datos y elige cómo pagar.</p>
           <div id="un-co-empty" class="hidden text-center py-16 border border-black bg-gray-50">
             <p class="uppercase tracking-widest text-sm font-bold mb-4">Tu carrito está vacío</p>
             <a href="${baseHome}" class="inline-block bg-black text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors">Volver a la tienda</a>
@@ -60,14 +65,44 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
               <input name="customerEmail" type="email" maxlength="120" placeholder="Correo electrónico (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
               <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
               <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
-              <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
-                <div>
-                  <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
-                  <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
-                </div>
+              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2">Método de pago</h2>
+              <div id="un-payment-box" class="space-y-3" data-paypal-enabled="${hasPaypal ? "1" : "0"}" data-paypal-client-id="${hasPaypal ? esc(pmPaypal.clientId) : ""}" data-paypal-mode="${pmPaypal.mode || "sandbox"}" data-paypal-currency="${esc(currency)}">
+                <label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
+                  <input type="radio" name="payment" value="cod" ${defaultMethod === "cod" ? "checked" : ""} class="mt-1">
+                  <span>
+                    <span class="block font-bold uppercase tracking-widest text-sm">Pago contra entrega</span>
+                    <span class="block text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</span>
+                  </span>
+                </label>
+                ${hasPaypal ? `<label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
+                  <input type="radio" name="payment" value="paypal" ${defaultMethod === "paypal" ? "checked" : ""} class="mt-1">
+                  <span>
+                    <span class="block font-bold uppercase tracking-widest text-sm">PayPal</span>
+                    <span class="block text-xs text-gray-500">Pago seguro con tu cuenta de PayPal.</span>
+                  </span>
+                </label>` : ""}
               </div>
-              <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido · $<span id="un-co-btn-amount">0.00</span></button>
+              <div id="un-cod-pay" class="space-y-4">
+                <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
+                  <div>
+                    <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
+                    <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
+                  </div>
+                </div>
+                <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido · $<span id="un-co-btn-amount">0.00</span></button>
+              </div>
+              ${hasPaypal ? `<div id="un-paypal-box" class="hidden space-y-3">
+                <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.5-1.5 6-3 6s-3-2.5-3-6M12 11c3.5 0 5-1.5 5-3s-2-2-5-2m0 8c3.5 0 5 1.5 5 3s-2 2-5 2m0-8V5m0 6V3" /></svg>
+                  <div>
+                    <p class="font-bold uppercase tracking-widest text-sm">Pago con PayPal</p>
+                    <p class="text-xs text-gray-500">Se abrirá PayPal para completar el pago de forma segura.</p>
+                  </div>
+                </div>
+                <div id="paypal-button-container" class="mt-1"></div>
+                <p id="un-paypal-note" class="hidden text-xs text-gray-500"></p>
+              </div>` : ""}
             </form>
           </div>
           <div id="un-co-done" class="hidden text-center py-16">
@@ -76,11 +111,12 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             </div>
             <h3 class="font-display font-bold uppercase text-2xl mb-2">Pedido recibido</h3>
             <p class="text-gray-500 mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
-            <p class="text-gray-500 mb-8">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
+            <p id="un-co-done-msg" class="text-gray-500 mb-8">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
             <a href="${baseHome}" class="inline-block bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors">Seguir comprando</a>
           </div>
         </div>
-      </div>`;
+      </div>
+      ${hasPaypal ? `<script src="${paypalSdkUrl}" async></script>` : ""}`;
     }
 
     case "header": {

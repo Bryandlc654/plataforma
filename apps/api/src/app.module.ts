@@ -39,6 +39,7 @@ import { AppDownloadModule } from './modules/app-download/app-download.module';
 import { SorteosModule } from './modules/sorteos/sorteos.module';
 import { LinktreesModule } from './modules/linktrees/linktrees.module';
 import { PopupsModule } from './modules/popups/popups.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { PopupsModule } from './modules/popups/popups.module';
     SorteosModule,
     LinktreesModule,
     PopupsModule,
+    PaymentsModule,
   ],
   providers: [
     {
