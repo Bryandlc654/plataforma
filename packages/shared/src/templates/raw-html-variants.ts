@@ -1,0 +1,68 @@
+const TOKEN_RE = /\{\{__ED::([^{}]+)\}\}/g;
+
+export function escapeHtmlValue(value: unknown): string {
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function resolvePath(content: any, path: string): unknown {
+  const segs = path.split("::");
+  let v: any = content;
+  for (const seg of segs) {
+    if (v == null) return undefined;
+    v = v[seg];
+  }
+  return v;
+}
+
+function resolveMedia(v: unknown, apiBaseUrl?: string): string {
+  if (v == null) return "";
+  const s = String(v);
+  if (s.startsWith("/uploads/")) return `${apiBaseUrl || ""}${s}`;
+  return s;
+}
+
+/**
+ * Renderiza un bloque de plantilla importado desde un ZIP (variant "raw-html").
+ * El HTML se guardó con placeholders {{__ED::...}}; aquí se sustituyen por el
+ * contenido editable actual (textos, imágenes, urls).
+ * - Token de campo normal:  {{__ED::title}}  o  {{__ED::items::0::titulo}}
+ * - Token de asset local:   {{__ED::asset:/uploads/templates/<slug>/img.png}}
+ *
+ * Si se pasa `site` (contexto de publicación), se inyecta a cada <form> el
+ * envío AJAX de leads hacia la API ({ action + data-pub-form + hidden inputs }).
+ */
+export function getRawHtmlHtml(type: string, content: any, apiBaseUrl?: string, site?: any): string | null {
+  if (!content || content.variant !== "raw-html") return null;
+  if (typeof content.html !== "string" || !content.html.trim()) return null;
+
+  let html = content.html.replace(TOKEN_RE, (match, path: string) => {
+    if (path.startsWith("asset:")) {
+      const rel = path.slice("asset:".length);
+      if (/^https?:\/\//i.test(rel)) return rel;
+      return `${apiBaseUrl || ""}${rel}`;
+    }
+    return resolveMedia(resolvePath(content, path), apiBaseUrl);
+  });
+
+  if (site?.tenantId && html.includes("<form")) {
+    const actionUrl = `${apiBaseUrl || ""}/api/v1/leads/submit/${site.tenantId}`;
+    html = html.replace(/<form\b([^>]*)>/gi, (_m, attrs: string) => {
+      const extra =
+        (/\baction\s*=/i.test(attrs) ? "" : ` action="${actionUrl}"`) +
+        (/\bmethod\s*=/i.test(attrs) ? "" : ` method="POST"`) +
+        (/\bdata-pub-form\b/.test(attrs) ? "" : ` data-pub-form`);
+      const hidden =
+        `<input type="hidden" name="siteId" value="${site?.id || ""}">` +
+        `<div data-pub-form-status style="display:none;padding:12px 16px;border-radius:10px;font-size:.9rem;text-align:center;font-weight:600;margin-bottom:1rem"></div>`;
+      return `<form${attrs}${extra}>${hidden}`;
+    });
+  }
+
+  return html;
+}

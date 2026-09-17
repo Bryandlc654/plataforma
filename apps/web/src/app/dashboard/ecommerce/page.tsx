@@ -175,7 +175,7 @@ export default function EcommercePage() {
             </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={form.isActive !== false} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} /> Activo</label>
-              <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> Destacado (badge "Nuevo")</label>
+              <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} /> Destacado (badge &quot;Nuevo&quot;)</label>
             </div>
             <div className="flex gap-2"><button onClick={saveProduct} className="btn-primary text-sm">{editingId ? "Guardar cambios" : "Crear"}</button><button onClick={resetForm} className="btn-ghost text-sm">Cancelar</button></div>
           </div>
@@ -296,7 +296,7 @@ export default function EcommercePage() {
                 </label>
               </div>
 
-              {(!payForm?.paypalEnabled) && <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">PayPal desactivado. El checkout mostrará solo "Pago contra entrega".</p>}
+              {(!payForm?.paypalEnabled) && <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">PayPal desactivado. El checkout mostrará solo &quot;Pago contra entrega&quot;.</p>}
 
               {payForm?.paypalEnabled && (
                 <div className="grid sm:grid-cols-2 gap-3 border-t border-slate-100 pt-4">

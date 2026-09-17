@@ -367,6 +367,42 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     }
   }
 
+  if (c.variant === "raw-html") {
+    const { getRawHtmlHtml } = require("../../../lib/raw-html-variants");
+    const html = getRawHtmlHtml(type, c, API_ORIGIN);
+    if (html) {
+      return (
+        <div
+          dangerouslySetInnerHTML={{ __html: html }}
+          onClick={(e) => {
+            const anchor = (e.target as HTMLElement)?.closest?.("a") as HTMLAnchorElement | null;
+            if (!anchor) return;
+            const href = anchor.getAttribute("href") || "";
+            if (href.startsWith("/") && !href.startsWith("//")) e.preventDefault();
+          }}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const formData = new FormData(form);
+            const data: Record<string, any> = {};
+            formData.forEach((v, k) => { data[k] = v; });
+            const tenantId = useAuthStore.getState().tenantId;
+            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+            if (btn) btn.disabled = true;
+            try {
+              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+              else await new Promise(res => setTimeout(res, 1000));
+              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
+            } catch (err) {
+              if (btn) btn.disabled = false;
+              alert("Error al enviar el formulario");
+            }
+          }}
+        />
+      );
+    }
+  }
+
   switch (type) {
     case "hero": {
       return (

@@ -9,3 +9,4 @@ export * from "./templates/indigo-variants";
 export * from "./templates/dishora-variants";
 export * from "./templates/graduate-variants";
 export * from "./templates/urban-noir-variants";
+export * from "./templates/raw-html-variants";

@@ -85,6 +85,50 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
   );
 }
 
+function RawHtmlFields({ content, set }: { content: any; set: (k: string, v: any) => void }) {
+  const [showHtml, setShowHtml] = useState(false);
+  const schema: Array<{ key: string; label: string; type: string; fields?: any[] }> = content.fieldSchema || [];
+
+  return (
+    <>
+      <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2 mb-4 text-xs text-indigo-700">
+        Bloque importado desde ZIP. Edita los textos e imágenes detectados.
+      </div>
+      {schema.length === 0 && (
+        <p className="text-sm text-slate-400 py-4 text-center">No se detectaron campos editables. Usa el HTML avanzado.</p>
+      )}
+      {schema.map((f) => {
+        if (f.type === "array") {
+          return (
+            <Field key={f.key} label={f.label}>
+              <ArrayEditor value={content[f.key]} onChange={(v) => set(f.key, v)} fields={f.fields || []} />
+            </Field>
+          );
+        }
+        if (f.type === "image") {
+          return <ImageField key={f.key} label={f.label} value={content[f.key]} onChange={(v) => set(f.key, v)} />;
+        }
+        return (
+          <Field key={f.key} label={f.label}>
+            <TextInput value={content[f.key]} onChange={(v) => set(f.key, v)} type={f.type === "textarea" ? "textarea" : "text"} />
+          </Field>
+        );
+      })}
+      <div className="mt-6 border-t border-slate-100 pt-4">
+        <button type="button" onClick={() => setShowHtml((s) => !s)}
+          className="w-full flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider hover:text-slate-700">
+          <span>HTML avanzado</span>
+          <span>{showHtml ? "▲" : "▼"}</span>
+        </button>
+        {showHtml && (
+          <textarea value={content.html || ""} onChange={(e) => set("html", e.target.value)} rows={14} spellCheck={false}
+            className="mt-3 w-full px-3 py-2 text-xs font-mono border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" />
+        )}
+      </div>
+    </>
+  );
+}
+
 const FA_ICONS = [
   { value: "fa-solid fa-bullhorn", label: "Megáfono" },
   { value: "fa-solid fa-fire", label: "Fuego" },
@@ -241,6 +285,9 @@ export function BlockEditor({ type, content, onChange }: { type: string; content
   const set = (key: string, value: any) => onChange({ ...content, [key]: value });
 
   const renderFields = () => {
+    if (content.variant === "raw-html") {
+      return <RawHtmlFields content={content} set={set} />;
+    }
     switch (type) {
       case "page-hero":
         if (content.variant === "indigo") {

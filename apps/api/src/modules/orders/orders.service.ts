@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
+import { EmailService } from "../email/email.service";
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private emailService: EmailService, private configService: ConfigService) {}
 
   async create(tenantId: string, dto: { items: Array<{ productId: string; quantity: number }>; customerName?: string; customerEmail?: string; customerPhone?: string; couponCode?: string; notes?: string; paymentMethod?: string }) {
     let coupon: any = null;
@@ -100,12 +102,60 @@ export class OrdersService {
 
   async updateStatus(id: string, status: string) {
     await this.assertExists(id);
-    return this.prisma.order.update({ where: { id }, data: { status } });
+    const prev = await this.prisma.order.findUnique({ where: { id }, select: { status: true } });
+    const updated = await this.prisma.order.update({ where: { id }, data: { status } });
+    if (status === "paid" && prev?.status !== "paid") {
+      await this.notifyPaid(id).catch(() => undefined);
+    }
+    return updated;
   }
 
   async markPaid(id: string) {
     await this.assertExists(id);
-    return this.prisma.order.update({ where: { id }, data: { status: "paid", paidAt: new Date() } });
+    const order = await this.prisma.order.update({
+      where: { id },
+      data: { status: "paid", paidAt: new Date() },
+      include: { items: { include: { product: true } } },
+    });
+    await this.notifyPaid(id).catch(() => undefined);
+    return order;
+  }
+
+  async notifyPaid(id: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { items: { include: { product: true } } },
+    });
+    if (!order) return;
+    if (!order.customerEmail) return;
+    try {
+      const site = await this.prisma.site.findFirst({
+        where: { tenantId: order.tenantId, isPublished: true, deletedAt: null },
+        select: { name: true, subdomain: true },
+      });
+      const apiBase =
+        this.configService.get<string>("PUBLIC_API_URL") ||
+        this.configService.get<string>("API_URL") ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "https://plataforma-api-dr5asqkdmq-uc.a.run.app";
+      await this.emailService.sendOrderNotificationEmail({
+        to: order.customerEmail,
+        customerName: order.customerName || "Cliente",
+        siteName: site?.name || "Mi tienda",
+        orderId: order.id,
+        orderUrl: site?.subdomain ? `${apiBase}/p/${site.subdomain}` : "",
+        total: String(order.totalAmount),
+        discount: String(order.discount || 0),
+        currency: "USD",
+        paymentMethod: order.paymentMethod || "cod",
+        status: "paid",
+        items: order.items.map((i) => ({
+          name: i.product?.name || "Producto",
+          quantity: i.quantity,
+          price: Number(i.price),
+        })),
+      });
+    } catch {}
   }
 
   async remove(id: string) {

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
-import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml, getIndigoHtml, getDishoraHtml, getGraduateHtml, getUrbanNoirHtml } from "@plataforma/shared";
+import { getPrestigeHtml, getArtCulinaireHtml, getRodriplastHtml, getIndigoHtml, getDishoraHtml, getGraduateHtml, getUrbanNoirHtml, getRawHtmlHtml } from "@plataforma/shared";
 import {
   resolvePublicSiteUrl,
   normalizePublicPath,
@@ -1266,6 +1266,11 @@ ${apkButton}
 
     if (c.variant === "urban-noir") {
       const html = getUrbanNoirHtml(type, c, this.apiBaseUrl(), site);
+      if (html) return html;
+    }
+
+    if (c.variant === "raw-html") {
+      const html = getRawHtmlHtml(type, c, this.apiBaseUrl());
       if (html) return html;
     }
 

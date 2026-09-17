@@ -43,6 +43,73 @@ export class EmailService {
     }
   }
 
+  async sendOrderNotificationEmail(params: {
+    to: string;
+    customerName: string;
+    siteName: string;
+    orderId: string;
+    orderUrl: string;
+    total: string;
+    discount?: string;
+    currency?: string;
+    paymentMethod: string;
+    status: string;
+    items: Array<{ name: string; quantity: number; price: number }>;
+  }) {
+    const paids = params.status === "paid";
+    const methodLabel = params.paymentMethod === "paypal" ? "PayPal" : params.paymentMethod === "cod" ? "Pago contra entrega" : (params.paymentMethod || "—");
+    const rows = params.items
+      .map(
+        (i) => `<tr style="border-bottom:1px solid #e2e8f0">
+          <td style="padding:10px 8px;color:#0f172a">${i.quantity} × ${i.name}</td>
+          <td style="padding:10px 8px;text-align:right;color:#0f172a">${this.formatMoney(i.price * i.quantity, params.currency)}</td>
+        </tr>`
+      )
+      .join("");
+    const discountRow = Number(params.discount || 0) > 0
+      ? `<tr><td style="padding:8px;color:#16a34a">Descuento</td><td style="padding:8px;text-align:right;color:#16a34a">-${this.formatMoney(Number(params.discount), params.currency)}</td></tr>`
+      : "";
+
+    await this.send({
+      to: params.to,
+      subject: paids
+        ? `Pago confirmado · Pedido ${String(params.orderId).slice(0, 8).toUpperCase()} · ${params.siteName}`
+        : `Pedido recibido · ${String(params.orderId).slice(0, 8).toUpperCase()} · ${params.siteName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #0f172a;">
+          <div style="background: ${paids ? "#16a34a" : "#2563EB"}; color: #fff; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin:0;font-size:20px;">${paids ? "✓ ¡Pago confirmado!" : "Tu pedido está en camino"}</h1>
+            <p style="margin:6px 0 0;opacity:.9;font-size:14px;">${params.siteName}</p>
+          </div>
+          <div style="border:1px solid #e2e8f0; border-top:0; padding: 24px; border-radius: 0 0 8px 8px;">
+            <p>Hola ${params.customerName || "cliente"},</p>
+            ${paids ? `<p>Hemos recibido tu pago correctamente. Método: <strong>${methodLabel}</strong>.</p>` : `<p>Recibimos tu pedido. Forma de pago: <strong>${methodLabel}</strong> (${params.paymentMethod === "cod" ? "pagas al recibir" : "se procesó al confirmar"}).</p>`}
+            <p style="color:#475569;font-size:14px;">Pedido <strong>#${String(params.orderId).slice(0, 8).toUpperCase()}</strong></p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+              <tbody>${rows}${discountRow}</tbody>
+            </table>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:2px solid #0f172a">
+              <strong>Total</strong>
+              <strong style="font-size:18px;">${this.formatMoney(Number(params.total), params.currency)}</strong>
+            </div>
+            <a href="${params.orderUrl}" style="display:inline-block;background:${paids ? "#16a34a" : "#2563EB"};color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;margin-top:16px;">
+              Ver mi pedido
+            </a>
+            <p style="color:#666;font-size:13px;margin-top:20px;">Si tienes dudas, responde este correo o contáctanos. Gracias por tu compra.</p>
+          </div>
+        </div>
+      `,
+    });
+  }
+
+  private formatMoney(value: number, currency = "USD") {
+    try {
+      return new Intl.NumberFormat("es-US", { style: "currency", currency }).format(value);
+    } catch {
+      return `$${Number(value).toFixed(2)}`;
+    }
+  }
+
   private getFrontendUrl(): string {
     return this.configService.get<string>("FRONTEND_URL", "https://build.icebergup.com");
   }

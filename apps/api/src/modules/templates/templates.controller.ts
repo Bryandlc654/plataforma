@@ -1,8 +1,12 @@
 import {
-  Controller, Get, Post, Put, Param, Query, Body, UseGuards,
+  Controller, Get, Post, Put, Param, Query, Body, UseGuards, UseInterceptors,
+  UploadedFile, BadRequestException, ForbiddenException,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { memoryStorage } from "multer";
 import { TemplatesService } from "./templates.service";
+import { TemplatesImportService } from "./zip-import.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { RequirePermissions } from "../../common/decorators/permissions.decorator";
 import { PERMISSIONS } from "../../shared/index";
@@ -13,7 +17,10 @@ import { CurrentUser } from "../../common/decorators/current-user.decorator";
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class TemplatesController {
-  constructor(private templatesService: TemplatesService) {}
+  constructor(
+    private templatesService: TemplatesService,
+    private templatesImportService: TemplatesImportService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: "List templates" })
@@ -25,6 +32,43 @@ export class TemplatesController {
   @ApiOperation({ summary: "List template categories" })
   async getCategories() {
     return this.templatesService.getCategories();
+  }
+
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @Post("admin/import-zip")
+  @ApiOperation({ summary: "Super admin: importar plantilla desde un ZIP (HTML + CSS)" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: memoryStorage(),
+      fileFilter: (_req, file, cb) => {
+        if (file.originalname.toLowerCase().endsWith(".zip") || file.mimetype === "application/zip") {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException("Solo se permiten archivos ZIP"), false);
+        }
+      },
+      limits: { fileSize: 40 * 1024 * 1024 },
+    }),
+  )
+  async importZip(
+    @CurrentUser() user: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Body("name") name?: string,
+    @Body("description") description?: string,
+    @Body("categoryId") categoryId?: string,
+    @Body("isPremium") isPremium?: string,
+  ) {
+    if (!user?.roles?.includes("super_admin")) {
+      throw new ForbiddenException("Solo el super admin puede importar plantillas");
+    }
+    if (!file) throw new BadRequestException("Archivo ZIP requerido");
+    return this.templatesImportService.importZip(file, {
+      name: name || file.originalname.replace(/\.zip$/i, ""),
+      description,
+      categoryId,
+      isPremium: isPremium === "true" || isPremium === "1",
+    });
   }
 
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)

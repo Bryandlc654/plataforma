@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { AppIcon } from "@/components/ui/app-icon";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
@@ -57,6 +57,35 @@ export default function AdminTemplatesPage() {
   const [edit, setEdit] = useState({ id: "", name: "", description: "", categoryId: "", tags: "", thumbnail: "", isPremium: false, isActive: true });
   const [diversifyLoading, setDiversifyLoading] = useState(false);
   const [portfolioPresetLoading, setPortfolioPresetLoading] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importState, setImportState] = useState({ name: "", description: "", categoryId: "", isPremium: false });
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const doImport = async () => {
+    if (!importFile) return;
+    setImportLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", importFile);
+      fd.append("name", importState.name.trim() || importFile.name.replace(/\.zip$/i, ""));
+      if (importState.description.trim()) fd.append("description", importState.description.trim());
+      if (importState.categoryId) fd.append("categoryId", importState.categoryId);
+      fd.append("isPremium", importState.isPremium ? "true" : "false");
+      const res: any = await api.post("/templates/admin/import-zip", fd, { timeout: 180000 });
+      const r = res.data || res;
+      setToast(`Plantilla importada: ${r.name} · ${r.pages} páginas · ${r.blocks} bloques`);
+      setShowImportModal(false);
+      setImportFile(null);
+      setImportState({ name: "", description: "", categoryId: "", isPremium: false });
+      fetchData();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Error al importar la plantilla");
+    } finally {
+      setImportLoading(false);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -178,6 +207,7 @@ export default function AdminTemplatesPage() {
           <button onClick={diversifyAll} disabled={diversifyLoading} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 transition-colors shadow-sm">
             {diversifyLoading ? "Actualizando..." : "Hacer distintas"}
           </button>
+          <button onClick={() => setShowImportModal(true)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors shadow-sm"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Importar ZIP</button>
           <button onClick={() => setShowCategoryModal(true)} className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors shadow-sm"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>Nueva categoría</button>
         </div>
       </div>
@@ -187,6 +217,57 @@ export default function AdminTemplatesPage() {
           <div key={s.label} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${s.color} p-4`}><p className="text-xs font-medium text-slate-500 uppercase">{s.label}</p><p className="text-2xl font-bold text-slate-900 mt-1">{s.value}</p></div>
         ))}
       </div>
+
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => !importLoading && setShowImportModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold text-slate-900">Importar plantilla desde ZIP</h3>
+              <button onClick={() => setShowImportModal(false)} disabled={importLoading} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-50">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">Sube un ZIP con tu sitio (un <span className="font-mono">index.html</span>, CSS e imágenes). Se convertirá en una plantilla editable.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Archivo ZIP</label>
+                <input ref={importRef} type="file" accept=".zip,application/zip" className="hidden" onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  setImportFile(f);
+                  if (f && !importState.name) setImportState((s) => ({ ...s, name: f.name.replace(/\.zip$/i, "") }));
+                }} />
+                <button onClick={() => importRef.current?.click()} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-5 text-sm text-slate-500 hover:border-primary-300 hover:bg-primary-50/30 transition-all">
+                  {importFile ? <span className="font-medium text-slate-700">{importFile.name} · {(importFile.size / 1024 / 1024).toFixed(1)} MB</span> : "Seleccionar archivo .zip"}
+                </button>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Nombre</label>
+                <input className="input-field" value={importState.name} onChange={(e) => setImportState({ ...importState, name: e.target.value })} placeholder="Mi sitio" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Descripción</label>
+                <textarea className="input-field" rows={2} value={importState.description} onChange={(e) => setImportState({ ...importState, description: e.target.value })} placeholder="Plantilla importada desde ZIP" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Categoría</label>
+                <select className="input-field bg-white" value={importState.categoryId} onChange={(e) => setImportState({ ...importState, categoryId: e.target.value })}>
+                  <option value="">Sin categoría</option>
+                  {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+                </select>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={importState.isPremium} onChange={(e) => setImportState({ ...importState, isPremium: e.target.checked })} />
+                Premium
+              </label>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowImportModal(false)} disabled={importLoading} className="flex-1 btn-secondary text-sm disabled:opacity-50">Cancelar</button>
+              <button onClick={doImport} disabled={importLoading || !importFile} className="flex-1 btn-primary text-sm disabled:opacity-50">{importLoading ? "Importando..." : "Importar"}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCategoryModal && <div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCategoryModal(false)}/><div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-md"><h3 className="text-lg font-semibold text-slate-900 mb-4">Nueva categoría</h3><input className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500" placeholder="Ej: Restaurantes" value={newCatName} onChange={e => setNewCatName(e.target.value)} autoFocus/><div className="flex gap-3 mt-4"><button onClick={() => setShowCategoryModal(false)} className="flex-1 btn-secondary text-sm">Cancelar</button><button onClick={createCategory} className="flex-1 btn-primary text-sm">Crear</button></div></div></div>}
 
