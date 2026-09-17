@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { AppIcon } from "@/components/ui/app-icon";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
@@ -41,7 +40,6 @@ const catColors: Record<string, string> = {
 };
 
 export default function AdminTemplatesPage() {
-  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -382,7 +380,7 @@ export default function AdminTemplatesPage() {
                   {t.category && <span className="bg-slate-100 rounded-full px-2 py-0.5 text-[10px] font-medium">{t.category.name}</span>}
                 </div>
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100 mt-auto">
-                  <button onClick={() => router.push(`/sandbox/templates/${t.id}`)} className="flex-1 text-xs font-semibold text-primary-600 hover:text-primary-700 py-2 rounded-lg hover:bg-primary-50 transition-all">Vista previa</button>
+                  <a href={`/sandbox/templates/${t.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-xs font-semibold text-primary-600 hover:text-primary-700 py-2 rounded-lg hover:bg-primary-50 transition-all">Vista previa</a>
                   <button onClick={() => openEdit(t)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 py-2 px-3 rounded-lg hover:bg-slate-100 transition-all">Editar</button>
                   <button onClick={() => toggleTemplate(t.id, t.isActive)} className={`text-xs font-semibold py-2 px-3 rounded-lg transition-all ${t.isActive ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-green-600 hover:text-green-700 hover:bg-green-50"}`}>{t.isActive ? "Desactivar" : "Activar"}</button>
                   <button onClick={() => setDeleteTarget(t)} title="Eliminar plantilla" className="p-2 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all">
