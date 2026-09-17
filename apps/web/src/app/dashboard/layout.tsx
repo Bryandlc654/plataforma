@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { AppIcon } from "@/components/ui/app-icon";
 import { useEffect, useState, Fragment } from "react";
 import api from "@/lib/api";
+import { cachedJson, setCachedJson } from "@/lib/cached-fetch";
 
 function hasRole(user: any, role: string) { return user?.roles?.includes(role) || false; }
 function hasPermission(user: any, perm: string) { return user?.permissions?.includes(perm) || hasRole(user, "super_admin"); }
@@ -33,11 +34,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!tenantId) return;
-    api.get("/sites/capabilities").then((res: any) => setCapabilities(res.data || res)).catch(() => setCapabilities({ bookings: false, ecommerce: false }));
+    const cacheKey = `capabilities:${tenantId}:v1`;
+    const cached = cachedJson<{ bookings: boolean; ecommerce: boolean }>(cacheKey, 5 * 60 * 1000);
+    if (cached) { setCapabilities(cached); return; }
+    api.get("/sites/capabilities").then((res: any) => {
+      const caps = res.data || res;
+      setCapabilities(caps);
+      setCachedJson(cacheKey, caps);
+    }).catch(() => setCapabilities({ bookings: false, ecommerce: false }));
   }, [tenantId]);
 
   const fetchTenants = async () => {
-    try { const res: any = await api.get("/users/tenants"); setTenants(res.data || res); }
+    const cacheKey = "tenants:v1";
+    const cached = cachedJson<Array<{ id: string; name: string; slug: string; isOwner: boolean }>>(cacheKey, 5 * 60 * 1000);
+    if (cached) { setTenants(cached); return; }
+    try {
+      const res: any = await api.get("/users/tenants");
+      const data = res.data || res;
+      if (Array.isArray(data)) {
+        setTenants(data);
+        setCachedJson(cacheKey, data);
+      } else {
+        setTenants([]);
+      }
+    }
     catch { setTenants([]); }
   };
 
@@ -71,7 +91,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard/analytics", label: "Analytics", icon: "analytics", perms: ["analytics.view"] },
         { href: "/dashboard/seo", label: "SEO", icon: "seo", perms: ["site.read"] },
-        { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
         { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
       ]
     },

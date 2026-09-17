@@ -31,6 +31,8 @@ steps:
       - '8080'
       - '--memory'
       - '512Mi'
+      - '--min-instances'
+      - '1'
       - '--set-env-vars'
       - 'NODE_ENV=production'
       - '--update-secrets'
