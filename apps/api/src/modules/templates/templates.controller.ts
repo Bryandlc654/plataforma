@@ -7,6 +7,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { TemplatesService } from "./templates.service";
 import { TemplatesImportService } from "./zip-import.service";
+import { MediaService } from "../media/media.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { RequirePermissions } from "../../common/decorators/permissions.decorator";
 import { PERMISSIONS } from "../../shared/index";
@@ -20,6 +21,7 @@ export class TemplatesController {
   constructor(
     private templatesService: TemplatesService,
     private templatesImportService: TemplatesImportService,
+    private mediaService: MediaService,
   ) {}
 
   @Get()
@@ -69,6 +71,36 @@ export class TemplatesController {
       categoryId,
       isPremium: isPremium === "true" || isPremium === "1",
     });
+  }
+
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @Post("admin/:id/thumbnail")
+  @ApiOperation({ summary: "Super admin: subir imagen de portada (thumbnail) de una plantilla" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: memoryStorage(),
+      fileFilter: (_req, file, cb) => {
+        if (file.mimetype.startsWith("image/")) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException("Solo se permiten imágenes"), false);
+        }
+      },
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  async uploadThumbnail(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!user?.roles?.includes("super_admin")) {
+      throw new ForbiddenException("Solo el super admin puede cambiar el thumbnail de plantillas");
+    }
+    if (!file) throw new BadRequestException("Imagen requerida");
+    const { url } = await this.mediaService.uploadTemplateThumbnail(file);
+    return this.templatesService.update(id, { thumbnail: url });
   }
 
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)

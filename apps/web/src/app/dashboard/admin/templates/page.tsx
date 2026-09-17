@@ -64,6 +64,28 @@ export default function AdminTemplatesPage() {
   const importRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
+  const [thumbUploading, setThumbUploading] = useState(false);
+
+  const onThumbUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!edit.id) { alert("Guarda la plantilla primero"); return; }
+    setThumbUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const res: any = await api.post(`/templates/admin/${edit.id}/thumbnail`, fd);
+      const r = res.data || res;
+      setEdit((prev) => ({ ...prev, thumbnail: r.thumbnail || r.url || prev.thumbnail }));
+      setToast("Imagen de portada actualizada");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Error al subir la imagen");
+    } finally {
+      setThumbUploading(false);
+    }
+  };
 
   const doDelete = async (t: Template) => {
     setDeleteLoading(true);
@@ -556,8 +578,20 @@ export default function AdminTemplatesPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Thumbnail (URL)</label>
-                <input className="input-field" placeholder="https://..." value={edit.thumbnail} onChange={(e) => setEdit({ ...edit, thumbnail: e.target.value })} />
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Thumbnail (portada)</label>
+                {edit.thumbnail && (
+                  <div className="relative mb-2 rounded-xl overflow-hidden border border-slate-200">
+                    <img src={edit.thumbnail} alt="Thumbnail de la plantilla" className="w-full h-28 object-cover object-top" />
+                    <button onClick={() => setEdit({ ...edit, thumbnail: "" })} title="Quitar imagen" className="absolute top-2 right-2 rounded-lg bg-white/90 p-1.5 text-slate-500 hover:text-red-600 hover:bg-white shadow-sm transition-colors">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                )}
+                <input ref={thumbInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbUpload} />
+                <button onClick={() => thumbInputRef.current?.click()} disabled={thumbUploading} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm text-slate-500 hover:border-primary-300 hover:bg-primary-50/30 disabled:opacity-60 transition-all">
+                  {thumbUploading ? "Subiendo..." : edit.thumbnail ? "Cambiar imagen" : "Subir imagen"}
+                </button>
+                <input className="input-field mt-2" placeholder="o pega una URL https://..." value={edit.thumbnail} onChange={(e) => setEdit({ ...edit, thumbnail: e.target.value })} />
               </div>
               <div className="flex flex-wrap gap-3">
                 <label className="inline-flex items-center gap-2 text-sm text-slate-700">
