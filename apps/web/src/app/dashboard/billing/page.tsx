@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { useConfirm } from "@/components/providers/confirm-provider";
+import { AdminModuleTabs } from "@/components/admin/admin-module-tabs";
 
 interface CurrentSub { id: string; plan: any; status: string; currentPeriodStart: string; currentPeriodEnd: string; paymentMethod: string; limits: { maxUsers: number; maxSites: number; maxStorage: string; storageUsed: string }; }
 interface Plan { id: string; name: string; slug: string; price: number; maxUsers: number; maxSites: number; maxStorage: string; features: any; }
@@ -28,6 +29,7 @@ export default function BillingPage() {
   if(loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
   return (
     <div className="p-8 max-w-4xl">
+      <AdminModuleTabs />
       <h1 className="text-2xl font-bold text-slate-900 mb-8">Facturación</h1>
       <div className="card mb-8"><h2 className="font-semibold text-slate-900 mb-4">Plan actual</h2>
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-3 mb-2"><span className="text-xl font-bold text-slate-900">{sub?.plan?.name||"Free"}</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sub?.status==="active"?"bg-green-50 text-green-700":"bg-slate-50 text-slate-700"}`}>{sub?.status==="active"?"Activo":sub?.status||"Free"}</span></div>{sub?.currentPeriodEnd&&<p className="text-sm text-slate-500">Próximo pago: {formatDate(sub.currentPeriodEnd)}</p>}</div>

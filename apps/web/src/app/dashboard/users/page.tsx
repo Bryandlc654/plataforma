@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate } from "@/lib/utils";
 import { useConfirm } from "@/components/providers/confirm-provider";
+import { AdminModuleTabs } from "@/components/admin/admin-module-tabs";
 
 interface Member { id: string; user: { id: string; email: string; firstName: string; lastName: string }; roles: Array<{ id: string; name: string }>; isOwner: boolean; joinedAt: string; }
 interface Role { id: string; name: string; description: string; }
@@ -46,6 +47,7 @@ export default function UsersPage() {
   if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
   return (
     <div className="p-8">
+      <AdminModuleTabs />
       {toast && <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm font-medium shadow-lg">{toast}</div>}
       <div className="flex items-center justify-between mb-8"><div><h1 className="text-2xl font-bold text-slate-900">Usuarios</h1><p className="text-sm text-slate-600 mt-1">{members.length} miembros · {tenant?.name}</p></div>{canManage && <button onClick={() => setShowInvite(!showInvite)} className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>Invitar usuario</button>}</div>
       {showInvite && <div className="bg-white rounded-xl border border-slate-200 p-5 mb-6"><h3 className="font-semibold text-slate-900 mb-4">Invitar nuevo usuario</h3><div className="flex flex-col sm:flex-row gap-3 items-end"><div className="flex-1"><label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label><input className="input-field" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="usuario@email.com" /></div><div><label className="block text-sm font-medium text-slate-700 mb-1.5">Rol</label><select className="input-field w-40" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>{roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div><button onClick={sendInvitation} disabled={sending} className="btn-primary text-sm whitespace-nowrap">{sending ? "Enviando..." : "Enviar invitación"}</button><button onClick={() => setShowInvite(false)} className="btn-ghost text-sm whitespace-nowrap">Cancelar</button></div></div>}

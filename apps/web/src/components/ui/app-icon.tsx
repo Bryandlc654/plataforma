@@ -1,4 +1,4 @@
-import { HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone } from "react-icons/hi2";
+import { HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone, HiShieldCheck } from "react-icons/hi2";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: HiHome,
@@ -28,6 +28,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   adminintegrations: HiWrenchScrewdriver,
   adminusers: HiUserGroup,
   appdownload: HiArrowDownTray,
+  shield: HiShieldCheck,
 };
 
 export function AppIcon({ name, className = "h-4 w-4" }: { name: string; className?: string }) {

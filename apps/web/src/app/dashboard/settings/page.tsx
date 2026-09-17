@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { AdminModuleTabs } from "@/components/admin/admin-module-tabs";
 
 interface TenantSettings { name: string; slug: string; subdomain: string; customDomain: string; logoUrl: string; faviconUrl: string; primaryColor: string; secondaryColor: string; settings: { locale?: string; currency?: string; timezone?: string; branding?: any; social?: { facebook?: string; instagram?: string; twitter?: string; linkedin?: string; youtube?: string; tiktok?: string }; businessHours?: { days?: string; hours?: string } }; }
 
@@ -33,6 +34,7 @@ export default function SettingsPage() {
 
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+      <AdminModuleTabs />
       <h1 className="text-2xl font-bold text-slate-900 mb-8">Configuración</h1>
 
       <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">

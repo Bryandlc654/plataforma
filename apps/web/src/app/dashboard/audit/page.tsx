@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate } from "@/lib/utils";
+import { AdminModuleTabs } from "@/components/admin/admin-module-tabs";
 
 interface LogEntry {
   id: string; action: string; resource: string; resourceId: string;
@@ -59,6 +60,7 @@ export default function AuditPage() {
 
   return (
       <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+        <AdminModuleTabs />
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Auditoría</h1>
         <p className="text-sm text-slate-600 mb-6">{logs.length} registros {isAdmin ? "(global)" : ""}</p>
 

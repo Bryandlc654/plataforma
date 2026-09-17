@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useConfirm } from "@/components/providers/confirm-provider";
+import { AdminModuleTabs } from "@/components/admin/admin-module-tabs";
 
 interface PermissionInfo { id: string; name: string; resource: string; action: string; }
 interface RoleWithPerms {
@@ -140,6 +141,7 @@ export default function RolesPage() {
 
   return (
     <div className="p-8">
+      <AdminModuleTabs />
       {toast && <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm font-medium shadow-lg">{toast}</div>}
 
       <div className="flex items-center justify-between mb-8">
