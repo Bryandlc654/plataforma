@@ -78,9 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       title: "Ventas y Marketing",
       links: [
         { href: "/dashboard/leads", label: "Leads", icon: "leads", perms: ["lead.read"] },
-        { href: "/dashboard/sorteos", label: "Sorteos", icon: "leads", perms: ["lead.read"] },
-        { href: "/dashboard/linktrees", label: "Bio Links", icon: "leads", perms: ["site.read"] },
-        { href: "/dashboard/reviews", label: "Reseñas", icon: "support", perms: ["site.read"] },
+        { href: "/dashboard/marketing", label: "Marketing", icon: "megaphone", perms: ["lead.read", "site.read"] },
         { href: "/dashboard/bookings-page", label: "Reservas", icon: "bookings", perms: ["site.read"] },
         { href: "/dashboard/ecommerce", label: "E-commerce", icon: "ecommerce", perms: ["site.read"] },
         { href: "/dashboard/whatsapp", label: "WhatsApp", icon: "whatsapp", perms: ["integration.manage"] },
