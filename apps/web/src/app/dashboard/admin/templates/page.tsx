@@ -62,6 +62,23 @@ export default function AdminTemplatesPage() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLoading, setImportLoading] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const doDelete = async (t: Template) => {
+    setDeleteLoading(true);
+    try {
+      await api.delete(`/templates/${t.id}`);
+      setToast("Plantilla eliminada");
+      setDeleteTarget(null);
+      if (selected?.id === t.id) { setSelected(null); setPreview(null); }
+      fetchData();
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Error al eliminar la plantilla");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const doImport = async () => {
     if (!importFile) return;
@@ -344,6 +361,9 @@ export default function AdminTemplatesPage() {
                   <button onClick={() => { setSelected(t); fetchPreview(t.id); }} className="flex-1 text-xs font-semibold text-primary-600 hover:text-primary-700 py-2 rounded-lg hover:bg-primary-50 transition-all">Vista previa</button>
                   <button onClick={() => openEdit(t)} className="text-xs font-semibold text-slate-600 hover:text-slate-800 py-2 px-3 rounded-lg hover:bg-slate-100 transition-all">Editar</button>
                   <button onClick={() => toggleTemplate(t.id, t.isActive)} className={`text-xs font-semibold py-2 px-3 rounded-lg transition-all ${t.isActive ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50" : "text-green-600 hover:text-green-700 hover:bg-green-50"}`}>{t.isActive ? "Desactivar" : "Activar"}</button>
+                  <button onClick={() => setDeleteTarget(t)} title="Eliminar plantilla" className="p-2 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -371,6 +391,9 @@ export default function AdminTemplatesPage() {
               <div className="flex gap-2">
                 <button onClick={() => openEdit(selected)} className="flex-1 btn-secondary text-sm">Editar</button>
                 <button onClick={() => toggleTemplate(selected.id, selected.isActive)} className="flex-1 btn-primary text-sm">{selected.isActive ? "Desactivar" : "Activar"}</button>
+                <button onClick={() => setDeleteTarget(selected)} className="rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-semibold px-3 py-2 hover:bg-red-100 transition-colors" title="Eliminar plantilla">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
               </div>
               {(selected.name || "").toLowerCase().includes("portafolio creativo") && (
                 <button
@@ -550,6 +573,32 @@ export default function AdminTemplatesPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowEditModal(false)} className="flex-1 btn-secondary text-sm">Cancelar</button>
               <button onClick={saveEdit} className="flex-1 btn-primary text-sm">Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => !deleteLoading && setDeleteTarget(null)} />
+          <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Eliminar plantilla</h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Se eliminará <span className="font-medium text-slate-700">{deleteTarget.name}</span> con sus {deleteTarget._count?.pages || 0} páginas. Esta acción no se puede deshacer.
+                </p>
+                {(deleteTarget._count?.sites || 0) > 0 && (
+                  <p className="text-xs text-amber-600 mt-2">En uso por {deleteTarget._count.sites} sitio(s): los sitios existentes conservarán su contenido.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setDeleteTarget(null)} disabled={deleteLoading} className="flex-1 btn-secondary text-sm disabled:opacity-50">Cancelar</button>
+              <button onClick={() => doDelete(deleteTarget)} disabled={deleteLoading} className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 disabled:opacity-60 transition-colors">{deleteLoading ? "Eliminando..." : "Eliminar"}</button>
             </div>
           </div>
         </div>

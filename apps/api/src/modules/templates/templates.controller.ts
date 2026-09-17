@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Param, Query, Body, UseGuards, UseInterceptors,
+  Controller, Get, Post, Put, Delete, Param, Query, Body, UseGuards, UseInterceptors,
   UploadedFile, BadRequestException, ForbiddenException,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
@@ -127,6 +127,16 @@ export class TemplatesController {
   @ApiOperation({ summary: "Update template" })
   async update(@Param("id") id: string, @Body() body: any) {
     return this.templatesService.update(id, body);
+  }
+
+  @Delete(":id")
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @ApiOperation({ summary: "Super admin: eliminar plantilla" })
+  async remove(@CurrentUser() user: any, @Param("id") id: string) {
+    if (!user?.roles?.includes("super_admin")) {
+      throw new ForbiddenException("Solo el super admin puede eliminar plantillas");
+    }
+    return this.templatesService.remove(id);
   }
 
   @Post("categories")

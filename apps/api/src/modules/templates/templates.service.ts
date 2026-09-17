@@ -730,6 +730,21 @@ export class TemplatesService {
     return this.prisma.template.update({ where: { id }, data: patch });
   }
 
+  async remove(id: string) {
+    const t = await this.prisma.template.findUnique({
+      where: { id },
+      include: { _count: { select: { sites: true } } },
+    });
+    if (!t) throw new NotFoundException("Template not found");
+
+    await this.prisma.$transaction([
+      this.prisma.templatePage.deleteMany({ where: { templateId: id } }),
+      this.prisma.template.delete({ where: { id } }),
+    ]);
+
+    return { id, deleted: true, sitesAffected: t._count.sites };
+  }
+
   async createCategory(dto: { name: string; slug?: string }) {
     const name = dto?.name?.trim();
     if (!name) throw new BadRequestException("Name is required");
