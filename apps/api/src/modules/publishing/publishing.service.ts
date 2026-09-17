@@ -455,6 +455,8 @@ export class PublishingService {
         this.renderBlock(block.type, block.content, block.styles, site)
       )
     ).join("\n");
+    const variant = site.pages?.[0]?.blocks?.[0]?.content?.variant;
+    const isRawHtml = variant === "raw-html";
 
     return `<!DOCTYPE html>
 <html lang="es">
@@ -466,8 +468,7 @@ export class PublishingService {
 <link rel="icon" href="${site.faviconUrl || ""}">
 <style>
 :root{--primary:${site.primaryColor || "#2563EB"}}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1e293b}
+${isRawHtml ? "" : "*{margin:0;padding:0;box-sizing:border-box}\nbody{font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1e293b}"}
 </style>
 </head>
 <body>
@@ -861,6 +862,7 @@ ${cfg}
     const variant = page?.blocks?.[0]?.content?.variant;
     const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora" || variant === "graduate" || variant === "urban-noir";
     const isUrbanNoir = variant === "urban-noir";
+    const isRawHtml = variant === "raw-html";
 
     const baseUrl = resolvePublicSiteUrl(site);
     const canonicalUrl =
@@ -1137,7 +1139,7 @@ ${isTemplate ? `
   }
 </script>` : ""}
 <style>
-${isTemplate ? `
+${isTemplate || isRawHtml ? `
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .material-symbols-outlined[data-weight="fill"] { font-variation-settings: 'FILL' 1; }
 ` : `

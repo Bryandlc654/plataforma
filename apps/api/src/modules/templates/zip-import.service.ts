@@ -153,15 +153,16 @@ export class TemplatesImportService {
       }
     }
 
-    const rewriteCss = (css: string): string => {
+    const rewriteCss = (css: string, baseDir: string): string => {
       return String(css || "")
         .replace(/expression\s*\([^)]*\)/gi, "none")
         .replace(/url\(\s*(["']?)(.*?)\1\s*\)/g, (m, quote, rawUrl: string) => {
           const trimmed = (rawUrl || "").trim();
           if (!trimmed || isExternalUrl(trimmed)) return `url(${quote}${trimmed}${quote})`;
-          const resolved = /^\//.test(trimmed)
-            ? posixNormalize(trimmed)
-            : posixNormalize(trimmed);
+          const plain = trimmed.replace(/[?#].*$/, "");
+          const resolved = /^\//.test(plain)
+            ? posixNormalize(plain)
+            : posixNormalize(POSIX_JOIN(baseDir, plain));
           return `url(${quote}${TOKEN_OPEN}asset:${toUploadsUrl(resolved)}${TOKEN_CLOSE}${quote})`;
         });
     };
@@ -202,20 +203,25 @@ export class TemplatesImportService {
       // CSS inline del head
       const htmlDir = this.dirOf(entryPosix);
       const cssParts: string[] = [];
+      const extHead: string[] = [];
       $("style").each((_, el) => {
         const raw = $(el).html() || "";
-        if (raw.trim()) cssParts.push(rewriteCss(raw));
+        if (raw.trim()) cssParts.push(rewriteCss(raw, htmlDir));
       });
       $('link[rel="stylesheet"]').each((_, el) => {
         const href = $(el).attr("href") || "";
-        if (isExternalUrl(href)) return;
+        if (isExternalUrl(href)) {
+          extHead.push(`<link rel="stylesheet" href="${href}">`);
+          return;
+        }
         const cssPath = /^\//.test(href)
           ? posixNormalize(href)
           : posixNormalize(POSIX_JOIN(htmlDir, href));
         const cached = cssCache.get(cssPath);
-        if (cached) cssParts.push(rewriteCss(cached));
+        if (cached) cssParts.push(rewriteCss(cached, this.dirOf(cssPath)));
       });
       const pageCss = cssParts.join("\n");
+      const extHeadHtml = extHead.join("\n");
 
       // Quitar styles/links css del body (quedan inline en el primer bloque)
       $("style").remove();
@@ -241,11 +247,14 @@ export class TemplatesImportService {
       const topEls = root.toArray();
       const blocks: ExtractedBlock[] = [];
       topEls.forEach((el, idx) => {
-        const block = this.buildBlock($, el, idx, { pageCss: idx === 0 ? pageCss : "" });
+        const block = this.buildBlock($, el, idx, {
+          pageHead: idx === 0 ? extHeadHtml : "",
+          pageCss: idx === 0 ? pageCss : "",
+        });
         if (block) blocks.push(block);
       });
       if (blocks.length === 0) {
-        const block = this.buildBlock($, root.first(), 0, { pageCss });
+        const block = this.buildBlock($, root.first(), 0, { pageHead: extHeadHtml, pageCss });
         if (block) blocks.push(block);
       }
 
@@ -486,7 +495,7 @@ export class TemplatesImportService {
     $: cheerio.CheerioAPI,
     el: any,
     index: number,
-    opts: { pageCss: string }
+    opts: { pageHead: string; pageCss: string }
   ): ExtractedBlock | null {
     const type = this.classifySection($, el, index);
     const isHeaderFooter = type === "header" || type === "footer";
@@ -639,6 +648,8 @@ export class TemplatesImportService {
     }
 
     let html = $.html(rootEl);
+    const head = (opts.pageHead || "").trim();
+    if (head) html = `${head}\n${html}`;
     if (opts.pageCss) html = `<style>${opts.pageCss}</style>\n${html}`;
 
     return {

@@ -78,6 +78,18 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
   const [reviewHover, setReviewHover] = useState(0);
   const [reviewFormState, setReviewFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const revealRef = useRef<HTMLDivElement>(null);
+  const rawHtmlRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (c.variant !== "raw-html" || (type !== "header" && type !== "footer")) return;
+    const root = rawHtmlRef.current;
+    if (!root) return;
+    root.querySelectorAll("*").forEach((el) => {
+      const elm = el as HTMLElement;
+      const pos = getComputedStyle(elm).position;
+      if (pos === "fixed" || pos === "sticky") elm.style.position = "relative";
+    });
+  }, [c.variant, type, c]);
 
   useEffect(() => {
     if (c.variant !== "rodriplast") return;
@@ -373,6 +385,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
     if (html) {
       return (
         <div
+          ref={rawHtmlRef}
           dangerouslySetInnerHTML={{ __html: html }}
           onClick={(e) => {
             const anchor = (e.target as HTMLElement)?.closest?.("a") as HTMLAnchorElement | null;
