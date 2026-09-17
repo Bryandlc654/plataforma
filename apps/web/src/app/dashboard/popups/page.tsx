@@ -30,7 +30,7 @@ interface PopupTriggerConfig {
 interface Popup {
   id: string;
   name: string;
-  active: boolean;
+  enabled: boolean;
   template: PopupTemplate;
   mode: PopupMode;
   trigger: PopupTriggerConfig;
@@ -59,7 +59,7 @@ function emptyPopup(): Popup {
   return {
     id: "",
     name: "",
-    active: false,
+    enabled: false,
     template: "modal-center",
     mode: "both",
     trigger: { type: "time", delaySeconds: 5, scrollPercent: 50 },
@@ -84,7 +84,13 @@ export default function PopupsPage() {
     async (siteId: string) => {
       try {
         const d: any = await api.get(`/popups/sites/${siteId}`);
-        setPopups(d?.items || d || []);
+        const list = d?.items || d || [];
+        const items = Array.isArray(list) ? list : [];
+        setPopups(
+          items
+            .filter((x: any) => x && typeof x === "object" && !Array.isArray(x))
+            .map((p: any) => ({ ...p, enabled: p.enabled === true }))
+        );
         setError(null);
       } catch {
         setError("No se pudieron cargar los popups. Revisa los permisos del módulo.");
@@ -142,9 +148,9 @@ export default function PopupsPage() {
   };
 
   const toggle = async (p: Popup) => {
-    const next = { ...p, active: !p.active };
+    const next = { ...p, enabled: !p.enabled };
     try {
-      await api.put(`/popups/sites/${selectedId}/${p.id}`, { active: next.active });
+      await api.put(`/popups/sites/${selectedId}/${p.id}`, { enabled: next.enabled });
       setPopups((prev) => prev.map((x) => (x.id === p.id ? next : x)));
     } catch {
       setError("No se pudo cambiar el estado del popup.");
@@ -211,15 +217,15 @@ export default function PopupsPage() {
               <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                 <button
                   onClick={() => toggle(p)}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${p.active ? "bg-emerald-500" : "bg-slate-300"}`}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${p.enabled ? "bg-emerald-500" : "bg-slate-300"}`}
                 >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${p.active ? "left-[22px]" : "left-0.5"}`} />
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${p.enabled ? "left-[22px]" : "left-0.5"}`} />
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium text-slate-800">
                     {p.name || "Sin nombre"}
-                    <span className={`ml-2 text-[10px] font-semibold uppercase ${p.active ? "text-emerald-600" : "text-slate-400"}`}>
-                      {p.active ? "Activo" : "Inactivo"}
+                    <span className={`ml-2 text-[10px] font-semibold uppercase ${p.enabled ? "text-emerald-600" : "text-slate-400"}`}>
+                      {p.enabled ? "Activo" : "Inactivo"}
                     </span>
                   </div>
                   <div className="truncate text-[11px] text-slate-400">
@@ -343,7 +349,7 @@ export default function PopupsPage() {
 
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
                   <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={draft.active} onChange={(e) => setDraft({ ...draft, active: e.target.checked })} className="h-4 w-4" />
+                    <input type="checkbox" checked={draft.enabled} onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })} className="h-4 w-4" />
                     Activar este popup
                   </label>
                 </div>

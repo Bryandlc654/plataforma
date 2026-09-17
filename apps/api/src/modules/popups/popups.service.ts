@@ -69,9 +69,58 @@ export class PopupsService {
     return site;
   }
 
+  private sanitize(raw: any): Popup | null {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const p = raw as any;
+    const trigger = p.trigger && typeof p.trigger === "object" && !Array.isArray(p.trigger) ? p.trigger : {};
+    const now = new Date().toISOString();
+    return {
+      id: typeof p.id === "string" && p.id ? p.id : this.genId(),
+      name: typeof p.name === "string" && p.name.trim() ? p.name : "Pop-up",
+      enabled: p.enabled === true || p.active === true,
+      template: KNOWN_TEMPLATES.has(p.template) ? p.template : "modal-center",
+      trigger: {
+        type: ["time", "scroll", "exit", "immediate"].includes(trigger.type) ? trigger.type : "time",
+        delaySeconds:
+          typeof trigger.delaySeconds === "number" && trigger.delaySeconds >= 0 ? trigger.delaySeconds : 5,
+        scrollPercent:
+          typeof trigger.scrollPercent === "number"
+            ? Math.min(Math.max(trigger.scrollPercent, 5), 100)
+            : 50,
+      },
+      mode: ["text", "image", "both"].includes(p.mode) ? p.mode : "text",
+      content: {
+        title: typeof p.content?.title === "string" ? p.content.title.slice(0, 200) : "",
+        description:
+          typeof p.content?.description === "string" ? p.content.description.slice(0, 2000) : "",
+        buttonText: typeof p.content?.buttonText === "string" ? p.content.buttonText.slice(0, 60) : "",
+        buttonUrl: typeof p.content?.buttonUrl === "string" ? p.content.buttonUrl.slice(0, 2000) : "",
+        imageUrl: typeof p.content?.imageUrl === "string" ? p.content.imageUrl.slice(0, 2000) : "",
+        imagePosition: p.content?.imagePosition === "right" ? "right" : "left",
+      },
+      styles: {
+        width: typeof p.styles?.width === "string" && p.styles.width.trim() ? p.styles.width : "420px",
+        bg: typeof p.styles?.bg === "string" ? p.styles.bg : "#ffffff",
+        textColor: typeof p.styles?.textColor === "string" ? p.styles.textColor : "#0f172a",
+        buttonColor: typeof p.styles?.buttonColor === "string" ? p.styles.buttonColor : "#2563EB",
+        overlayColor:
+          typeof p.styles?.overlayColor === "string" ? p.styles.overlayColor : "rgba(0,0,0,.5)",
+        rounded: typeof p.styles?.rounded === "string" ? p.styles.rounded : "1rem",
+      },
+      closable: p.closable !== false,
+      frequency: p.frequency === "always" ? "always" : "session",
+      pages: Array.isArray(p.pages) ? p.pages.map((x: any) => String(x).slice(0, 500)) : ["*"],
+      createdAt: typeof p.createdAt === "string" && p.createdAt ? p.createdAt : now,
+      updatedAt: typeof p.updatedAt === "string" && p.updatedAt ? p.updatedAt : now,
+    };
+  }
+
   private readPopups(site: any): Popup[] {
     const settings = (site.settings as any) || {};
-    return Array.isArray(settings.popups) ? (settings.popups as Popup[]) : [];
+    const items = Array.isArray(settings.popups) ? settings.popups : [];
+    return items
+      .map((it: any) => this.sanitize(it))
+      .filter((p): p is Popup => p !== null);
   }
 
   private async persist(site: any, popups: Popup[]) {
@@ -93,7 +142,7 @@ export class PopupsService {
     const popup: Popup = {
       id: this.genId(),
       name: (typeof body?.name === "string" && body.name.trim()) || "Pop-up",
-      enabled: body?.enabled === true,
+      enabled: body?.enabled === true || body?.active === true,
       template: KNOWN_TEMPLATES.has(body?.template) ? body.template : "modal-center",
       trigger: {
         type: ["time", "scroll", "exit", "immediate"].includes(body?.trigger?.type)
@@ -163,7 +212,12 @@ export class PopupsService {
     const merged: Popup = {
       ...current,
       name: typeof body?.name === "string" && body.name.trim() ? body.name.trim() : current.name,
-      enabled: typeof body?.enabled === "boolean" ? body.enabled : current.enabled,
+      enabled:
+        typeof body?.enabled === "boolean"
+          ? body.enabled
+          : typeof body?.active === "boolean"
+            ? body.active
+            : current.enabled,
       template: KNOWN_TEMPLATES.has(body?.template) ? body.template : current.template,
       trigger: {
         ...current.trigger,
