@@ -1,5 +1,15 @@
 const TOKEN_RE = /\{\{__ED::([^{}]+)\}\}/g;
 
+function escapeHtmlValue(value: unknown): string {
+  if (value == null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function resolvePath(content: any, path: string): unknown {
   const segs = path.split("::");
   let v: any = content;
@@ -35,20 +45,28 @@ export function getRawHtmlHtml(type: string, content: any, apiBaseUrl?: string, 
       if (/^https?:\/\//i.test(rel)) return rel;
       return `${apiBaseUrl || ""}${rel}`;
     }
-    return resolveMedia(resolvePath(content, path), apiBaseUrl);
+    return escapeHtmlValue(resolveMedia(resolvePath(content, path), apiBaseUrl));
   });
 
   if (site?.tenantId && html.includes("<form")) {
     const actionUrl = `${apiBaseUrl || ""}/api/v1/leads/submit/${site.tenantId}`;
+    // Elimina siteId previos (algunas plantillas traen uno) para no duplicarlos.
+    html = html.replace(/<input\b[^>]*\bname\s*=\s*["']?siteId\b["']?[^>]*>/gi, "");
     html = html.replace(/<form\b([^>]*)>/gi, (_m: string, attrs: string) => {
-      const extra =
-        (/\baction\s*=/i.test(attrs) ? "" : ` action="${actionUrl}"`) +
-        (/\bmethod\s*=/i.test(attrs) ? "" : ` method="POST"`) +
-        (/\bdata-pub-form\b/.test(attrs) ? "" : ` data-pub-form`);
+      const actionMatch = /\baction\s*=\s*["']?([^"'\s>]*)/i.exec(attrs);
+      const needsAction = !actionMatch || actionMatch[1] === "" || actionMatch[1] === "#";
+      let nextAttrs = attrs;
+      if (needsAction) {
+        nextAttrs = actionMatch
+          ? nextAttrs.replace(/\baction\s*=\s*["']?[^"'\s>]*["']?/i, `action="${actionUrl}"`)
+          : ` action="${actionUrl}"` + nextAttrs;
+      }
+      if (!/\bmethod\s*=/i.test(nextAttrs)) nextAttrs += ` method="POST"`;
+      if (!/\bdata-pub-form\b/.test(nextAttrs)) nextAttrs += ` data-pub-form`;
       const hidden =
         `<input type="hidden" name="siteId" value="${site?.id || ""}">` +
         `<div data-pub-form-status style="display:none;padding:12px 16px;border-radius:10px;font-size:.9rem;text-align:center;font-weight:600;margin-bottom:1rem"></div>`;
-      return `<form${attrs}${extra}>${hidden}`;
+      return `<form${nextAttrs}>${hidden}`;
     });
   }
 

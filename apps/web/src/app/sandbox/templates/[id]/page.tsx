@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
+import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 import { useAuthStore } from "@/stores/auth-store";
 
 type Device = "desktop" | "tablet" | "mobile";
@@ -125,7 +126,8 @@ export default function TemplateSandboxPage() {
       {template && activePage && (
         <div className="py-8 bg-slate-950">
           <div className={`mx-auto ${widths[device]} rounded-t-3xl overflow-hidden bg-white shadow-2xl border border-white/10`}>
-            <div className={`bg-slate-100 ${device === "mobile" ? "min-h-[calc(100vh-3rem)]" : "min-h-[calc(100vh-6rem)]"}`}>
+            <div className={`bg-slate-100 ${templateWrapperClass(template?.globalStyles, activePage.path)} ${device === "mobile" ? "min-h-[calc(100vh-3rem)]" : "min-h-[calc(100vh-6rem)]"}`}>
+              <TemplateGlobalStyles globalStyles={template?.globalStyles} pagePath={activePage.path} />
               {activePage.blocks?.map((b: any) => (
                 <BlockRenderer key={b.id} type={b.type} content={b.content} />
               ))}

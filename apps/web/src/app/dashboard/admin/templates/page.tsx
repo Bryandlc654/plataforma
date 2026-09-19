@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
 import { AppIcon } from "@/components/ui/app-icon";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
+import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 
 interface Template {
   id: string;
@@ -61,6 +62,8 @@ export default function AdminTemplatesPage() {
   const [importState, setImportState] = useState({ name: "", description: "", categoryId: "", isPremium: false });
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLoading, setImportLoading] = useState(false);
+  const [importPreview, setImportPreview] = useState<any | null>(null);
+  const [importPreviewing, setImportPreviewing] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -102,21 +105,42 @@ export default function AdminTemplatesPage() {
     }
   };
 
+  const buildImportForm = (file: File, preview: boolean) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("name", importState.name.trim() || file.name.replace(/\.zip$/i, ""));
+    if (importState.description.trim()) fd.append("description", importState.description.trim());
+    if (importState.categoryId) fd.append("categoryId", importState.categoryId);
+    fd.append("isPremium", importState.isPremium ? "true" : "false");
+    if (preview) fd.append("preview", "true");
+    return fd;
+  };
+
+  const loadImportPreview = async (file?: File | null) => {
+    const target = file || importFile;
+    if (!target) return;
+    setImportPreviewing(true);
+    try {
+      const res: any = await api.post("/templates/admin/import-zip", buildImportForm(target, true), { timeout: 180000 });
+      setImportPreview(res.data || res);
+    } catch (e: any) {
+      setImportPreview(null);
+      alert(e.response?.data?.message || "No se pudo analizar el ZIP");
+    } finally {
+      setImportPreviewing(false);
+    }
+  };
+
   const doImport = async () => {
     if (!importFile) return;
     setImportLoading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", importFile);
-      fd.append("name", importState.name.trim() || importFile.name.replace(/\.zip$/i, ""));
-      if (importState.description.trim()) fd.append("description", importState.description.trim());
-      if (importState.categoryId) fd.append("categoryId", importState.categoryId);
-      fd.append("isPremium", importState.isPremium ? "true" : "false");
-      const res: any = await api.post("/templates/admin/import-zip", fd, { timeout: 180000 });
+      const res: any = await api.post("/templates/admin/import-zip", buildImportForm(importFile, false), { timeout: 180000 });
       const r = res.data || res;
       setToast(`Plantilla importada: ${r.name} · ${r.pages} páginas · ${r.blocks} bloques`);
       setShowImportModal(false);
       setImportFile(null);
+      setImportPreview(null);
       setImportState({ name: "", description: "", categoryId: "", isPremium: false });
       fetchData();
     } catch (e: any) {
@@ -260,7 +284,7 @@ export default function AdminTemplatesPage() {
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => !importLoading && setShowImportModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+          <div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-semibold text-slate-900">Importar plantilla desde ZIP</h3>
               <button onClick={() => setShowImportModal(false)} disabled={importLoading} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-50">
@@ -274,7 +298,9 @@ export default function AdminTemplatesPage() {
                 <input ref={importRef} type="file" accept=".zip,application/zip" className="hidden" onChange={(e) => {
                   const f = e.target.files?.[0] || null;
                   setImportFile(f);
+                  setImportPreview(null);
                   if (f && !importState.name) setImportState((s) => ({ ...s, name: f.name.replace(/\.zip$/i, "") }));
+                  if (f) void loadImportPreview(f);
                 }} />
                 <button onClick={() => importRef.current?.click()} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-5 text-sm text-slate-500 hover:border-primary-300 hover:bg-primary-50/30 transition-all">
                   {importFile ? <span className="font-medium text-slate-700">{importFile.name} · {(importFile.size / 1024 / 1024).toFixed(1)} MB</span> : "Seleccionar archivo .zip"}
@@ -299,6 +325,65 @@ export default function AdminTemplatesPage() {
                 <input type="checkbox" checked={importState.isPremium} onChange={(e) => setImportState({ ...importState, isPremium: e.target.checked })} />
                 Premium
               </label>
+
+              {(importPreviewing || importPreview) && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 max-h-72 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vista previa del mapeo</p>
+                    <div className="flex items-center gap-3">
+                      {importPreviewing && <span className="text-xs text-slate-400">Analizando…</span>}
+                      <button type="button" onClick={() => loadImportPreview()} disabled={importPreviewing || !importFile}
+                        className="text-[11px] font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50">Actualizar</button>
+                    </div>
+                  </div>
+                  {importPreview && (
+                    <>
+                      <p className="text-xs text-slate-500 mb-2">
+                        {importPreview.pages?.length || 0} página(s) · {(importPreview.pages || []).reduce((n: number, p: any) => n + (p.blocks?.length || 0), 0)} bloque(s) ·{" "}
+                        {importPreview.report?.totals?.texts || 0} textos · {importPreview.report?.totals?.images || 0} imágenes
+                        {(importPreview.report?.totals?.icons || 0) > 0 && <> · {importPreview.report.totals.icons} iconos</>}
+                        {(importPreview.report?.totals?.svgs || 0) > 0 && <> · {importPreview.report.totals.svgs} SVG inline</>}
+                      </p>
+                      {importPreview.report?.discarded && (
+                        <p className="text-xs text-amber-600 mb-2">Se descartaron elementos por límites: revisa el reporte.</p>
+                      )}
+                      <div className="space-y-2">
+                        {(importPreview.pages || []).map((p: any) => (
+                          <div key={p.path} className="rounded-lg border border-slate-200 bg-white p-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-semibold text-slate-700 truncate">{p.name} <span className="font-mono text-slate-400">{p.path}</span></span>
+                              <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${p.css?.mode === "file" ? "bg-green-100 text-green-700" : p.css?.mode === "inline" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>
+                                {p.css?.mode === "file" ? "CSS en archivo" : p.css?.mode === "inline" ? "CSS inline (pendiente de archivo)" : "Sin CSS"}
+                              </span>
+                            </div>
+                            <div className="mt-1 space-y-1">
+                              {(p.blocks || []).map((b: any, bi: number) => (
+                                <div key={bi} className="text-[11px] text-slate-500">
+                                  <span className="font-medium text-slate-600">{b.type}</span>
+                                  {b.fields?.length ? (
+                                    <span className="text-slate-400"> · {b.fields.map((f: any) => f.label).slice(0, 8).join(", ")}{b.fields.length > 8 ? "…" : ""}</span>
+                                  ) : (
+                                    <span className="text-slate-400"> · sin campos</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {(importPreview.externalResources?.length || 0) > 0 && (
+                        <p className="text-[11px] text-slate-400 mt-2">{importPreview.externalResources.length} recurso(s) externo(s) referenciado(s).</p>
+                      )}
+                      {((importPreview.js?.libraries?.length || 0) > 0 || (importPreview.js?.unsupported?.length || 0) > 0) && (
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          JS: {importPreview.js?.libraries?.join(", ") || "—"}
+                          {importPreview.js?.unsupported?.length ? ` · sin reemplazo automático: ${importPreview.js.unsupported.join(", ")}` : ""}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowImportModal(false)} disabled={importLoading} className="flex-1 btn-secondary text-sm disabled:opacity-50">Cancelar</button>
@@ -460,7 +545,8 @@ export default function AdminTemplatesPage() {
                           if (el?.closest("a")) e.preventDefault();
                         }}
                       >
-                        <div className="mx-auto rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+                        <div className={`mx-auto rounded-2xl bg-white shadow-sm border border-slate-200 overflow-hidden ${templateWrapperClass(preview?.globalStyles, activePreviewPage?.path)}`}>
+                          <TemplateGlobalStyles globalStyles={preview?.globalStyles} pagePath={activePreviewPage?.path} />
                           <div style={{ transform: `scale(${previewScale})`, transformOrigin: "top left", width: `${100 / previewScale}%` }}>
                             {activePreviewPage?.blocks?.map((b: any) => (
                               <BlockRenderer key={b.id} type={b.type} content={b.content} />
@@ -533,7 +619,8 @@ export default function AdminTemplatesPage() {
                 if (el?.closest("a")) e.preventDefault();
               }}
             >
-              <div className="max-w-5xl mx-auto bg-white">
+              <div className={`max-w-5xl mx-auto bg-white ${templateWrapperClass(preview?.globalStyles, activePreviewPage?.path)}`}>
+                <TemplateGlobalStyles globalStyles={preview?.globalStyles} pagePath={activePreviewPage?.path} />
                 {activePreviewPage?.blocks?.map((b: any) => (
                   <BlockRenderer key={b.id} type={b.type} content={b.content} />
                 ))}

@@ -87,7 +87,7 @@ function ArrayEditor({ value, onChange, fields }: { value: any[]; onChange: (v: 
 
 function RawHtmlFields({ content, set }: { content: any; set: (k: string, v: any) => void }) {
   const [showHtml, setShowHtml] = useState(false);
-  const schema: Array<{ key: string; label: string; type: string; fields?: any[] }> = content.fieldSchema || [];
+  const schema: Array<{ key: string; label: string; type: string; fields?: any[]; bi?: boolean; brand?: boolean }> = content.fieldSchema || [];
 
   return (
     <>
@@ -108,9 +108,16 @@ function RawHtmlFields({ content, set }: { content: any; set: (k: string, v: any
         if (f.type === "image") {
           return <ImageField key={f.key} label={f.label} value={content[f.key]} onChange={(v) => set(f.key, v)} />;
         }
+        if (f.type === "icon") {
+          return (
+            <Field key={f.key} label={f.label}>
+              <IconPicker value={content[f.key]} onChange={(v) => set(f.key, v)} bi={f.bi} brand={f.brand} />
+            </Field>
+          );
+        }
         return (
           <Field key={f.key} label={f.label}>
-            <TextInput value={content[f.key]} onChange={(v) => set(f.key, v)} type={f.type === "textarea" ? "textarea" : "text"} />
+            <TextInput value={content[f.key]} onChange={(v) => set(f.key, v)} type={f.type || "text"} />
           </Field>
         );
       })}

@@ -92,23 +92,10 @@ export class SitesService {
     }
 
     const site = await this.prisma.$transaction(async (tx) => {
-      const site = await tx.site.create({
-        data: {
-          tenantId,
-          name: dto.name,
-          subdomain,
-          domain: dto.domain,
-          templateId: dto.templateId,
-          settings: {},
-          isPublished: true,
-          publishedAt: new Date(),
-        },
-        select: { id: true, tenantId: true, subdomain: true, domain: true },
-      });
-
       const template = await tx.template.findUnique({
         where: { id: dto.templateId },
         select: {
+          globalStyles: true,
           pages: {
             select: {
               name: true, slug: true, path: true, isDefault: true, sortOrder: true,
@@ -117,6 +104,20 @@ export class SitesService {
             orderBy: { sortOrder: "asc" },
           },
         },
+      });
+
+      const site = await tx.site.create({
+        data: {
+          tenantId,
+          name: dto.name,
+          subdomain,
+          domain: dto.domain,
+          templateId: dto.templateId,
+          settings: template?.globalStyles ? ({ globalStyles: template.globalStyles } as any) : {},
+          isPublished: true,
+          publishedAt: new Date(),
+        },
+        select: { id: true, tenantId: true, subdomain: true, domain: true },
       });
 
       if (template) {

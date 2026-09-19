@@ -207,7 +207,7 @@ export class TemplatesService {
       data: {
         name: name.trim(),
         description: description?.trim() || undefined,
-        globalStyles: site.settings as any,
+        globalStyles: ((site.settings as any)?.globalStyles ?? site.settings) as any,
       },
     });
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
+import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineArrowUp, HiOutlineArrowDown } from "react-icons/hi";
@@ -12,7 +13,7 @@ import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; pages: SitePage[]; }
+interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; }
 
 const blockCategories: Record<string, string[]> = {
   "Encabezado": ["hero", "header"],
@@ -412,7 +413,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       </div>
 
       {/* CANVAS */}
-      <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
+      <div className={`flex-1 overflow-y-auto bg-slate-100/50 ${templateWrapperClass(site?.settings?.globalStyles, activePage?.path)} ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}>
+        <TemplateGlobalStyles
+          globalStyles={site?.settings?.globalStyles}
+          pagePath={activePage?.path}
+          colors={{ primary: siteSettings.primaryColor, secondary: siteSettings.secondaryColor }}
+        />
         {activePage && sortedBlocks.length > 0 ? (
           <div className="max-w-6xl mx-auto py-8 px-6 space-y-6">
             {sortedBlocks.map((block, idx) => (

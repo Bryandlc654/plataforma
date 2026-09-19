@@ -60,6 +60,7 @@ export class TemplatesController {
     @Body("description") description?: string,
     @Body("categoryId") categoryId?: string,
     @Body("isPremium") isPremium?: string,
+    @Body("preview") preview?: string,
   ) {
     if (!user?.roles?.includes("super_admin")) {
       throw new ForbiddenException("Solo el super admin puede importar plantillas");
@@ -70,6 +71,7 @@ export class TemplatesController {
       description,
       categoryId,
       isPremium: isPremium === "true" || isPremium === "1",
+      dryRun: preview === "true" || preview === "1",
     });
   }
 
