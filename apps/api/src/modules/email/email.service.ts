@@ -57,7 +57,7 @@ export class EmailService {
     items: Array<{ name: string; quantity: number; price: number }>;
   }) {
     const paids = params.status === "paid";
-    const methodLabel = params.paymentMethod === "paypal" ? "PayPal" : params.paymentMethod === "cod" ? "Pago contra entrega" : (params.paymentMethod || "—");
+    const methodLabel = params.paymentMethod === "paypal" ? "PayPal" : params.paymentMethod === "payphone" ? "Payphone (tarjeta / saldo)" : params.paymentMethod === "cod" ? "Pago contra entrega" : (params.paymentMethod || "—");
     const rows = params.items
       .map(
         (i) => `<tr style="border-bottom:1px solid #e2e8f0">

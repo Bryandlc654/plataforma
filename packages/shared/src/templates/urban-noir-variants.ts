@@ -36,9 +36,19 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
       const baseHome = c.checkoutBase || (site?.domain ? `https://${site.domain}` : (apiBaseUrl ? `${apiBaseUrl}/p/${site?.subdomain || ""}` : "#"));
       const pmPaypal = (c.payment && c.payment.paypal) || {};
       const hasPaypal = pmPaypal.enabled === true && !!pmPaypal.clientId;
-      const defaultMethod = c.payment?.defaultMethod === "paypal" && hasPaypal ? "paypal" : "cod";
+      const pmPayphone = (c.payment && c.payment.payphone) || {};
+      const hasPayphone = pmPayphone.enabled === true && !!pmPayphone.token && !!pmPayphone.storeId;
+      const defaultMethod =
+        c.payment?.defaultMethod === "paypal" && hasPaypal
+          ? "paypal"
+          : c.payment?.defaultMethod === "payphone" && hasPayphone
+            ? "payphone"
+            : "cod";
       const currency = c.payment?.currency || "USD";
       const paypalSdkUrl = `${pmPaypal.mode === "live" ? "https://www.paypal.com" : "https://www.sandbox.paypal.com"}/sdk/js?client-id=${encodeURIComponent(pmPaypal.clientId)}&intent=capture&currency=${encodeURIComponent(currency)}&components=buttons`;
+      const payphoneAssets = hasPayphone ? `
+      <link rel="stylesheet" href="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.css">
+      <script type="module" src="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.js"></script>` : "";
       return `
       <div class="bg-white min-h-[60vh] pt-28">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -66,7 +76,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
               <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
               <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
               <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2">Método de pago</h2>
-              <div id="un-payment-box" class="space-y-3" data-paypal-enabled="${hasPaypal ? "1" : "0"}" data-paypal-client-id="${hasPaypal ? esc(pmPaypal.clientId) : ""}" data-paypal-mode="${pmPaypal.mode || "sandbox"}" data-paypal-currency="${esc(currency)}">
+              <div id="un-payment-box" class="space-y-3" data-paypal-enabled="${hasPaypal ? "1" : "0"}" data-paypal-client-id="${hasPaypal ? esc(pmPaypal.clientId) : ""}" data-paypal-mode="${pmPaypal.mode || "sandbox"}" data-paypal-currency="${esc(currency)}" data-payphone-enabled="${hasPayphone ? "1" : "0"}">
                 <label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
                   <input type="radio" name="payment" value="cod" ${defaultMethod === "cod" ? "checked" : ""} class="mt-1">
                   <span>
@@ -79,6 +89,13 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                   <span>
                     <span class="block font-bold uppercase tracking-widest text-sm">PayPal</span>
                     <span class="block text-xs text-gray-500">Pago seguro con tu cuenta de PayPal.</span>
+                  </span>
+                </label>` : ""}
+                ${hasPayphone ? `<label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
+                  <input type="radio" name="payment" value="payphone" ${defaultMethod === "payphone" ? "checked" : ""} class="mt-1">
+                  <span>
+                    <span class="block font-bold uppercase tracking-widest text-sm">Tarjeta / Payphone</span>
+                    <span class="block text-xs text-gray-500">Paga con tarjeta (Visa, Mastercard, Diners, Discover) o Saldo Payphone sin salir de la página.</span>
                   </span>
                 </label>` : ""}
               </div>
@@ -103,6 +120,17 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                 <div id="paypal-button-container" class="mt-1"></div>
                 <p id="un-paypal-note" class="hidden text-xs text-gray-500"></p>
               </div>` : ""}
+              ${hasPayphone ? `<div id="un-payphone-box" class="hidden space-y-3">
+                <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                  <div>
+                    <p class="font-bold uppercase tracking-widest text-sm">Pago con Payphone</p>
+                    <p class="text-xs text-gray-500">Paga con tarjeta de crédito, débito o Saldo Payphone. No saldrás de la página.</p>
+                  </div>
+                </div>
+                <div id="pp-button" class="mt-1"></div>
+                <p id="un-payphone-note" class="hidden text-xs text-gray-500"></p>
+              </div>` : ""}
             </form>
           </div>
           <div id="un-co-done" class="hidden text-center py-16">
@@ -116,6 +144,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
           </div>
         </div>
       </div>
+      ${payphoneAssets}
       ${hasPaypal ? `<script src="${paypalSdkUrl}" async></script>` : ""}`;
     }
 

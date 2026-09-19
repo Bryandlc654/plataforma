@@ -53,4 +53,28 @@ export class PaymentsController {
     if (!paypalOrderId || !orderId) throw new BadRequestException("Faltan datos del pago");
     return this.paymentsService.capturePaypalOrder(tenantId, paypalOrderId, orderId);
   }
+
+  @Public()
+  @Post("p/:subdomain/payphone/create-order")
+  @ApiOperation({ summary: "Public Payphone create order - creates local order + transaction id" })
+  async createPayphoneOrder(@Param("subdomain") subdomain: string, @Body() body: any) {
+    const tenantId = await this.publishingService.resolveTenantBySubdomain(subdomain);
+    if (!tenantId) throw new NotFoundException("Sitio no encontrado");
+    return this.paymentsService.createPayphoneOrder(tenantId, body);
+  }
+
+  @Public()
+  @Post("p/:subdomain/payphone/confirm")
+  @ApiOperation({ summary: "Public Payphone confirm - verifies payment with Payphone and marks order paid" })
+  async confirmPayphone(
+    @Param("subdomain") subdomain: string,
+    @Body() body: any,
+  ) {
+    const tenantId = await this.publishingService.resolveTenantBySubdomain(subdomain);
+    if (!tenantId) throw new NotFoundException("Sitio no encontrado");
+    const id = String(body?.id || "");
+    const clientTransactionId = String(body?.clientTransactionId || "");
+    if (!id || !clientTransactionId) throw new BadRequestException("Faltan datos del pago");
+    return this.paymentsService.confirmPayphone(tenantId, id, clientTransactionId);
+  }
 }

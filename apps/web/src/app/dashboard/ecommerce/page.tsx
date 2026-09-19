@@ -47,7 +47,8 @@ export default function EcommercePage() {
         const res: any = await api.get("/payments/config");
         const cfg = res.data || res || {};
         const p = cfg?.providers?.paypal || {};
-        setPayForm({ defaultMethod: cfg?.defaultMethod || "cod", paypalEnabled: !!p.enabled, paypalMode: p.mode || "sandbox", paypalClientId: p.clientId || "", hasSecret: !!p.hasSecret, paypalSecret: "" });
+        const ph = cfg?.providers?.payphone || {};
+        setPayForm({ defaultMethod: cfg?.defaultMethod || "cod", paypalEnabled: !!p.enabled, paypalMode: p.mode || "sandbox", paypalClientId: p.clientId || "", hasSecret: !!p.hasSecret, paypalSecret: "", payphoneEnabled: !!ph.enabled, payphoneMode: ph.mode || "sandbox", payphoneToken: ph.token || "", payphoneStoreId: ph.storeId || "" });
       } else {
         const res: any = await api.get("/coupons"); setCoupons(res.data || res);
       }
@@ -122,7 +123,10 @@ export default function EcommercePage() {
     if (!payForm) return;
     const body: any = {
       defaultMethod: payForm.defaultMethod,
-      providers: { paypal: { enabled: !!payForm.paypalEnabled, mode: payForm.paypalMode, clientId: (payForm.paypalClientId || "").trim() } },
+      providers: {
+        paypal: { enabled: !!payForm.paypalEnabled, mode: payForm.paypalMode, clientId: (payForm.paypalClientId || "").trim() },
+        payphone: { enabled: !!payForm.payphoneEnabled, mode: payForm.payphoneMode, token: (payForm.payphoneToken || "").trim(), storeId: (payForm.payphoneStoreId || "").trim() },
+      },
     };
     if (payForm.paypalSecret?.trim()) body.providers.paypal.secret = payForm.paypalSecret.trim();
     try { await api.put("/payments/config", body); fetchData(); alert("Configuración de pagos guardada."); }
@@ -235,7 +239,7 @@ export default function EcommercePage() {
           <div className="space-y-3">{orders.map((o) => (
             <div key={o.id} className="card">
               <div className="flex items-center justify-between mb-3"><div><span className="font-semibold">{o.customerName || "Cliente"}</span><span className="text-xs text-slate-400 ml-2">{formatDate(o.createdAt)}</span>{o.customerPhone ? <span className="text-xs text-slate-400 ml-2">· {o.customerPhone}</span> : null}</div>
-                <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod === "paypal" ? "PayPal" : o.paymentMethod || "—"}</span></div>
+                <div className="flex items-center gap-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${o.status === "paid" ? "bg-green-50 text-green-700" : o.status === "pending" ? "bg-yellow-50 text-yellow-700" : "bg-slate-50 text-slate-700"}`}>{o.status}</span><span className="text-[10px] uppercase tracking-wide bg-black text-white rounded-full px-2 py-0.5">{o.paymentMethod === "cod" ? "Contra entrega" : o.paymentMethod === "paypal" ? "PayPal" : o.paymentMethod === "payphone" ? "Payphone" : o.paymentMethod || "—"}</span></div>
               </div>
 <div className="text-sm space-y-2">{o.items.map((i, idx) => (
                 <div key={idx} className="flex items-center gap-3">
@@ -320,11 +324,49 @@ export default function EcommercePage() {
               )}
             </div>
 
+            <div className="card space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold">Payphone</h3>
+                  <p className="text-sm text-slate-500 mt-1">Acepta pagos con tarjeta y Saldo Payphone en el checkout sin sacar al cliente de la página. Para activarlo obtén tus credenciales en <span className="font-medium text-slate-700">Payphone Developers</span> (aplicación tipo <span className="font-medium text-slate-700">WEB</span>): copia el <span className="font-medium text-slate-700">Token</span> y el <span className="font-medium text-slate-700">Store ID</span>. Las credenciales de <span className="font-medium text-slate-700">pruebas</span> y de <span className="font-medium text-slate-700">producción</span> son distintas; pega las que correspondan al modo elegido.</p>
+                  <p className="text-xs text-slate-500 mt-2">En tu cuenta de Payphone Developers, la aplicación WEB requiere el <span className="font-medium text-slate-700">Dominio Web</span> y la <span className="font-medium text-slate-700">URL de Respuesta</span>. Configura la URL de Respuesta apuntando a la página de checkout de tu sitio (ej. <span className="font-medium text-slate-700">/checkout</span>) para que el pago se confirme automáticamente al volver.</p>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 whitespace-nowrap">
+                  <input type="checkbox" checked={payForm?.payphoneEnabled || false} onChange={(e) => setPayForm({ ...payForm, payphoneEnabled: e.target.checked })} className="h-4 w-4" />
+                  Activar Payphone
+                </label>
+              </div>
+
+              {(!payForm?.payphoneEnabled) && <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">Payphone desactivado. El checkout no mostrará la cajita de pagos Payphone.</p>}
+
+              {payForm?.payphoneEnabled && (
+                <div className="grid sm:grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                  <div>
+                    <label className="label">Modo</label>
+                    <select className="input-field" value={payForm.payphoneMode} onChange={(e) => setPayForm({ ...payForm, payphoneMode: e.target.value })}>
+                      <option value="sandbox">Pruebas (Sandbox)</option>
+                      <option value="live">Producción (Live)</option>
+                    </select>
+                    <p className="text-xs text-slate-400 mt-1">{payForm.payphoneMode === "live" ? "Usa tu Token y Store ID de producción." : "Usa tus credenciales de pruebas. Todas las transacciones se aprueban y no se hacen cobros reales."}</p>
+                  </div>
+                  <div>
+                    <label className="label">Token</label>
+                    <input className="input-field" value={payForm.payphoneToken || ""} onChange={(e) => setPayForm({ ...payForm, payphoneToken: e.target.value })} placeholder="Tu token de acceso (Bearer Token)" />
+                  </div>
+                  <div>
+                    <label className="label">Store ID</label>
+                    <input className="input-field" value={payForm.payphoneStoreId || ""} onChange={(e) => setPayForm({ ...payForm, payphoneStoreId: e.target.value })} placeholder="Tienda Payphone" />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="card">
               <label className="label">Método de pago preseleccionado en el checkout</label>
               <select className="input-field" value={payForm?.defaultMethod || "cod"} onChange={(e) => setPayForm({ ...payForm, defaultMethod: e.target.value })}>
                 <option value="cod">Pago contra entrega</option>
                 {payForm?.paypalEnabled && <option value="paypal">PayPal</option>}
+                {payForm?.payphoneEnabled && <option value="payphone">Payphone (tarjeta / saldo)</option>}
               </select>
               <p className="text-xs text-slate-400 mt-1">El cliente siempre puede elegir otro método disponible.</p>
             </div>

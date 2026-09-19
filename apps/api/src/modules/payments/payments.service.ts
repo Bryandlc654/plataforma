@@ -9,7 +9,16 @@ interface PaypalProvider {
   secret: string;
 }
 
+interface PayphoneProvider {
+  enabled: boolean;
+  mode: "sandbox" | "live";
+  token: string;
+  storeId: string;
+}
+
 const PAYPAL_CURRENCY = "USD";
+const PAYPHONE_CURRENCY = "USD";
+const PAYPHONE_CONFIRM_URL = "https://paymentbox.payphonetodoesposible.com/api/confirm";
 
 @Injectable()
 export class PaymentsService {
@@ -28,13 +37,19 @@ export class PaymentsService {
     if (!tenant) throw new NotFoundException("Tenant not found");
     const pgw = (tenant.settings as any)?.paymentGateway || {};
     return {
-      defaultMethod: pgw.defaultMethod === "paypal" ? "paypal" : "cod",
+      defaultMethod: pgw.defaultMethod === "paypal" ? "paypal" : pgw.defaultMethod === "payphone" ? "payphone" : "cod",
       providers: {
         paypal: {
           enabled: pgw.providers?.paypal?.enabled === true,
           mode: pgw.providers?.paypal?.mode === "live" ? "live" : "sandbox",
           clientId: String(pgw.providers?.paypal?.clientId || "").trim(),
           secret: String(pgw.providers?.paypal?.secret || "").trim(),
+        },
+        payphone: {
+          enabled: pgw.providers?.payphone?.enabled === true,
+          mode: pgw.providers?.payphone?.mode === "live" ? "live" : "sandbox",
+          token: String(pgw.providers?.payphone?.token || "").trim(),
+          storeId: String(pgw.providers?.payphone?.storeId || "").trim(),
         },
       },
     };
@@ -43,6 +58,7 @@ export class PaymentsService {
   async getConfig(tenantId: string) {
     const pgw = await this.loadPaymentGateway(tenantId);
     const paypal = pgw.providers.paypal;
+    const payphone = pgw.providers.payphone;
     return {
       defaultMethod: pgw.defaultMethod,
       providers: {
@@ -51,6 +67,12 @@ export class PaymentsService {
           mode: paypal.mode,
           clientId: paypal.clientId,
           hasSecret: !!paypal.secret,
+        },
+        payphone: {
+          enabled: payphone.enabled,
+          mode: payphone.mode,
+          token: payphone.token,
+          storeId: payphone.storeId,
         },
       },
     };
@@ -73,20 +95,32 @@ export class PaymentsService {
     const current = (tenant.settings as any) || {};
     const pgw = current.paymentGateway || {};
     const currentPaypal = pgw.providers?.paypal || {};
+    const currentPayphone = pgw.providers?.payphone || {};
 
-    const incoming = dto?.providers?.paypal || {};
+    const incomingPaypal = dto?.providers?.paypal || {};
     const paypal: PaypalProvider = {
-      enabled: incoming.enabled === true,
-      mode: incoming.mode === "live" ? "live" : "sandbox",
-      clientId: String(incoming.clientId || currentPaypal.clientId || "").trim(),
-      secret: incoming.secret ? String(incoming.secret).trim() : String(currentPaypal.secret || "").trim(),
+      enabled: incomingPaypal.enabled === true,
+      mode: incomingPaypal.mode === "live" ? "live" : "sandbox",
+      clientId: String(incomingPaypal.clientId || currentPaypal.clientId || "").trim(),
+      secret: incomingPaypal.secret ? String(incomingPaypal.secret).trim() : String(currentPaypal.secret || "").trim(),
     };
+
+    const incomingPayphone = dto?.providers?.payphone || {};
+    const payphone: PayphoneProvider = {
+      enabled: incomingPayphone.enabled === true,
+      mode: incomingPayphone.mode === "live" ? "live" : "sandbox",
+      token: String(incomingPayphone.token || currentPayphone.token || "").trim(),
+      storeId: String(incomingPayphone.storeId || currentPayphone.storeId || "").trim(),
+    };
+
+    const defaultMethod =
+      dto?.defaultMethod === "paypal" ? "paypal" : dto?.defaultMethod === "payphone" ? "payphone" : "cod";
 
     const merged = {
       ...current,
       paymentGateway: {
-        defaultMethod: dto?.defaultMethod === "paypal" ? "paypal" : "cod",
-        providers: { paypal },
+        defaultMethod,
+        providers: { paypal, payphone },
       },
     };
 
@@ -258,6 +292,136 @@ export class PaymentsService {
       captureId,
       totalAmount: String(order.totalAmount),
       currency: order.currency || PAYPAL_CURRENCY,
+    };
+  }
+
+  private async payphoneCredentials(payphone: PayphoneProvider) {
+    if (!payphone.token || !payphone.storeId) {
+      throw new BadRequestException("Payphone no está configurado. Agrega tu Token y Store ID en E-commerce > Pagos.");
+    }
+    return payphone;
+  }
+
+  async createPayphoneOrder(tenantId: string, body: any): Promise<{
+    orderId: string;
+    clientTransactionId: string;
+    totalAmount: string;
+    amount: number;
+    currency: string;
+    provider: { token: string; storeId: string; mode: string; defaultMethod: string };
+  }> {
+    const pgw = await this.loadPaymentGateway(tenantId);
+    const payphone = pgw.providers.payphone;
+    if (!payphone.enabled) throw new BadRequestException("Pago con Payphone no está activo para este sitio");
+    await this.payphoneCredentials(payphone);
+
+    const itemsRaw = Array.isArray(body?.items) ? body.items : [];
+    if (itemsRaw.length === 0 || itemsRaw.length > 50) {
+      throw new BadRequestException("Carrito vacío o demasiados ítems");
+    }
+    const items = itemsRaw.map((i: any) => ({
+      productId: String(i?.productId || ""),
+      quantity: Math.floor(Number(i?.quantity) || 0),
+    }));
+    if (items.some((i: any) => !i.productId || i.quantity < 1 || i.quantity > 999)) {
+      throw new BadRequestException("Ítems inválidos");
+    }
+
+    const str = (v: any, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const address = str(body?.address, 300);
+
+    const order = await this.ordersService.create(tenantId, {
+      items,
+      customerName: str(body?.customerName, 120) || undefined,
+      customerEmail: str(body?.customerEmail, 120) || undefined,
+      customerPhone: str(body?.customerPhone, 40) || undefined,
+      notes: address ? `${address}${body?.notes ? `\n${str(body?.notes, 300)}` : ""}` : str(body?.notes, 300),
+      paymentMethod: "payphone",
+    });
+
+    // El clientTransactionId de Payphone (máx 50 chars) se mapea al pedido vía paymentReference.
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { paymentReference: order.id },
+    });
+
+    const totalAmount = Number(order.totalAmount).toFixed(2);
+    const amountCents = Math.round(Number(order.totalAmount) * 100);
+
+    return {
+      orderId: order.id,
+      clientTransactionId: order.id,
+      totalAmount,
+      amount: amountCents,
+      currency: PAYPHONE_CURRENCY,
+      provider: {
+        token: payphone.token,
+        storeId: payphone.storeId,
+        mode: payphone.mode,
+        defaultMethod: "card",
+      },
+    };
+  }
+
+  async confirmPayphone(tenantId: string, id: string | number, clientTransactionId: string) {
+    const pgw = await this.loadPaymentGateway(tenantId);
+    const payphone = pgw.providers.payphone;
+    if (!payphone.enabled) throw new BadRequestException("Pago con Payphone no está activo para este sitio");
+    await this.payphoneCredentials(payphone);
+
+    const txId = Number(id);
+    const clientTxId = String(clientTransactionId || "").trim();
+    if (!txId || !clientTxId) throw new BadRequestException("Faltan datos del pago");
+
+    const order = await this.prisma.order.findFirst({
+      where: { tenantId, paymentReference: clientTxId, paymentMethod: "payphone" },
+    });
+    if (!order) throw new NotFoundException("Pedido no encontrado");
+    if (order.status === "paid") {
+      return { orderId: order.id, status: "paid", payphoneTransactionId: order.paymentReference, alreadyPaid: true };
+    }
+
+    const res = await fetch(PAYPHONE_CONFIRM_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${payphone.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: txId, clientTxId }),
+    });
+    const json: any = await res.json().catch(() => ({}));
+
+    if (!res.ok || json?.errorCode !== undefined) {
+      throw new BadRequestException(json?.message || "Payphone no pudo confirmar la transacción");
+    }
+
+    const statusCode = Number(json?.statusCode);
+    const transactionStatus = String(json?.transactionStatus || "");
+    if (statusCode !== 3 || transactionStatus !== "Approved") {
+      throw new BadRequestException(
+        `El pago no fue aprobado (estado: ${transactionStatus || statusCode || "desconocido"})`
+      );
+    }
+
+    const expected = Math.round(Number(order.totalAmount) * 100);
+    const paidAmount = Number(json?.amount) || 0;
+    if (paidAmount !== expected) {
+      throw new BadRequestException("El monto confirmado por Payphone no coincide con el pedido");
+    }
+
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { status: "paid", paidAt: new Date(), paymentReference: String(json?.transactionId ?? txId) },
+    });
+
+    return {
+      orderId: order.id,
+      status: "paid",
+      payphoneTransactionId: json?.transactionId ?? txId,
+      authorizationCode: json?.authorizationCode || null,
+      transactionStatus,
+      amount: String(order.totalAmount),
+      currency: order.currency || PAYPHONE_CURRENCY,
     };
   }
 }

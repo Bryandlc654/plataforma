@@ -1,0 +1,731 @@
+
+
+Cajita de Pagos: cobra sin sacar a tu cliente de tu web
+Integra una pasarela de pago completa en tu sitio web con pocas líneas de código, en unos 30 minutos. Acepta pagos con tarjeta y Saldo Payphone.
+Visa Mastercard Diners Club Discover Saldo Payphone
+📎¿Qué es la cajita de pagos de Payphone?
+La Cajita de Pagos de Payphone es una integración de pago que se incrusta en tu sitio web. Tus clientes pagan sin salir de tu página. Está orientada a e-commerce, freelancers y pequeños emprendimientos que necesiten una pasarela rápida de implementar.
+La integración usa tecnologías estándar (HTML, CSS y JavaScript) y peticiones HTTP POST para confirmar transacciones. Puedes ponerla en marcha en unos 30 minutos.
+Casos de uso comunes
+Tiendas en línea
+Plataformas de servicios
+Proyectos de emprendimiento
+Portales de reservas
+Cualquier negocio que necesite cobrar en línea de forma confiable.
+Flujo de la Cajita de Pagos 💳
+La Cajita de Pagos opera en dos fases secuenciales. Ambas son obligatorias para que una transacción se considere válida y el cobro se acredite correctamente.
+1. 🧩 Preparación - Renderizar el botón de pago
+En esta etapa se incorpora el formulario de pago a tu sitio utilizando los recursos proporcionados por Payphone:
+Agrega los recursos de Payphone en tu página: JS, hoja de estilos CSS y contenedor HTML.
+Con un script configuras los parámetros de la transacción: montos, impuestos y demás detalles del pago.
+El botón de pago queda disponible para el usuario.
+Pago del usuario
+El cliente completa el pago con su tarjeta o Saldo Payphone. Una vez procesado, Payphone redirige al usuario a tu URL de respuesta.
+2. ✅ Confirmación
+Una vez redirigido a tu URL de respuesta con los parámetros id y clientTransactionId tu sistema debe:
+Capturar los parámetros de respuesta.
+Realizar una solicitud POST a la API de Confirmación de Payphone.
+Obtener el detalle completo de la transacción (estado, monto, autorización, etc.)
+🔙 Importante: Reverso Automático
+Si tu sistema no ejecuta la fase de confirmación dentro de los primeros 5 minutos después del pago, Payphone reversará automáticamente la transacción. Esto se hace para proteger tanto al comercio como al cliente, evitando:
+Cobros indebidos
+Procesos incompletos por falta de datos
+Conflictos o reclamos por parte del cliente
+📖 En resumen: Si no confirmas el pago, Payphone lo cancela automáticamente, ya que no puede garantizar que el comercio haya registrado correctamente la transacción.
+⚠️ Consideraciones previas:
+Antes de comenzar con la implementación de la Cajita de Pagos de Payphone, asegúrate de cumplir con los siguientes requisitos técnicos y administrativos:
+🌐 Plataforma
+La Cajita de Pagos está diseñada exclusivamente para entornos WEB. No está disponible para aplicaciones móviles directamente.
+🔒 Dominio y entorno seguro
+Es indispensable contar con un dominio que tenga un certificado SSL (https://) válido para producción.
+Para fines de prueba o desarrollo local, puedes utilizar http://localhost sin necesidad de certificado SSL.
+Importante: La Cajita de Pagos está vinculada directamente al dominio configurado en tu Cuenta Payphone.
+Esto significa que solo funcionará en ese dominio específico. Si se intenta ejecutar desde otro dominio no autorizado, se mostrará un error de autorización y el proceso de pago no podrá completarse.
+🏢 Cuenta en Payphone Business
+Debes tener una cuenta activa en Payphone Business.
+Si aún no la tienes, puedes registrarte en: Payphone Business
+👨💻 Usuario con rol de Desarrollador
+Dentro de tu cuenta Payphone Business, crea un usuario con el rol de Desarrollador.
+Este usuario tiene acceso a las configuraciones técnicas y a la generación de credenciales para integración.
+💻 Entorno de desarrollo
+Asegúrate de contar con un entorno de desarrollo funcional, incluyendo:
+Editor de código (VSCode, WebStorm, etc.)
+Navegador actualizado
+Herramientas de prueba como Postman, Insomnia o cURL
+Conocimientos básicos de HTML, JavaScript y consumo de APIs REST
+🔑 Obtención de credenciales
+Desde la plataforma para desarrolladores de Payphone, debes:
+Crear una nueva configuración de aplicación.
+Obtener las credenciales necesarias para la integración: TOKEN de autenticación (Bearer Token) y STOREID asociado a tu comercio
+Próximos pasos
+En las siguientes secciones te guiaremos paso a paso para implementar correctamente cada una de estas fases, con ejemplos prácticos y buenas prácticas.
+🔑Configuración del Ambiente y Obtención de Credenciales
+Prepara tu plataforma para recibir pagos de forma segura y simple. 🛒💳 Sigue estos pasos y empieza a procesar transacciones.
+🚀 Configura tu ambiente
+Para que Payphone funcione correctamente, necesitas establecer una conexión segura entre tu sistema y nuestra plataforma.
+Esto incluye obtener dos credenciales clave:
+Token y StoreID
+🛠️ ¿Cómo hacerlo?
+Configura tu API. Desde tu cuenta de Payphone Developers asegúrate de haber creado una aplicación de tipo: "WEB"
+Al elegir aplicación de tipo "WEB", se requerirá completar dos campos nuevos: Dominio Web y URL de Respuesta.
+Obtén tus credenciales. Estos datos son esenciales para autenticarte con Payphone. Encuéntralos al configurar tu aplicación.
+Establece tu entorno de desarrollo y pruebas. Esto te permitirá realizar simulaciones antes de pasar a la producción.
+🎯 ¿Por qué es importante?
+Seguridad: Tus transacciones estarán encriptadas y protegidas contra accesos no autorizados.
+Personalización: Adapta los métodos de pago según las necesidades de tu negocio.
+Funcionalidad: Garantiza que los pagos se procesen correctamente.
+✨ Comienza ahora
+Haz clic en el siguiente botón, sigue las instrucciones para obtener tus credenciales:
+📑 Configuración de Ambiente y Obtención de Credenciales
+⚠️NOTA:
+👉 Sin esta configuración, no podrás procesar pagos a través de nuestra plataforma.
+
+🛠️Insertar cajita de pagos Payphone
+Para integrar la Cajita de Pagos en tu sitio web necesitas agregar dos scripts, una fuente CSS, un fragmento de JavaScript de configuración y un contenedor HTML donde aparecerá el botón de pago.
+🧷 Agrega las dependencias en la cabecera de tu página
+payphone-payment-box.css: La hoja de estilos CSS aplica el diseño visual del botón de pago.
+payphone-payment-box.js: El SDK JavaScript habilita el control y la lógica de la Cajita.
+<head>
+
+     <link rel="stylesheet" href="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.css"> 
+
+     <script type="module" src="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.js"></script> 
+
+</head>
+⚙️ Inserta el script de configuración
+Este script es el núcleo de la integración. Define los datos de la transacción, credenciales, impuestos, y comportamiento del formulario. Puedes colocarlo al final del <body> o también en el <head>
+<script>
+
+	//Cobro mixto: 1 USD con impuesto del 15% y 2 USD sin impuesto
+
+      window.addEventListener('DOMContentLoaded',()=>{
+
+           ppb = new PPaymentButtonBox({
+
+               token: 'ACA TU TOKEN',	//credenciales de acceso
+
+               clientTransactionId: 'ID_UNICO_X_TRANSACCION-001', 	
+
+               amount: 315, 	// Valor total 
+
+               amountWithoutTax: 200, 	
+
+               amountWithTax:100, 	
+
+               tax: 15,	
+
+               service: 0,	
+
+               tip:0,	
+
+               currency: "USD",	
+
+               storeId:"TU_STOREID", 
+
+               reference:"Pago por venta Fact#001", 	   
+
+               lang: "es", 
+
+               defaultMethod:"card", // *Tarjeta = "card" - *Payphone = "payphone"
+
+               timeZone: -5,   
+
+               lat: "-1.831239",   
+
+               lng: "-78.183406",  
+
+               optionalParameter:"Parametro opcional",
+
+               //Solo si se registran datos del titular de la tarjeta 
+
+               phoneNumber:"+593999999999",
+
+               email: "aloy@mail.com",
+
+               documentId:"1234567890",
+
+               identificationType: 1 //Tipo de identificación: *Cédula: 1 *RUC: 2 *Pasaporte: 3 *Por defecto 1.
+
+           }).render('pp-button');
+
+       })
+
+</script>
+📦 Inserta el contenedor del botón
+Debes agregar un contenedor <div id="pp-button"> en la ubicación donde desees que aparezca el botón de pago:
+<div id="pp-button"></div>
+
+📌 Importante:
+📟 Cálculo del monto total (amount)
+El campo amount debe ser la suma de todos los valores monetarios
+amount = amountWithoutTax + amountWithTax  + tax + service + tip
+
+Aunque los campos individuales son opcionales, debe haber al menos uno presente que respalde el valor total amount
+💵 Valores monetarios en centavos:
+Todos los montos deben expresarse como enteros. Multiplica el valor en dólares por 100:
+💵 Valor en USD
+🪙 Valor en centavos
+$ 1.00
+100
+$ 1.50
+150
+$ 10.00
+1000
+$ 12.68
+1268
+
+📈 Ejemplo básico de configuración
+A continuación, se muestran ejemplos de configuraciones con los campos mínimos para diferentes tipos de cobro:
+Montos Con Impuestos
+Montos Sin Impuestos
+Montos Mixtos
+<script>
+
+	//Ejemplo de cobro de 1 USD con impuesto del 15%
+
+      window.addEventListener('DOMContentLoaded',()=>{
+
+           ppb = new PPaymentButtonBox({
+
+               token: 'ACA TU TOKEN',	
+
+               clientTransactionId: 'ID_UNICO_X_TRANSACCION-001', 	
+
+               amount: 115, 	
+
+               amountWithTax:100, 	
+
+               tax: 15,	
+
+               currency: "USD",	
+
+               storeId:"TU_STOREID", 
+
+               reference:"Pago por venta Fact#001" 	          
+
+           }).render('pp-button');
+
+       })
+
+</script>
+🧾 Descripción de parámetros en la petición
+A continuación detallamos los parámetros que puedes usar en una transacción: montos a cobrar, la moneda, datos del cliente y otros campos que necesites enviar.
+Nombre
+Descripción
+Tipo de Dato
+Opcional
+token
+Credencial que se genera en la configuración de Payphone Developer.
+String
+❌ No
+amount
+Valor total de la factura a cobrar, es la suma de amountWithTax, amountWithoutTax, Tax, service y tip.
+Int
+❌ No
+amountWithoutTax
+Monto que no está sujeto a impuestos.
+Int
+❌ No
+amountWithTax
+Monto que incluye el valor sujeto a impuestos, excluyendo el propio impuesto.
+Int
+✅ Sí
+tax
+Monto del impuesto aplicado a la transacción.
+Int
+✅ Sí
+service
+Monto asociado al servicio proporcionado.
+Int
+✅ Sí
+tip
+Monto de la propina otorgada por el cliente.
+Int
+✅ Sí
+currency
+Código de moneda ISO 4217. (ej:USD)
+String
+✅ Sí
+clientTransactionId
+Identificador único asignado por el comercio a cada transacción para su seguimiento. Máximo 50 caracteres
+String
+❌ No
+storeId
+Identificador de la sucursal que efectúa el cobro (se obtiene en Payphone Developer).
+String
+✅ Sí
+reference
+Motivo o referencia específica del pago. Máximo 100 caracteres
+String
+✅ Sí
+phoneNumber
+Número de teléfono del titular; se solicitará si no se proporciona.
+Formato: Símbolo(+) + Código País + numero telefónico.
+Ej. +593984111222
+String
+✅ Sí
+email
+Correo electrónico del titular; se solicitará si no se proporciona.
+String
+✅ Sí
+documentId
+Número de identificación del titular; se solicitará si no se proporciona.
+String
+✅ Sí
+identificationType
+Tipo de identificación:
+*Cédula: 1
+*RUC: 2
+*Pasaporte: 3
+Por defecto 1.
+Int
+✅ Sí
+lang
+Idioma de Formulario:
+inglés (en),
+español (es).
+Por defecto en español.
+String
+✅ Sí
+defaultMethod
+El método por defecto a mostrar:
+*Tarjeta = "card"
+*Payphone = "payphone"
+String
+✅ Sí
+timeZone
+Zona horaria, (ej: -5)
+Int
+✅ Sí
+lat
+latitud en formato decimal: -1.831239
+String
+✅ Sí
+lng
+longitud en formato decimal: -78.183406
+String
+✅ Sí
+optionalParameter
+Información adicional para la transacción.
+String
+✅ Sí
+🛑 Advertencia:
+Al utilizar los campos phoneNumber, email y documentId en las solicitudes a los servicios de Payphone, es crucial que se ingresen los datos del titular de la tarjeta para cada transacción individual. No se permite el uso de datos "quemados" o estáticos, ya que esto puede resultar en el rechazo de sus transacciones y el bloqueo de sus usuarios. El uso de datos falsos o repetitivos puede generar sospechas de fraude.
+Payphone se compromete a proteger la seguridad y privacidad de los datos, por lo que es fundamental cumplir con esta política para garantizar un proceso de pago seguro y confiable.
+🧱 Estructura final del código:
+Con la configuración terminada, la Cajita de Pagos se muestra así:
+Cajita con DOM
+Cajita con Modal
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+   <script src="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.js" type="module" ></script>
+
+   <link href="https://cdn.payphonetodoesposible.com/box/v2.0/payphone-payment-box.css" rel="stylesheet" >
+
+</head>
+
+<body>
+
+   <script>
+
+      window.addEventListener('DOMContentLoaded',()=>{
+
+           ppb = new PPaymentButtonBox({
+
+               token: 'ACA TU TOKEN',	
+
+               clientTransactionId: 'ID_UNICO_X_TRANSACCION-001', 	
+
+               amount: 315, 	
+
+               amountWithoutTax: 200, 	
+
+               amountWithTax:100, 	
+
+               tax: 15,	
+
+               currency: "USD",	
+
+               storeId:"TU_STOREID", 
+
+               reference:"Pago por venta Fact#001" 	           
+
+           }).render('pp-button');
+
+       })
+
+   </script>
+
+   <div id="pp-button"></div>
+
+</body>
+
+</html>
+Una vez terminada la configuración de tu página con los campos requeridos se mostrara la cajita de pagos de la siguiente forma:
+
+📌 Consideraciones
+⏱️ Tiempo de vida del formulario
+Cada formulario de la Cajita de Pagos tiene una vigencia de 10 minutos desde su carga.
+Si el usuario no completa el pago en ese tiempo, el formulario expirará y se deberá generar uno nuevo.
+🚫 Error de "Acceso denegado" en Cajita de Pagos
+
+¿Por qué ocurre este error?
+El mensaje de "Acceso denegado o dominio no permitido" al intentar cargar o ejecutar la Cajita de Pagos puede deberse a una de las siguientes razones:
+1. 🌐 Dominio no autorizado
+La Cajita de Pagos solo funciona en el dominio registrado en tu configuración de desarrollador en Payphone Developers.
+Si intentas ejecutarla desde otro dominio o mediante una redirección no autorizada, se bloqueará por motivos de seguridad.
+✅ Solución: Asegúrate de que la redirección hacia el formulario de pago se realice desde el mismo dominio que configuraste en tu cuenta de Payphone.
+2. 🛡️ Falta de identidad del sitio (Referrer-Policy)
+En algunos frameworks o servidores, existe una configuración por defecto que no comparte la identidad del sitio web desde donde se hace la redirección al formulario de pago.
+Esto impide que Payphone verifique el origen de la solicitud y provoca el error de acceso denegado.
+La configuración detectada que puede causar el error:
+Referrer-Policy: en las plataformas mas comunes como C# / ASP.NET, WordPress, entre otras
+SECURE_REFERRER_POLICY: Desde Django 3.1 en adelante
+📘 ¿Qué es la Referrer-Policy?
+La Referrer-Policy es una política de seguridad del navegador que define qué información del origen (referencia) se envía al hacer peticiones a otros recursos.
+A continuación, se muestran las opciones más comunes:
+no-referrer: No se envía ninguna referencia. Máxima privacidad, pero puede romper funcionalidades.
+no-referrer-when-downgrade: Envía la referencia solo si ambos sitios usan HTTPS.
+origin: Envía solo el esquema y host del sitio (sin ruta). Nivel medio de privacidad.
+origin-when-cross-origin: Como origin, pero solo en solicitudes entre sitios distintos.
+strict-origin: Similar a origin, pero restringido a HTTPS..
+strict-origin-when-cross-origin: Mayor control sobre envíos entre orígenes cruzados.
+no-referrer: No se envía ninguna referencia. Máxima privacidad, pero puede romper funcionalidades.
+✅ Recomendación de Payphone
+Para garantizar el correcto funcionamiento de la Cajita de Pagos, recomendamos usar:
+origin
+origin-when-cross-origin
+Esto proporciona el equilibrio ideal entre funcionalidad y privacidad, y permite a Payphone validar correctamente el origen de la solicitud.
+🧾Consultar respuesta de la transacción
+Una vez que el usuario completa el pago, será redirigido automáticamente a la URL de respuesta que hayas configurado previamente en la plataforma de Payphone.
+Esta URL incluirá dos parámetros esenciales en la cadena:
+id Número entero que representa el identificador único de la transacción generado por Payphone.
+clientTransactionId Cadena de texto definida como identificador único por tu plataforma al iniciar el pago.
+Es crucial capturar estos parámetros para poder realizar una solicitud POST al método Confirm.
+🔸 Ejemplo en PHP para obtener los parámetros de la URL:
+$id = isset($_GET["id"])?$_GET["id"]:0;
+
+$clientTransactionId = isset($_GET["clientTransactionId"])?$_GET["clientTransactionId"]:"";
+✔️Confirmar el Estado de la Transacción API Buttom/Confirm :
+Para verificar si una transacción fue aprobada, cancelada o fallida, realiza una solicitud POST al endpoint de confirmación.
+Esto te permitirá mostrar un mensaje claro al usuario sobre el resultado.
+🔗Endpoint del API Confirm
+https://paymentbox.payphonetodoesposible.com/api/confirm
+📦 Cuerpo de la solicitud (JSON):
+El cuerpo de la solicitud debe ser un objeto JSON que contenga los siguientes parámetros, los cuales son los valores que se recibió de la URL de respuesta:
+{
+
+ "id": 0,
+
+ "clientTxId": "string"
+
+}
+🔐 Es fundamental incluir las siguientes cabeceras en la solicitud:
+Authorization: bearer TU_TOKEN (Esta cabecera debe contener el token de autenticación de tu aplicación, precedido por la palabra “Bearer”. Este token es el mismo que utilizaste al preparar la transacción inicialmente).
+Content-type: application/json (Indica que el formato de los datos enviados en el cuerpo de la solicitud es JSON).
+📬Respuesta satisfactoria de solicitud POST
+Si la solicitud es correcta, recibirás un objeto JSON con el detalle de la transacción. Los parámetros recibidos son:
+{
+
+   "email": "aloy@mail.com",
+
+   "cardType": "Credit",
+
+   "bin": "530219",
+
+   "lastDigits": "XX17",
+
+   "deferredCode": "00000000",
+
+   "deferred": false,
+
+   "cardBrandCode": "51",
+
+   "cardBrand": "Mastercard Produbanco/Promerica",
+
+   "amount": 315,
+
+   "clientTransactionId": "ID_UNICO_X_TRANSACCION-001",
+
+   "phoneNumber": "593999999999",
+
+   "statusCode": 3,
+
+   "transactionStatus": "Approved",
+
+   "authorizationCode": "W23178284",
+
+   "message": null,
+
+   "messageCode": 0,
+
+   "transactionId": 23178284,
+
+   "document": "1234567890",
+
+   "currency": "USD",
+
+   "optionalParameter3": "Descripción Extra",
+
+   "optionalParameter4": "ELISABETH SOBECK",
+
+   "storeName": "Tienda Payphone",
+
+   "date": "2023-10-10T11:57:26.367",
+
+   "regionIso": "EC",
+
+   "transactionType": "Classic",
+
+   "reference": "Pago por venta Fact#001"
+
+}
+📝Descripción de parámetros de respuesta
+Una vez la llamada es satisfactoria obtendrás un JSON con los siguientes parámetros:
+Nombre
+Descripción
+statusCode
+Código de estado de la transacción.
+2 = Cancelado.
+3 = Aprobada
+transactionStatus
+Estado de la transacción (Approved o Canceled).
+clientTransactionId
+Identificador de transacción que enviaste en la petición.
+authorizationCode
+Código de autorización bancario.
+transactionId
+Identificador de transacción asignado por Payphone.
+email
+El correo electrónico registrado en el formulario para el pago.
+phoneNumber
+Número de teléfono registrado en el formulario para el pago.
+document
+Número de cédula registrado en el formulario para el pago.
+amount
+Monto total pagado.
+cardType
+Tipo de tarjeta utilizada (crédito o débito).
+cardBrandCode
+Código de la marca de la tarjeta.
+cardBrand
+Marca de la tarjeta: Visa, MasterCard, Diners Club, Discover y Banco Emisor
+bin
+Primeros 6 dígitos de la tarjeta utilizada.
+lastDigits
+Últimos dígitos de la tarjeta utilizada.
+deferredCode
+Código de diferido empleado por el usuario.
+deferredMessage
+Mensaje del diferido.
+deferred
+Indica si se usó un diferido (booleano).
+message
+Mesaje de error, si corresponde
+messageCode
+Código de mensaje.
+currency
+Moneda utilizada para el pago.
+reference
+Motivo de la transacción
+optionalParameter3
+Parámetro opcional
+optionalParameter4
+Nombre del titular si el pago es con tarjeta
+storeName
+Nombre de la tienda que cobro
+date
+Fecha de cobro en formato ISO 8601
+regionIso
+Códigos de país en ISO 3166-1
+transactionType
+Tipo de Transacción
+📬Respuesta con error de solicitud POST
+Si la solicitud contiene algún error, recibirás un objeto JSON con el detalle del error. Los parámetros recibidos son:
+{
+
+   "message": "La transacción no existe, verifique que el identificador enviado sea correcto.",
+
+   "errorCode": 20
+
+}
+🔙 Importante Recordar: Reverso Automático
+Si tu sistema no ejecuta la fase de confirmación dentro de los primeros 5 minutos después del pago, Payphone reversará automáticamente la transacción. Esto se hace para proteger tanto al comercio como al cliente, evitando:
+Cobros indebidos
+Procesos incompletos por falta de datos
+Conflictos o reclamos por parte del cliente
+📖 En resumen: Si no confirmas el pago, Payphone lo cancela automáticamente, ya que no puede garantizar que el comercio haya registrado correctamente la transacción.
+🧱 Ejemplo de Implementación API Buttom/Confirm
+A continuación, se presenta varios ejemplos de cómo realizar solicitudes POST:
+PHP
+JQUERY
+AXIOS
+<?php
+
+   //Obtener parametros enviados por payphone de la URL de respuesta
+
+   $id = isset($_GET["id"])?$_GET["id"]:0;
+
+   $clientTxId = isset($_GET["clientTransactionId"])?$_GET["clientTransactionId"]:"";
+
+
+
+   //Preparar cabecera para la solicitud
+
+   $headers[] = 'Authorization: Bearer your_token' ;//CREDENCIALES DE CONFIGURACION
+
+   $headers[] = 'Content-Type: application/json' ;//TIPO DE APLICACION 
+
+
+
+   //Preparar objeto JSON para solicitud
+
+   $data = array(
+
+       "id" => (int)$id,
+
+       "clientTxId" => $clientTxId 
+
+   );
+
+   $objetoJSON = json_encode($data);
+
+
+
+   //Iniciar solicitud curl: POST 
+
+   $curl = curl_init();
+
+   curl_setopt($curl, CURLOPT_URL, "https://paymentbox.payphonetodoesposible.com/api/confirm");
+
+   curl_setopt($curl, CURLOPT_POST, 1);
+
+
+
+   curl_setopt($curl, CURLOPT_POSTFIELDS, $objetoJSON);    
+
+   curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+   curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+
+   //Respuesta en formato JSON
+
+   $curl_response = curl_exec($curl);
+
+   //Finaliza solicitud curl: POST
+
+   curl_close($curl);
+
+
+
+
+
+   //Mostrar Resultado en Pantalla
+
+   echo "<h1>Prueba Confirmacion de Transaccion</h1> <br>";
+
+
+
+   $result= json_decode($curl_response);
+
+   echo "Respuesta : <pre>".json_encode($result,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT )."</pre>";
+
+?>
+Con esto ya tienes la lógica principal implementada. En la siguiente sección del manual puedes ver cómo hacer pruebas con datos simulados y pasar a producción.
+
+
+🔰Pruebas y paso a producción
+En Payphone, tienes el control total de tu integración: tú decides cuándo probar y cuándo lanzar. No necesitas pasar por procesos de certificación, ni depender de terceros para poner tu aplicación en línea. Solo integras, pruebas y lanzas.
+Payphone pone a tu disposición dos entornos listos para usar:
+1. 🧪 Entorno de PRUEBAS
+Espacio seguro y controlado para el desarrollo, integración y validación de tu aplicación. Aquí puedes realizar todas las pruebas necesarias sin afectar a usuarios reales ni realizar cobros reales.
+Todas las transacciones se aprueban.
+No se conecta con entidades bancarias.
+Puedes usar datos reales (sin cobro) o datos ficticios válidos.
+Compatible con herramientas como Postman o curl para pruebas automatizadas.
+Probadores en App Payphone
+Invita usuarios personales de Payphone como "probadores" para simular pagos reales desde la app. Ideal para validar la experiencia completa del cliente.
+2. 🖥️ Entorno de PRODUCCIÓN
+Ambiente en el que tus usuarios finales realizarán pagos reales. Todas las transacciones aquí son efectivas y se procesan a través de la red bancaria.
+El dinero se transfiere directamente a tu cuenta Payphone.
+Todas las transacciones se reflejan en tiempo real.
+📓 Información detallada
+Consulta la guía detallada sobre cómo usar ambos entornos, con ejemplos, recomendaciones técnicas y configuraciones paso a paso:
+📑Guia Entorno de Pruebas y Produccion
+⚠️ Consideraciones importantes
+Realiza pruebas exhaustivas antes de pasar a producción.
+En entorno de producción, usa únicamente datos reales y verificados.
+Utiliza herramientas de visualización:
+En Pruebas: revisa transacciones en Payphone Developer > Probadores> Transacciones.
+En Producción: consulta tu historial en Payphone Business > Ventas.
+Nuestro sistema tiene estrictos protocolos de seguridad: asegúrate de cumplir con las normas para evitar rechazos o bloqueos.
+Una vez que tu aplicación esté en producción, el proceso estará completo. Felicidades por integrar la Cajita de Pagos de Payphone.
+↩️Reverso de Transacciones
+Este proceso permite deshacer una transacción que ya ha sido procesada, devolviendo los fondos al cliente.
+Para gestionar reverso o anulación de transacciones, es necesario contar con el transactionID o el clientTransactionID. Estos identificadores son cruciales para localizar y manipular la transacción específica.
+🗂️ Casos de uso
+El método de reverso es útil en diferentes situaciones:
+Cuando se generó transacciones erróneas.
+Cuando el cliente realiza solicitudes de reembolso.
+Cuando su plataforma no puede confirmar el estado de la transacción.
+Por razones de seguridad, cuando un pago necesita ser reversado.
+↩️ API Reverse y reverso desde Payphone Business
+Para obtener una explicación detallada sobre el proceso de reverso a través de la API o para realizar reversos directamente desde la plataforma Payphone Business, consulta nuestra documentación.
+📑 GUIA DE REVERSO PAYPHONE
+⚠️Consideraciones
+Es crucial tener en cuenta la siguiente restricción temporal para los reversos de transacciones:
+Los reversos solo pueden ejecutarse el mismo día de la transacción original.
+El período de reversión está limitado hasta las 20:00 del día en que se realizó la transacción.
+🔧Funcionalidades Adicionales
+💳 Tokenización de Tarjetas con Payphone
+La tokenización es una nueva funcionalidad de Payphone que permite a los comercios guardar de forma segura un identificador único (cardToken) asociado a la tarjeta de un cliente, sin almacenar directamente los datos sensibles de la tarjeta.
+Este cardToken puede usarse para realizar pagos futuros de forma rápida y segura, sin necesidad de que el cliente vuelva a ingresar sus datos. Es una funcionalidad adicional del botón de pago o cajita de pagos de Payphone.
+🔁 ¿Cómo funciona?
+Primera Transacción:
+El cliente realiza un pago usando el botón o cajita de Payphone.
+Si el comercio está autorizado, Payphone genera un cardToken y lo devuelve junto a los parámetros de la transacción aprobada.
+Transacciones siguientes:
+El comercio utiliza el cardToken para realizar nuevos cobros al mismo cliente, sin solicitar nuevamente los datos de su tarjeta.
+Payphone procesa estos pagos usando el token de manera segura.
+💼 Casos de uso comunes
+Plataformas de suscripción (cobros mensuales automáticos)
+Pagos recurrentes (membresías, servicios por cuotas)
+Compras frecuentes (e-commerce que ofrece "pago rápido")
+Apps de delivery o transporte con usuarios registrados
+Servicios bajo demanda (streaming, educación en línea)
+📓 Información detallada
+Consulta nuestra guía completa para desarrolladores sobre cómo implementar la tokenización usando nuestra API:
+📑 GUIA DE TOKENIZACION PAYPHONE
+📌 Importante:
+Esta funcionalidad requiere autorización previa por parte de Payphone.
+La tokenización de Payphone NO es un sistema de pagos recurrentes.
+El servicio entrega los tokens de las tarjetas para que los comercios puedan implementar sus propios sistemas de recurrencia.
+El token solo se genera si la transacción inicial es aprobada por la entidad emisora de la tarjeta.
+La tokenización solo funciona para pagos directos con tarjetas de crédito o débito.
+Debes contar con un sistema de gestión de usuarios activo y funcional.
+➗Split de Pagos con Payphone
+El Split de Pagos permite dividir un cobro entre varios usuarios Payphone al momento de realizar un pago. Esta función es ideal para plataformas o comercios que necesiten distribuir un pago entre distintos actores (por ejemplo, una empresa, un socio o un proveedor de servicios).
+Esta funcionalidad está disponible a través de:
+Botón de Pagos
+Cajita de Pagos
+Link de Pago por API
+🔁 ¿Cómo funciona?
+Se configura el servicio indicando el monto total, los datos de la transacción y los usuarios que recibirán un porcentaje del pago.
+Se realiza la transacción a través del canal elegido.
+Si la operación es aprobada y el comercio tiene el permiso, el monto se distribuye automáticamente según lo configurado.
+💼 Casos de uso comunes
+Marketplaces o Aplicaciones de Venta Multiactor: Ideal para negocios como restaurantes, servicios de delivery o compañías de transporte (como taxis), donde un cliente paga y los fondos se reparten entre el establecimiento, el repartidor y la empresa que aplica comisiones.
+Sistemas de Recaudación: Permite dividir pagos entre un comercio principal y un beneficiario que cobra una comisión.
+📓 Información detallada
+Para una guía paso a paso sobre cómo integrar el Split de Pagos mediante API, consulta nuestra documentación oficial:
+📑 GUIA DE SPLIT DE PAGOS PAYPHONE
+📌 Importante:
+Esta funcionalidad requiere autorización previa por parte de Payphone.
+El valor a dividir no puede superar el total cobrado (ten en cuenta la comisión del 5.75% por pagos con tarjeta).
+Si el monto dividido supera el valor cobrado, se usa el Saldo Payphone del comercio para cubrir la diferencia.
+Al hacer una dispersión inmediata, el saldo se transfiere de forma definitiva. Si necesitas hacer un reverso, deberás gestionar manualmente el reembolso con cada usuario receptor.
+

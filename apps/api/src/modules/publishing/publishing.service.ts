@@ -255,13 +255,25 @@ export class PublishingService {
         const tenantSettings = (site.tenant?.settings as any) || {};
         const paymentGateway = tenantSettings.paymentGateway || {};
         const paypalCfg = paymentGateway.providers?.paypal || {};
+        const payphoneCfg = paymentGateway.providers?.payphone || {};
         const paymentConfig = {
-          defaultMethod: paymentGateway.defaultMethod === "paypal" ? "paypal" : "cod",
+          defaultMethod:
+            paymentGateway.defaultMethod === "paypal"
+              ? "paypal"
+              : paymentGateway.defaultMethod === "payphone"
+                ? "payphone"
+                : "cod",
           currency: "USD",
           paypal: {
             enabled: paypalCfg.enabled === true && !!paypalCfg.clientId,
             clientId: String(paypalCfg.clientId || ""),
             mode: paypalCfg.mode === "live" ? "live" : "sandbox",
+          },
+          payphone: {
+            enabled: payphoneCfg.enabled === true && !!payphoneCfg.token && !!payphoneCfg.storeId,
+            token: String(payphoneCfg.token || ""),
+            storeId: String(payphoneCfg.storeId || ""),
+            mode: payphoneCfg.mode === "live" ? "live" : "sandbox",
           },
         };
         const blocks: any[] = [
@@ -415,6 +427,50 @@ export class PublishingService {
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     if (url.startsWith("/uploads/")) return `${this.apiBaseUrl()}${url}`;
     return url;
+  }
+
+  /** Reemplaza tokens `{{__ED::asset:...}}` dentro de CSS por URLs absolutas. */
+  private resolveCssAssetTokens(css: string): string {
+    return String(css || "").replace(/\{\{__ED::asset:([^{}]+)\}\}/g, (_m, ref: string) => {
+      const rel = String(ref || "").trim();
+      if (/^https?:\/\//i.test(rel)) return rel;
+      return `${this.apiBaseUrl()}${rel}`;
+    });
+  }
+
+  /**
+   * Sobrescribe las variables de tema detectadas en la plantilla (`:root{--primary}`)
+   * con los colores editables del sitio, para cambiar la marca sin tocar el CSS.
+   */
+  private buildThemeOverrides(theme: any, site: any): string {
+    if (!theme || typeof theme !== "object") return "";
+    const decls: string[] = [];
+    const primary = site?.primaryColor || "#2563EB";
+    const secondary = site?.secondaryColor || site?.tenant?.secondaryColor || "#1E40AF";
+    if (typeof theme.primaryVar === "string" && theme.primaryVar) {
+      decls.push(`${theme.primaryVar}:${primary}`);
+    }
+    if (typeof theme.secondaryVar === "string" && theme.secondaryVar && theme.secondaryVar !== theme.primaryVar) {
+      decls.push(`${theme.secondaryVar}:${secondary}`);
+    }
+    return decls.length ? `:root{${decls.join(";")}}` : "";
+  }
+
+  /** Serializa atributos de `<html>`/`<body>` capturados al importar la plantilla. */
+  private attrsToHtml(
+    attrs: Record<string, string> | undefined,
+    defaults: Record<string, string> = {},
+    extraClass = ""
+  ): string {
+    const merged: Record<string, string> = { ...defaults };
+    for (const [key, value] of Object.entries(attrs || {})) {
+      if (value == null) continue;
+      merged[String(key).toLowerCase()] = String(value);
+    }
+    if (extraClass) merged.class = [merged.class, extraClass].filter(Boolean).join(" ").trim();
+    return Object.entries(merged)
+      .map(([key, value]) => `${key}="${escapeHtml(value)}"`)
+      .join(" ");
   }
 
   private isLightColor(hex: string): boolean {
@@ -611,6 +667,11 @@ ${cfg}
   var paypalBtnBox = document.getElementById("un-paypal-box");
   var codPayBox = document.getElementById("un-cod-pay");
   var paypalRendered = false;
+  var payphoneEnabled = paymentBox && paymentBox.getAttribute("data-payphone-enabled") === "1";
+  var payphoneBtnBox = document.getElementById("un-payphone-box");
+  var payphoneRendered = false;
+  var payphoneReturnHandled = false;
+  var payphoneInitTimer = null;
   var pendingOrderId = null;
   function selectedMethod(){ var r = document.querySelector('input[name="payment"]:checked'); return r ? r.value : "cod"; }
   function paypalNote(msg){
@@ -619,10 +680,18 @@ ${cfg}
       if (el) { el.textContent = msg; el.classList.remove("hidden"); }
     }
   }
+  function payphoneNote(msg){
+    if (msg) {
+      var el = document.getElementById("un-payphone-note");
+      if (el) { el.textContent = msg; el.classList.remove("hidden"); }
+    }
+  }
   function setMethod(m){
     var isPaypal = m === "paypal" && paypalEnabled;
-    if (isPaypal) { if (codPayBox) { codPayBox.classList.add("hidden"); } if (paypalBtnBox) { paypalBtnBox.classList.remove("hidden"); } initPaypal(); }
-    else { if (paypalBtnBox) { paypalBtnBox.classList.add("hidden"); } if (codPayBox) { codPayBox.classList.remove("hidden"); } }
+    var isPayphone = m === "payphone" && payphoneEnabled;
+    if (isPaypal) { if (codPayBox) { codPayBox.classList.add("hidden"); } if (payphoneBtnBox) { payphoneBtnBox.classList.add("hidden"); } if (paypalBtnBox) { paypalBtnBox.classList.remove("hidden"); } initPaypal(); }
+    else if (isPayphone) { if (codPayBox) { codPayBox.classList.add("hidden"); } if (paypalBtnBox) { paypalBtnBox.classList.add("hidden"); } if (payphoneBtnBox) { payphoneBtnBox.classList.remove("hidden"); } initPayphone(); }
+    else { if (paypalBtnBox) { paypalBtnBox.classList.add("hidden"); } if (payphoneBtnBox) { payphoneBtnBox.classList.add("hidden"); } if (codPayBox) { codPayBox.classList.remove("hidden"); } }
   }
   function buildPayload(method){
     var data = { items: [], paymentMethod: method };
@@ -652,6 +721,25 @@ ${cfg}
     var dm = document.getElementById("un-co-done-msg");
     if (dm) { dm.textContent = msg; }
     if (badge) { badge.textContent = "0"; badge.style.display = "none"; }
+  }
+  function handlePayphoneReturn(){
+    var q = (window.location.search || "").replace(/^\?/, "");
+    if (!q) return;
+    var params = {};
+    q.split("&").forEach(function(kv){
+      var parts = kv.split("=");
+      if (parts[0]) { params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || ""); }
+    });
+    var id = params.id;
+    var clientTxId = params.clientTransactionId;
+    if (!id || !clientTxId) return;
+    payphoneReturnHandled = true;
+    postJson(checkoutBase + "/payphone/confirm", { id: Number(id) || 0, clientTransactionId: clientTxId })
+      .then(function(res){
+        if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al confirmar el pago"); }
+        showDone("Pago confirmado con Payphone. Te contactaremos para coordinar la entrega de tu pedido.", (res.j.data && res.j.data.orderId) || "");
+      })
+      .catch(function(err){ alert(err.message || "Ocurrió un error al confirmar el pago con Payphone"); });
   }
   function renderPaypalBtn(box){
     if (paypalRendered) return;
@@ -702,6 +790,63 @@ ${cfg}
       return;
     }
     renderPaypalBtn(box);
+  }
+  function renderPayphoneWidget(box){
+    if (payphoneRendered) return;
+    payphoneRendered = true;
+    var payload;
+    try { payload = buildPayload("payphone"); } catch (err) { payphoneRendered = false; payphoneNote(err.message || "Datos incompletos"); return; }
+    payphoneNote("Preparando Payphone...");
+    postJson(checkoutBase + "/payphone/create-order", payload)
+      .then(function(res){
+        if (!res.ok || res.j.error || !res.j.data || !res.j.data.clientTransactionId || !res.j.data.provider || !res.j.data.provider.token) {
+          payphoneRendered = false;
+          throw new Error((res.j && (res.j.message || (res.j.data && res.j.data.message))) || "Error al iniciar el pago con Payphone");
+        }
+        pendingOrderId = res.j.data.orderId || null;
+        var data = res.j.data;
+        var provider = data.provider;
+        var priv = document.getElementById("un-payphone-note");
+        if (priv) { priv.classList.add("hidden"); }
+        var cfg = {
+          token: provider.token,
+          clientTransactionId: data.clientTransactionId,
+          amount: data.amount,
+          amountWithoutTax: data.amount,
+          currency: data.currency || "USD",
+          storeId: provider.storeId,
+          reference: "Pago por pedido #" + String(data.orderId || "").slice(0, 8).toUpperCase(),
+          lang: "es",
+          defaultMethod: "card",
+          optionalParameter: "Plataforma"
+        };
+        if (payload.customerEmail) { cfg.email = payload.customerEmail; }
+        if (payload.customerPhone) { cfg.phoneNumber = payload.customerPhone; }
+        if (typeof window.PPaymentButtonBox !== "function") {
+          payphoneRendered = false;
+          payphoneNote("No se pudo cargar el botón de Payphone. Revisa la configuración de pagos del sitio.");
+          return;
+        }
+        window.ppb = new window.PPaymentButtonBox(cfg).render("pp-button");
+      })
+      .catch(function(err){ payphoneRendered = false; payphoneNote(err.message || "Ocurrió un error al preparar Payphone"); });
+  }
+  function initPayphone(){
+    if (payphoneReturnHandled) return;
+    var box = document.getElementById("pp-button");
+    if (!box) return;
+    if (!window.PPaymentButtonBox) {
+      payphoneNote("Cargando Payphone...");
+      if (payphoneInitTimer) return;
+      var tries = 0;
+      payphoneInitTimer = setInterval(function(){
+        tries++;
+        if (window.PPaymentButtonBox) { clearInterval(payphoneInitTimer); payphoneInitTimer = null; renderPayphoneWidget(box); }
+        else if (tries > 40) { clearInterval(payphoneInitTimer); payphoneInitTimer = null; payphoneNote("No se pudo cargar Payphone. Revisa la configuración de pagos del sitio."); }
+      }, 500);
+      return;
+    }
+    renderPayphoneWidget(box);
   }
   function open(){ if (overlay) { overlay.classList.remove("hidden"); } if (drawer) { drawer.classList.remove("translate-x-full"); } document.body.style.overflow = "hidden"; }
   function close(){ if (overlay) { overlay.classList.add("hidden"); } if (drawer) { drawer.classList.add("translate-x-full"); } document.body.style.overflow = ""; }
@@ -816,9 +961,17 @@ ${cfg}
         });
     });
   }
-  if (paymentBox) {
+if (paymentBox) {
     Array.prototype.forEach.call(paymentBox.querySelectorAll('input[name="payment"]'), function(r){
       r.addEventListener("change", function(){ setMethod(selectedMethod()); });
+    });
+  }
+  var coForm = document.getElementById("un-checkout-form");
+  if (coForm) {
+    coForm.addEventListener("input", function(){
+      if (!payphoneReturnHandled && selectedMethod() === "payphone" && payphoneEnabled && !payphoneRendered) {
+        initPayphone();
+      }
     });
   }
   render();
@@ -863,6 +1016,23 @@ ${cfg}
     const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora" || variant === "graduate" || variant === "urban-noir";
     const isUrbanNoir = variant === "urban-noir";
     const isRawHtml = variant === "raw-html";
+
+    const globalStyles = (site.settings as any)?.globalStyles || null;
+    const stylePages = globalStyles?.pages || null;
+    const pageStyle =
+      (stylePages && (stylePages[normalizePublicPath(page?.path || "/")] || stylePages[page?.path || "/"] || stylePages["/"])) ||
+      null;
+    const pageCss = pageStyle?.css ? this.resolveCssAssetTokens(pageStyle.css) : "";
+    const pageCssHref =
+      typeof pageStyle?.cssPath === "string" && pageStyle.cssPath
+        ? `${this.apiBaseUrl()}${pageStyle.cssPath}${pageStyle.cssHash ? `?h=${pageStyle.cssHash}` : ""}`
+        : "";
+    const themeOverride = this.buildThemeOverrides(pageStyle?.theme, site);
+    const pageHead = typeof pageStyle?.head === "string" ? pageStyle.head : "";
+    const runtimeScript =
+      typeof globalStyles?.runtime?.script === "string" ? globalStyles.runtime.script : "";
+    const pageHtmlAttrs: Record<string, string> | undefined = pageStyle?.htmlAttrs;
+    const pageBodyAttrs: Record<string, string> | undefined = pageStyle?.bodyAttrs;
 
     const baseUrl = resolvePublicSiteUrl(site);
     const canonicalUrl =
@@ -1094,7 +1264,7 @@ ${cfg}
     };
 
     return `<!DOCTYPE html>
-<html lang="es">
+<html ${this.attrsToHtml(pageHtmlAttrs, { lang: "es" })}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1113,6 +1283,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ""}
 <meta name="twitter:description" content="${escapeHtml(seoDesc)}">
 ${ogImage ? `<meta name="twitter:image" content="${escapeHtml(ogImage)}">` : ""}
 ${favicon ? `<link rel="icon" href="${escapeHtml(favicon)}">` : ""}
+${pageHead}
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 ${isTemplate ? `
@@ -1159,6 +1330,10 @@ a{color:inherit}
 .pub-header:hover{box-shadow:0 1px 8px rgba(0,0,0,.06)}
 `}
 </style>
+${pageCssHref ? `<link rel="stylesheet" href="${escapeHtml(pageCssHref)}">` : ""}
+${pageCss ? `<style>\n${pageCss}\n</style>` : ""}
+${themeOverride ? `<style>\n${themeOverride}\n</style>` : ""}
+${runtimeScript ? `<script>\n${runtimeScript}\n</script>` : ""}
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   // Mobile header toggle
@@ -1224,7 +1399,7 @@ document.addEventListener("DOMContentLoaded",function(){
 })()
 </script>
 </head>
-<body class="${isTemplate ? "bg-background text-on-background font-body-md text-body-md antialiased selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant" : ""}">
+<body ${this.attrsToHtml(pageBodyAttrs, {}, isTemplate ? "bg-background text-on-background font-body-md text-body-md antialiased selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant" : "")}>
 ${blocksHtml}
 ${isUrbanNoir ? this.urbanNoirCartHtml(site.subdomain || site.domain || "") : ""}
 ${waButton}
@@ -1272,7 +1447,7 @@ ${apkButton}
     }
 
     if (c.variant === "raw-html") {
-      const html = getRawHtmlHtml(type, c, this.apiBaseUrl());
+      const html = getRawHtmlHtml(type, c, this.apiBaseUrl(), site);
       if (html) return html;
     }
 
