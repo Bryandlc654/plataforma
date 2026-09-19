@@ -8,7 +8,7 @@ function siteHref(url?: string) {
 }
 
 function actionUrl(site?: any, apiBaseUrl?: string) {
-  const host = apiBaseUrl || "https://plataforma-api-71743315793.us-central1.run.app";
+  const host = apiBaseUrl || "https://plataforma-api-rkav7vkxia-uc.a.run.app";
   if (site?.tenantId) return `${host}/api/v1/leads/submit/${site.tenantId}`;
   return `${host}/api/v1/leads`;
 }

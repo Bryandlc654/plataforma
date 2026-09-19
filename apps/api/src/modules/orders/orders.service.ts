@@ -137,7 +137,7 @@ export class OrdersService {
         this.configService.get<string>("PUBLIC_API_URL") ||
         this.configService.get<string>("API_URL") ||
         process.env.NEXT_PUBLIC_API_URL ||
-        "https://plataforma-api-dr5asqkdmq-uc.a.run.app";
+        "https://plataforma-api-rkav7vkxia-uc.a.run.app";
       await this.emailService.sendOrderNotificationEmail({
         to: order.customerEmail,
         customerName: order.customerName || "Cliente",

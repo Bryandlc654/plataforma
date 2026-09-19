@@ -97,7 +97,7 @@ export class AppDownloadService {
       const filename = `${unique}.apk`;
       const filePath = join(DATA_DIR, filename);
       writeFileSync(filePath, dto.apkBuffer);
-      const apiBase = process.env.PUBLIC_API_URL || "https://plataforma-api-71743315793.us-central1.run.app";
+      const apiBase = process.env.PUBLIC_API_URL || "https://plataforma-api-rkav7vkxia-uc.a.run.app";
       apkUrl = `${apiBase}/uploads/app-download/${filename}`;
     }
 

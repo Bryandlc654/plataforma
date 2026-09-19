@@ -106,7 +106,7 @@ export class SitesController {
     @Body("apkName") apkName?: string,
   ) {
     if (!file) throw new BadRequestException("Archivo APK requerido");
-    const apiBase = process.env.PUBLIC_API_URL || process.env.PLATAFORMA_API_URL || "https://plataforma-api-71743315793.us-central1.run.app";
+    const apiBase = process.env.PUBLIC_API_URL || process.env.PLATAFORMA_API_URL || "https://plataforma-api-rkav7vkxia-uc.a.run.app";
     const apkUrl = `${apiBase}/uploads/apk/${file.filename}`;
     return this.sitesService.setApk(id, user.tenantId, {
       apkUrl,

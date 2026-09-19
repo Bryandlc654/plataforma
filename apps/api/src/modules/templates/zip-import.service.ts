@@ -890,7 +890,7 @@ export class TemplatesImportService {
   private apiBaseUrl(): string {
     const url = process.env.PUBLIC_API_URL || process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
     if (url && !url.includes("localhost")) return url.replace(/\/+$/, "");
-    return "https://plataforma-api-71743315793.us-central1.run.app";
+    return "https://plataforma-api-rkav7vkxia-uc.a.run.app";
   }
 
   private dirOf(entryPosix: string): string {

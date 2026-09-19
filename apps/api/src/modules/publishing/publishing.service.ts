@@ -415,7 +415,7 @@ export class PublishingService {
     if (url && !url.includes("localhost")) {
       return url.replace(/\/+$/, "");
     }
-    return "https://plataforma-api-71743315793.us-central1.run.app";
+    return "https://plataforma-api-rkav7vkxia-uc.a.run.app";
   }
 
   private apiV1Url(): string {
