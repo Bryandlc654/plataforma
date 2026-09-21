@@ -278,7 +278,7 @@ export class PublishingService {
         };
         const blocks: any[] = [
           headerBlock ? ({ ...headerBlock } as any) : null,
-          { type: "checkout", content: { variant: "urban-noir", tenantId: site.tenantId, checkoutBase: `${this.apiV1Url()}/p/${subdomain}`, payment: paymentConfig }, styles: {} } as any,
+          { type: "checkout", content: { variant: "urban-noir", tenantId: site.tenantId, checkoutBase: resolvePublicSiteUrl(site), payment: paymentConfig }, styles: {} } as any,
           footerBlock ? ({ ...footerBlock } as any) : null,
         ].filter(Boolean) as any[];
         site.pages.push({
@@ -613,9 +613,9 @@ ${blocksHtml}
     return `https://placehold.co/600x800/111827/FFFFFF?text=${label || "Producto"}`;
   }
 
-  private urbanNoirCartHtml(subdomain: string): string {
+  private urbanNoirCartHtml(subdomain: string, sitePublicUrl: string): string {
     const api = this.apiV1Url();
-    const cfg = `window.UN_CART_CFG = { subdomain: "${subdomain}", apiBase: "${api}" };`;
+    const cfg = `window.UN_CART_CFG = { subdomain: "${subdomain}", apiBase: "${api}", siteBase: "${sitePublicUrl}" };`;
     return `
 <div id="un-cart-overlay" class="fixed inset-0 bg-black/50 z-[10000] hidden" aria-hidden="true"></div>
 <aside id="un-cart-drawer" aria-label="Carrito" class="fixed top-0 right-0 z-[10001] h-full w-full max-w-md bg-white flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
@@ -661,7 +661,8 @@ ${cfg}
   var coWrapEl = document.getElementById("un-co-wrap");
   var coDoneEl = document.getElementById("un-co-done");
   var coBtnAmount = document.getElementById("un-co-btn-amount");
-  var checkoutBase = (cfg.apiBase || "") + "/p/" + (cfg.subdomain || "");
+  var checkoutBase = cfg.siteBase || ((cfg.apiBase || "") + "/p/" + (cfg.subdomain || ""));
+  var apiCheckoutBase = (cfg.apiBase || "") + "/p/" + (cfg.subdomain || "");
   var paymentBox = document.getElementById("un-payment-box");
   var paypalEnabled = paymentBox && paymentBox.getAttribute("data-paypal-enabled") === "1";
   var paypalBtnBox = document.getElementById("un-paypal-box");
@@ -734,7 +735,7 @@ ${cfg}
     var clientTxId = params.clientTransactionId;
     if (!id || !clientTxId) return;
     payphoneReturnHandled = true;
-    postJson(checkoutBase + "/payphone/confirm", { id: Number(id) || 0, clientTransactionId: clientTxId })
+    postJson(apiCheckoutBase + "/payphone/confirm", { id: Number(id) || 0, clientTransactionId: clientTxId })
       .then(function(res){
         if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al confirmar el pago"); }
         showDone("Pago confirmado con Payphone. Te contactaremos para coordinar la entrega de tu pedido.", (res.j.data && res.j.data.orderId) || "");
@@ -749,7 +750,7 @@ ${cfg}
       createOrder: function(data, actions){
         var payload;
         try { payload = buildPayload("paypal"); } catch (err) { return Promise.reject(err.message || "Datos incompletos"); }
-        return postJson(checkoutBase + "/paypal/create-order", payload)
+        return postJson(apiCheckoutBase + "/paypal/create-order", payload)
           .then(function(res){
             if (!res.ok || res.j.error || !res.j.data || !res.j.data.paypalOrderId) {
               throw new Error((res.j && (res.j.message || (res.j.data && res.j.data.message))) || "Error al iniciar el pago con PayPal");
@@ -759,7 +760,7 @@ ${cfg}
           });
       },
       onApprove: function(data, actions){
-        return postJson(checkoutBase + "/paypal/capture-order", { paypalOrderId: data.orderID, orderId: pendingOrderId || "" })
+        return postJson(apiCheckoutBase + "/paypal/capture-order", { paypalOrderId: data.orderID, orderId: pendingOrderId || "" })
           .then(function(res){
             if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al confirmar el pago"); }
             pendingOrderId = null;
@@ -797,7 +798,7 @@ ${cfg}
     var payload;
     try { payload = buildPayload("payphone"); } catch (err) { payphoneRendered = false; payphoneNote(err.message || "Datos incompletos"); return; }
     payphoneNote("Preparando Payphone...");
-    postJson(checkoutBase + "/payphone/create-order", payload)
+    postJson(apiCheckoutBase + "/payphone/create-order", payload)
       .then(function(res){
         if (!res.ok || res.j.error || !res.j.data || !res.j.data.clientTransactionId || !res.j.data.provider || !res.j.data.provider.token) {
           payphoneRendered = false;
@@ -949,7 +950,7 @@ ${cfg}
       var data;
       try { data = buildPayload("cod"); } catch (err) { if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } return; }
       if (!data) { if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; } return; }
-      postJson(checkoutBase + "/orders", data)
+      postJson(apiCheckoutBase + "/orders", data)
         .then(function(res){
           if (!res.ok || res.j.error) { throw new Error((res.j && res.j.message) || "Error al procesar el pedido"); }
           if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }
@@ -1401,7 +1402,7 @@ document.addEventListener("DOMContentLoaded",function(){
 </head>
 <body ${this.attrsToHtml(pageBodyAttrs, {}, isTemplate ? "bg-background text-on-background font-body-md text-body-md antialiased selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant" : "")}>
 ${blocksHtml}
-${isUrbanNoir ? this.urbanNoirCartHtml(site.subdomain || site.domain || "") : ""}
+${isUrbanNoir ? this.urbanNoirCartHtml(site.subdomain || site.domain || "", resolvePublicSiteUrl(site)) : ""}
 ${waButton}
 ${apkButton}
 </body>
