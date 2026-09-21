@@ -723,7 +723,7 @@ ${cfg}
     if (badge) { badge.textContent = "0"; badge.style.display = "none"; }
   }
   function handlePayphoneReturn(){
-    var q = (window.location.search || "").replace(/^\?/, "");
+    var q = (window.location.search || "").replace(/^\\?/, "");
     if (!q) return;
     var params = {};
     q.split("&").forEach(function(kv){
