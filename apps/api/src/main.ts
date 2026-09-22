@@ -54,12 +54,12 @@ async function bootstrap() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://cdn.payphonetodoesposible.com", "https://pay.payphonetodoesposible.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://cdn.payphonetodoesposible.com", "https://pay.payphonetodoesposible.com", "https://songbird.cardinalcommerce.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.payphonetodoesposible.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://cdn.payphonetodoesposible.com"],
         connectSrc: ["'self'", "https:", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com", "https://paymentbox.payphonetodoesposible.com", "https://cdn.payphonetodoesposible.com", "https://api.payphonetodoesposible.com", "https://pay.payphonetodoesposible.com"],
-        frameSrc: ["'self'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://paymentbox.payphonetodoesposible.com", "https://pay.payphonetodoesposible.com"],
+        frameSrc: ["'self'", "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://paymentbox.payphonetodoesposible.com", "https://pay.payphonetodoesposible.com", "https://songbird.cardinalcommerce.com", "https://payments.cardinalcommerce.com"],
         objectSrc: ["'none'"],
       },
     },
