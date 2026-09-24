@@ -25,15 +25,15 @@ export class ProductsController {
 
   @Get("products/:id")
   @ApiOperation({ summary: "Get product" })
-  async findById(@Param("id") id: string) { return this.productsService.findById(id); }
+  async findById(@Param("id") id: string, @CurrentUser() user: any) { return this.productsService.findById(id, user.tenantId); }
 
   @Put("products/:id")
   @ApiOperation({ summary: "Update product" })
-  async update(@Param("id") id: string, @Body() body: any) { return this.productsService.update(id, body); }
+  async update(@Param("id") id: string, @CurrentUser() user: any, @Body() body: any) { return this.productsService.update(id, user.tenantId, body); }
 
   @Delete("products/:id")
   @ApiOperation({ summary: "Delete product" })
-  async remove(@Param("id") id: string) { return this.productsService.remove(id); }
+  async remove(@Param("id") id: string, @CurrentUser() user: any) { return this.productsService.remove(id, user.tenantId); }
 
   @Get("product-categories")
   @ApiOperation({ summary: "List categories" })

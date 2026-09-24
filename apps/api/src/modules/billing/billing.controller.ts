@@ -1,6 +1,9 @@
 import {
-  Controller, Get, Post, Param, Body, UseGuards, Query,
+  Controller, Get, Post, Param, Body, UseGuards, Query, Req, Headers,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
+import type { RawBodyRequest } from "@nestjs/common";
+import type { Request } from "express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { BillingService } from "./billing.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
@@ -64,9 +67,17 @@ export class BillingController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Post("webhook")
-  @ApiOperation({ summary: "Payment gateway webhook" })
-  async webhook(@Body() payload: any) {
-    return this.billingService.processWebhook(payload);
+  @ApiOperation({ summary: "Payment gateway webhook (HMAC signed)" })
+  async webhook(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers("x-billing-signature") signature?: string,
+    @Body() payload?: any,
+  ) {
+    return this.billingService.processWebhook(payload, {
+      rawBody: req.rawBody,
+      signature,
+    });
   }
 }

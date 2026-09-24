@@ -6,6 +6,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { SeoService } from "./seo.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
 @ApiTags("seo")
 @Controller("seo")
@@ -16,24 +17,24 @@ export class SeoController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get SEO metadata for site" })
-  async getSeoMeta(@Param("siteId") siteId: string) {
-    return this.seoService.getSeoMeta(siteId);
+  async getSeoMeta(@Param("siteId") siteId: string, @CurrentUser() user: any) {
+    return this.seoService.getSeoMeta(siteId, user.tenantId);
   }
 
   @Put("sites/:siteId")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update site SEO" })
-  async updateSiteSeo(@Param("siteId") siteId: string, @Body() body: any) {
-    return this.seoService.updateSiteSeo(siteId, body);
+  async updateSiteSeo(@Param("siteId") siteId: string, @CurrentUser() user: any, @Body() body: any) {
+    return this.seoService.updateSiteSeo(siteId, user.tenantId, body);
   }
 
   @Put("pages/:pageId")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update page SEO" })
-  async updatePageSeo(@Param("pageId") pageId: string, @Body() body: any) {
-    return this.seoService.updatePageSeo(pageId, body);
+  async updatePageSeo(@Param("pageId") pageId: string, @CurrentUser() user: any, @Body() body: any) {
+    return this.seoService.updatePageSeo(pageId, user.tenantId, body);
   }
 
   @Public()

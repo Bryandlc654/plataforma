@@ -9,7 +9,6 @@ import { ConfigService } from "@nestjs/config";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import * as compression from "compression";
 import * as cookieParser from "cookie-parser";
-import * as cors from "cors";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
@@ -23,6 +22,7 @@ import { join } from "path";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger(winstonConfig),
+    rawBody: true,
   });
 
   app.set("trust proxy", 1);
@@ -30,24 +30,68 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>("PORT", 3001);
 
-  // CORS must be the first middleware
-  app.use(
-    cors({
-      origin: (origin, cb) => {
-        if (!origin) return cb(null, true);
-        cb(null, true);
-      },
-      credentials: true,
-      methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-      allowedHeaders: [
-        "Content-Type",
-        "Authorization",
-        "X-Tenant-Id",
-        "X-CSRF-Token",
-      ],
-      maxAge: 86400,
-    })
-  );
+  // Fail fast en producción si faltan secretos críticos (evita defaults débiles).
+  if (configService.get<string>("nodeEnv") === "production") {
+    const jwtSecret = configService.get<string>("jwt.secret");
+    const refreshSecret = configService.get<string>("jwt.refreshSecret");
+    if (!jwtSecret || jwtSecret === "dev-secret-change-me") {
+      throw new Error("JWT_SECRET no configurado en producción");
+    }
+    if (!refreshSecret || refreshSecret === "dev-refresh-secret-change-me") {
+      throw new Error("JWT_REFRESH_SECRET no configurado en producción");
+    }
+  }
+
+  // CORS con whitelist real (admite entradas exactas y comodines *.dominio).
+  const configuredOrigins = String(configService.get<string>("cors.origin") || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const extraDevOrigins = ["http://localhost:3000", "http://localhost:3001"];
+  const corsAllowlist = Array.from(new Set([...configuredOrigins, ...extraDevOrigins]));
+
+  const isOriginAllowed = (origin: string | undefined): boolean => {
+    if (!origin) return true; // peticiones server-to-server / curl
+    if (corsAllowlist.includes("*")) return true;
+    if (corsAllowlist.includes(origin)) return true;
+    try {
+      const host = new URL(origin).hostname;
+      return corsAllowlist.some((entry) => {
+        if (entry.startsWith("*.")) {
+          const base = entry.slice(2);
+          return host === base || host.endsWith(`.${base}`);
+        }
+        return false;
+      });
+    } catch {
+      return false;
+    }
+  };
+
+  // CORS must be the first middleware.
+  // Orígenes de plataforma (allowlist) obtienen credenciales; los dominios de
+  // sitios de clientes pueden consumir endpoints públicos cross-origin, pero
+  // SIN credenciales. Esto evita el patrón peligroso "cualquier origen + credenciales".
+  app.use((req: any, res: any, next: any) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      const allowed = isOriginAllowed(origin);
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      if (allowed) res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Tenant-Id, X-CSRF-Token, X-Billing-Signature"
+      );
+      res.setHeader("Access-Control-Max-Age", "86400");
+    }
+    if (req.method === "OPTIONS") {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
 
   app.use(helmet({
     crossOriginEmbedderPolicy: false,

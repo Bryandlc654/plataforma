@@ -30,7 +30,9 @@ export default () => ({
   },
 
   cors: {
-    origin: process.env.CORS_ORIGIN || "https://build.icebergup.com",
+    origin:
+      process.env.CORS_ORIGIN ||
+      "https://build.icebergup.com,https://*.icebergup.com",
   },
 
   smtp: {
@@ -50,6 +52,10 @@ export default () => ({
   payphone: {
     appId: process.env.PAYPHONE_APP_ID,
     token: process.env.PAYPHONE_TOKEN,
+  },
+
+  billing: {
+    webhookSecret: process.env.BILLING_WEBHOOK_SECRET,
   },
 
   vercel: {

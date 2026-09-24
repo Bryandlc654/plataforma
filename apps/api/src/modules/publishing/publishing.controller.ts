@@ -7,6 +7,7 @@ import { PublishingService } from "./publishing.service";
 import { OrdersService } from "../orders/orders.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
 @ApiTags("publishing")
 @Controller()
@@ -20,24 +21,24 @@ export class PublishingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Publish a site" })
-  async publish(@Param("id") id: string) {
-    return this.publishingService.publish(id);
+  async publish(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.publishingService.publish(id, user.tenantId);
   }
 
   @Post("sites/:id/unpublish")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Unpublish a site" })
-  async unpublish(@Param("id") id: string) {
-    return this.publishingService.unpublish(id);
+  async unpublish(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.publishingService.unpublish(id, user.tenantId);
   }
 
   @Get("sites/:id/preview")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get site preview data" })
-  async preview(@Param("id") id: string) {
-    return this.publishingService.preview(id);
+  async preview(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.publishingService.preview(id, user.tenantId);
   }
 
   @Public()

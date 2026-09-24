@@ -24,8 +24,8 @@ export class AppDownloadController {
 
   @Get()
   @ApiOperation({ summary: "Get global APK info" })
-  getApk() {
-    return this.appDownloadService.getApk() || { message: "No hay APK configurada" };
+  async getApk() {
+    return (await this.appDownloadService.getApk()) || { message: "No hay APK configurada" };
   }
 
   @Post()

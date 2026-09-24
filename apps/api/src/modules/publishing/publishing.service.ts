@@ -88,9 +88,9 @@ export class PublishingService {
     }
   }
 
-  async publish(id: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id },
+  async publish(id: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
       include: {
         tenant: { select: { subdomain: true, customDomain: true } },
         pages: {
@@ -100,7 +100,7 @@ export class PublishingService {
       },
     });
 
-    if (!site || site.deletedAt) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Site not found");
 
     for (const page of site.pages) {
       if (page.blocks) {
@@ -126,15 +126,16 @@ export class PublishingService {
     };
   }
 
-  async unpublish(id: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id },
+  async unpublish(id: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
       select: {
         subdomain: true,
         domain: true,
         tenant: { select: { subdomain: true } },
       },
     });
+    if (!site) throw new NotFoundException("Site not found");
 
     await this.prisma.site.update({
       where: { id },
@@ -149,9 +150,9 @@ export class PublishingService {
     return { published: false };
   }
 
-  async preview(id: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id },
+  async preview(id: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id, tenantId, deletedAt: null },
       include: {
         pages: {
           include: { blocks: { orderBy: { sortOrder: "asc" } } },
@@ -160,7 +161,7 @@ export class PublishingService {
       },
     });
 
-    if (!site || site.deletedAt) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Site not found");
 
     return {
       site: {
@@ -1363,10 +1364,10 @@ if (paymentBox) {
       (stylePages && (stylePages[normalizePublicPath(page?.path || "/")] || stylePages[page?.path || "/"] || stylePages["/"])) ||
       null;
     const pageCss = pageStyle?.css ? this.resolveCssAssetTokens(pageStyle.css) : "";
-    const pageCssHref =
-      typeof pageStyle?.cssPath === "string" && pageStyle.cssPath
-        ? `${this.apiBaseUrl()}${pageStyle.cssPath}${pageStyle.cssHash ? `?h=${pageStyle.cssHash}` : ""}`
-        : "";
+    const rawCssPath = typeof pageStyle?.cssPath === "string" ? pageStyle.cssPath : "";
+    const pageCssHref = rawCssPath
+      ? `${/^https?:\/\//i.test(rawCssPath) ? rawCssPath : `${this.apiBaseUrl()}${rawCssPath}`}${pageStyle.cssHash ? `?h=${pageStyle.cssHash}` : ""}`
+      : "";
     const themeOverride = buildCapturedThemeOverrides(pageStyle?.theme, palette, explicitRoles);
     const pageHead = typeof pageStyle?.head === "string" ? pageStyle.head : "";
     const runtimeScript =

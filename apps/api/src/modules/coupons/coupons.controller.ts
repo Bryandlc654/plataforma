@@ -14,6 +14,6 @@ export class CouponsController {
   @Post() @ApiOperation({ summary: "Create coupon" }) async create(@CurrentUser() user: any, @Body() body: any) { return this.couponsService.create(user.tenantId, body); }
   @Get() @ApiOperation({ summary: "List coupons" }) async findAll(@CurrentUser() user: any) { return this.couponsService.findAll(user.tenantId); }
   @Get("validate/:code") @ApiOperation({ summary: "Validate coupon" }) async validate(@CurrentUser() user: any, @Param("code") code: string) { return this.couponsService.validate(user.tenantId, code); }
-  @Put(":id") @ApiOperation({ summary: "Update coupon" }) async update(@Param("id") id: string, @Body() body: any) { return this.couponsService.update(id, body); }
-  @Delete(":id") @ApiOperation({ summary: "Delete coupon" }) async remove(@Param("id") id: string) { return this.couponsService.remove(id); }
+  @Put(":id") @ApiOperation({ summary: "Update coupon" }) async update(@CurrentUser() user: any, @Param("id") id: string, @Body() body: any) { return this.couponsService.update(id, user.tenantId, body); }
+  @Delete(":id") @ApiOperation({ summary: "Delete coupon" }) async remove(@CurrentUser() user: any, @Param("id") id: string) { return this.couponsService.remove(id, user.tenantId); }
 }

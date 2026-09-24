@@ -5,7 +5,9 @@ import { createHash } from "crypto";
 import { TextDecoder } from "util";
 import AdmZip = require("adm-zip");
 import * as cheerio from "cheerio";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { PrismaService } from "../../prisma/prisma.service";
+import { createR2Client, r2Bucket, r2Enabled, r2UrlFor } from "../../common/storage/r2";
 import {
   buildCss,
   scopeCss,
@@ -468,6 +470,8 @@ function resolveStorePath(ref: string, baseDir: string): string {
 
 @Injectable()
 export class TemplatesImportService {
+  private r2Client = createR2Client();
+
   constructor(private prisma: PrismaService) {}
 
   async importZip(file: Express.Multer.File, dto: ImportZipDto) {
@@ -504,11 +508,13 @@ export class TemplatesImportService {
     const dryRun = Boolean(dto.dryRun);
     const slug = normalizeSlug(name);
     const storageRoot = path.join(this.configStoragePath(), "templates", slug);
+    const useR2 = r2Enabled() && !!this.r2Client;
+    const assetBase = useR2 ? r2UrlFor(`templates/${slug}`) : `/uploads/templates/${slug}`;
     if (!dryRun) {
       fs.rmSync(storageRoot, { recursive: true, force: true });
       fs.mkdirSync(storageRoot, { recursive: true });
 
-      // Copiar assets (todo lo que no sea html)
+      // Copiar assets (todo lo que no sea html); si R2 está activo, subirlos también.
       for (const entry of entries) {
         const lower = entry.entryName.toLowerCase();
         if (lower.endsWith(".html")) continue;
@@ -518,10 +524,23 @@ export class TemplatesImportService {
         const rel = path.relative(storageRoot, dest);
         if (rel.startsWith("..") || path.isAbsolute(rel)) continue;
         fs.mkdirSync(path.dirname(dest), { recursive: true });
+        let data: Buffer | null = null;
         try {
-          fs.writeFileSync(dest, entry.getData());
+          data = entry.getData();
+          fs.writeFileSync(dest, data);
         } catch {
-          /* ignora entradas ilegibles */
+          data = null; /* ignora entradas ilegibles */
+        }
+        if (useR2 && data) {
+          try {
+            await this.r2Client!.send(new PutObjectCommand({
+              Bucket: r2Bucket(),
+              Key: `templates/${slug}/${assetName}`,
+              Body: data,
+            }));
+          } catch {
+            /* si falla la subida, el asset queda local (dev) */
+          }
         }
       }
     }
@@ -529,7 +548,7 @@ export class TemplatesImportService {
     const existsInZip = new Set(entries.map((e) => posixNormalize(e.entryName).toLowerCase()));
     const existsInZipFn = (p: string) => existsInZip.has(p.toLowerCase());
     const toUploadsUrl = (entryPosix: string) =>
-      `/uploads/templates/${slug}/${posixNormalize(entryPosix)}`;
+      `${assetBase}/${posixNormalize(entryPosix)}`;
 
     // ------ CSS del zip (para inline + reescribir url()) ------
     const cssCache = new Map<string, string>();
@@ -597,17 +616,28 @@ export class TemplatesImportService {
       const rawName = `__page-${cssHash}.css`;
       const scopedName = `__page-${cssHash}.scoped.css`;
       const info: PageCssFileInfo = {
-        cssPath: `/uploads/templates/${slug}/${rawName}`,
-        scopedCssPath: `/uploads/templates/${slug}/${scopedName}`,
+        cssPath: `${assetBase}/${rawName}`,
+        scopedCssPath: `${assetBase}/${scopedName}`,
         cssHash,
         scopedCssHash,
       };
       if (!dryRun) {
+        const rawContent = resolveTokensToAbs(css);
+        const scopedContent = resolveTokensToAbs(scopedCss);
         try {
-          fs.writeFileSync(path.join(storageRoot, rawName), resolveTokensToAbs(css), "utf8");
-          fs.writeFileSync(path.join(storageRoot, scopedName), resolveTokensToAbs(scopedCss), "utf8");
+          fs.writeFileSync(path.join(storageRoot, rawName), rawContent, "utf8");
+          fs.writeFileSync(path.join(storageRoot, scopedName), scopedContent, "utf8");
         } catch {
           return null;
+        }
+        if (useR2) {
+          // Subida best-effort (no bloquea el procesamiento de la página).
+          this.r2Client!.send(new PutObjectCommand({
+            Bucket: r2Bucket(), Key: `templates/${slug}/${rawName}`, Body: rawContent, ContentType: "text/css",
+          })).catch(() => {});
+          this.r2Client!.send(new PutObjectCommand({
+            Bucket: r2Bucket(), Key: `templates/${slug}/${scopedName}`, Body: scopedContent, ContentType: "text/css",
+          })).catch(() => {});
         }
       }
       cssFileCache.set(cacheKey, info);
@@ -862,7 +892,7 @@ export class TemplatesImportService {
       name,
       pages: pagesResult.length,
       blocks: pagesResult.reduce((n, p) => n + p.blocks.length, 0),
-      assetsPath: `/uploads/templates/${slug}`,
+      assetsPath: assetBase,
       externalResources: Array.from(externalResources),
       js: {
         libraries: jsFeatures.libraries,

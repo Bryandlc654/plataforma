@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
@@ -16,12 +17,14 @@ export class MediaService {
   private storagePath: string;
   private s3Client: S3Client | null = null;
   private isR2Enabled = false;
+  private requireRemote: boolean;
 
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService
   ) {
     this.storagePath = this.configService.get<string>("storage.path", "./uploads");
+    this.requireRemote = process.env.NODE_ENV === "production";
     if (!fs.existsSync(this.storagePath)) {
       fs.mkdirSync(this.storagePath, { recursive: true });
     }
@@ -50,7 +53,13 @@ export class MediaService {
     if (!file) throw new BadRequestException("No file provided");
 
     const ext = path.extname(file.originalname);
-    const cleanFolder = folder && folder !== "/" ? folder.replace(/^\/+|\/+$/g, "") : "";
+    const cleanFolder = this.sanitizeFolder(folder);
+
+    if (this.requireRemote && !this.isR2Enabled) {
+      throw new ServiceUnavailableException(
+        "El almacenamiento remoto (R2) no está configurado; no se permite guardar en disco local en producción."
+      );
+    }
 
     let fileBuffer: Buffer;
     if (file.path) {
@@ -131,6 +140,17 @@ export class MediaService {
     return { ...media[0], url: this.toAbsoluteUrl(media[0].url) };
   }
 
+  private sanitizeFolder(folder?: string): string {
+    if (!folder || folder === "/") return "";
+    return String(folder)
+      .replace(/\\/g, "/")
+      .split("/")
+      .map((p) => p.trim())
+      .filter((p) => p && p !== "." && p !== "..")
+      .map((p) => p.replace(/[^a-zA-Z0-9._-]/g, "_"))
+      .join("/");
+  }
+
   private toAbsoluteUrl(url: string): string {
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     const base = process.env.PUBLIC_API_URL || process.env.API_URL || "";
@@ -140,6 +160,11 @@ export class MediaService {
 
   async uploadTemplateThumbnail(file: Express.Multer.File) {
     if (!file) throw new BadRequestException("No file provided");
+    if (this.requireRemote && !this.isR2Enabled) {
+      throw new ServiceUnavailableException(
+        "El almacenamiento remoto (R2) no está configurado; no se permite guardar en disco local en producción."
+      );
+    }
 
     const ext = path.extname(file.originalname);
     let fileBuffer: Buffer;

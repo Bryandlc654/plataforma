@@ -13,8 +13,8 @@ export class BookingsController {
 
   @Post("services") @ApiOperation({ summary: "Create booking service" }) async createService(@CurrentUser() user: any, @Body() body: any) { return this.bookingsService.createService(user.tenantId, body); }
   @Get("services") @ApiOperation({ summary: "List services" }) async getServices(@CurrentUser() user: any) { return this.bookingsService.getServices(user.tenantId); }
-  @Put("services/:id") @ApiOperation({ summary: "Update service" }) async updateService(@Param("id") id: string, @Body() body: any) { return this.bookingsService.updateService(id, body); }
-  @Delete("services/:id") @ApiOperation({ summary: "Delete service" }) async removeService(@Param("id") id: string) { return this.bookingsService.removeService(id); }
+  @Put("services/:id") @ApiOperation({ summary: "Update service" }) async updateService(@CurrentUser() user: any, @Param("id") id: string, @Body() body: any) { return this.bookingsService.updateService(id, user.tenantId, body); }
+  @Delete("services/:id") @ApiOperation({ summary: "Delete service" }) async removeService(@CurrentUser() user: any, @Param("id") id: string) { return this.bookingsService.removeService(id, user.tenantId); }
 
   @Post() @ApiOperation({ summary: "Create booking" }) async create(@CurrentUser() user: any, @Body() body: any) { return this.bookingsService.createBooking(user.tenantId, body); }
 
@@ -23,6 +23,6 @@ export class BookingsController {
     return this.bookingsService.getBookings(user.tenantId, from, to, serviceId, status);
   }
 
-  @Put(":id/status") @ApiOperation({ summary: "Update booking status" }) async updateStatus(@Param("id") id: string, @Body("status") status: string) { return this.bookingsService.updateBookingStatus(id, status); }
-  @Get("availability/:serviceId") @ApiOperation({ summary: "Get availability" }) async getAvailability(@Param("serviceId") serviceId: string, @Query("date") date: string) { return this.bookingsService.getAvailability(serviceId, date); }
+  @Put(":id/status") @ApiOperation({ summary: "Update booking status" }) async updateStatus(@CurrentUser() user: any, @Param("id") id: string, @Body("status") status: string) { return this.bookingsService.updateBookingStatus(id, user.tenantId, status); }
+  @Get("availability/:serviceId") @ApiOperation({ summary: "Get availability" }) async getAvailability(@CurrentUser() user: any, @Param("serviceId") serviceId: string, @Query("date") date: string) { return this.bookingsService.getAvailability(serviceId, user.tenantId, date); }
 }

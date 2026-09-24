@@ -124,10 +124,11 @@ export function TemplateGlobalStyles({
     typeof page.scopedCss === "string" && page.scopedCss ? page.scopedCss : "";
   const cssFallback =
     !scopedCss && typeof page.css === "string" ? page.css : "";
-  const href =
-    typeof page.scopedCssPath === "string" && page.scopedCssPath
-      ? `${API_ORIGIN}${page.scopedCssPath}${page.scopedCssHash ? `?h=${page.scopedCssHash}` : ""}`
-      : "";
+  const rawScopedCssPath =
+    typeof page.scopedCssPath === "string" && page.scopedCssPath ? page.scopedCssPath : "";
+  const href = rawScopedCssPath
+    ? `${/^https?:\/\//i.test(rawScopedCssPath) ? rawScopedCssPath : `${API_ORIGIN}${rawScopedCssPath}`}${page.scopedCssHash ? `?h=${page.scopedCssHash}` : ""}`
+    : "";
   const effectivePalette: SitePalette | undefined =
     palette || (colors?.primary || colors?.secondary
       ? {

@@ -5,19 +5,43 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
+  private pickService(data: any) {
+    const out: any = {};
+    for (const key of ["name", "description", "duration", "price", "color", "isActive"]) {
+      if (data && data[key] !== undefined) out[key] = data[key];
+    }
+    return out;
+  }
+
+  private async assertServiceOwned(id: string, tenantId: string) {
+    const service = await this.prisma.bookingService.findFirst({ where: { id, tenantId }, select: { id: true } });
+    if (!service) throw new NotFoundException("Service not found");
+    return service;
+  }
+
   async createService(tenantId: string, dto: any) {
-    return this.prisma.bookingService.create({ data: { ...dto, tenantId } });
+    const data = this.pickService(dto);
+    if (!data.name) throw new BadRequestException("El nombre del servicio es obligatorio");
+    return this.prisma.bookingService.create({ data: { ...data, tenantId } });
   }
 
   async getServices(tenantId: string) {
     return this.prisma.bookingService.findMany({ where: { tenantId, isActive: true }, orderBy: { name: "asc" } });
   }
 
-  async updateService(id: string, data: any) { return this.prisma.bookingService.update({ where: { id }, data }); }
-  async removeService(id: string) { await this.prisma.bookingService.delete({ where: { id } }); return { deleted: true }; }
+  async updateService(id: string, tenantId: string, data: any) {
+    await this.assertServiceOwned(id, tenantId);
+    return this.prisma.bookingService.update({ where: { id }, data: this.pickService(data) });
+  }
+
+  async removeService(id: string, tenantId: string) {
+    await this.assertServiceOwned(id, tenantId);
+    await this.prisma.bookingService.delete({ where: { id } });
+    return { deleted: true };
+  }
 
   async createBooking(tenantId: string, dto: { serviceId: string; customerName: string; customerEmail?: string; customerPhone?: string; startTime: string; notes?: string }) {
-    const service = await this.prisma.bookingService.findUnique({ where: { id: dto.serviceId } });
+    const service = await this.prisma.bookingService.findFirst({ where: { id: dto.serviceId, tenantId } });
     if (!service) throw new NotFoundException("Service not found");
 
     const startTime = new Date(dto.startTime);
@@ -70,12 +94,14 @@ export class BookingsService {
     });
   }
 
-  async updateBookingStatus(id: string, status: string) {
+  async updateBookingStatus(id: string, tenantId: string, status: string) {
+    const booking = await this.prisma.booking.findFirst({ where: { id, tenantId }, select: { id: true } });
+    if (!booking) throw new NotFoundException("Booking not found");
     return this.prisma.booking.update({ where: { id }, data: { status } });
   }
 
-  async getAvailability(serviceId: string, date: string) {
-    const service = await this.prisma.bookingService.findUnique({ where: { id: serviceId } });
+  async getAvailability(serviceId: string, tenantId: string, date: string) {
+    const service = await this.prisma.bookingService.findFirst({ where: { id: serviceId, tenantId } });
     if (!service) throw new NotFoundException("Service not found");
 
     const dayStart = new Date(date);

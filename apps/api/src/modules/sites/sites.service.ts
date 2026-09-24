@@ -4,13 +4,16 @@ import {
   ForbiddenException,
   ConflictException,
   BadRequestException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PrismaService } from "../../prisma/prisma.service";
 import { VercelService } from "./vercel.service";
 import { resolvePublicSiteUrl } from "../publishing/seo-helpers";
 import { join } from "path";
-import { existsSync, unlinkSync } from "fs";
+import { existsSync, unlinkSync, mkdirSync, writeFileSync } from "fs";
 import * as dns from "dns";
+import { createR2Client, r2Bucket, r2KeyFromUrl, r2UrlFor } from "../../common/storage/r2";
 
 const RESERVED_PATHS = ["api", "dashboard", "login", "register", "admin", "templates", "auth", "public", "static", "images", "fonts", "s"];
 
@@ -337,9 +340,9 @@ export class SitesService {
     });
   }
 
-  async checkDomainDns(id: string, domain: string) {
+  async checkDomainDns(id: string, tenantId: string, domain: string) {
     const site = await this.prisma.site.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { id: true },
     });
     if (!site) throw new NotFoundException("Site not found");
@@ -366,6 +369,50 @@ export class SitesService {
     };
   }
 
+  /** Sube el APK a almacenamiento remoto (R2). En producción es obligatorio. */
+  async storeApk(buffer: Buffer, _originalName: string): Promise<string> {
+    const client = createR2Client();
+    if (client && r2Bucket()) {
+      const key = `apk/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.apk`;
+      await client.send(new PutObjectCommand({
+        Bucket: r2Bucket(),
+        Key: key,
+        Body: buffer,
+        ContentType: "application/vnd.android.package-archive",
+      }));
+      return r2UrlFor(key);
+    }
+    if (process.env.NODE_ENV === "production") {
+      throw new ServiceUnavailableException(
+        "El almacenamiento remoto (R2) no está configurado; no se puede subir el APK en producción."
+      );
+    }
+    const dir = join(process.cwd(), "uploads", "apk");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.apk`;
+    writeFileSync(join(dir, filename), buffer);
+    return `/uploads/apk/${filename}`;
+  }
+
+  private async deleteStoredApk(url?: string) {
+    if (!url) return;
+    const key = r2KeyFromUrl(url);
+    if (key) {
+      const client = createR2Client();
+      if (client && r2Bucket()) {
+        try { await client.send(new DeleteObjectCommand({ Bucket: r2Bucket(), Key: key })); } catch {}
+      }
+      return;
+    }
+    const filename = url.split("/").pop();
+    if (filename) {
+      const filePath = join(process.cwd(), "uploads", "apk", filename);
+      if (existsSync(filePath)) {
+        try { unlinkSync(filePath); } catch {}
+      }
+    }
+  }
+
   async setApk(id: string, tenantId: string, dto: { apkUrl: string; apkVersion: string; apkName: string; apkSize: number }) {
     const site = await this.prisma.site.findFirst({
       where: { id, tenantId, deletedAt: null },
@@ -375,15 +422,7 @@ export class SitesService {
 
     const settings = ((site.settings as any) || {});
 
-    if (settings.apkUrl) {
-      const filename = settings.apkUrl.split("/").pop();
-      if (filename) {
-        const filePath = join(process.cwd(), "uploads", "apk", filename);
-        if (existsSync(filePath)) {
-          try { unlinkSync(filePath); } catch {}
-        }
-      }
-    }
+    await this.deleteStoredApk(settings.apkUrl);
 
     return this.prisma.site.update({
       where: { id },
@@ -409,15 +448,7 @@ export class SitesService {
 
     const settings = ((site.settings as any) || {});
 
-    if (settings.apkUrl) {
-      const filename = settings.apkUrl.split("/").pop();
-      if (filename) {
-        const filePath = join(process.cwd(), "uploads", "apk", filename);
-        if (existsSync(filePath)) {
-          try { unlinkSync(filePath); } catch {}
-        }
-      }
-    }
+    await this.deleteStoredApk(settings.apkUrl);
 
     const { apkUrl, apkVersion, apkName, apkSize, ...rest } = settings;
     return this.prisma.site.update({

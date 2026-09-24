@@ -19,9 +19,11 @@ export class OrdersService {
       if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) throw new BadRequestException("Cupón agotado");
     }
 
-    // Batch-fetch products (single query instead of one per item)
+    // Batch-fetch products scoped to the tenant (evita IDOR cross-tenant)
     const productIds = dto.items.map((i) => i.productId);
-    const products = await this.prisma.product.findMany({ where: { id: { in: productIds } } });
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: productIds }, tenantId },
+    });
     const productMap = new Map(products.map((p) => [p.id, p]));
 
     const orderItems: { productId: string; quantity: number; price: any; total: number }[] = [];
@@ -40,36 +42,40 @@ export class OrdersService {
     let discount = 0;
     if (coupon) {
       discount = coupon.type === "percentage" ? (total * Number(coupon.value)) / 100 : Number(coupon.value);
-      await this.prisma.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
     }
 
-    const order = await this.prisma.order.create({
-      data: {
-        tenantId,
-        totalAmount: total - discount,
-        customerName: dto.customerName,
-        customerEmail: dto.customerEmail,
-        customerPhone: dto.customerPhone,
-        couponCode: dto.couponCode,
-        discount,
-        notes: dto.notes,
-        paymentMethod: dto.paymentMethod || "cod",
-        items: { create: orderItems },
-      },
-      include: { items: { include: { product: true } } },
-    });
-
-    // Update stock (conditional, atomic, parallel)
-    await Promise.all(
-      dto.items.map((item) =>
-        this.prisma.product.updateMany({
-          where: { id: item.productId, stock: { gte: item.quantity } },
+    return this.prisma.$transaction(async (tx) => {
+      // Decremento atómico y condicional del stock (evita sobreventa)
+      for (const item of dto.items) {
+        const res = await tx.product.updateMany({
+          where: { id: item.productId, tenantId, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
-        })
-      )
-    );
+        });
+        if (res.count === 0) {
+          throw new BadRequestException(`Stock insuficiente para el producto ${item.productId}`);
+        }
+      }
 
-    return order;
+      if (coupon) {
+        await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } });
+      }
+
+      return tx.order.create({
+        data: {
+          tenantId,
+          totalAmount: total - discount,
+          customerName: dto.customerName,
+          customerEmail: dto.customerEmail,
+          customerPhone: dto.customerPhone,
+          couponCode: dto.couponCode,
+          discount,
+          notes: dto.notes,
+          paymentMethod: dto.paymentMethod || "cod",
+          items: { create: orderItems },
+        },
+        include: { items: { include: { product: true } } },
+      });
+    });
   }
 
   async findAll(tenantId: string, status?: string) {
@@ -83,26 +89,26 @@ export class OrdersService {
     });
   }
 
-  async findById(id: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id },
+  async findById(id: string, tenantId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, tenantId },
       include: { items: { include: { product: true } } },
     });
     if (!order) throw new NotFoundException("Order not found");
     return order;
   }
 
-  private async assertExists(id: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id },
+  private async assertExists(id: string, tenantId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, tenantId },
       select: { id: true },
     });
     if (!order) throw new NotFoundException("Order not found");
   }
 
-  async updateStatus(id: string, status: string) {
-    await this.assertExists(id);
-    const prev = await this.prisma.order.findUnique({ where: { id }, select: { status: true } });
+  async updateStatus(id: string, tenantId: string, status: string) {
+    await this.assertExists(id, tenantId);
+    const prev = await this.prisma.order.findFirst({ where: { id, tenantId }, select: { status: true } });
     const updated = await this.prisma.order.update({ where: { id }, data: { status } });
     if (status === "paid" && prev?.status !== "paid") {
       await this.notifyPaid(id).catch(() => undefined);
@@ -110,8 +116,8 @@ export class OrdersService {
     return updated;
   }
 
-  async markPaid(id: string) {
-    await this.assertExists(id);
+  async markPaid(id: string, tenantId: string) {
+    await this.assertExists(id, tenantId);
     const order = await this.prisma.order.update({
       where: { id },
       data: { status: "paid", paidAt: new Date() },
@@ -158,8 +164,8 @@ export class OrdersService {
     } catch {}
   }
 
-  async remove(id: string) {
-    await this.assertExists(id);
+  async remove(id: string, tenantId: string) {
+    await this.assertExists(id, tenantId);
     return this.prisma.order.delete({ where: { id } });
   }
 }

@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "fs";
 import { join } from "path";
 
 const DATA_DIR = join(process.cwd(), "uploads", "app-download");
 const APK_FILE = join(DATA_DIR, "app.json");
+const INDEX_KEY = "app-download/index.json";
 
 export interface GlobalApkInfo {
   apkUrl: string;
@@ -44,7 +45,7 @@ export class AppDownloadService {
     if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
   }
 
-  getApk(): GlobalApkInfo | null {
+  private readLocalIndex(): GlobalApkInfo | null {
     if (!existsSync(APK_FILE)) return null;
     try {
       return JSON.parse(readFileSync(APK_FILE, "utf-8"));
@@ -53,10 +54,59 @@ export class AppDownloadService {
     }
   }
 
+  /**
+   * Lee el índice desde R2 (durable entre instancias) con fallback local.
+   */
+  async getApk(): Promise<GlobalApkInfo | null> {
+    if (this.isR2Enabled && this.s3Client) {
+      const bucket = process.env.R2_BUCKET_NAME;
+      if (bucket) {
+        try {
+          const res = await this.s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: INDEX_KEY }));
+          const bytes = await res.Body?.transformToByteArray();
+          if (bytes && bytes.length > 0) {
+            return JSON.parse(Buffer.from(bytes).toString("utf-8"));
+          }
+        } catch {
+          /* fall back to local */
+        }
+      }
+    }
+    return this.readLocalIndex();
+  }
+
+  private async writeIndex(info: GlobalApkInfo): Promise<void> {
+    if (this.isR2Enabled && this.s3Client) {
+      const bucket = process.env.R2_BUCKET_NAME;
+      if (bucket) {
+        await this.s3Client.send(new PutObjectCommand({
+          Bucket: bucket,
+          Key: INDEX_KEY,
+          Body: JSON.stringify(info),
+          ContentType: "application/json",
+        }));
+      }
+    }
+    this.ensureDir();
+    writeFileSync(APK_FILE, JSON.stringify(info, null, 2));
+  }
+
+  private async deleteIndex(): Promise<void> {
+    if (this.isR2Enabled && this.s3Client) {
+      const bucket = process.env.R2_BUCKET_NAME;
+      if (bucket) {
+        try {
+          await this.s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: INDEX_KEY }));
+        } catch {}
+      }
+    }
+    if (existsSync(APK_FILE)) unlinkSync(APK_FILE);
+  }
+
   async setApk(dto: { apkBuffer: Buffer; apkVersion: string; apkName: string; apkSize: number; originalFilename: string }): Promise<GlobalApkInfo> {
     this.ensureDir();
 
-    const prev = this.getApk();
+    const prev = await this.getApk();
     if (prev?.apkUrl && this.isR2Enabled && this.s3Client) {
       const bucket = process.env.R2_BUCKET_NAME;
       const key = this.extractR2Key(prev.apkUrl);
@@ -109,14 +159,13 @@ export class AppDownloadService {
       updatedAt: new Date().toISOString(),
     };
 
-    writeFileSync(APK_FILE, JSON.stringify(info, null, 2));
+    await this.writeIndex(info);
     return info;
   }
 
   async removeApk(): Promise<{ deleted: true }> {
-    if (!existsSync(APK_FILE)) throw new NotFoundException("No hay APK configurada");
-
-    const info = this.getApk();
+    const info = await this.getApk();
+    if (!info) throw new NotFoundException("No hay APK configurada");
     if (info?.apkUrl && this.isR2Enabled && this.s3Client) {
       const bucket = process.env.R2_BUCKET_NAME;
       const key = this.extractR2Key(info.apkUrl);
@@ -133,7 +182,7 @@ export class AppDownloadService {
       }
     }
 
-    unlinkSync(APK_FILE);
+    await this.deleteIndex();
     return { deleted: true };
   }
 

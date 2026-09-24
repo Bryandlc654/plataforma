@@ -21,17 +21,17 @@ export class OrdersController {
 
   @Get(":id")
   @ApiOperation({ summary: "Get order by ID" })
-  async findById(@Param("id") id: string) { return this.ordersService.findById(id); }
+  async findById(@Param("id") id: string, @CurrentUser() user: any) { return this.ordersService.findById(id, user.tenantId); }
 
   @Put(":id/status")
   @ApiOperation({ summary: "Update order status" })
-  async updateStatus(@Param("id") id: string, @Body("status") status: string) { return this.ordersService.updateStatus(id, status); }
+  async updateStatus(@Param("id") id: string, @CurrentUser() user: any, @Body("status") status: string) { return this.ordersService.updateStatus(id, user.tenantId, status); }
 
   @Put(":id/pay")
   @ApiOperation({ summary: "Mark order as paid" })
-  async markPaid(@Param("id") id: string) { return this.ordersService.markPaid(id); }
+  async markPaid(@Param("id") id: string, @CurrentUser() user: any) { return this.ordersService.markPaid(id, user.tenantId); }
 
   @Delete(":id")
   @ApiOperation({ summary: "Delete order" })
-  async remove(@Param("id") id: string) { return this.ordersService.remove(id); }
+  async remove(@Param("id") id: string, @CurrentUser() user: any) { return this.ordersService.remove(id, user.tenantId); }
 }

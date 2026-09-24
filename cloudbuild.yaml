@@ -13,6 +13,16 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/plataforma-api']
 
+  # Apply pending database migrations before deploying (fail build on error)
+  - name: 'gcr.io/$PROJECT_ID/plataforma-api'
+    entrypoint: 'npx'
+    args:
+      - 'prisma'
+      - 'migrate'
+      - 'deploy'
+      - '--schema=packages/database/prisma/schema.prisma'
+    secretEnv: ['DATABASE_URL']
+
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -36,10 +46,14 @@ steps:
       - '--set-env-vars'
       - 'NODE_ENV=production'
       - '--update-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,CSRF_SECRET=CSRF_SECRET:latest,R2_ACCOUNT_ID=R2_ACCOUNT_ID:latest,R2_ACCESS_KEY_ID=R2_ACCESS_KEY_ID:latest,R2_SECRET_ACCESS_KEY=R2_SECRET_ACCESS_KEY:latest,R2_BUCKET_NAME=R2_BUCKET_NAME:latest,R2_PUBLIC_URL=R2_PUBLIC_URL:latest'
+      - 'DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,CSRF_SECRET=CSRF_SECRET:latest,R2_ACCOUNT_ID=R2_ACCOUNT_ID:latest,R2_ACCESS_KEY_ID=R2_ACCESS_KEY_ID:latest,R2_SECRET_ACCESS_KEY=R2_SECRET_ACCESS_KEY:latest,R2_BUCKET_NAME=R2_BUCKET_NAME:latest,R2_PUBLIC_URL=R2_PUBLIC_URL:latest,BILLING_WEBHOOK_SECRET=BILLING_WEBHOOK_SECRET:latest,PAYPHONE_APP_ID=PAYPHONE_APP_ID:latest,PAYPHONE_TOKEN=PAYPHONE_TOKEN:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/plataforma-api'
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/DATABASE_URL/versions/latest
+      env: DATABASE_URL
 timeout: '600s'
 options:
   logging: CLOUD_LOGGING_ONLY

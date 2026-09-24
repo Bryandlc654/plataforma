@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   ForbiddenException,
   Logger,
   OnModuleInit,
@@ -80,6 +81,34 @@ export class SubscriptionsService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  /**
+   * Aplica el plan gratuito de forma inmediata (no requiere pago).
+   */
+  private async applyFreePlan(tenantId: string, plan: any) {
+    await this.prisma.$transaction([
+      this.prisma.tenant.update({
+        where: { id: tenantId },
+        data: {
+          planId: plan.id,
+          subscriptionEndsAt: null,
+          maxUsers: plan.maxUsers,
+          maxSites: plan.maxSites,
+          maxStorage: plan.maxStorage,
+        },
+      }),
+      this.prisma.subscription.updateMany({
+        where: { tenantId, status: { in: ["active", "pending"] } },
+        data: { status: "canceled", canceledAt: new Date() },
+      }),
+    ]);
+
+    return { status: "free", plan };
+  }
+
+  /**
+   * Cambia a un plan. Los planes de pago NO se activan aquí: requieren un pago
+   * confirmado (ver BillingService y `activatePaidSubscription`).
+   */
   async upgrade(tenantId: string, planId: string) {
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan) throw new NotFoundException("Plan not found");
@@ -88,74 +117,102 @@ export class SubscriptionsService implements OnModuleInit, OnModuleDestroy {
     if (!tenant) throw new NotFoundException("Tenant not found");
 
     if (Number(plan.price) === 0) {
-      // Free plan - just update tenant limits
-      await this.prisma.tenant.update({
+      return this.applyFreePlan(tenantId, plan);
+    }
+
+    throw new ForbiddenException(
+      "Este plan requiere pago. Usa el enlace de pago para completar la suscripción."
+    );
+  }
+
+  /**
+   * Activa una suscripción de pago. Solo debe invocarse tras confirmar el pago
+   * (webhook firmado o marcado manual por un admin).
+   */
+  async activatePaidSubscription(
+    tenantId: string,
+    planId: string,
+    opts: { subscriptionId?: string; invoiceId?: string; paymentMethod?: string } = {}
+  ) {
+    const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
+    if (!plan) throw new NotFoundException("Plan not found");
+    if (Number(plan.price) === 0) {
+      throw new BadRequestException("El plan gratuito no requiere activación de pago");
+    }
+
+    const now = new Date();
+    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.subscription.findFirst({
+        where: { tenantId, status: "active" },
+      });
+
+      const sub = opts.subscriptionId
+        ? await tx.subscription.update({
+            where: { id: opts.subscriptionId },
+            data: {
+              planId: plan.id,
+              status: "active",
+              currentPeriodStart: now,
+              currentPeriodEnd: periodEnd,
+              paymentMethod: opts.paymentMethod || "payphone",
+              canceledAt: null,
+              endedAt: null,
+            },
+            include: { plan: true },
+          })
+        : await tx.subscription.create({
+            data: {
+              tenantId,
+              planId: plan.id,
+              status: "active",
+              currentPeriodStart: now,
+              currentPeriodEnd: periodEnd,
+              paymentMethod: opts.paymentMethod || "payphone",
+            },
+            include: { plan: true },
+          });
+
+      if (existing && existing.id !== sub.id) {
+        await tx.subscription.update({
+          where: { id: existing.id },
+          data: { status: "canceled", canceledAt: now },
+        });
+      }
+
+      // Cancela otras suscripciones pending del tenant para el mismo plan.
+      await tx.subscription.updateMany({
+        where: { tenantId, status: "pending", NOT: { id: sub.id } },
+        data: { status: "canceled", canceledAt: now },
+      });
+
+      await tx.tenant.update({
         where: { id: tenantId },
         data: {
           planId: plan.id,
+          subscriptionEndsAt: periodEnd,
           maxUsers: plan.maxUsers,
           maxSites: plan.maxSites,
           maxStorage: plan.maxStorage,
         },
       });
 
-      // Cancel active subscriptions
-      await this.prisma.subscription.updateMany({
-        where: { tenantId, status: "active" },
-        data: { status: "canceled", canceledAt: new Date() },
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          action: "subscription.activated",
+          resource: "Subscription",
+          resourceId: sub.id,
+          metadata: {
+            planId: plan.id,
+            invoiceId: opts.invoiceId || null,
+          } as any,
+        },
       });
 
-      return { status: "free", plan };
-    }
-
-    // Paid plan
-    const existing = await this.prisma.subscription.findFirst({
-      where: { tenantId, status: "active" },
+      return sub;
     });
-
-    const now = new Date();
-    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    const sub = await this.prisma.subscription.create({
-      data: {
-        tenantId,
-        planId: plan.id,
-        status: "active",
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-      },
-      include: { plan: true },
-    });
-
-    if (existing) {
-      await this.prisma.subscription.update({
-        where: { id: existing.id },
-        data: { status: "canceled", canceledAt: now },
-      });
-    }
-
-    await this.prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        planId: plan.id,
-        subscriptionEndsAt: periodEnd,
-        maxUsers: plan.maxUsers,
-        maxSites: plan.maxSites,
-        maxStorage: plan.maxStorage,
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        tenantId,
-        action: "subscription.upgrade",
-        resource: "Subscription",
-        resourceId: sub.id,
-        metadata: { from: existing?.planId || "free", to: plan.id } as any,
-      },
-    });
-
-    return sub;
   }
 
   async downgrade(tenantId: string, planId: string) {
@@ -167,28 +224,26 @@ export class SubscriptionsService implements OnModuleInit, OnModuleDestroy {
       include: { plan: true },
     });
 
-    if (current && Number(current.plan.price) > 0 && Number(plan.price) === 0) {
-      // Downgrading to free - cancel subscription at period end, but apply limits now for free
-      await this.prisma.subscription.update({
-        where: { id: current.id },
-        data: { status: "canceled", canceledAt: new Date() },
-      });
-
-      await this.prisma.tenant.update({
-        where: { id: tenantId },
-        data: {
-          planId: plan.id,
-          maxUsers: plan.maxUsers,
-          maxSites: plan.maxSites,
-          maxStorage: plan.maxStorage,
-        },
-      });
-
-      return { status: "canceled", plan };
+    // Bajar a gratuito: aplicar de inmediato.
+    if (Number(plan.price) === 0) {
+      return this.applyFreePlan(tenantId, plan);
     }
 
-    // For paid → paid downgrade
-    return this.upgrade(tenantId, planId);
+    const currentPrice = current ? Number(current.plan.price) : 0;
+    const targetPrice = Number(plan.price);
+
+    // No es un downgrade (más caro o sin plan previo): requiere pago.
+    if (targetPrice > currentPrice) {
+      throw new ForbiddenException(
+        "Para cambiar a un plan superior debes completar el pago."
+      );
+    }
+
+    // Bajar a un plan de pago igual o más barato: aplicar sin cobro adicional.
+    return this.activatePaidSubscription(tenantId, plan.id, {
+      subscriptionId: current?.id,
+      paymentMethod: current?.paymentMethod || undefined,
+    });
   }
 
   async cancel(tenantId: string) {

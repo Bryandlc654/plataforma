@@ -1,12 +1,28 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 
+const COUPON_FIELDS = [
+  "code", "type", "value", "minAmount", "maxUses", "startsAt", "expiresAt", "isActive",
+] as const;
+
 @Injectable()
 export class CouponsService {
   constructor(private prisma: PrismaService) {}
 
+  private pick(data: any): any {
+    const out: any = {};
+    for (const key of COUPON_FIELDS) {
+      if (data && data[key] !== undefined) out[key] = data[key];
+    }
+    return out;
+  }
+
   async create(tenantId: string, dto: any) {
-    return this.prisma.coupon.create({ data: { ...dto, tenantId } });
+    const data = this.pick(dto);
+    const code = String(data.code || "").trim().toUpperCase();
+    if (!code) throw new BadRequestException("El código es obligatorio");
+    data.code = code;
+    return this.prisma.coupon.create({ data: { ...data, tenantId } });
   }
 
   async findAll(tenantId: string) {
@@ -23,15 +39,20 @@ export class CouponsService {
     return coupon;
   }
 
-  async update(id: string, data: any) {
-    const existing = await this.prisma.coupon.findUnique({ where: { id } });
+  private async assertOwned(id: string, tenantId: string) {
+    const existing = await this.prisma.coupon.findFirst({ where: { id, tenantId }, select: { id: true } });
     if (!existing) throw new NotFoundException("Coupon not found");
-    return this.prisma.coupon.update({ where: { id }, data });
   }
 
-  async remove(id: string) {
-    const existing = await this.prisma.coupon.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException("Coupon not found");
+  async update(id: string, tenantId: string, data: any) {
+    await this.assertOwned(id, tenantId);
+    const clean = this.pick(data);
+    if (clean.code !== undefined) clean.code = String(clean.code).trim().toUpperCase();
+    return this.prisma.coupon.update({ where: { id }, data: clean });
+  }
+
+  async remove(id: string, tenantId: string) {
+    await this.assertOwned(id, tenantId);
     await this.prisma.coupon.delete({ where: { id } });
     return { deleted: true };
   }

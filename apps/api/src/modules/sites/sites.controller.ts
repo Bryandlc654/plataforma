@@ -3,15 +3,11 @@ import {
   UploadedFile, UseInterceptors, BadRequestException, ForbiddenException,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
+import { memoryStorage } from "multer";
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
-import { join } from "path";
-import { existsSync, mkdirSync } from "fs";
 import { SitesService } from "./sites.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
-
-const APK_DIR = join(process.cwd(), "uploads", "apk");
 
 @ApiTags("sites")
 @Controller("sites")
@@ -70,7 +66,7 @@ export class SitesController {
   @Get(":id/check-domain")
   @ApiOperation({ summary: "Check if custom domain DNS points to server" })
   async checkDomain(@Param("id") id: string, @CurrentUser() user: any, @Query("domain") domain: string) {
-    return this.sitesService.checkDomainDns(id, domain);
+    return this.sitesService.checkDomainDns(id, user.tenantId, domain);
   }
 
   @Post(":id/apk")
@@ -78,16 +74,7 @@ export class SitesController {
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(
     FileInterceptor("file", {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          if (!existsSync(APK_DIR)) mkdirSync(APK_DIR, { recursive: true });
-          cb(null, APK_DIR);
-        },
-        filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-          cb(null, `${unique}.apk`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (file.mimetype === "application/vnd.android.package-archive" || file.originalname.endsWith(".apk")) {
           cb(null, true);
@@ -106,8 +93,7 @@ export class SitesController {
     @Body("apkName") apkName?: string,
   ) {
     if (!file) throw new BadRequestException("Archivo APK requerido");
-    const apiBase = process.env.PUBLIC_API_URL || process.env.PLATAFORMA_API_URL || "https://plataforma-api-rkav7vkxia-uc.a.run.app";
-    const apkUrl = `${apiBase}/uploads/apk/${file.filename}`;
+    const apkUrl = await this.sitesService.storeApk(file.buffer, file.originalname);
     return this.sitesService.setApk(id, user.tenantId, {
       apkUrl,
       apkVersion: apkVersion || "",

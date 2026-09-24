@@ -44,6 +44,15 @@ create_secret() {
 # create_secret "R2_BUCKET_NAME" "plataforma"
 # create_secret "R2_PUBLIC_URL" "https://pub-448097f708f142c4b44913cfc7d82c4f.r2.dev"
 
+# === PASO 3.5: Migraciones de BD ===
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  echo ">>> Aplicando migraciones (prisma migrate deploy)..."
+  npm run db:migrate:deploy
+else
+  echo "⚠️  DATABASE_URL no definido: se omite 'prisma migrate deploy' en local."
+  echo "    El pipeline de Cloud Build sí las aplica automáticamente."
+fi
+
 # === PASO 4: Build + Deploy ===
 echo ""
 echo ">>> Building & deploying to Cloud Run..."
@@ -69,7 +78,11 @@ R2_ACCOUNT_ID=R2_ACCOUNT_ID:latest,\
 R2_ACCESS_KEY_ID=R2_ACCESS_KEY_ID:latest,\
 R2_SECRET_ACCESS_KEY=R2_SECRET_ACCESS_KEY:latest,\
 R2_BUCKET_NAME=R2_BUCKET_NAME:latest,\
-R2_PUBLIC_URL=R2_PUBLIC_URL:latest"
+R2_PUBLIC_URL=R2_PUBLIC_URL:latest,\
+BILLING_WEBHOOK_SECRET=BILLING_WEBHOOK_SECRET:latest,\
+PAYPHONE_APP_ID=PAYPHONE_APP_ID:latest,\
+PAYPHONE_TOKEN=PAYPHONE_TOKEN:latest,\
+JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest"
 
 # === PASO 5: Obtener URL ===
 URL=$(gcloud run services describe "${SERVICE}" \

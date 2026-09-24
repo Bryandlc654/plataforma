@@ -24,7 +24,18 @@ export class SeoService {
     this.cache.set(key, { value, expiry: Date.now() + ttlMs });
   }
 
-  async updateSiteSeo(siteId: string, data: any) {
+  private async assertSiteOwned(siteId: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id: siteId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!site) throw new NotFoundException("Site not found");
+    return site;
+  }
+
+  async updateSiteSeo(siteId: string, tenantId: string, data: any) {
+    await this.assertSiteOwned(siteId, tenantId);
+
     const update: any = {};
     const seoTitle = data?.seoTitle ?? data?.title;
     const seoDesc = data?.seoDesc ?? data?.description;
@@ -43,7 +54,13 @@ export class SeoService {
     return this.prisma.site.update({ where: { id: siteId }, data: update, select: { id: true, seoTitle: true, seoDesc: true, settings: true } });
   }
 
-  async updatePageSeo(pageId: string, data: any) {
+  async updatePageSeo(pageId: string, tenantId: string, data: any) {
+    const page = await this.prisma.sitePage.findFirst({
+      where: { id: pageId, site: { tenantId, deletedAt: null } },
+      select: { id: true },
+    });
+    if (!page) throw new NotFoundException("Page not found");
+
     const update: { seoTitle?: string; seoDesc?: string } = {};
     const seoTitle = data?.seoTitle ?? data?.title;
     const seoDesc = data?.seoDesc ?? data?.description;
@@ -89,9 +106,9 @@ export class SeoService {
     return robots;
   }
 
-  async getSeoMeta(siteId: string) {
-    const site = await this.prisma.site.findUnique({
-      where: { id: siteId },
+  async getSeoMeta(siteId: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id: siteId, tenantId, deletedAt: null },
       select: {
         id: true, name: true, subdomain: true, domain: true, isPublished: true,
         seoTitle: true, seoDesc: true, faviconUrl: true, logoUrl: true, settings: true,

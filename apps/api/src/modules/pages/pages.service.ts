@@ -5,9 +5,34 @@ import { PrismaService } from "../../prisma/prisma.service";
 export class PagesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(siteId: string, dto: { name: string; slug: string; path?: string }) {
-    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+  private async assertSiteOwned(siteId: string, tenantId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id: siteId, tenantId, deletedAt: null },
+      select: { id: true },
+    });
     if (!site) throw new NotFoundException("Site not found");
+    return site;
+  }
+
+  private async assertPageOwned(id: string, tenantId: string) {
+    const page = await this.prisma.sitePage.findFirst({
+      where: { id, site: { tenantId, deletedAt: null } },
+      select: { id: true },
+    });
+    if (!page) throw new NotFoundException("Page not found");
+    return page;
+  }
+
+  private async assertBlockOwned(blockId: string, tenantId: string) {
+    const block = await this.prisma.pageBlock.findFirst({
+      where: { id: blockId, page: { site: { tenantId, deletedAt: null } } },
+    });
+    if (!block) throw new NotFoundException("Block not found");
+    return block;
+  }
+
+  async create(siteId: string, tenantId: string, dto: { name: string; slug: string; path?: string }) {
+    await this.assertSiteOwned(siteId, tenantId);
 
     const maxOrder = await this.prisma.sitePage.aggregate({
       where: { siteId },
@@ -25,7 +50,8 @@ export class PagesService {
     });
   }
 
-  async findAll(siteId: string) {
+  async findAll(siteId: string, tenantId: string) {
+    await this.assertSiteOwned(siteId, tenantId);
     return this.prisma.sitePage.findMany({
       where: { siteId },
       include: {
@@ -35,9 +61,9 @@ export class PagesService {
     });
   }
 
-  async findById(id: string) {
-    const page = await this.prisma.sitePage.findUnique({
-      where: { id },
+  async findById(id: string, tenantId: string) {
+    const page = await this.prisma.sitePage.findFirst({
+      where: { id, site: { tenantId, deletedAt: null } },
       include: {
         blocks: { orderBy: { sortOrder: "asc" } },
       },
@@ -46,36 +72,42 @@ export class PagesService {
     return page;
   }
 
-  async update(id: string, data: {
-    name?: string;
-    seoTitle?: string;
-    seoDesc?: string;
-    isPublished?: boolean;
-  }) {
+  async update(
+    id: string,
+    tenantId: string,
+    data: {
+      name?: string;
+      seoTitle?: string;
+      seoDesc?: string;
+      isPublished?: boolean;
+    }
+  ) {
+    await this.assertPageOwned(id, tenantId);
     return this.prisma.sitePage.update({ where: { id }, data });
   }
 
-  async remove(id: string) {
-    await this.findById(id);
+  async remove(id: string, tenantId: string) {
+    await this.assertPageOwned(id, tenantId);
     await this.prisma.sitePage.delete({ where: { id } });
     return { deleted: true };
   }
 
-  async reorderPages(siteId: string, pageIds: string[]) {
+  async reorderPages(siteId: string, tenantId: string, pageIds: string[]) {
+    await this.assertSiteOwned(siteId, tenantId);
     await this.prisma.$transaction(
       pageIds.map((id, i) =>
-        this.prisma.sitePage.update({
-          where: { id },
+        this.prisma.sitePage.updateMany({
+          where: { id, siteId },
           data: { sortOrder: i },
         })
       )
     );
-    return this.findAll(siteId);
+    return this.findAll(siteId, tenantId);
   }
 
   // Block operations
-  async addBlock(pageId: string, dto: { type: string; content: any; afterIndex?: number }) {
-    const page = await this.findById(pageId);
+  async addBlock(pageId: string, tenantId: string, dto: { type: string; content: any; afterIndex?: number }) {
+    const page = await this.findById(pageId, tenantId);
     const index = dto.afterIndex !== undefined ? dto.afterIndex + 1 : page.blocks.length;
 
     await this.prisma.pageBlock.updateMany({
@@ -93,9 +125,8 @@ export class PagesService {
     });
   }
 
-  async updateBlock(blockId: string, data: { content?: any; styles?: any; type?: string }) {
-    const block = await this.prisma.pageBlock.findUnique({ where: { id: blockId } });
-    if (!block) throw new NotFoundException("Block not found");
+  async updateBlock(blockId: string, tenantId: string, data: { content?: any; styles?: any; type?: string }) {
+    const block = await this.assertBlockOwned(blockId, tenantId);
 
     const updated = await this.prisma.pageBlock.update({ where: { id: blockId }, data });
 
@@ -126,9 +157,8 @@ export class PagesService {
     return updated;
   }
 
-  async removeBlock(blockId: string) {
-    const block = await this.prisma.pageBlock.findUnique({ where: { id: blockId } });
-    if (!block) throw new NotFoundException("Block not found");
+  async removeBlock(blockId: string, tenantId: string) {
+    const block = await this.assertBlockOwned(blockId, tenantId);
 
     await this.prisma.pageBlock.delete({ where: { id: blockId } });
 
@@ -140,15 +170,16 @@ export class PagesService {
     return { deleted: true };
   }
 
-  async reorderBlocks(pageId: string, blockIds: string[]) {
+  async reorderBlocks(pageId: string, tenantId: string, blockIds: string[]) {
+    await this.assertPageOwned(pageId, tenantId);
     await this.prisma.$transaction(
       blockIds.map((id, i) =>
-        this.prisma.pageBlock.update({
-          where: { id },
+        this.prisma.pageBlock.updateMany({
+          where: { id, sitePageId: pageId },
           data: { sortOrder: i },
         })
       )
     );
-    return this.findById(pageId);
+    return this.findById(pageId, tenantId);
   }
 }
