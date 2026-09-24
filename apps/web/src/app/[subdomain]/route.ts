@@ -18,14 +18,18 @@ export async function GET(
       cache: "no-store",
     });
 
-    if (!res.ok) {
+    const html = await res.text();
+    const looksHtml = /^\s*(<!doctype|<html)/i.test(html);
+
+    // A non-OK HTML response is the site's own status page (404 / maintenance).
+    // Anything else (JSON) is "site not found".
+    if (!res.ok && !looksHtml) {
       return new NextResponse("Site Not Found", { status: 404 });
     }
 
-    const html = await res.text();
-    
     // Return the exact raw HTML from the API
     return new NextResponse(html, {
+      status: res.status,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store, no-cache, must-revalidate",

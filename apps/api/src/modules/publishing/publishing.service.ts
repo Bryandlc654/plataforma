@@ -7,6 +7,28 @@ import {
   normalizePublicPath,
   escapeHtml,
 } from "./seo-helpers";
+import {
+  applyPaletteToThemeColors,
+  applyPaletteToVariantHtml,
+  buildCapturedThemeOverrides,
+  explicitPaletteRoles,
+  paletteCssVariables,
+  resolveSitePalette,
+  type SitePalette,
+} from "./site-palette";
+import { resolveBlogSettings } from "../blog/blog.util";
+
+/** Ruta reservada de la página de error 404 del sitio/plantilla. */
+const ERROR_PAGE_PATH = "/404";
+/** Ruta reservada de la página de mantenimiento mostrada al despublicar. */
+const MAINTENANCE_PAGE_PATH = "/mantenimiento";
+
+type UnpublishedBehavior = "404" | "maintenance";
+
+function resolveUnpublishedBehavior(settings: any): UnpublishedBehavior {
+  const raw = settings && typeof settings === "object" ? settings.unpublishedBehavior : null;
+  return raw === "maintenance" ? "maintenance" : "404";
+}
 
 const withTimeout = <T>(promise: Promise<T>, ms: number, msg = 'Request timeout'): Promise<T> => {
   return new Promise((resolve, reject) => {
@@ -92,8 +114,10 @@ export class PublishingService {
       data: { isPublished: true, publishedAt: new Date() },
     });
 
-    const subdomain = site.tenant?.subdomain || site.subdomain;
-    if (subdomain) this.invalidateCache(subdomain);
+    const cacheKeys = [site.tenant?.subdomain, site.subdomain, site.domain].filter(
+      Boolean
+    ) as string[];
+    for (const key of cacheKeys) this.invalidateCache(key);
 
     return {
       url: resolvePublicSiteUrl(site),
@@ -103,10 +127,25 @@ export class PublishingService {
   }
 
   async unpublish(id: string) {
+    const site = await this.prisma.site.findUnique({
+      where: { id },
+      select: {
+        subdomain: true,
+        domain: true,
+        tenant: { select: { subdomain: true } },
+      },
+    });
+
     await this.prisma.site.update({
       where: { id },
       data: { isPublished: false },
     });
+
+    const cacheKeys = [site?.tenant?.subdomain, site?.subdomain, site?.domain].filter(
+      Boolean
+    ) as string[];
+    for (const key of cacheKeys) this.invalidateCache(key);
+
     return { published: false };
   }
 
@@ -179,10 +218,10 @@ export class PublishingService {
     };
   }
 
-  async getPublicHtml(subdomain: string, path?: string): Promise<string> {
+  async getPublicHtml(subdomain: string, path?: string): Promise<{ html: string; status: number }> {
     const cacheKey = `${subdomain}:${path || "/"}`;
     const cached = this.getCached(this.htmlCache, cacheKey);
-    if (cached) return cached;
+    if (cached) return { html: cached, status: 200 };
 
     if (this.inFlightRequests.has(cacheKey)) {
       return this.inFlightRequests.get(cacheKey);
@@ -192,7 +231,6 @@ export class PublishingService {
       const site = await this.prisma.site.findFirst({
         where: {
           OR: [{ subdomain }, { domain: subdomain }],
-          isPublished: true,
           deletedAt: null,
         },
         include: {
@@ -205,6 +243,49 @@ export class PublishingService {
       });
 
       if (!site) throw new NotFoundException("Site not found");
+
+      // Sitio despublicado: mostrar página de mantenimiento (503) o 404 según la config.
+      if (!site.isPublished) {
+        const behavior = resolveUnpublishedBehavior(site.settings);
+        let page: any;
+        let status: number;
+        if (behavior === "maintenance") {
+          page = this.synthesizeMaintenancePage(site);
+          site.pages.push(page);
+          status = 503;
+        } else {
+          page = this.resolveErrorPage(site);
+          status = 404;
+        }
+        const pagePath = normalizePublicPath(page?.path || ERROR_PAGE_PATH);
+        const html = await this.renderFullSite(site, pagePath, []);
+        return { html, status };
+      }
+
+      // Blog (opt-in): /<slug> (índice) y /<slug>/<articulo>.
+      const blog = resolveBlogSettings(site.settings);
+      if (blog.enabled && path) {
+        const wanted = normalizePublicPath(path);
+        const base = `/${blog.slug}`;
+        if (wanted === base || wanted === `${base}/`) {
+          const page = await this.buildBlogIndexPage(site, blog);
+          site.pages.push(page as any);
+          const html = await this.renderFullSite(site, page.path, []);
+          return { html, status: 200 };
+        }
+        if (wanted.startsWith(`${base}/`)) {
+          const articleSlug = wanted.slice(base.length + 1);
+          const article = await this.prisma.blogArticle.findFirst({
+            where: { siteId: site.id, tenantId: site.tenantId, slug: articleSlug, isPublished: true },
+          });
+          if (article) {
+            const page = this.buildBlogArticlePage(site, blog, article);
+            site.pages.push(page as any);
+            const html = await this.renderFullSite(site, page.path, []);
+            return { html, status: 200 };
+          }
+        }
+      }
 
       const isReviewFormRoute = path && normalizePublicPath(path) === "/dejar-opinion";
       const isCheckoutRoute = !!path && normalizePublicPath(path) === "/checkout";
@@ -232,7 +313,12 @@ export class PublishingService {
         const match = site.pages.find(
           (p: any) => normalizePublicPath(p.path) === wanted
         );
-        if (!match) throw new NotFoundException("Page not found");
+        if (!match) {
+          const errorPage = this.resolveErrorPage(site);
+          const errorPath = normalizePublicPath(errorPage?.path || ERROR_PAGE_PATH);
+          const html = await this.renderFullSite(site, errorPath, []);
+          return { html, status: 404 };
+        }
       }
 
       if (isReviewFormRoute) {
@@ -325,7 +411,7 @@ export class PublishingService {
 
       const html = await this.renderFullSite(site, path, approvedReviews);
       this.setCached(this.htmlCache, cacheKey, html, 60_000);
-      return html;
+      return { html, status: 200 };
     })(), 10000, "Timeout rendering site").finally(() => {
       this.inFlightRequests.delete(cacheKey);
     });
@@ -360,12 +446,32 @@ export class PublishingService {
         site.publishedAt?.toISOString().split("T")[0] ||
         new Date().toISOString().split("T")[0];
 
-      const urls = site.pages.map((page) => {
+      const sitemapPages = site.pages.filter(
+        (page) =>
+          normalizePublicPath(page.path || "/") !== ERROR_PAGE_PATH && page.slug !== "404"
+      );
+      const entry = (loc: string, priority: string) =>
+        `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+
+      const urls = sitemapPages.map((page) => {
         const loc =
           page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
         const priority = page.isDefault ? "1.0" : "0.8";
-        return `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+        return entry(loc, priority);
       });
+
+      const blog = resolveBlogSettings(site.settings);
+      if (blog.enabled) {
+        urls.push(entry(`${urlBase}/${blog.slug}`, "0.7"));
+        const articles = await this.prisma.blogArticle.findMany({
+          where: { siteId: site.id, isPublished: true },
+          select: { slug: true },
+          orderBy: { publishedAt: "desc" },
+        });
+        for (const a of articles) {
+          urls.push(entry(`${urlBase}/${blog.slug}/${a.slug}`, "0.6"));
+        }
+      }
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
       this.setCached(this.staticCache, cacheKey, xml, 3_600_000);
@@ -438,22 +544,26 @@ export class PublishingService {
     });
   }
 
+  private isHexColor(value: any): boolean {
+    return typeof value === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
+  }
+
   /**
-   * Sobrescribe las variables de tema detectadas en la plantilla (`:root{--primary}`)
-   * con los colores editables del sitio, para cambiar la marca sin tocar el CSS.
+   * Aplica la paleta global a los bloques genéricos (sin variante). Las
+   * variantes de plantilla manejan su propio theming más abajo.
    */
-  private buildThemeOverrides(theme: any, site: any): string {
-    if (!theme || typeof theme !== "object") return "";
-    const decls: string[] = [];
-    const primary = site?.primaryColor || "#2563EB";
-    const secondary = site?.secondaryColor || site?.tenant?.secondaryColor || "#1E40AF";
-    if (typeof theme.primaryVar === "string" && theme.primaryVar) {
-      decls.push(`${theme.primaryVar}:${primary}`);
-    }
-    if (typeof theme.secondaryVar === "string" && theme.secondaryVar && theme.secondaryVar !== theme.primaryVar) {
-      decls.push(`${theme.secondaryVar}:${secondary}`);
-    }
-    return decls.length ? `:root{${decls.join(";")}}` : "";
+  private applyPaletteToBlock(block: any, palette: SitePalette, explicit: boolean): any {
+    if (!explicit) return block;
+    const content = block?.content;
+    if (!content || typeof content !== "object" || content.variant) return block;
+    return {
+      ...block,
+      content: {
+        ...content,
+        primaryColor: palette.primary,
+        secondaryColor: palette.secondary,
+      },
+    };
   }
 
   /** Serializa atributos de `<html>`/`<body>` capturados al importar la plantilla. */
@@ -993,6 +1103,222 @@ if (paymentBox) {
     return site?.tenantId || null;
   }
 
+  /**
+   * Devuelve la página 404 del sitio. Si no existe (plantillas antiguas), la
+   * sintetiza a partir de la página por defecto para conservar el estilo.
+   */
+  private resolveErrorPage(site: any): any {
+    const existing = (site.pages || []).find(
+      (p: any) =>
+        normalizePublicPath(p.path || "/") === ERROR_PAGE_PATH || p.slug === "404"
+    );
+    if (existing) {
+      if (normalizePublicPath(existing.path || "/") !== ERROR_PAGE_PATH) {
+        existing.path = ERROR_PAGE_PATH;
+      }
+      return existing;
+    }
+    const synthesized = this.synthesizeErrorPage(site);
+    site.pages.push(synthesized);
+    return synthesized;
+  }
+
+  private synthesizeErrorPage(site: any): any {
+    return this.synthesizeStatusPage(site, {
+      name: "404",
+      slug: "404",
+      path: ERROR_PAGE_PATH,
+      title: "404",
+      subtitle: "No encontramos la página que buscas.",
+      buttonText: "Volver al inicio",
+      buttonUrl: "/",
+    });
+  }
+
+  private synthesizeMaintenancePage(site: any): any {
+    return this.synthesizeStatusPage(site, {
+      name: "En mantenimiento",
+      slug: "mantenimiento",
+      path: MAINTENANCE_PAGE_PATH,
+      title: "En mantenimiento",
+      subtitle: "Estamos trabajando para mejorar tu experiencia. Volvemos muy pronto.",
+    });
+  }
+
+  /**
+   * Construye una página de estado (404 / mantenimiento) reutilizando el estilo
+   * de la página por defecto de la plantilla (header + hero + footer).
+   */
+  private synthesizeStatusPage(
+    site: any,
+    status: {
+      name: string;
+      slug: string;
+      path: string;
+      title: string;
+      subtitle: string;
+      buttonText?: string;
+      buttonUrl?: string;
+    }
+  ): any {
+    const defaultPage =
+      (site.pages || []).find((p: any) => p.isDefault) || site.pages?.[0];
+    const blocks: any[] = [];
+    const header = defaultPage?.blocks?.find((b: any) => b.type === "header");
+    if (header) {
+      blocks.push({ type: "header", content: header.content, styles: header.styles });
+    }
+    const hero = defaultPage?.blocks?.find((b: any) => b.type === "hero");
+    const variant = (defaultPage?.blocks || []).find(
+      (b: any) => b.content && b.content.variant
+    )?.content?.variant;
+    const heroContent = hero?.content ? { ...hero.content } : {};
+    blocks.push({
+      type: hero ? "hero" : "cta",
+      content: {
+        ...heroContent,
+        variant: heroContent.variant || variant,
+        title: status.title,
+        subtitle: status.subtitle,
+        buttonText: status.buttonText,
+        buttonUrl: status.buttonUrl,
+        slides: undefined,
+        highlights: undefined,
+        secondaryButtonText: undefined,
+        secondaryButtonUrl: undefined,
+      },
+      styles: hero?.styles,
+    });
+    const footer = defaultPage?.blocks?.find((b: any) => b.type === "footer");
+    if (footer) {
+      blocks.push({ type: "footer", content: footer.content, styles: footer.styles });
+    }
+    return {
+      name: status.name,
+      slug: status.slug,
+      path: status.path,
+      isDefault: false,
+      sortOrder: 999,
+      blocks,
+    };
+  }
+
+  private siteVariant(site: any): string | undefined {
+    const defaultPage =
+      (site.pages || []).find((p: any) => p.isDefault) || site.pages?.[0];
+    return (defaultPage?.blocks || []).find((b: any) => b.content && b.content.variant)
+      ?.content?.variant;
+  }
+
+  /** Header + contenido + footer, reutilizando el chrome de la página por defecto. */
+  private buildChromeBlocks(site: any, middle: any[]): any[] {
+    const defaultPage =
+      (site.pages || []).find((p: any) => p.isDefault) || site.pages?.[0];
+    const header = defaultPage?.blocks?.find((b: any) => b.type === "header");
+    const footer = defaultPage?.blocks?.find((b: any) => b.type === "footer");
+    return [
+      header ? { type: "header", content: header.content, styles: header.styles } : null,
+      ...middle,
+      footer ? { type: "footer", content: footer.content, styles: footer.styles } : null,
+    ].filter(Boolean) as any[];
+  }
+
+  private async buildBlogIndexPage(site: any, blog: { title: string; slug: string }) {
+    const articles = await this.prisma.blogArticle.findMany({
+      where: { siteId: site.id, isPublished: true },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        title: true,
+        slug: true,
+        excerpt: true,
+        coverImage: true,
+        authorName: true,
+        publishedAt: true,
+      },
+    });
+    const items = articles.map((a) => ({
+      title: a.title,
+      url: `/${blog.slug}/${a.slug}`,
+      excerpt: a.excerpt || "",
+      coverImage: a.coverImage ? this.absoluteUrl(a.coverImage) : "",
+      authorName: a.authorName || "",
+      date: a.publishedAt ? a.publishedAt.toISOString() : "",
+    }));
+    const blocks = this.buildChromeBlocks(site, [
+      {
+        type: "blog-list",
+        content: { variant: this.siteVariant(site), title: blog.title, items },
+        styles: {},
+      },
+    ]);
+    return {
+      name: blog.title,
+      slug: blog.slug,
+      path: `/${blog.slug}`,
+      isDefault: false,
+      sortOrder: 998,
+      seoTitle: blog.title,
+      seoDesc: "",
+      blocks,
+    };
+  }
+
+  private buildBlogArticlePage(
+    site: any,
+    blog: { title: string; slug: string },
+    article: any,
+  ) {
+    const blocks = this.buildChromeBlocks(site, [
+      {
+        type: "blog-article",
+        content: {
+          variant: this.siteVariant(site),
+          title: article.title,
+          excerpt: article.excerpt || "",
+          content: article.content || "",
+          coverImage: article.coverImage ? this.absoluteUrl(article.coverImage) : "",
+          authorName: article.authorName || "",
+          date: article.publishedAt ? article.publishedAt.toISOString() : "",
+          blogTitle: blog.title,
+          blogUrl: `/${blog.slug}`,
+        },
+        styles: {},
+      },
+    ]);
+    return {
+      name: article.title,
+      slug: article.slug,
+      path: `/${blog.slug}/${article.slug}`,
+      isDefault: false,
+      sortOrder: 998,
+      seoTitle: article.seoTitle || article.title,
+      seoDesc: article.seoDesc || article.excerpt || "",
+      ogImage: article.seoImage || undefined,
+      blocks,
+    };
+  }
+
+  /** Agrega el enlace del blog al menú de la cabecera si el blog está habilitado. */
+  private withBlogNav(blocks: any[], blog: { enabled: boolean; title: string; slug: string }): any[] {
+    if (!blog.enabled || !Array.isArray(blocks)) return blocks;
+    const url = `/${blog.slug}`;
+    const push = (arr: any[]) =>
+      arr.some((l) => l && l.url === url) ? arr : [...arr, { label: blog.title, url }];
+
+    return blocks.map((b) => {
+      if (b?.type !== "header") return b;
+      const content = { ...(b.content || {}) };
+      if (Array.isArray(content.links)) {
+        content.links = push(content.links);
+      } else if (Array.isArray(content.navLinks)) {
+        content.navLinks = push(content.navLinks);
+      } else {
+        content.links = [{ label: blog.title, url }];
+      }
+      return { ...b, content };
+    });
+  }
+
   private async renderFullSite(site: any, requestedPath?: string, reviews: any[] = []): Promise<string> {
     const wanted = requestedPath ? normalizePublicPath(requestedPath) : "/";
     const defaultPage = site.pages.find((p: any) => p.isDefault) || site.pages[0];
@@ -1006,17 +1332,30 @@ if (paymentBox) {
       page.blocks = await this.hydrateCatalogProducts(page.blocks, site);
     }
 
-    const blocksHtml = (page?.blocks || [])
+    const palette = resolveSitePalette(site.settings, site.primaryColor, site.secondaryColor);
+    const explicitRoles = explicitPaletteRoles(site.settings);
+    const explicitPalette = explicitRoles.length > 0;
+    const blogNav = resolveBlogSettings(site.settings);
+    const pageBlocks = this.withBlogNav(page?.blocks || [], blogNav);
+    const themeBlocks = pageBlocks.map((block: any) =>
+      this.applyPaletteToBlock(block, palette, explicitPalette)
+    );
+
+    let blocksHtml = themeBlocks
       .map((block: any) =>
         this.renderBlock(block.type, this.resolveBlockUrls(block).content, block.styles, site, reviews)
       ).join("\n") || "";
 
-    const primary = site.primaryColor || "#2563EB";
-    const secondary = site.secondaryColor || "#1E40AF";
+    const primary = palette.primary;
+    const secondary = palette.secondary;
     const variant = page?.blocks?.[0]?.content?.variant;
     const isTemplate = variant === "art-culinaire" || variant === "prestige" || variant === "rodriplast" || variant === "indigo" || variant === "dishora" || variant === "graduate" || variant === "urban-noir";
     const isUrbanNoir = variant === "urban-noir";
     const isRawHtml = variant === "raw-html";
+
+    if (explicitPalette) {
+      blocksHtml = applyPaletteToVariantHtml(blocksHtml, variant, palette);
+    }
 
     const globalStyles = (site.settings as any)?.globalStyles || null;
     const stylePages = globalStyles?.pages || null;
@@ -1028,7 +1367,7 @@ if (paymentBox) {
       typeof pageStyle?.cssPath === "string" && pageStyle.cssPath
         ? `${this.apiBaseUrl()}${pageStyle.cssPath}${pageStyle.cssHash ? `?h=${pageStyle.cssHash}` : ""}`
         : "";
-    const themeOverride = this.buildThemeOverrides(pageStyle?.theme, site);
+    const themeOverride = buildCapturedThemeOverrides(pageStyle?.theme, palette, explicitRoles);
     const pageHead = typeof pageStyle?.head === "string" ? pageStyle.head : "";
     const runtimeScript =
       typeof globalStyles?.runtime?.script === "string" ? globalStyles.runtime.script : "";
@@ -1044,9 +1383,11 @@ if (paymentBox) {
     const seoTitle = page?.seoTitle || site.seoTitle || site.name || "";
     const seoDesc = page?.seoDesc || site.seoDesc || "";
     const ogSettings = (site.settings as any)?.og || {};
-    const ogImage = ogSettings.image
-      ? this.absoluteUrl(ogSettings.image)
-      : this.absoluteUrl(site.logoUrl);
+    const ogImage = page?.ogImage
+      ? this.absoluteUrl(page.ogImage)
+      : ogSettings.image
+        ? this.absoluteUrl(ogSettings.image)
+        : this.absoluteUrl(site.logoUrl);
     const favicon = this.absoluteUrl(site.faviconUrl);
 
     const waSettings = (site.tenant?.settings as any)?.whatsapp || {};
@@ -1066,7 +1407,7 @@ if (paymentBox) {
 <span>Descargar App</span>
 </a>` : "";
 
-    const themeColors = variant === "rodriplast" ? {
+    const baseThemeColors = variant === "rodriplast" ? {
       "rodri-primary": "#4fad33",
       "rodri-primary-dark": "#3d8f29",
       "rodri-primary-glow": "#4fad33",
@@ -1193,6 +1534,10 @@ if (paymentBox) {
       "primary": "#001387"
     };
 
+    const themeColors = explicitPalette
+      ? applyPaletteToThemeColors(baseThemeColors, variant, palette, explicitRoles) || baseThemeColors
+      : baseThemeColors;
+
     const themeFonts = variant === "rodriplast" ? {
       "display": ["Inter"],
       "headline-md": ["Inter"],
@@ -1315,7 +1660,7 @@ ${isTemplate || isRawHtml ? `
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 .material-symbols-outlined[data-weight="fill"] { font-variation-settings: 'FILL' 1; }
 ` : `
-:root{--primary:${primary};--secondary:${secondary}}
+:root{--primary:${primary};--secondary:${secondary};--accent:${palette.accent};${paletteCssVariables(palette)}}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1e293b;background:#fff;-webkit-font-smoothing:antialiased}
 img{max-width:100%;height:auto;display:block}
@@ -1334,6 +1679,7 @@ a{color:inherit}
 ${pageCssHref ? `<link rel="stylesheet" href="${escapeHtml(pageCssHref)}">` : ""}
 ${pageCss ? `<style>\n${pageCss}\n</style>` : ""}
 ${themeOverride ? `<style>\n${themeOverride}\n</style>` : ""}
+<style>:root{${paletteCssVariables(palette)}}</style>
 ${runtimeScript ? `<script>\n${runtimeScript}\n</script>` : ""}
 <script>
 document.addEventListener("DOMContentLoaded",function(){
@@ -1981,8 +2327,92 @@ ${relativeClose}
 </section>`;
       }
 
+      case "blog-list":
+        return this.renderBlogList(c);
+
+      case "blog-article":
+        return this.renderBlogArticle(c);
+
+
       default:
         return `<div style="padding:clamp(2rem,5vw,3rem) clamp(1rem,4vw,2rem);text-align:center;color:#94a3b8"><p>Bloque: ${type}</p></div>`;
     }
+  }
+
+  private sanitizeArticleHtml(html: string): string {
+    return String(html || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
+      .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "");
+  }
+
+  private formatBlogDate(value: string): string {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    try {
+      return d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+    } catch {
+      return d.toISOString().split("T")[0];
+    }
+  }
+
+  /** Índice del blog, adaptado a la paleta global y tipografía de la plantilla. */
+  private renderBlogList(c: any): string {
+    const items: any[] = Array.isArray(c.items) ? c.items : [];
+    const title = escapeHtml(c.title || "Blog");
+
+    const cards = items
+      .map((item) => {
+        const date = this.formatBlogDate(item.date);
+        return `<a href="${escapeHtml(item.url || "#")}" class="site-blog-card" style="display:flex;flex-direction:column;border-radius:18px;overflow:hidden;background:var(--site-surface,#f8fafc);border:1px solid rgba(127,127,127,.16);text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:transform .2s,box-shadow .2s">
+  ${item.coverImage ? `<img src="${escapeHtml(item.coverImage)}" alt="${escapeHtml(item.title)}" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : ""}
+  <div style="padding:1.5rem;display:flex;flex-direction:column;gap:.6rem;flex:1">
+    ${date ? `<span style="font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:var(--site-primary,#2563EB);font-weight:700">${date}</span>` : ""}
+    <h2 style="margin:0;font-size:1.3rem;font-weight:800;line-height:1.25;color:var(--site-text,#0f172a)">${escapeHtml(item.title || "")}</h2>
+    ${item.excerpt ? `<p style="margin:0;color:var(--site-text,#0f172a);opacity:.7;line-height:1.6;font-size:.95rem">${escapeHtml(item.excerpt)}</p>` : ""}
+    <span style="margin-top:auto;color:var(--site-primary,#2563EB);font-weight:700;font-size:.9rem">Leer más →</span>
+  </div>
+</a>`;
+      })
+      .join("");
+
+    return `<section style="max-width:1120px;margin:0 auto;padding:clamp(3rem,8vw,5rem) clamp(1rem,5vw,2rem)">
+  <header style="text-align:center;margin-bottom:clamp(2rem,5vw,3rem)">
+    <h1 style="margin:0;font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.1;color:var(--site-text,#0f172a)">${title}</h1>
+  </header>
+  ${items.length
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:clamp(1rem,2vw,1.5rem)">${cards}</div>`
+    : `<p style="text-align:center;color:var(--site-text,#0f172a);opacity:.6">Aún no hay artículos publicados.</p>`}
+</section>`;
+  }
+
+  /** Artículo del blog, con el contenido en HTML del autor. */
+  private renderBlogArticle(c: any): string {
+    const date = this.formatBlogDate(c.date);
+    const blogTitle = escapeHtml(c.blogTitle || "Blog");
+    const contentStyle = `<style>
+.site-blog-content{line-height:1.75;font-size:1.05rem;color:var(--site-text,#0f172a)}
+.site-blog-content h2{font-size:1.5rem;font-weight:700;margin:1.75rem 0 .75rem}
+.site-blog-content h3{font-size:1.25rem;font-weight:700;margin:1.5rem 0 .5rem}
+.site-blog-content p{margin:0 0 1rem}
+.site-blog-content ul{list-style:disc;padding-left:1.5rem;margin:0 0 1rem}
+.site-blog-content ol{list-style:decimal;padding-left:1.5rem;margin:0 0 1rem}
+.site-blog-content a{color:var(--site-primary,#2563EB);text-decoration:underline}
+.site-blog-content img{max-width:100%;height:auto;border-radius:12px;margin:1rem 0}
+.site-blog-content blockquote{border-left:4px solid var(--site-primary,#2563EB);padding-left:1rem;margin:1rem 0;opacity:.8}
+</style>`;
+
+    return `${contentStyle}<article style="max-width:800px;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1rem,5vw,2rem)">
+  <a href="${escapeHtml(c.blogUrl || "/")}" style="display:inline-block;margin-bottom:1.25rem;color:var(--site-primary,#2563EB);font-weight:700;text-decoration:none">← ${blogTitle}</a>
+  <h1 style="margin:0 0 .75rem;font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.12;color:var(--site-text,#0f172a)">${escapeHtml(c.title || "")}</h1>
+  <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;color:var(--site-text,#0f172a);opacity:.6;font-size:.85rem;margin-bottom:1.5rem">
+    ${c.authorName ? `<span>${escapeHtml(c.authorName)}</span>` : ""}
+    ${c.authorName && date ? `<span>•</span>` : ""}
+    ${date ? `<span>${date}</span>` : ""}
+  </div>
+  ${c.coverImage ? `<img src="${escapeHtml(c.coverImage)}" alt="${escapeHtml(c.title || "")}" style="width:100%;height:auto;border-radius:16px;margin-bottom:2rem;display:block">` : ""}
+  <div class="site-blog-content">${this.sanitizeArticleHtml(c.content)}</div>
+</article>`;
   }
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { applyPaletteToVariantHtml, type SitePalette } from "@/lib/site-palette";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1")
   .replace(/\/api\/v1\/?$/i, "")
@@ -54,10 +55,10 @@ function DarkDots({ total, active, onDot }: { total: number; active: number; onD
   );
 }
 
-export function BlockRenderer({ type, content }: { type: string; content: any }) {
+export function BlockRenderer({ type, content, palette }: { type: string; content: any; palette?: SitePalette }) {
   const c = resolveMediaUrl(content || {});
-  const primary = c.primaryColor || "#2563EB";
-  const secondary = c.secondaryColor || "#1e40af";
+  const primary = palette?.primary || c.primaryColor || "#2563EB";
+  const secondary = palette?.secondary || c.secondaryColor || "#1e40af";
 
   // All hooks at top level (React rules of hooks)
   const slides = (c.slides && c.slides.length > 0) ? c.slides : [c];
@@ -146,7 +147,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
   if (c.variant === "prestige") {
     // Import from local lib directory since Vercel root doesn't have access to packages/
     const { getPrestigeHtml } = require("../../../lib/prestige-variants");
-    const html = getPrestigeHtml(type, c);
+    const html = applyPaletteToVariantHtml(getPrestigeHtml(type, c), c.variant, palette);
     if (html) {
       return (
         <div 
@@ -177,7 +178,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "art-culinaire") {
     const { getArtCulinaireHtml } = require("../../../lib/art-culinaire-variants");
-    const html = getArtCulinaireHtml(type, c);
+    const html = applyPaletteToVariantHtml(getArtCulinaireHtml(type, c), c.variant, palette);
     if (html) {
       return (
         <div 
@@ -208,7 +209,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "rodriplast") {
     const { getRodriplastHtml } = require("../../../lib/rodriplast-variants");
-    let html = getRodriplastHtml(type, c);
+    let html = applyPaletteToVariantHtml(getRodriplastHtml(type, c), c.variant, palette);
     // In the editor the fixed header overlaps the project header; render it static here
     if (html && type === "header") {
       html = html.replace('class="fixed top-0 inset-x-0 z-50', 'class="relative top-0 inset-x-0 z-50');
@@ -247,7 +248,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "indigo") {
     const { getIndigoHtml } = require("../../../lib/indigo-variants");
-    let html = getIndigoHtml(type, c);
+    let html = applyPaletteToVariantHtml(getIndigoHtml(type, c), c.variant, palette);
     if (html && type === "header") {
       html = html.replace('class="fixed w-full z-50 top-0 left-0 p-6 flex', 'class="relative w-full z-50 top-0 left-0 p-6 flex');
     }
@@ -285,7 +286,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "dishora") {
     const { getDishoraHtml } = require("../../../lib/dishora-variants");
-    const html = getDishoraHtml(type, c);
+    const html = applyPaletteToVariantHtml(getDishoraHtml(type, c), c.variant, palette);
     if (html) {
       return (
         <div 
@@ -316,7 +317,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "graduate") {
     const { getGraduateHtml } = require("../../../lib/graduate-variants");
-    const html = getGraduateHtml(type, c);
+    const html = applyPaletteToVariantHtml(getGraduateHtml(type, c), c.variant, palette);
     if (html) {
       return (
         <div 
@@ -346,7 +347,7 @@ export function BlockRenderer({ type, content }: { type: string; content: any })
 
   if (c.variant === "urban-noir") {
     const { getUrbanNoirHtml } = require("../../../lib/urban-noir-variants");
-    let html = getUrbanNoirHtml(type, c);
+    let html = applyPaletteToVariantHtml(getUrbanNoirHtml(type, c), c.variant, palette);
     // In the editor the fixed header overlaps the project header; render it static here
     if (html && type === "header") {
       html = html.replace('class="fixed w-full z-50', 'class="relative w-full z-50');

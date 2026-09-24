@@ -271,8 +271,26 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         throw new UnauthorizedException("User not found");
       }
 
-      return this.generateTokens(user);
-    } catch {
+      const rp = await this.getUserRolesAndPermissions(user.id);
+      const isSystemUser =
+        rp.roles.includes("super_admin") || rp.roles.includes("support");
+
+      if (!isSystemUser) {
+        const memberships = await this.prisma.userTenant.findMany({
+          where: { userId: user.id },
+          select: { tenant: { select: { isActive: true } } },
+        });
+        if (
+          memberships.length > 0 &&
+          !memberships.some((m) => m.tenant.isActive)
+        ) {
+          throw new ForbiddenException("El negocio está suspendido");
+        }
+      }
+
+      return this.generateTokens(user, rp);
+    } catch (err) {
+      if (err instanceof ForbiddenException) throw err;
       throw new UnauthorizedException("Invalid or expired refresh token");
     }
   }
@@ -489,18 +507,42 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   private async buildAuthPayload(user: any) {
     const rp = await this.getUserRolesAndPermissions(user.id);
-    const tokens = await this.generateTokens(user, rp);
 
     const userTenants = await this.prisma.userTenant.findMany({
       where: { userId: user.id },
-      include: { tenant: { select: { id: true, name: true, slug: true, subdomain: true } } },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            subdomain: true,
+            isActive: true,
+          },
+        },
+      },
     });
+
+    const isSystemUser =
+      rp.roles.includes("super_admin") || rp.roles.includes("support");
+
+    const accessibleTenants = isSystemUser
+      ? userTenants
+      : userTenants.filter((ut) => ut.tenant.isActive);
+
+    if (!isSystemUser && userTenants.length > 0 && accessibleTenants.length === 0) {
+      throw new ForbiddenException(
+        "El negocio está suspendido. Contacta al administrador."
+      );
+    }
+
+    const tokens = await this.generateTokens(user, rp);
 
     const enriched = await this.enrichUser(user, rp);
 
     return {
       user: enriched,
-      tenants: userTenants.map((ut) => ({
+      tenants: accessibleTenants.map((ut) => ({
         id: ut.tenant.id,
         name: ut.tenant.name,
         slug: ut.tenant.slug,

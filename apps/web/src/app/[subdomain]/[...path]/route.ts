@@ -40,9 +40,14 @@ export async function GET(
       `${apiBase}/p/${subdomain}?path=${encodeURIComponent(pagePath)}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return new NextResponse("Page Not Found", { status: 404 });
     const html = await res.text();
+    const looksHtml = /^\s*(<!doctype|<html)/i.test(html);
+    // A non-OK HTML response is the site's own status page (404 / maintenance).
+    if (!res.ok && !looksHtml) {
+      return new NextResponse("Page Not Found", { status: 404 });
+    }
     return new NextResponse(html, {
+      status: res.status,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store, no-cache, must-revalidate",

@@ -333,6 +333,43 @@ export class SeedService implements OnModuleInit {
       })) as any,
     });
 
+    const headerBlock = blocks.find((b) => b.type === "header");
+    const heroBlock = blocks.find((b) => b.type === "hero");
+    const footerBlock = blocks.find((b) => b.type === "footer");
+    const errorPage = await this.prisma.templatePage.create({
+      data: {
+        templateId: template.id,
+        name: "404",
+        slug: "404",
+        path: "/404",
+        isDefault: false,
+        sortOrder: 999,
+      },
+    });
+    const errorBlocks: any[] = [];
+    if (headerBlock) errorBlocks.push(headerBlock);
+    errorBlocks.push({
+      type: "hero",
+      styles: (heroBlock as any)?.styles,
+      content: {
+        ...((heroBlock?.content as any) || {}),
+        title: "404",
+        subtitle: "No encontramos la página que buscas.",
+        buttonText: "Volver al inicio",
+        buttonUrl: "/",
+      },
+    });
+    if (footerBlock) errorBlocks.push(footerBlock);
+    await this.prisma.templateBlock.createMany({
+      data: errorBlocks.map((b, i) => ({
+        templatePageId: errorPage.id,
+        type: b.type,
+        content: b.content as any,
+        styles: b.styles as any,
+        sortOrder: i,
+      })),
+    });
+
     this.logger.log("URBAN NOIR ecommerce template seeded");
   }
 

@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
+import { DEFAULT_SITE_PALETTE, PALETTE_LABELS, PALETTE_PRESETS, hasExplicitPalette, resolveSitePalette, type PaletteRole, type SitePalette } from "@/lib/site-palette";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineArrowUp, HiOutlineArrowDown } from "react-icons/hi";
@@ -23,7 +24,7 @@ const blockCategories: Record<string, string[]> = {
   "Estructura": ["footer"],
 };
 
-function BlockWrapper({ block, activeBlockId, onSelect, onMoveUp, onMoveDown, onDelete, isFirst, isLast }: {
+function BlockWrapper({ block, activeBlockId, onSelect, onMoveUp, onMoveDown, onDelete, isFirst, isLast, palette }: {
   block: Block; activeBlockId: string | null;
   onSelect: (id: string) => void;
   onMoveUp: () => void;
@@ -31,6 +32,7 @@ function BlockWrapper({ block, activeBlockId, onSelect, onMoveUp, onMoveDown, on
   onDelete: () => void;
   isFirst: boolean;
   isLast: boolean;
+  palette?: SitePalette;
 }) {
   return (
     <div className="group relative">
@@ -55,7 +57,7 @@ function BlockWrapper({ block, activeBlockId, onSelect, onMoveUp, onMoveDown, on
         </div>
       </div>
       <div onClick={() => onSelect(block.id)} className={`rounded-xl overflow-hidden cursor-pointer transition-all duration-200 ${activeBlockId === block.id ? "ring-2 ring-primary-500 ring-offset-2 shadow-lg" : "ring-1 ring-slate-200 hover:ring-slate-300 shadow-sm"}`}>
-        <BlockRenderer type={block.type} content={block.content} />
+        <BlockRenderer type={block.type} content={block.content} palette={palette} />
       </div>
     </div>
   );
@@ -120,6 +122,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [dirty, setDirty] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState({ name: "", primaryColor: "#2563EB", secondaryColor: "#1E40AF", logoUrl: "", faviconUrl: "", domain: "" });
+  const [palette, setPalette] = useState<SitePalette>(DEFAULT_SITE_PALETTE);
+  const [paletteDirty, setPaletteDirty] = useState(false);
+  const [unpublishedBehavior, setUnpublishedBehavior] = useState<"404" | "maintenance">("404");
   const [history, setHistory] = useState<Site[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [dnsStatus, setDnsStatus] = useState<"idle"|"checking"|"ok"|"error">("idle");
@@ -137,6 +142,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const s = (res.data || res) as Site;
       setSite(s);
       setSiteSettings({ name: s.name, primaryColor: s.primaryColor || "#2563EB", secondaryColor: s.secondaryColor || "#1E40AF", logoUrl: s.logoUrl || "", faviconUrl: s.faviconUrl || "", domain: s.domain || "" });
+      setPalette(resolveSitePalette(s.settings, s.primaryColor, s.secondaryColor));
+      setPaletteDirty(false);
+      setUnpublishedBehavior((s.settings as any)?.unpublishedBehavior === "maintenance" ? "maintenance" : "404");
       if (s.pages.length > 0) setActivePageId(s.pages.find(p => p.isDefault)?.id || s.pages[0].id);
     } catch { setSite(null); }
     finally { setLoading(false); }
@@ -184,6 +192,26 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const activePage = site?.pages.find(p => p.id === activePageId);
   const sortedBlocks = activePage ? [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder) : [];
   const activeBlock = sortedBlocks.find(b => b.id === activeBlockId);
+
+  const paletteActive = hasExplicitPalette(site?.settings) || paletteDirty;
+  const variantPalette = paletteActive ? palette : undefined;
+
+  const blogCfg = (site?.settings as any)?.blog;
+  const injectBlogNav = (block: Block): Block => {
+    if (blogCfg?.enabled !== true || block.type !== "header") return block;
+    const url = `/${blogCfg.slug || "blog"}`;
+    const content = { ...(block.content || {}) };
+    const links = Array.isArray(content.links) ? content.links : [];
+    if (!links.some((l: any) => l?.url === url)) {
+      content.links = [...links, { label: blogCfg.title || "Blog", url }];
+    }
+    return { ...block, content };
+  };
+
+  const updatePaletteColor = (role: PaletteRole, value: string) => {
+    setPalette(p => ({ ...p, [role]: value }));
+    setPaletteDirty(true);
+  };
 
   const savePending = useCallback(async () => {
     const pendingBlocks = Object.entries(pendingBlocksRef.current);
@@ -353,8 +381,16 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   const saveSiteSettings = async () => {
     try {
-      await api.put(`/sites/${siteId}`, siteSettings);
-      setSite(p => p ? { ...p, ...siteSettings, domain: siteSettings.domain || undefined } : p);
+      const body = {
+        ...siteSettings,
+        primaryColor: palette.primary,
+        secondaryColor: palette.secondary,
+        settings: { ...(site?.settings || {}), palette, unpublishedBehavior },
+      };
+      await api.put(`/sites/${siteId}`, body);
+      setSite(p => p ? { ...p, ...body, settings: body.settings, domain: siteSettings.domain || undefined } : p);
+      setSiteSettings(s => ({ ...s, primaryColor: palette.primary, secondaryColor: palette.secondary }));
+      setPaletteDirty(false);
       setToast("Configuración guardada");
       setDnsStatus("idle");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al guardar"); }
@@ -417,14 +453,15 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         <TemplateGlobalStyles
           globalStyles={site?.settings?.globalStyles}
           pagePath={activePage?.path}
-          colors={{ primary: siteSettings.primaryColor, secondary: siteSettings.secondaryColor }}
+          palette={paletteActive ? palette : undefined}
+          colors={paletteActive ? undefined : { primary: siteSettings.primaryColor, secondary: siteSettings.secondaryColor }}
         />
         {activePage && sortedBlocks.length > 0 ? (
           <div className="max-w-6xl mx-auto py-8 px-6 space-y-6">
             {sortedBlocks.map((block, idx) => (
               <BlockWrapper
                 key={block.id}
-                block={block}
+                block={injectBlogNav(block)}
                 activeBlockId={activeBlockId}
                 onSelect={setActiveBlockId}
                 onMoveUp={() => moveBlock(block.id, "up")}
@@ -432,6 +469,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                 onDelete={() => deleteBlock(block.id)}
                 isFirst={idx === 0}
                 isLast={idx === sortedBlocks.length - 1}
+                palette={variantPalette}
               />
             ))}
             <button onClick={() => setShowAddBlock(true)} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-xl text-sm font-medium text-slate-400 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50/30 transition-all flex items-center justify-center gap-2">
@@ -474,7 +512,62 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white"><h3 className="font-semibold text-sm text-slate-900">Configuración</h3><button onClick={()=>{setShowSettings(false);saveSiteSettings()}} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
             <div className="p-4 space-y-3">
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Nombre</label><input className="input-field text-xs" value={siteSettings.name} onChange={e=>setSiteSettings({...siteSettings,name:e.target.value})}/></div>
-              <div className="flex gap-3"><div className="flex-1"><label className="block text-xs font-medium text-slate-600 mb-1">Color primario</label><div className="flex gap-2"><input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={siteSettings.primaryColor} onChange={e=>setSiteSettings({...siteSettings,primaryColor:e.target.value})}/><input className="input-field text-xs flex-1" value={siteSettings.primaryColor} onChange={e=>setSiteSettings({...siteSettings,primaryColor:e.target.value})}/></div></div><div className="flex-1"><label className="block text-xs font-medium text-slate-600 mb-1">Color secundario</label><div className="flex gap-2"><input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={siteSettings.secondaryColor} onChange={e=>setSiteSettings({...siteSettings,secondaryColor:e.target.value})}/><input className="input-field text-xs flex-1" value={siteSettings.secondaryColor} onChange={e=>setSiteSettings({...siteSettings,secondaryColor:e.target.value})}/></div></div></div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-slate-700">Paleta de colores</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Se aplica de forma global a toda la web.</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {PALETTE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => { setPalette({ ...preset.palette }); setPaletteDirty(true); }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-primary-300 hover:bg-primary-50"
+                      title={`Aplicar paleta ${preset.name}`}
+                    >
+                      <span className="flex -space-x-1">
+                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.primary }} />
+                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.secondary }} />
+                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.accent }} />
+                      </span>
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["primary", "secondary", "accent", "background", "surface", "text"] as PaletteRole[]).map((role) => (
+                    <div key={role}>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">{PALETTE_LABELS[role]}</label>
+                      <div className="flex gap-2">
+                        <input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={palette[role]} onChange={e=>updatePaletteColor(role, e.target.value)}/>
+                        <input className="input-field text-xs flex-1" value={palette[role]} onChange={e=>updatePaletteColor(role, e.target.value)}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div>
+                  <p className="text-xs font-semibold text-slate-700">Al despublicar el sitio</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Qué verá el visitante mientras la web está despublicada.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: "404", label: "Página 404" },
+                    { value: "maintenance", label: "En mantenimiento" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setUnpublishedBehavior(opt.value)}
+                      className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${unpublishedBehavior === opt.value ? "border-primary-400 bg-primary-50 text-primary-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Logo URL</label><input className="input-field text-xs" value={siteSettings.logoUrl} onChange={e=>setSiteSettings({...siteSettings,logoUrl:e.target.value})} placeholder="https://..."/></div>
               <div><label className="block text-xs font-medium text-slate-600 mb-1">Favicon</label><ImageField label="Favicon" value={siteSettings.faviconUrl} onChange={v=>setSiteSettings({...siteSettings,faviconUrl:v})}/></div>
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">

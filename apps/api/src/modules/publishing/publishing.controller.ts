@@ -49,9 +49,9 @@ export class PublishingController {
     @Query("path") path: string,
     @Res() res: Response
   ) {
-    const html = await this.publishingService.getPublicHtml(subdomain, path);
+    const { html, status } = await this.publishingService.getPublicHtml(subdomain, path);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.send(html);
+    res.status(status).send(html);
   }
 
   @Public()
@@ -68,9 +68,9 @@ export class PublishingController {
   @Header("Content-Type", "text/html; charset=utf-8")
   @ApiOperation({ summary: "Public checkout page - cart summary + cod form" })
   async getPublicCheckout(@Param("subdomain") subdomain: string, @Res() res: Response) {
-    const html = await this.publishingService.getPublicHtml(subdomain, "/checkout");
+    const { html, status } = await this.publishingService.getPublicHtml(subdomain, "/checkout");
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.send(html);
+    res.status(status).send(html);
   }
 
   @Public()

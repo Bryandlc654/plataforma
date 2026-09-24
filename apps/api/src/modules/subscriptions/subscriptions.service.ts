@@ -1,11 +1,42 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 
+const DEFAULT_EXPIRED_CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
 @Injectable()
-export class SubscriptionsService {
+export class SubscriptionsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SubscriptionsService.name);
+  private expiredCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(private prisma: PrismaService) {}
+
+  onModuleInit() {
+    const configured = parseInt(
+      process.env.SUBSCRIPTIONS_EXPIRED_CHECK_INTERVAL_MS || "",
+      10
+    );
+    const intervalMs =
+      Number.isFinite(configured) && configured > 0
+        ? configured
+        : DEFAULT_EXPIRED_CHECK_INTERVAL_MS;
+
+    this.expiredCheckInterval = setInterval(() => {
+      this.checkAndSuspendExpired().catch((err) =>
+        this.logger.error(`Expired subscriptions check failed: ${err.message}`)
+      );
+    }, intervalMs);
+  }
+
+  onModuleDestroy() {
+    if (this.expiredCheckInterval) clearInterval(this.expiredCheckInterval);
+  }
 
   async getCurrent(tenantId: string) {
     const sub = await this.prisma.subscription.findFirst({

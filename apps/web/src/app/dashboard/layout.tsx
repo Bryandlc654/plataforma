@@ -50,13 +50,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (cached) { setTenants(cached); return; }
     try {
       const res: any = await api.get("/users/tenants");
-      const data = res.data || res;
-      if (Array.isArray(data)) {
-        setTenants(data);
-        setCachedJson(cacheKey, data);
-      } else {
-        setTenants([]);
-      }
+      const raw = res.data || res;
+      const data = Array.isArray(raw)
+        ? raw.filter((t: any) => t.isActive !== false)
+        : [];
+      setTenants(data);
+      setCachedJson(cacheKey, data);
     }
     catch { setTenants([]); }
   };
@@ -89,6 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard/analytics", label: "Analytics", icon: "analytics", perms: ["analytics.view"] },
         { href: "/dashboard/seo", label: "SEO", icon: "seo", perms: ["site.read"] },
+        { href: "/dashboard/blog", label: "Blog", icon: "blog", perms: ["site.read"] },
         { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
       ]
     },

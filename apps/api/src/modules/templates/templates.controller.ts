@@ -66,13 +66,21 @@ export class TemplatesController {
       throw new ForbiddenException("Solo el super admin puede importar plantillas");
     }
     if (!file) throw new BadRequestException("Archivo ZIP requerido");
-    return this.templatesImportService.importZip(file, {
+    const result: any = await this.templatesImportService.importZip(file, {
       name: name || file.originalname.replace(/\.zip$/i, ""),
       description,
       categoryId,
       isPremium: isPremium === "true" || isPremium === "1",
       dryRun: preview === "true" || preview === "1",
     });
+    if (result?.id) {
+      try {
+        await this.templatesService.ensureErrorPage(result.id);
+      } catch {
+        // la importación ya se completó; la página 404 puede generarse luego
+      }
+    }
+    return result;
   }
 
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
@@ -124,6 +132,13 @@ export class TemplatesController {
   @ApiOperation({ summary: "Admin: make templates visually distinct" })
   async diversifyAll() {
     return this.templatesService.diversifyAllTemplates();
+  }
+
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @Post("admin/ensure-error-pages")
+  @ApiOperation({ summary: "Admin: asegurar página 404 en todas las plantillas" })
+  async ensureErrorPages() {
+    return this.templatesService.ensureErrorPagesForAllTemplates();
   }
 
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)

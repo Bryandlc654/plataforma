@@ -108,6 +108,18 @@ api.interceptors.response.use(
       }
     }
 
+    if (status === 403) {
+      const message = String(
+        error?.response?.data?.message || error?.response?.data?.error || ""
+      );
+      if (/suspendid|suspended/i.test(message)) {
+        try { useAuthStore.getState().logout(); } catch {}
+        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      }
+    }
+
     if (status === 401) {
       const url = String(original?.url || "");
       const isAuthProbe = url.includes("/auth/me");

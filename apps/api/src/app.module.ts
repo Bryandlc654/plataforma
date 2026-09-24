@@ -40,6 +40,7 @@ import { SorteosModule } from './modules/sorteos/sorteos.module';
 import { LinktreesModule } from './modules/linktrees/linktrees.module';
 import { PopupsModule } from './modules/popups/popups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { BlogModule } from './modules/blog/blog.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     LinktreesModule,
     PopupsModule,
     PaymentsModule,
+    BlogModule,
   ],
   providers: [
     {

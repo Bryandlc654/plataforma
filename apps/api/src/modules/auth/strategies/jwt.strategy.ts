@@ -43,6 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       : requestedTenantIdRaw;
 
     const includeRoles = {
+      tenant: { select: { isActive: true } },
       roles: {
         include: {
           role: {
@@ -82,6 +83,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       ) ?? [];
 
     const isSuperAdmin = roles.includes("super_admin");
+    const isSystemUser = isSuperAdmin || roles.includes("support");
+
+    if (!isSystemUser && userTenant?.tenant && !userTenant.tenant.isActive) {
+      throw new ForbiddenException("El negocio está suspendido");
+    }
 
     return {
       id: user.id,

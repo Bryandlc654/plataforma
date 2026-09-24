@@ -37,15 +37,18 @@ export async function middleware(request: NextRequest) {
         const res = await fetch(apiUrl, {
           headers: { "Accept": "text/html" },
         });
-        if (res.ok) {
-          const body = await res.text();
+        const body = await res.text();
+        const looksHtml = /^\s*(<!doctype|<html)/i.test(body);
+        // Forward the site's own status page (404 / maintenance). Keep trying other
+        // host variants when the API reports "site not found" (JSON) for this host.
+        if (res.ok || looksHtml) {
           const contentType = pathname.endsWith(".xml")
             ? "application/xml; charset=utf-8"
             : pathname.endsWith(".txt")
               ? "text/plain; charset=utf-8"
               : "text/html; charset=utf-8";
           return new NextResponse(body, {
-            status: 200,
+            status: res.status,
             headers: {
               "Content-Type": contentType,
               "Cache-Control": "no-store, no-cache, must-revalidate",

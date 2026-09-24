@@ -30,13 +30,13 @@ export class TenantGuard implements CanActivate {
       throw new ForbiddenException("Tenant not found or inactive");
     }
 
-    if (!tenant.isActive) {
-      throw new ForbiddenException("Tenant is suspended");
-    }
-
     const user = request.user;
     const isSystemUser =
       user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+
+    if (!tenant.isActive && !isSystemUser) {
+      throw new ForbiddenException("Tenant is suspended");
+    }
 
     if (user?.id && !isSystemUser) {
       const membership = await this.prisma.userTenant.findUnique({

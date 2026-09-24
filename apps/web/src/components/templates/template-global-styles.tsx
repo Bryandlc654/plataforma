@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  buildCapturedThemeOverrides,
+  paletteCssVariables,
+  type SitePalette,
+} from "@/lib/site-palette";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1")
   .replace(/\/api\/v1\/?$/i, "")
@@ -50,6 +55,8 @@ export interface TemplateThemeColors {
   secondary?: string;
 }
 
+export type { SitePalette };
+
 /**
  * Traduce las variables de tema capturadas en la plantilla a overrides sobre el
  * contenedor con scope, para reflejar los colores editables del sitio.
@@ -57,28 +64,20 @@ export interface TemplateThemeColors {
 function buildThemeCss(
   pageTheme: any,
   globalStyles: any,
-  colors?: TemplateThemeColors,
+  palette?: SitePalette,
+  explicitRoles?: string[],
 ): string {
-  if (!colors || (!colors.primary && !colors.secondary)) return "";
+  if (!palette) return "";
   if (!pageTheme || typeof pageTheme !== "object") return "";
   const scope = templateScopeClass(globalStyles);
-  const decls: string[] = [];
-  if (
-    typeof pageTheme.primaryVar === "string" &&
-    pageTheme.primaryVar &&
-    colors.primary
-  ) {
-    decls.push(`${pageTheme.primaryVar}:${colors.primary}`);
-  }
-  if (
-    typeof pageTheme.secondaryVar === "string" &&
-    pageTheme.secondaryVar &&
-    colors.secondary &&
-    pageTheme.secondaryVar !== pageTheme.primaryVar
-  ) {
-    decls.push(`${pageTheme.secondaryVar}:${colors.secondary}`);
-  }
-  return decls.length ? `.${scope}{${decls.join(";")}}` : "";
+  const overrides = buildCapturedThemeOverrides(
+    pageTheme,
+    palette,
+    (explicitRoles as any) || [],
+  );
+  if (!overrides) return "";
+  const decls = overrides.replace(/^:root\{|\}$/g, "");
+  return decls ? `.${scope}{${decls}}` : "";
 }
 
 /**
@@ -109,10 +108,12 @@ export function TemplateGlobalStyles({
   globalStyles,
   pagePath,
   colors,
+  palette,
 }: {
   globalStyles: any;
   pagePath?: string;
   colors?: TemplateThemeColors;
+  palette?: SitePalette;
 }) {
   const page = resolveTemplatePageStyles(globalStyles, pagePath);
   if (!page) return null;
@@ -127,8 +128,27 @@ export function TemplateGlobalStyles({
     typeof page.scopedCssPath === "string" && page.scopedCssPath
       ? `${API_ORIGIN}${page.scopedCssPath}${page.scopedCssHash ? `?h=${page.scopedCssHash}` : ""}`
       : "";
-  const themeCss = buildThemeCss(page.theme, globalStyles, colors);
-  if (!head && !href && !scopedCss && !cssFallback && !themeCss && !runtime) return null;
+  const effectivePalette: SitePalette | undefined =
+    palette || (colors?.primary || colors?.secondary
+      ? {
+          background: "#ffffff",
+          surface: "#f8fafc",
+          text: "#1e293b",
+          accent: "#f59e0b",
+          primary: colors?.primary || "#2563EB",
+          secondary: colors?.secondary || "#1E40AF",
+        }
+      : undefined);
+  const explicitRoles = palette
+    ? (Object.keys(palette) as Array<keyof SitePalette>)
+    : colors
+      ? (["primary", "secondary"] as Array<keyof SitePalette>)
+      : [];
+  const themeCss = buildThemeCss(page.theme, globalStyles, effectivePalette, explicitRoles as string[]);
+  const paletteCss = palette
+    ? `:root{${paletteCssVariables(palette)}}`
+    : "";
+  if (!head && !href && !scopedCss && !cssFallback && !themeCss && !paletteCss && !runtime) return null;
   return (
     <>
       {runtime ? <TemplateRuntimeScript script={runtime} /> : null}
@@ -138,6 +158,7 @@ export function TemplateGlobalStyles({
         <style dangerouslySetInnerHTML={{ __html: resolveAssets(scopedCss || cssFallback) }} />
       ) : null}
       {themeCss ? <style dangerouslySetInnerHTML={{ __html: themeCss }} /> : null}
+      {paletteCss ? <style dangerouslySetInnerHTML={{ __html: paletteCss }} /> : null}
     </>
   );
 }

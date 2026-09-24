@@ -1,15 +1,32 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  OnModuleInit,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
-export class TemplatesService {
+export class TemplatesService implements OnModuleInit {
+  private readonly logger = new Logger(TemplatesService.name);
+
   constructor(private prisma: PrismaService) {}
+
+  onModuleInit() {
+    // Backfill idempotente: asegura la página 404 en las plantillas existentes.
+    setTimeout(() => {
+      this.ensureErrorPagesForAllTemplates()
+        .then((res) => {
+          if (res.created > 0) {
+            this.logger.log(`Página 404 creada en ${res.created}/${res.total} plantillas`);
+          }
+        })
+        .catch((err) => this.logger.warn(`Backfill 404 omitido: ${err?.message || err}`));
+    }, 5000);
+  }
 
   private normalizeSlug(input: string): string {
     return input
@@ -242,7 +259,118 @@ export class TemplatesService {
       await this.prisma.templateBlock.createMany({ data: allBlocksData });
     }
 
+    await this.ensureErrorPage(template.id);
+
     return template;
+  }
+
+  private normalizePath(path: string | null | undefined): string {
+    const clean = String(path || "/").split(/[?#]/)[0].replace(/\/+$/, "");
+    return clean || "/";
+  }
+
+  private buildErrorPageBlocks(defaultPage: any) {
+    const blocks: Array<{ type: string; content: any; styles: any; sortOrder: number }> = [];
+    const pageBlocks = defaultPage?.blocks || [];
+    let order = 0;
+
+    const header = pageBlocks.find((b: any) => b.type === "header");
+    if (header) {
+      blocks.push({ type: "header", content: header.content, styles: header.styles, sortOrder: order++ });
+    }
+
+    const hero = pageBlocks.find((b: any) => b.type === "hero");
+    const variant = pageBlocks.find((b: any) => b.content?.variant)?.content?.variant;
+    const heroContent = (hero?.content as any) || {};
+    blocks.push({
+      type: hero ? "hero" : "cta",
+      content: {
+        ...heroContent,
+        variant: heroContent.variant || variant,
+        title: "404",
+        subtitle: "No encontramos la página que buscas.",
+        buttonText: "Volver al inicio",
+        buttonUrl: "/",
+        slides: undefined,
+        highlights: undefined,
+        secondaryButtonText: undefined,
+        secondaryButtonUrl: undefined,
+      },
+      styles: hero?.styles,
+      sortOrder: order++,
+    });
+
+    const footer = pageBlocks.find((b: any) => b.type === "footer");
+    if (footer) {
+      blocks.push({ type: "footer", content: footer.content, styles: footer.styles, sortOrder: order++ });
+    }
+
+    return blocks;
+  }
+
+  /** Asegura que una plantilla tenga su página de error 404 propia. */
+  async ensureErrorPage(templateId: string) {
+    const template = await this.prisma.template.findUnique({
+      where: { id: templateId },
+      include: {
+        pages: {
+          include: { blocks: { orderBy: { sortOrder: "asc" } } },
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+    });
+    if (!template) throw new NotFoundException("Template not found");
+
+    const exists = template.pages.some(
+      (p) => p.slug === "404" || this.normalizePath(p.path) === "/404"
+    );
+    if (exists) return { created: false, pageId: null as string | null };
+
+    const defaultPage = template.pages.find((p) => p.isDefault) || template.pages[0];
+    const blocks = this.buildErrorPageBlocks(defaultPage);
+
+    const page = await this.prisma.templatePage.create({
+      data: {
+        templateId: template.id,
+        name: "404",
+        slug: "404",
+        path: "/404",
+        isDefault: false,
+        sortOrder: 999,
+      },
+    });
+
+    if (blocks.length > 0) {
+      await this.prisma.templateBlock.createMany({
+        data: blocks.map((b) => ({
+          templatePageId: page.id,
+          type: b.type,
+          content: b.content as any,
+          styles: b.styles as any,
+          sortOrder: b.sortOrder,
+        })),
+      });
+    }
+
+    return { created: true, pageId: page.id };
+  }
+
+  /** Crea la página 404 en todas las plantillas que aún no la tengan. */
+  async ensureErrorPagesForAllTemplates() {
+    const templates = await this.prisma.template.findMany({
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+    let created = 0;
+    for (const t of templates) {
+      try {
+        const res = await this.ensureErrorPage(t.id);
+        if (res.created) created++;
+      } catch {
+        // continúa con el resto de plantillas
+      }
+    }
+    return { created, total: templates.length };
   }
 
   async diversifyAllTemplates() {

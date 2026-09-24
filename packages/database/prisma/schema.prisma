@@ -152,6 +152,7 @@ model Tenant {
    supportTickets    SupportTicket[]
    sorteos           Sorteo[]
    linkPages         LinkPage[]
+   blogArticles      BlogArticle[]
    roles             Role[]
 
    @@index([slug])
@@ -319,6 +320,7 @@ model Site {
   reviews         Review[]
   forms           Form[]
   analyticsEvents AnalyticsEvent[]
+  blogArticles    BlogArticle[]
 
   @@index([tenantId])
   @@map("sites")
@@ -907,4 +909,33 @@ model LinkPage {
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@map("link_pages")
+}
+
+model BlogArticle {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  title       String
+  slug        String
+  excerpt     String?  @db.Text
+  content     String   @db.LongText
+  coverImage  String?  @map("cover_image")
+  authorName  String?  @map("author_name")
+  tags        Json?
+  isPublished Boolean  @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  seoTitle    String?  @map("seo_title")
+  seoDesc     String?  @map("seo_desc")
+  seoImage    String?  @map("seo_image")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([siteId, isPublished, publishedAt])
+  @@index([tenantId])
+  @@map("blog_articles")
 }
