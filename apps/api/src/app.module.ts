@@ -41,6 +41,7 @@ import { LinktreesModule } from './modules/linktrees/linktrees.module';
 import { PopupsModule } from './modules/popups/popups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { BlogModule } from './modules/blog/blog.module';
     PopupsModule,
     PaymentsModule,
     BlogModule,
+    KnowledgeBaseModule,
   ],
   providers: [
     {

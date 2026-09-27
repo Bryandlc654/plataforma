@@ -118,6 +118,7 @@ export default function DashboardPage() {
     { href: "/dashboard/ecommerce", label: "E-commerce", icon: "ecommerce", perms: ["site.read"] },
     { href: "/dashboard/bookings-page", label: "Reservas", icon: "bookings", perms: ["site.read"] },
     { href: "/dashboard/support", label: "Soporte", icon: "support", roles: "*" },
+    { href: "/dashboard/help", label: "Base de Conocimientos", icon: "help", roles: "*" },
   ];
 
   const adminLinks = [
