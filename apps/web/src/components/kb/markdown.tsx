@@ -196,7 +196,7 @@ export default function Markdown({ children }: { children: string }) {
         items.push(
           <li key={`${key++}-li`} className="my-1 flex gap-2">
             <span className="mt-0.5 flex-shrink-0 font-medium text-slate-400">{counter}.</span>
-            <span>{renderInline(olItem![2], `${key}-li`)}</span>
+            <span>{renderInline(olItem![1], `${key}-li`)}</span>
           </li>
         );
         while (i + 1 < lines.length) {
