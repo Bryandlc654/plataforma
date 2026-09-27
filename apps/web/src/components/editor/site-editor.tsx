@@ -198,8 +198,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   const blogCfg = (site?.settings as any)?.blog;
   const injectBlogNav = (block: Block): Block => {
-    if (blogCfg?.enabled !== true || block.type !== "header") return block;
-    const url = `/${blogCfg.slug || "blog"}`;
+    if (!site || blogCfg?.enabled !== true || block.type !== "header") return block;
+    const base = site.domain ? `https://${site.domain}` : `https://build.icebergup.com/${site.subdomain}`;
+    const url = `${base}/${blogCfg.slug || "blog"}`;
     const content = { ...(block.content || {}) };
     const links = Array.isArray(content.links) ? content.links : [];
     if (!links.some((l: any) => l?.url === url)) {

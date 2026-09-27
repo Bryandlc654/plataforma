@@ -356,6 +356,9 @@ export default function SeoPage() {
                 onChange={(e) => handleSelectSite(e.target.value)}
                 className="input-field max-w-md"
               >
+                <option value="" disabled>
+                  Elige tu sitio web
+                </option>
                 {sites.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} — {s.subdomain || s.id}
