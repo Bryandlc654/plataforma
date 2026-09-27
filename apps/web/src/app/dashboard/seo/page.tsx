@@ -196,7 +196,8 @@ export default function SeoPage() {
   const fetchMeta = useCallback(
     async (siteId: string) => {
       try {
-        const d = (await api.get(`/seo/sites/${siteId}/meta`)) as SeoMeta;
+        const res: any = await api.get(`/seo/sites/${siteId}/meta`);
+        const d = (res?.data || res) as SeoMeta;
         applyMeta(d);
         setSaveError(null);
       } catch {
