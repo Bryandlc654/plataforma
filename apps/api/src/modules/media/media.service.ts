@@ -11,6 +11,7 @@ import * as path from "path";
 import { v4 as uuid } from "uuid";
 import * as sharp from "sharp";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { createR2Client, r2Bucket, r2UrlFor, r2ConfigProblems, describeR2Error } from "../../common/storage/r2";
 
 @Injectable()
 export class MediaService {
@@ -29,23 +30,14 @@ export class MediaService {
       fs.mkdirSync(this.storagePath, { recursive: true });
     }
 
-    const r2AccountIdRaw = process.env.R2_ACCOUNT_ID;
-    const r2AccessKey = process.env.R2_ACCESS_KEY_ID;
-    const r2SecretKey = process.env.R2_SECRET_ACCESS_KEY;
+    this.s3Client = createR2Client();
+    this.isR2Enabled = Boolean(this.s3Client) && Boolean(r2Bucket());
 
-    if (r2AccountIdRaw && r2AccessKey && r2SecretKey) {
-      this.isR2Enabled = true;
-      let endpoint = `https://${r2AccountIdRaw}.r2.cloudflarestorage.com`;
-      if (r2AccountIdRaw.startsWith("http")) {
-        endpoint = r2AccountIdRaw;
-      } else if (r2AccountIdRaw.includes(".r2.cloudflarestorage.com")) {
-        endpoint = `https://${r2AccountIdRaw}`;
-      }
-      this.s3Client = new S3Client({
-        region: "auto",
-        endpoint,
-        credentials: { accessKeyId: r2AccessKey, secretAccessKey: r2SecretKey },
-      });
+    const problems = r2ConfigProblems();
+    if (problems.length) {
+      console.error(
+        `[storage] R2 no operativo: ${problems.join(" ")} Las subidas de imagen fallaran hasta corregirlas.`
+      );
     }
   }
 
@@ -101,16 +93,15 @@ export class MediaService {
     let fileUrl = "";
 
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (!bucket) throw new BadRequestException("R2_BUCKET_NAME is not configured");
       const objectKey = cleanFolder ? `${tenantId}/${cleanFolder}/${storedName}` : `${tenantId}/${storedName}`;
       try {
         await this.s3Client.send(new PutObjectCommand({ Bucket: bucket, Key: objectKey, Body: finalBuffer, ContentType: mimeType }));
       } catch (err: any) {
-        throw new BadRequestException(`Cloudflare R2 Error: No se pudo subir el archivo. Detalle: ${err.message || err.name}`);
+        throw new BadRequestException(`Cloudflare R2 Error: No se pudo subir el archivo. Detalle: ${describeR2Error(err)}`);
       }
-      const publicUrlBase = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
-      fileUrl = publicUrlBase ? `${publicUrlBase}/${objectKey}` : `https://${bucket}.r2.cloudflarestorage.com/${objectKey}`;
+      fileUrl = r2UrlFor(objectKey);
     } else {
       const uploadDir = cleanFolder ? path.join(this.storagePath, tenantId, cleanFolder) : path.join(this.storagePath, tenantId);
       if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -202,15 +193,14 @@ export class MediaService {
     let fileUrl = "";
 
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (!bucket) throw new BadRequestException("R2_BUCKET_NAME is not configured");
       try {
         await this.s3Client.send(new PutObjectCommand({ Bucket: bucket, Key: objectKey, Body: finalBuffer, ContentType: mimeType }));
       } catch (err: any) {
-        throw new BadRequestException(`Cloudflare R2 Error: No se pudo subir la imagen. Detalle: ${err.message || err.name}`);
+        throw new BadRequestException(`Cloudflare R2 Error: No se pudo subir la imagen. Detalle: ${describeR2Error(err)}`);
       }
-      const publicUrlBase = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
-      fileUrl = publicUrlBase ? `${publicUrlBase}/${objectKey}` : `https://${bucket}.r2.cloudflarestorage.com/${objectKey}`;
+      fileUrl = r2UrlFor(objectKey);
     } else {
       const uploadDir = path.join(this.storagePath, "templates");
       if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -272,7 +262,7 @@ export class MediaService {
     const media = await this.findById(id, tenantId);
 
     if (this.isR2Enabled && this.s3Client && media.url.startsWith("http")) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       const cleanFolder = media.folder && media.folder !== "/" ? media.folder : "";
       const objectKey = cleanFolder ? `${tenantId}/${cleanFolder}/${media.storedName}` : `${tenantId}/${media.storedName}`;
       try {

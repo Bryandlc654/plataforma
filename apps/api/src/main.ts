@@ -12,6 +12,7 @@ import * as cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
+import { r2ConfigProblems } from "./common/storage/r2";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 import { WinstonModule } from "nest-winston";
@@ -39,6 +40,12 @@ async function bootstrap() {
     }
     if (!refreshSecret || refreshSecret === "dev-refresh-secret-change-me") {
       throw new Error("JWT_REFRESH_SECRET no configurado en producción");
+    }
+    // Credenciales R2 con formato invalido: hoy solo se descubriria al subir una
+    // imagen, con un error opaco de Node sobre la cabecera Authorization.
+    const r2Problems = r2ConfigProblems();
+    if (r2Problems.length) {
+      throw new Error(`Credenciales de Cloudflare R2 invalidas: ${r2Problems.join(" ")}`);
     }
   }
 
