@@ -14,13 +14,17 @@ steps:
     args: ['push', 'gcr.io/$PROJECT_ID/plataforma-api']
 
   # Apply pending database migrations before deploying (fail build on error)
+  # Se invoca el binario de Prisma 6 que ya viene en la imagen. Con `npx` sin `dir`,
+  # Cloud Build corre desde /workspace, no encuentra node_modules y descarga Prisma 7,
+  # que rechaza el `url` del datasource (P1012) y rompe el pipeline.
   - name: 'gcr.io/$PROJECT_ID/plataforma-api'
-    entrypoint: 'npx'
+    dir: '/app'
+    entrypoint: 'node'
     args:
-      - 'prisma'
+      - '/app/node_modules/prisma/build/index.js'
       - 'migrate'
       - 'deploy'
-      - '--schema=packages/database/prisma/schema.prisma'
+      - '--schema=/app/packages/database/prisma/schema.prisma'
     secretEnv: ['DATABASE_URL']
 
   # Deploy to Cloud Run
@@ -41,12 +45,21 @@ steps:
       - '8080'
       - '--memory'
       - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '60'
+      - '--concurrency'
+      - '80'
       - '--min-instances'
       - '1'
       - '--set-env-vars'
       - 'NODE_ENV=production'
       - '--update-secrets'
-      - 'DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,CSRF_SECRET=CSRF_SECRET:latest,R2_ACCOUNT_ID=R2_ACCOUNT_ID:latest,R2_ACCESS_KEY_ID=R2_ACCESS_KEY_ID:latest,R2_SECRET_ACCESS_KEY=R2_SECRET_ACCESS_KEY:latest,R2_BUCKET_NAME=R2_BUCKET_NAME:latest,R2_PUBLIC_URL=R2_PUBLIC_URL:latest,BILLING_WEBHOOK_SECRET=BILLING_WEBHOOK_SECRET:latest,PAYPHONE_APP_ID=PAYPHONE_APP_ID:latest,PAYPHONE_TOKEN=PAYPHONE_TOKEN:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest'
+      # Solo los secretos que existen en Secret Manager. PAYPHONE_APP_ID/PAYPHONE_TOKEN
+      # no se usan: cada tenant guarda su token y storeId en tenant.settings.
+      # Referenciarlos aqui hacia fallar el deploy por secreto inexistente.
+      - 'DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,CSRF_SECRET=CSRF_SECRET:latest,R2_ACCOUNT_ID=R2_ACCOUNT_ID:latest,R2_ACCESS_KEY_ID=R2_ACCESS_KEY_ID:latest,R2_SECRET_ACCESS_KEY=R2_SECRET_ACCESS_KEY:latest,R2_BUCKET_NAME=R2_BUCKET_NAME:latest,R2_PUBLIC_URL=R2_PUBLIC_URL:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest,BILLING_WEBHOOK_SECRET=BILLING_WEBHOOK_SECRET:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/plataforma-api'
