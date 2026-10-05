@@ -3,6 +3,10 @@ import type { NextRequest } from "next/server";
 
 const PLATFORM_HOSTNAMES = ["localhost", "build.icebergup.com", "127.0.0.1"];
 
+// Sufijos de hosts donde vive la propia app de la plataforma (no son dominios
+// de sitios de clientes).
+const PLATFORM_HOST_SUFFIXES = [".icebergup.com", ".vercel.app", ".onrender.com"];
+
 const protectedPaths = ["/dashboard"];
 const authPaths = ["/login", "/register"];
 
@@ -16,8 +20,7 @@ export async function middleware(request: NextRequest) {
   // the [subdomain] route so the correct site is served and tracked.
   const isPlatformHost =
     PLATFORM_HOSTNAMES.includes(cleanHost) ||
-    cleanHost.endsWith(".icebergup.com") ||
-    cleanHost.endsWith(".vercel.app");
+    PLATFORM_HOST_SUFFIXES.some((suffix) => cleanHost.endsWith(suffix));
 
   if (!isPlatformHost) {
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
