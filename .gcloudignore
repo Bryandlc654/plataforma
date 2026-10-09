@@ -1,0 +1,15 @@
+node_modules/
+.git/
+.next/
+dist/
+.turbo/
+.env
+.env.*
+*.md
+coverage/
+.vscode/
+.idea/
+logs/
+backups/
+*.log
+*.sql.gz

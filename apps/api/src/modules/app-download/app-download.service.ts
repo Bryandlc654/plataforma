@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { createR2Client, r2Bucket, r2PublicBase, r2UrlFor, describeR2Error } from "../../common/storage/r2";
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "fs";
 import { join } from "path";
 
@@ -21,24 +22,8 @@ export class AppDownloadService {
   private isR2Enabled = false;
 
   constructor() {
-    const r2AccountIdRaw = process.env.R2_ACCOUNT_ID;
-    const r2AccessKey = process.env.R2_ACCESS_KEY_ID;
-    const r2SecretKey = process.env.R2_SECRET_ACCESS_KEY;
-
-    if (r2AccountIdRaw && r2AccessKey && r2SecretKey) {
-      this.isR2Enabled = true;
-      let endpoint = `https://${r2AccountIdRaw}.r2.cloudflarestorage.com`;
-      if (r2AccountIdRaw.startsWith("http")) {
-        endpoint = r2AccountIdRaw;
-      } else if (r2AccountIdRaw.includes(".r2.cloudflarestorage.com")) {
-        endpoint = `https://${r2AccountIdRaw}`;
-      }
-      this.s3Client = new S3Client({
-        region: "auto",
-        endpoint,
-        credentials: { accessKeyId: r2AccessKey, secretAccessKey: r2SecretKey },
-      });
-    }
+    this.s3Client = createR2Client();
+    this.isR2Enabled = Boolean(this.s3Client) && Boolean(r2Bucket());
   }
 
   private ensureDir() {
@@ -59,7 +44,7 @@ export class AppDownloadService {
    */
   async getApk(): Promise<GlobalApkInfo | null> {
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (bucket) {
         try {
           const res = await this.s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: INDEX_KEY }));
@@ -77,7 +62,7 @@ export class AppDownloadService {
 
   private async writeIndex(info: GlobalApkInfo): Promise<void> {
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (bucket) {
         await this.s3Client.send(new PutObjectCommand({
           Bucket: bucket,
@@ -93,7 +78,7 @@ export class AppDownloadService {
 
   private async deleteIndex(): Promise<void> {
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (bucket) {
         try {
           await this.s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: INDEX_KEY }));
@@ -108,7 +93,7 @@ export class AppDownloadService {
 
     const prev = await this.getApk();
     if (prev?.apkUrl && this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       const key = this.extractR2Key(prev.apkUrl);
       if (bucket && key) {
         try {
@@ -126,7 +111,7 @@ export class AppDownloadService {
     let apkUrl = "";
 
     if (this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       if (!bucket) throw new BadRequestException("R2_BUCKET_NAME is not configured");
       const unique = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
       const objectKey = `app-download/${unique}.apk`;
@@ -138,10 +123,9 @@ export class AppDownloadService {
           ContentType: "application/vnd.android.package-archive",
         }));
       } catch (err: any) {
-        throw new BadRequestException(`Error al subir APK a R2: ${err.message || err.name}`);
+        throw new BadRequestException(`Error al subir APK a R2: ${describeR2Error(err)}`);
       }
-      const publicUrlBase = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
-      apkUrl = publicUrlBase ? `${publicUrlBase}/${objectKey}` : `https://${bucket}.r2.cloudflarestorage.com/${objectKey}`;
+      apkUrl = r2UrlFor(objectKey);
     } else {
       const unique = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
       const filename = `${unique}.apk`;
@@ -167,7 +151,7 @@ export class AppDownloadService {
     const info = await this.getApk();
     if (!info) throw new NotFoundException("No hay APK configurada");
     if (info?.apkUrl && this.isR2Enabled && this.s3Client) {
-      const bucket = process.env.R2_BUCKET_NAME;
+      const bucket = r2Bucket();
       const key = this.extractR2Key(info.apkUrl);
       if (bucket && key) {
         try {
@@ -187,11 +171,11 @@ export class AppDownloadService {
   }
 
   private extractR2Key(url: string): string | null {
-    const publicUrlBase = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
+    const publicUrlBase = r2PublicBase();
     if (publicUrlBase && url.startsWith(publicUrlBase)) {
       return url.substring(publicUrlBase.length + 1);
     }
-    const bucket = process.env.R2_BUCKET_NAME;
+    const bucket = r2Bucket();
     if (bucket && url.includes(`/${bucket}/`)) {
       const idx = url.indexOf(`/${bucket}/`) + bucket.length + 2;
       return url.substring(idx);

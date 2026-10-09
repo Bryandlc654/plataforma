@@ -46,6 +46,11 @@ coverage/
 packages/database/prisma/*.db
 packages/database/prisma/*.db-journal
 
+# Credenciales de infraestructura (nunca versionar)
+keysR2.txt
+*_keys.txt
+*_secrets.txt
+
 # Misc
 *.tgz
 *.zip

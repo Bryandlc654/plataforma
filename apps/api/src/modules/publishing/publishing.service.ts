@@ -1239,7 +1239,7 @@ if (paymentBox) {
     });
     const items = articles.map((a) => ({
       title: a.title,
-      url: `/${blog.slug}/${a.slug}`,
+      url: `${resolvePublicSiteUrl(site)}/${blog.slug}/${a.slug}`,
       excerpt: a.excerpt || "",
       coverImage: a.coverImage ? this.absoluteUrl(a.coverImage) : "",
       authorName: a.authorName || "",
@@ -1281,7 +1281,7 @@ if (paymentBox) {
           authorName: article.authorName || "",
           date: article.publishedAt ? article.publishedAt.toISOString() : "",
           blogTitle: blog.title,
-          blogUrl: `/${blog.slug}`,
+          blogUrl: `${resolvePublicSiteUrl(site)}/${blog.slug}`,
         },
         styles: {},
       },
@@ -1300,9 +1300,13 @@ if (paymentBox) {
   }
 
   /** Agrega el enlace del blog al menú de la cabecera si el blog está habilitado. */
-  private withBlogNav(blocks: any[], blog: { enabled: boolean; title: string; slug: string }): any[] {
+  private withBlogNav(
+    blocks: any[],
+    blog: { enabled: boolean; title: string; slug: string },
+    site: any,
+  ): any[] {
     if (!blog.enabled || !Array.isArray(blocks)) return blocks;
-    const url = `/${blog.slug}`;
+    const url = `${resolvePublicSiteUrl(site)}/${blog.slug}`;
     const push = (arr: any[]) =>
       arr.some((l) => l && l.url === url) ? arr : [...arr, { label: blog.title, url }];
 
@@ -1337,7 +1341,7 @@ if (paymentBox) {
     const explicitRoles = explicitPaletteRoles(site.settings);
     const explicitPalette = explicitRoles.length > 0;
     const blogNav = resolveBlogSettings(site.settings);
-    const pageBlocks = this.withBlogNav(page?.blocks || [], blogNav);
+    const pageBlocks = this.withBlogNav(page?.blocks || [], blogNav, site);
     const themeBlocks = pageBlocks.map((block: any) =>
       this.applyPaletteToBlock(block, palette, explicitPalette)
     );

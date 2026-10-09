@@ -36,6 +36,7 @@ model User {
   invitations     Invitation[]
   supportTickets  SupportTicket[]
   ticketReplies   SupportTicketReply[]
+  knowledgeBaseArticles KnowledgeBaseArticle[]
 
   @@index([email])
   @@index([googleId])
@@ -938,4 +939,24 @@ model BlogArticle {
   @@index([siteId, isPublished, publishedAt])
   @@index([tenantId])
   @@map("blog_articles")
+}
+
+model KnowledgeBaseArticle {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  category    String
+  excerpt     String?  @db.Text
+  content     String   @db.LongText
+  isPublished Boolean  @default(true) @map("is_published")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdById String?  @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([isPublished, sortOrder])
+  @@map("knowledge_base_articles")
 }

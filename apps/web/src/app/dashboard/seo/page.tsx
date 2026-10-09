@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
+import MediaPicker from "@/components/media-picker";
 
 interface Site {
   id: string;
@@ -157,6 +158,7 @@ export default function SeoPage() {
   const [globalTitle, setGlobalTitle] = useState("");
   const [globalDesc, setGlobalDesc] = useState("");
   const [ogImage, setOgImage] = useState("");
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [pages, setPages] = useState<PageSeo[]>([]);
   const [snapshot, setSnapshot] = useState("");
 
@@ -196,7 +198,8 @@ export default function SeoPage() {
   const fetchMeta = useCallback(
     async (siteId: string) => {
       try {
-        const d = (await api.get(`/seo/sites/${siteId}/meta`)) as SeoMeta;
+        const res: any = await api.get(`/seo/sites/${siteId}/meta`);
+        const d = (res?.data || res) as SeoMeta;
         applyMeta(d);
         setSaveError(null);
       } catch {
@@ -356,6 +359,9 @@ export default function SeoPage() {
                 onChange={(e) => handleSelectSite(e.target.value)}
                 className="input-field max-w-md"
               >
+                <option value="" disabled>
+                  Elige tu sitio web
+                </option>
                 {sites.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} — {s.subdomain || s.id}
@@ -419,6 +425,14 @@ export default function SeoPage() {
                             onChange={(e) => setOgImage(e.target.value)}
                             placeholder="https://…/imagen-1200x630.jpg"
                           />
+                          <button
+                            type="button"
+                            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 flex items-center gap-1.5"
+                            onClick={() => setMediaPickerOpen(true)}
+                          >
+                            <span className="material-symbols-outlined text-base">upload</span>
+                            Subir
+                          </button>
                           <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                             {ogImage ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -634,6 +648,12 @@ export default function SeoPage() {
           {toast.message}
         </div>
       )}
+
+      <MediaPicker
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(url) => setOgImage(url)}
+      />
     </main>
   );
 }
