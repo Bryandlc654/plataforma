@@ -69,7 +69,7 @@ gcloud run deploy "${SERVICE}" \
   --min-instances 0 \
   --max-instances 10 \
   --timeout 60 \
-  --set-env-vars "NODE_ENV=production,PORT=8080" \
+  --update-env-vars "NODE_ENV=production" \
   --update-secrets "\
 DATABASE_URL=DATABASE_URL:latest,\
 JWT_SECRET=JWT_SECRET:latest,\
