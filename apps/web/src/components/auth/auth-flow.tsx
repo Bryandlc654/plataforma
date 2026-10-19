@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import api from "@/lib/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,14 +20,19 @@ export function BrandMark({ className = "" }: { className?: string }) {
 }
 
 /**
- * Acceso en dos pasos, igual que Shopify: correo -> código de 6 dígitos.
- * Sirve para crear cuenta y para volver a entrar (el backend decide).
+ * Igual que Shopify:
+ * - Iniciar sesión: correo -> contraseña (sin códigos).
+ * - Crear cuenta: correo -> código de 6 dígitos -> crear contraseña.
+ * El código solo se usa para registrarse (y la recuperación de contraseña va aparte).
  */
 export function AuthFlow({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
-  const { startWithEmail, verifyEmail, resendVerification, isLoading, ensureSession, hasHydrated } =
+  const { startWithEmail, verifyEmail, resendVerification, login, isLoading, ensureSession, hasHydrated } =
     useAuthStore();
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"email" | "code" | "password">("email");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +64,12 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       setError("Ingresa un correo electrónico válido");
       return;
     }
+    if (mode === "login") {
+      setError(null);
+      setEmail(value);
+      setStep("password");
+      return;
+    }
     try {
       setError(null);
       const res = await startWithEmail(value);
@@ -74,11 +86,41 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     try {
       setError(null);
       await verifyEmail(email, value);
-      router.replace("/dashboard");
+      setError(null);
+      setStep("password");
     } catch (err: any) {
       setCode("");
       setError(err.response?.data?.message || "Código incorrecto");
       codeRef.current?.focus();
+    }
+  };
+
+  const submitPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mode === "login") {
+      if (!password) return;
+      try {
+        setError(null);
+        await login(email, password);
+        router.replace("/dashboard");
+      } catch (err: any) {
+        setError(err.response?.data?.message || "Correo o contraseña incorrectos");
+      }
+      return;
+    }
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    try {
+      setSaving(true);
+      setError(null);
+      await api.post("/auth/set-password", { password });
+      router.replace("/dashboard");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No pudimos guardar la contraseña. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -108,7 +150,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
             <p className="mt-2 text-center text-lg text-white/60">
               {mode === "register"
                 ? "3 días gratis para crear tu sitio web, sin tarjeta"
-                : "Te enviaremos un código a tu correo"}
+                : "Ingresa tu correo para continuar"}
             </p>
 
             <form onSubmit={submitEmail} className="sp-card mt-10 w-full max-w-[376px] space-y-2">
@@ -143,13 +185,64 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
                   </>
                 )}
               </p>
-              <p className="text-center text-xs text-[#8a8a8a]">
-                <Link href="/login/password" className="hover:underline">
-                  Usar contraseña
-                </Link>
-              </p>
             </form>
           </>
+        ) : step === "password" ? (
+          <form onSubmit={submitPassword} className="sp-card mt-16 w-full max-w-[440px] !p-8">
+            <h1 className="text-[26px] font-bold leading-tight tracking-tight">
+              {mode === "login" ? "Ingresa tu contraseña" : "Crea tu contraseña"}
+            </h1>
+            <p className="mt-2 text-[15px] leading-snug text-[#616161]">
+              {mode === "login" ? "Cuenta: " : "Con ella iniciarás sesión en "}
+              <span className="font-semibold text-[#303030]">{email}</span>
+              {mode === "login" ? "" : ". Mínimo 8 caracteres."}
+            </p>
+            <div className="relative mt-6">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                autoFocus
+                className="sp-input !pr-16"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[#616161] hover:text-[#303030]"
+                tabIndex={-1}
+              >
+                {showPassword ? "Ocultar" : "Ver"}
+              </button>
+            </div>
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {mode === "login" && (
+              <Link href="/forgot-password" className="sp-link mt-3 block">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            )}
+            <button type="submit" disabled={!password || isLoading || saving} className="sp-btn mt-5 !h-12 !rounded-xl">
+              {isLoading || saving
+                ? "Un momento..."
+                : mode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear cuenta y continuar"}
+            </button>
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("email");
+                  setPassword("");
+                  setError(null);
+                }}
+                className="sp-link mt-4 block"
+              >
+                Usar otro correo
+              </button>
+            )}
+          </form>
         ) : (
           <div className="sp-card mt-16 w-full max-w-[440px] !p-8">
             <h1 className="text-[26px] font-bold leading-tight tracking-tight">Revisa tu correo</h1>

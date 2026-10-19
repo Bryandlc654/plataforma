@@ -37,6 +37,13 @@ export class StartAuthDto {
   email!: string;
 }
 
+export class SetPasswordDto {
+  @IsString()
+  @MinLength(8)
+  @MaxLength(64)
+  password!: string;
+}
+
 export class LoginDto {
   @IsEmail()
   email!: string;

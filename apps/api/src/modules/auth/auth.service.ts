@@ -152,6 +152,11 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       if (!existing.isActive) {
         throw new ForbiddenException("La cuenta está desactivada");
       }
+      // El código solo sirve para completar un registro pendiente: una cuenta ya
+      // activa con contraseña entra con correo + contraseña.
+      if (existing.isVerified && existing.passwordHash) {
+        throw new ConflictException("Este correo ya tiene una cuenta. Inicia sesión.");
+      }
       await this.createVerificationCode(existing.id, existing.email);
       return { email: existing.email, isNew: false };
     }
@@ -222,6 +227,25 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return { email: user.email, isNew: true };
   }
 
+  /** Define la contraseña inicial tras verificar el correo (solo si aún no tiene una). */
+  async setInitialPassword(userId: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true, isVerified: true },
+    });
+    if (!user || !user.isVerified) {
+      throw new ForbiddenException("Verifica tu correo primero.");
+    }
+    if (user.passwordHash) {
+      throw new ForbiddenException("Esta cuenta ya tiene contraseña.");
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await bcrypt.hash(password, 12) },
+    });
+    return { message: "Contraseña creada correctamente." };
+  }
+
   private assertCodeNotLocked(email: string) {
     const entry = this.codeAttempts.get(email);
     if (entry && entry.lockedUntil > Date.now()) {
@@ -273,6 +297,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     if (!user.isActive) {
       throw new ForbiddenException("La cuenta está desactivada");
+    }
+
+    // Verificar el correo no es un inicio de sesión alternativo: si la cuenta ya
+    // está activa y tiene contraseña, hay que usarla.
+    if (user.isVerified && user.passwordHash) {
+      throw new BadRequestException("Esta cuenta ya está activa. Inicia sesión con tu contraseña.");
     }
 
     await this.prisma.$transaction(async (tx) => {

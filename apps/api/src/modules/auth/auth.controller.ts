@@ -21,6 +21,7 @@ import {
   VerifyEmailDto,
   ResendVerificationDto,
   StartAuthDto,
+  SetPasswordDto,
 } from "../../shared/index";
 import { Throttle } from "@nestjs/throttler";
 import { Public } from "../../common/decorators/public.decorator";
@@ -88,6 +89,15 @@ export class AuthController {
   @ApiOperation({ summary: "Start sign-in/sign-up with email only (sends a 6-digit code)" })
   async start(@Body() dto: StartAuthDto) {
     return this.authService.startWithEmail(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("set-password")
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Set the initial password after email verification" })
+  async setPassword(@CurrentUser() user: any, @Body() dto: SetPasswordDto) {
+    return this.authService.setInitialPassword(user.id, dto.password);
   }
 
   @Public()
