@@ -42,6 +42,7 @@ interface AuthState {
     firstName: string;
     lastName: string;
   }) => Promise<{ message: string; email: string; requiresVerification: boolean }>;
+  startWithEmail: (email: string) => Promise<{ email: string; isNew: boolean }>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendVerification: (email: string) => Promise<string>;
   logout: () => void;
@@ -129,6 +130,17 @@ const useAuthStore = create<AuthState>()(
             email: payload.email || data.email,
             requiresVerification: payload.requiresVerification ?? true,
           };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      startWithEmail: async (email: string) => {
+        set({ isLoading: true });
+        try {
+          const response: any = await api.post("/auth/start", { email });
+          const payload = response.data || response;
+          return { email: payload.email || email, isNew: !!payload.isNew };
         } finally {
           set({ isLoading: false });
         }

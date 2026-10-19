@@ -87,6 +87,64 @@
   }
 }
 
+/* ===== Estilo "Shopify": pantallas de acceso y onboarding ===== */
+.sp-dark-screen {
+  min-height: 100vh;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 50% 0%, #0f1a1c 0%, #070d0f 45%, #02080a 100%);
+}
+.sp-card {
+  background: #fff;
+  color: #303030;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.45);
+}
+.sp-input {
+  width: 100%;
+  height: 56px;
+  border: 1px solid #c9cccf;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 16px;
+  color: #303030;
+  background: #fff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.sp-input:focus { border-color: #1a1a1a; box-shadow: 0 0 0 1px #1a1a1a; }
+.sp-input::placeholder { color: #8a8a8a; }
+.sp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #303030 0%, #0f0f0f 100%);
+  color: #fff; font-weight: 600; font-size: 15px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 2px rgba(0,0,0,.4);
+  transition: opacity .15s, transform .05s;
+}
+.sp-btn:hover:not(:disabled) { opacity: .92; }
+.sp-btn:active:not(:disabled) { transform: translateY(1px); }
+.sp-btn:disabled { opacity: .45; cursor: not-allowed; }
+.sp-btn-light {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 40px; padding: 0 18px; border-radius: 999px;
+  background: rgba(255,255,255,.12); color: #fff; font-weight: 500; font-size: 14px;
+  transition: background .15s;
+}
+.sp-btn-light:hover { background: rgba(255,255,255,.2); }
+.sp-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 18px; border-radius: 999px;
+  background: #f1f2f3; color: #303030; font-size: 15px; font-weight: 500;
+  transition: background .15s, color .15s;
+}
+.sp-chip:hover { background: #e6e7e8; }
+.sp-chip[data-on="true"] { background: #111; color: #fff; }
+.sp-link { color: #005bd3; font-size: 14px; font-weight: 500; }
+.sp-link:hover { text-decoration: underline; }
+
 .theme-art-culinaire {
   --color-primary: #000000;
   --color-on-primary: #ffffff;

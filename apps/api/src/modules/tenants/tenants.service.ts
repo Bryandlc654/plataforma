@@ -229,6 +229,7 @@ export class TenantsService {
       faviconUrl: tenant.faviconUrl,
       primaryColor: tenant.primaryColor,
       secondaryColor: tenant.secondaryColor,
+      subscriptionEndsAt: tenant.subscriptionEndsAt,
       settings: tenant.settings || {},
     };
   }

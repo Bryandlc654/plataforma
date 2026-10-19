@@ -123,12 +123,12 @@ export class EmailService {
   async sendVerificationEmail(to: string, code: string) {
     await this.send({
       to,
-      subject: "Tu código de verificación - Plataforma",
+      subject: `${code} es tu código de acceso - Plataforma`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #2563EB;">Verifica tu correo</h1>
+          <h1 style="color: #2563EB;">Tu código de acceso</h1>
           <p>Hola,</p>
-          <p>Ingresa el siguiente código para confirmar tu dirección de correo y activar tu cuenta:</p>
+          <p>Ingresa el siguiente código para continuar en la plataforma:</p>
           <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin: 16px 0; text-align: center;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563EB;">${code}</span>
           </div>

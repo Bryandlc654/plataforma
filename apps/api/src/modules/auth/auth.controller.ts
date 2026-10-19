@@ -20,7 +20,9 @@ import {
   ResetPasswordDto,
   VerifyEmailDto,
   ResendVerificationDto,
+  StartAuthDto,
 } from "../../shared/index";
+import { Throttle } from "@nestjs/throttler";
 import { Public } from "../../common/decorators/public.decorator";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
@@ -80,6 +82,16 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post("start")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Start sign-in/sign-up with email only (sends a 6-digit code)" })
+  async start(@Body() dto: StartAuthDto) {
+    return this.authService.startWithEmail(dto);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post("verify-email")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Verify email with code and log the user in" })

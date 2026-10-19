@@ -22,12 +22,18 @@ import {
   ResetPasswordDto,
   VerifyEmailDto,
   ResendVerificationDto,
+  StartAuthDto,
 } from "../../shared/index";
+
+const TRIAL_DAYS = 3;
+const MAX_CODE_ATTEMPTS = 5;
+const CODE_LOCK_MS = 15 * 60 * 1000;
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
+  private codeAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
   constructor(
     private prisma: PrismaService,
@@ -133,7 +139,111 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  /**
+   * Flujo "solo correo": si el correo ya existe envía un código de acceso; si no,
+   * crea la cuenta (sin contraseña) con su negocio y 3 días de prueba, y envía el
+   * código de verificación. En ambos casos el usuario entra con verifyEmail.
+   */
+  async startWithEmail(dto: StartAuthDto) {
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+
+    if (existing) {
+      if (!existing.isActive) {
+        throw new ForbiddenException("La cuenta está desactivada");
+      }
+      await this.createVerificationCode(existing.id, existing.email);
+      return { email: existing.email, isNew: false };
+    }
+
+    const localPart = email.split("@")[0];
+    const businessName =
+      localPart
+        .replace(/[._-]+/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim() || "Mi negocio";
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+
+    const user = await this.prisma.$transaction(
+      async (tx) => {
+        const newUser = await tx.user.create({
+          data: { email, isVerified: false },
+        });
+
+        const freePlan = await tx.plan.findUnique({ where: { slug: "free" } });
+
+        const tenant = await tx.tenant.create({
+          data: {
+            name: businessName,
+            slug: this.generateSlug(localPart),
+            subdomain: this.generateSlug(localPart),
+            planId: freePlan?.id,
+            maxUsers: freePlan?.maxUsers ?? 1,
+            maxSites: freePlan?.maxSites ?? 1,
+            maxStorage: freePlan?.maxStorage ?? BigInt(52428800),
+            subscriptionEndsAt: trialEndsAt,
+            settings: {
+              trial: { startedAt: new Date().toISOString(), endsAt: trialEndsAt.toISOString() },
+              onboarding: { completed: false, goals: [] },
+            } as any,
+          },
+        });
+
+        const ownerRole = await tx.role.findFirst({
+          where: { name: "owner", tenantId: null, isSystem: true },
+        });
+
+        const userTenant = await tx.userTenant.create({
+          data: { userId: newUser.id, tenantId: tenant.id, isOwner: true },
+        });
+
+        if (ownerRole) {
+          await tx.userTenantRole.create({
+            data: { userTenantId: userTenant.id, roleId: ownerRole.id },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId: newUser.id,
+            tenantId: tenant.id,
+            action: "user.register",
+            resource: "User",
+            resourceId: newUser.id,
+          },
+        });
+
+        return newUser;
+      },
+      { maxWait: 10_000, timeout: 30_000 }
+    );
+
+    await this.createVerificationCode(user.id, user.email);
+    return { email: user.email, isNew: true };
+  }
+
+  private assertCodeNotLocked(email: string) {
+    const entry = this.codeAttempts.get(email);
+    if (entry && entry.lockedUntil > Date.now()) {
+      throw new BadRequestException(
+        "Demasiados intentos fallidos. Solicita un código nuevo o inténtalo en unos minutos."
+      );
+    }
+  }
+
+  private registerCodeFailure(email: string) {
+    const entry = this.codeAttempts.get(email);
+    const count = (entry && entry.lockedUntil === 0 ? entry.count : 0) + 1;
+    this.codeAttempts.set(email, {
+      count,
+      lockedUntil: count >= MAX_CODE_ATTEMPTS ? Date.now() + CODE_LOCK_MS : 0,
+    });
+  }
+
   async verifyEmail(dto: VerifyEmailDto) {
+    dto.email = dto.email.trim().toLowerCase();
+    this.assertCodeNotLocked(dto.email);
+
     const verification = await this.prisma.emailVerification.findFirst({
       where: { email: dto.email, usedAt: null },
       orderBy: { createdAt: "desc" },
@@ -148,8 +258,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (verification.code !== dto.code) {
+      this.registerCodeFailure(dto.email);
       throw new BadRequestException("El código es incorrecto. Revisa el correo enviado.");
     }
+    this.codeAttempts.delete(dto.email);
 
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -159,10 +271,14 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException("No existe una cuenta con este correo.");
     }
 
+    if (!user.isActive) {
+      throw new ForbiddenException("La cuenta está desactivada");
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: user.id },
-        data: { isVerified: true },
+        data: { isVerified: true, lastLoginAt: new Date() },
       });
 
       await tx.emailVerification.updateMany({
@@ -182,10 +298,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     if (!user) {
       return { message: "Si el correo existe, recibirás un código de verificación." };
-    }
-
-    if (user.isVerified) {
-      return { message: "Tu correo ya está verificado. Ya puedes iniciar sesión." };
     }
 
     await this.createVerificationCode(user.id, user.email);
@@ -478,22 +590,23 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async createVerificationCode(userId: string, email: string) {
+    this.codeAttempts.delete(email);
     const code = this.generateVerificationCode();
 
-    await this.prisma.$transaction([
-      this.prisma.emailVerification.updateMany({
-        where: { email, usedAt: null },
-        data: { usedAt: new Date() },
-      }),
-      this.prisma.emailVerification.create({
-        data: {
-          email,
-          code,
-          userId,
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-        },
-      }),
-    ]);
+    // Secuencial (sin transacción): en MySQL/MariaDB el updateMany + create en una
+    // misma transacción puede chocar por bloqueos de índice y devolver un 500.
+    await this.prisma.emailVerification.updateMany({
+      where: { email, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    await this.prisma.emailVerification.create({
+      data: {
+        email,
+        code,
+        userId,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
 
     try {
       await this.emailService.sendVerificationEmail(email, code);

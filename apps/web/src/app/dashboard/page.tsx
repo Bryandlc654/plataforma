@@ -46,6 +46,12 @@ export default function DashboardPage() {
 
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; thumbnail?: string | null; category?: { name: string } | null }>>([]);
+
+  useEffect(() => {
+    if (!tenantId || isSuperAdmin) return;
+    api.get("/templates").then((res: any) => setTemplates((res.data || res || []).slice(0, 6))).catch(() => setTemplates([]));
+  }, [tenantId, isSuperAdmin]);
 
   const fetchTenants = useCallback(async () => {
     try {
@@ -203,7 +209,64 @@ export default function DashboardPage() {
           <>
             {error && <div className="card bg-red-50 border-red-200 mb-6"><p className="text-sm text-red-700">{error}</p></div>}
 
-            {tenant ? (
+            {tenant && (tenantData?.summary?.totalSites ?? 0) === 0 ? (
+              <div className="mx-auto max-w-[900px] px-2 py-10 sm:py-16">
+                <h1 className="text-center text-[30px] font-semibold leading-tight tracking-tight text-[#303030]">
+                  ¡Te damos la bienvenida!<br />Creemos <span className="underline decoration-dotted underline-offset-4">{tenant.name}</span>
+                </h1>
+                <p className="mt-3 text-center text-[15px] text-[#616161]">
+                  En tres pasos tendrás tu sitio web publicado: elige un diseño, personalízalo y publícalo.
+                </p>
+
+                <div className="mt-10 grid gap-4 md:grid-cols-2">
+                  <Link href="/dashboard/sites/new" className="group flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-5 shadow-sm transition hover:shadow-md">
+                    <p className="text-[15px] font-semibold text-[#303030]">1. Crea tu sitio web</p>
+                    <p className="mt-1 text-sm text-[#616161]">Elige una plantilla, ponle nombre y lo generamos al instante. Siempre podrás cambiarlo después.</p>
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      {templates.slice(0, 3).map((t) => (
+                        <div key={t.id} className="aspect-[3/4] overflow-hidden rounded-lg border border-[#ececec] bg-[#f6f6f7]">
+                          {t.thumbnail ? <div className="h-full w-full bg-cover bg-top" style={{ backgroundImage: `url(${t.thumbnail})` }} /> : <div className="flex h-full items-center justify-center text-[11px] text-[#8a8a8a]">{t.name}</div>}
+                        </div>
+                      ))}
+                    </div>
+                    <span className="mt-5 inline-flex w-fit rounded-lg bg-[#f1f1f1] px-3 py-1.5 text-[13px] font-semibold text-[#303030] group-hover:bg-[#e6e6e6]">Crear sitio web</span>
+                  </Link>
+
+                  <div className="flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-5 shadow-sm">
+                    <p className="text-[15px] font-semibold text-[#303030]">2. Publica y comparte</p>
+                    <p className="mt-1 text-sm text-[#616161]">Tu sitio sale con una dirección gratuita. Después puedes conectar tu propio dominio.</p>
+                    <ul className="mt-5 space-y-3 text-sm text-[#303030]">
+                      {["Editor visual sin código", "Dirección web lista al publicar", "Formularios que capturan clientes", "Estadísticas de visitas"].map((f) => (
+                        <li key={f} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[11px] text-emerald-700">✓</span>{f}</li>
+                      ))}
+                    </ul>
+                    <Link href="/dashboard/help" className="mt-auto inline-flex w-fit pt-5 text-[13px] font-semibold text-[#005bd3] hover:underline">Ver guía de inicio</Link>
+                  </div>
+                </div>
+
+                {templates.length > 0 && (
+                  <div className="mt-10">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-[15px] font-semibold text-[#303030]">Plantillas populares</h2>
+                      <Link href="/dashboard/sites/new" className="text-[13px] font-semibold text-[#005bd3] hover:underline">Ver todas</Link>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                      {templates.map((t) => (
+                        <Link key={t.id} href="/dashboard/sites/new" className="group overflow-hidden rounded-xl border border-[#e3e3e3] bg-white transition hover:shadow-md">
+                          <div className="aspect-[4/3] bg-[#f6f6f7]">
+                            {t.thumbnail && <div className="h-full w-full bg-cover bg-top transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${t.thumbnail})` }} />}
+                          </div>
+                          <div className="px-3 py-2.5">
+                            <p className="truncate text-[13px] font-semibold text-[#303030]">{t.name}</p>
+                            {t.category?.name && <p className="text-xs text-[#8a8a8a]">{t.category.name}</p>}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : tenant ? (
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                   <div>

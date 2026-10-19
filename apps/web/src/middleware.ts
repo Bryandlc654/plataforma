@@ -7,7 +7,7 @@ const PLATFORM_HOSTNAMES = ["localhost", "build.icebergup.com", "127.0.0.1"];
 // de sitios de clientes).
 const PLATFORM_HOST_SUFFIXES = [".icebergup.com", ".vercel.app", ".onrender.com"];
 
-const protectedPaths = ["/dashboard"];
+const protectedPaths = ["/dashboard", "/welcome"];
 const authPaths = ["/login", "/register"];
 
 export async function middleware(request: NextRequest) {

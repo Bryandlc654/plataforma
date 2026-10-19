@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/stores/auth-store";
@@ -15,9 +15,40 @@ function hasPermission(user: any, perm: string) { return user?.permissions?.incl
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, tenant, tenantId, isAuthenticated, hasHydrated, logout, selectTenant, ensureSession } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
   const [collapsed, setCollapsed] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [gateChecked, setGateChecked] = useState(false);
+
+  // Onboarding (estilo Shopify): si la cuenta es nueva y no terminó el asistente, se envía a /welcome.
+  // La cuenta de prueba muestra "La prueba termina en N días" hasta que haya un plan de pago.
+  useEffect(() => {
+    if (!hasHydrated) return;
+    if (!tenantId || isSuperAdmin || isSupport) { setGateChecked(true); return; }
+    (async () => {
+      try {
+        const res: any = await api.get(`/tenants/${tenantId}/settings`);
+        const data = res.data || res;
+        if (data?.settings?.onboarding?.completed === false) {
+          router.replace("/welcome");
+          return;
+        }
+        const endsAt = data?.settings?.trial?.endsAt;
+        setGateChecked(true);
+        if (!endsAt) return setTrialDaysLeft(null);
+        let paid = false;
+        try {
+          const s: any = await api.get("/subscriptions/current");
+          const sub = s.data || s;
+          paid = Number(sub?.plan?.price || 0) > 0 && sub?.status === "active";
+        } catch {}
+        if (paid) return setTrialDaysLeft(null);
+        setTrialDaysLeft(Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86400000)));
+      } catch { setGateChecked(true); }
+    })();
+  }, [hasHydrated, tenantId, isSuperAdmin, isSupport, router]);
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; slug: string; isOwner: boolean }>>([]);
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
@@ -127,138 +158,119 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   ];
 
-  if (!hasHydrated) {
-    return <div className="flex h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
+  if (!hasHydrated || !gateChecked) {
+    return <div className="flex h-screen items-center justify-center bg-[#0a0a0a]"><p className="text-white/60">Cargando...</p></div>;
   }
 
-  return (
-    <div className="flex min-h-screen">
-      <aside className={`relative ${collapsed ? "w-16" : "w-64"} border-r border-slate-200 bg-white flex flex-col transition-all duration-200 ${collapsed ? "p-2" : "p-6"}`}>
-        {/* Toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-4 top-6 h-8 w-8 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-all z-10"
-          title={collapsed ? "Abrir menú" : "Cerrar menú"}
-        >
-          <svg className={`h-4 w-4 transition-transform duration-300 ${collapsed ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+  const groups = (isSuperAdmin || isSupport ? adminNavGroups : tenantNavGroups)
+    .map((group) => ({
+      ...group,
+      links: group.links.filter((link: any) => {
+        if (isSuperAdmin || isSupport) return true;
+        if (link.roles === "*") return true;
+        if (link.perms && !link.perms.some((p: string) => hasPermission(user, p))) return false;
+        if (link.href === "/dashboard/bookings-page" && capabilities?.bookings !== true) return false;
+        if (link.href === "/dashboard/ecommerce" && capabilities?.ecommerce !== true) return false;
+        return true;
+      }),
+    }))
+    .filter((g) => g.links.length > 0);
 
-        {/* Brand */}
-        <div className={`flex items-center ${collapsed ? "justify-center" : "px-2"} mb-8`}>
-          {collapsed ? (
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">I</div>
-          ) : (
-            <Image src="/logo.png" alt="Build Iceberg Agency" width={220} height={64} className="h-10 w-auto object-contain" />
+  const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname?.startsWith(href));
+
+  return (
+    <div className="flex min-h-screen bg-[#0a0a0a]">
+      <aside className={`relative ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
+        {/* Brand + toggle */}
+        <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
+          {!collapsed && (
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-black text-black">P</span>
+              <span className="font-semibold tracking-tight">Plataforma</span>
+            </Link>
           )}
+          <button onClick={() => setCollapsed(!collapsed)} className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white" title={collapsed ? "Abrir menú" : "Cerrar menú"}>
+            <svg className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          </button>
         </div>
 
         {/* Tenant selector */}
-        {!isSuperAdmin && !isSupport && tenants.length > 0 && !collapsed && (
-          <div className="mb-6">
-            <select value={tenantId || ""} onChange={(e) => { const t = tenants.find(x => x.id === e.target.value); if (t) handleSelectTenant(t); }} className="input-field text-sm">
-              {tenants.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
-            </select>
-          </div>
+        {!isSuperAdmin && !isSupport && tenants.length > 1 && !collapsed && (
+          <select value={tenantId || ""} onChange={(e) => { const t = tenants.find(x => x.id === e.target.value); if (t) handleSelectTenant(t); }} className="mb-3 w-full rounded-lg border-0 bg-white/10 px-2 py-1.5 text-[13px] text-white focus:ring-1 focus:ring-white/40">
+            {tenants.map((t) => (<option key={t.id} value={t.id} className="text-black">{t.name}</option>))}
+          </select>
         )}
 
         {/* Navigation */}
-        <nav className={`space-y-1 flex-1 overflow-y-auto no-scrollbar pb-4 ${collapsed ? "space-y-2" : "space-y-1"}`}>
-          {isSuperAdmin || isSupport ? (
-            adminNavGroups.map((group, gIdx) => (
-              <div key={gIdx} className={gIdx > 0 ? "mt-6" : ""}>
-                {!collapsed && (
-                  <h3 className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    {group.title}
-                  </h3>
-                )}
-                {collapsed && gIdx > 0 && <div className="border-t border-slate-100 my-2 mx-2"></div>}
-                <div className="space-y-1">
-                  {group.links.map(link => (
-                    <Link key={link.href} href={link.href} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors ${collapsed ? "justify-center" : ""}`} title={collapsed ? link.label : undefined}>
-                      <AppIcon name={link.icon} className="h-5 w-5 flex-shrink-0" />
-                      {!collapsed && <span>{link.label}</span>}
-                    </Link>
-                  ))}
-                </div>
+        <nav className="no-scrollbar flex-1 overflow-y-auto pb-4">
+          {groups.map((group, gIdx) => (
+            <div key={gIdx} className={gIdx > 0 ? "mt-5" : ""}>
+              {!collapsed && gIdx > 0 && (
+                <h3 className="mb-1 px-2 text-[11px] font-medium text-white/45">{group.title}</h3>
+              )}
+              {collapsed && gIdx > 0 && <div className="mx-2 my-2 border-t border-white/10" />}
+              <div className="space-y-0.5">
+                {group.links.map((link: any) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    title={collapsed ? link.label : undefined}
+                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
+                  >
+                    <AppIcon name={link.icon} className="h-[18px] w-[18px] flex-shrink-0" />
+                    {!collapsed && <span className="truncate">{link.label}</span>}
+                  </Link>
+                ))}
               </div>
-            ))
-          ) : (
-            tenantNavGroups.map((group, gIdx) => {
-              // Filter links based on roles/perms
-              const allowedLinks = group.links.filter(link => {
-                if (link.roles === "*") return true;
-                if (link.perms && !link.perms.some(p => hasPermission(user, p))) return false;
-                if (link.href === "/dashboard/bookings-page" && capabilities?.bookings !== true) return false;
-                if (link.href === "/dashboard/ecommerce" && capabilities?.ecommerce !== true) return false;
-                return true;
-              });
-              
-              if (allowedLinks.length === 0) return null;
+            </div>
+          ))}
 
-              return (
-                <div key={gIdx} className={gIdx > 0 ? "mt-6" : ""}>
-                  {!collapsed && (
-                    <h3 className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      {group.title}
-                    </h3>
-                  )}
-                  {collapsed && gIdx > 0 && <div className="border-t border-slate-100 my-2 mx-2"></div>}
-                  <div className="space-y-1">
-                    {allowedLinks.map(link => (
-                      <Link key={link.href} href={link.href} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors ${collapsed ? "justify-center" : ""}`} title={collapsed ? link.label : undefined}>
-                        <AppIcon name={link.icon} className="h-5 w-5 flex-shrink-0" />
-                        {!collapsed && <span>{link.label}</span>}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          )}
-          
           {!isSuperAdmin && !tenant && !collapsed && (
-            <Link href="/dashboard/new-tenant" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-primary-600 hover:bg-primary-50 font-medium mt-4">+ Crear negocio</Link>
+            <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 font-medium text-white/80 hover:bg-white/10">+ Crear negocio</Link>
           )}
         </nav>
 
-        {/* User section */}
-        {!collapsed && (
-          <div className="mt-4 pt-4 border-t border-slate-200">
-            <div className="mb-3 px-3">
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                isSuperAdmin ? "bg-purple-50 text-purple-700" : hasRole(user, "owner") ? "bg-blue-50 text-blue-700" :
-                hasRole(user, "admin") ? "bg-amber-50 text-amber-700" : "bg-slate-50 text-slate-700"
-              }`}>{isSuperAdmin ? "Super Admin" : user?.roles?.[0] || "Usuario"}</span>
-            </div>
-            <div className="flex items-center gap-3 px-1">
-              <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-sm flex-shrink-0">{user?.firstName?.[0] || "U"}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-col gap-1">
-              <Link href="/dashboard/profile" className="w-full text-left text-xs text-slate-500 hover:text-primary-600 transition-colors px-1">Mi perfil</Link>
-              <button onClick={logout} className="w-full text-left text-xs text-slate-500 hover:text-red-600 transition-colors px-1">Cerrar sesión</button>
-            </div>
+        {/* Trial banner (estilo Shopify) */}
+        {!collapsed && trialDaysLeft !== null && !isSuperAdmin && !isSupport && (
+          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-emerald-900/40 p-3">
+            <p className="mb-2 text-[13px] font-semibold">
+              {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
+            </p>
+            <Link href="/dashboard/billing" className="block rounded-full bg-white py-2 text-center text-[13px] font-semibold text-black hover:bg-white/90">
+              Elegir un plan
+            </Link>
           </div>
         )}
-        {collapsed && (
-          <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-xs flex-shrink-0" title={`${user?.firstName} ${user?.lastName}`}>{user?.firstName?.[0] || "U"}</div>
-            <Link href="/dashboard/profile" title="Mi perfil" className="text-slate-400 hover:text-primary-600 transition-colors">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            </Link>
-            <button onClick={logout} title="Cerrar sesión" className="text-slate-400 hover:text-red-500 transition-colors">
+
+        {/* User */}
+        <div className={`border-t border-white/10 pt-3 ${collapsed ? "flex flex-col items-center gap-3" : ""}`}>
+          <div className={`flex items-center gap-2.5 ${collapsed ? "" : "px-1"}`}>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-400 text-xs font-bold text-black" title={user?.email}>
+              {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
+            </div>
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{tenant?.name || user?.firstName || "Mi cuenta"}</p>
+                <p className="truncate text-[11px] text-white/50">{user?.email}</p>
+              </div>
+            )}
+          </div>
+          {!collapsed ? (
+            <div className="mt-2 flex gap-3 px-1 text-[12px] text-white/55">
+              <Link href="/dashboard/profile" className="hover:text-white">Mi perfil</Link>
+              <button onClick={logout} className="hover:text-red-400">Cerrar sesión</button>
+            </div>
+          ) : (
+            <button onClick={logout} title="Cerrar sesión" className="text-white/50 hover:text-red-400">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
-      <div className="flex-1 bg-slate-50 overflow-auto">{children}</div>
+      <div className="min-w-0 flex-1 p-0 lg:py-2 lg:pr-2">
+        <div className="h-full min-h-screen overflow-auto bg-[#f1f1f1] lg:min-h-0 lg:rounded-xl lg:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">{children}</div>
+      </div>
     </div>
   );
 }

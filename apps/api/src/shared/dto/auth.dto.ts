@@ -32,6 +32,11 @@ export class RegisterUserDto {
   phone?: string;
 }
 
+export class StartAuthDto {
+  @IsEmail()
+  email!: string;
+}
+
 export class LoginDto {
   @IsEmail()
   email!: string;
