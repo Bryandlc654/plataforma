@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [gateChecked, setGateChecked] = useState(false);
 
-  // Onboarding (estilo Shopify): si la cuenta es nueva y no terminó el asistente, se envía a /welcome.
+  // El asistente /welcome solo se muestra justo después de registrarse (ver AuthFlow); aquí no se fuerza.
   // La cuenta de prueba muestra "La prueba termina en N días" hasta que haya un plan de pago.
   useEffect(() => {
     if (!hasHydrated) return;
@@ -31,10 +31,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       try {
         const res: any = await api.get(`/tenants/${tenantId}/settings`);
         const data = res.data || res;
-        if (data?.settings?.onboarding?.completed === false) {
-          router.replace("/welcome");
-          return;
-        }
         const endsAt = data?.settings?.trial?.endsAt;
         setGateChecked(true);
         if (!endsAt) return setTrialDaysLeft(null);

@@ -116,7 +116,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       setSaving(true);
       setError(null);
       await api.post("/auth/set-password", { password });
-      router.replace("/dashboard");
+      router.replace("/welcome");
     } catch (err: any) {
       setError(err.response?.data?.message || "No pudimos guardar la contraseña. Inténtalo de nuevo.");
     } finally {
