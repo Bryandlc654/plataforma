@@ -92,7 +92,7 @@
   min-height: 100vh;
   color: #fff;
   background:
-    radial-gradient(ellipse at 50% 0%, #0f1a1c 0%, #070d0f 45%, #02080a 100%);
+    radial-gradient(ellipse at 50% 0%, #302a73 0%, #201b51 45%, #120f33 100%);
 }
 .sp-card {
   background: #fff;
@@ -113,13 +113,13 @@
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
-.sp-input:focus { border-color: #1a1a1a; box-shadow: 0 0 0 1px #1a1a1a; }
+.sp-input:focus { border-color: #201b51; box-shadow: 0 0 0 1px #201b51; }
 .sp-input::placeholder { color: #8a8a8a; }
 .sp-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 48px; width: 100%;
   border-radius: 999px;
-  background: linear-gradient(180deg, #303030 0%, #0f0f0f 100%);
+  background: linear-gradient(180deg, #2f2877 0%, #201b51 100%);
   color: #fff; font-weight: 600; font-size: 15px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 2px rgba(0,0,0,.4);
   transition: opacity .15s, transform .05s;
@@ -141,8 +141,8 @@
   transition: background .15s, color .15s;
 }
 .sp-chip:hover { background: #e6e7e8; }
-.sp-chip[data-on="true"] { background: #111; color: #fff; }
-.sp-link { color: #005bd3; font-size: 14px; font-weight: 500; }
+.sp-chip[data-on="true"] { background: #201b51; color: #fff; }
+.sp-link { color: #201b51; font-size: 14px; font-weight: 500; }
 .sp-link:hover { text-decoration: underline; }
 
 .theme-art-culinaire {

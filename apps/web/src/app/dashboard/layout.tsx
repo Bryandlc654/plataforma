@@ -60,6 +60,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!ok) { router.push("/login"); return; }
       const u = useAuthStore.getState().user;
       if (!hasRole(u, "super_admin")) fetchTenants();
+      // Si el estado persistido perdió el negocio activo (recarga), lo recuperamos del servidor.
+      if (!hasRole(u, "super_admin") && !useAuthStore.getState().tenantId) {
+        try {
+          const res: any = await api.get("/users/tenants");
+          const list = (res.data || res || []).filter((t: any) => t.isActive !== false);
+          if (list[0]) selectTenant({ id: list[0].id, name: list[0].name, slug: list[0].slug, isOwner: list[0].isOwner });
+        } catch {}
+      }
     })();
   }, [ensureSession, hasHydrated, isAuthenticated, router]);
 
@@ -159,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   if (!hasHydrated || !gateChecked) {
-    return <div className="flex h-screen items-center justify-center bg-[#0a0a0a]"><p className="text-white/60">Cargando...</p></div>;
+    return <div className="flex h-screen items-center justify-center bg-[#201b51]"><p className="text-white/60">Cargando...</p></div>;
   }
 
   const groups = (isSuperAdmin || isSupport ? adminNavGroups : tenantNavGroups)
@@ -179,13 +187,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname?.startsWith(href));
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
+    <div className="flex min-h-screen bg-[#201b51]">
       <aside className={`relative ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
         {/* Brand + toggle */}
         <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-black text-black">P</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-black text-[#201b51]">P</span>
               <span className="font-semibold tracking-tight">Plataforma</span>
             </Link>
           )}
@@ -232,11 +240,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Trial banner (estilo Shopify) */}
         {!collapsed && trialDaysLeft !== null && !isSuperAdmin && !isSupport && (
-          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-emerald-900/40 p-3">
+          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-[#f29200]/30 p-3">
             <p className="mb-2 text-[13px] font-semibold">
               {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
             </p>
-            <Link href="/dashboard/billing" className="block rounded-full bg-white py-2 text-center text-[13px] font-semibold text-black hover:bg-white/90">
+            <Link href="/dashboard/billing" className="block rounded-full bg-[#f29200] py-2 text-center text-[13px] font-semibold text-white hover:bg-[#d98200]">
               Elegir un plan
             </Link>
           </div>
@@ -245,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User */}
         <div className={`border-t border-white/10 pt-3 ${collapsed ? "flex flex-col items-center gap-3" : ""}`}>
           <div className={`flex items-center gap-2.5 ${collapsed ? "" : "px-1"}`}>
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-400 text-xs font-bold text-black" title={user?.email}>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#f29200] text-xs font-bold text-white" title={user?.email}>
               {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
             </div>
             {!collapsed && (

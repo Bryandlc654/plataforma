@@ -240,7 +240,7 @@ export default function DashboardPage() {
                         <li key={f} className="flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[11px] text-emerald-700">✓</span>{f}</li>
                       ))}
                     </ul>
-                    <Link href="/dashboard/help" className="mt-auto inline-flex w-fit pt-5 text-[13px] font-semibold text-[#005bd3] hover:underline">Ver guía de inicio</Link>
+                    <Link href="/dashboard/help" className="mt-auto inline-flex w-fit pt-5 text-[13px] font-semibold text-[#201b51] hover:underline">Ver guía de inicio</Link>
                   </div>
                 </div>
 
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                   <div className="mt-10">
                     <div className="mb-3 flex items-center justify-between">
                       <h2 className="text-[15px] font-semibold text-[#303030]">Plantillas populares</h2>
-                      <Link href="/dashboard/sites/new" className="text-[13px] font-semibold text-[#005bd3] hover:underline">Ver todas</Link>
+                      <Link href="/dashboard/sites/new" className="text-[13px] font-semibold text-[#201b51] hover:underline">Ver todas</Link>
                     </div>
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                       {templates.map((t) => (
