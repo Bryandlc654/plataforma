@@ -19,6 +19,7 @@ const PERMISSIONS = {
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   super_admin: Object.values(PERMISSIONS),
+  platform_admin: Object.values(PERMISSIONS),
   support: [PERMISSIONS.AUDIT_VIEW, PERMISSIONS.BILLING_READ, PERMISSIONS.SUBSCRIPTION_READ],
   owner: [
     PERMISSIONS.SITE_CREATE, PERMISSIONS.SITE_READ, PERMISSIONS.SITE_UPDATE,
@@ -67,11 +68,11 @@ async function main() {
   // Seed roles
   const roleCount = await prisma.role.count();
   if (roleCount === 0) {
-    const roles = ["super_admin", "support", "owner", "admin", "editor", "marketing", "billing", "viewer"];
+    const roles = ["super_admin", "platform_admin", "support", "owner", "admin", "editor", "marketing", "billing", "viewer"];
     await prisma.role.createMany({
       data: roles.map((name) => ({
         name,
-        level: name === "super_admin" || name === "support" ? "platform" : "tenant",
+        level: name === "super_admin" || name === "platform_admin" || name === "support" ? "platform" : "tenant",
         isSystem: true,
       })),
     });

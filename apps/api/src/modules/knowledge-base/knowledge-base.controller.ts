@@ -14,14 +14,18 @@ export class KnowledgeBaseController {
   constructor(private knowledgeBaseService: KnowledgeBaseService) {}
 
   private assertStaff(user: any) {
-    if (!user?.roles?.includes("super_admin") && !user?.roles?.includes("support")) {
-      throw new ForbiddenException("Solo el super admin puede gestionar la base de conocimientos");
+    if (
+      !user?.roles?.includes("super_admin") &&
+      !user?.roles?.includes("platform_admin") &&
+      !user?.roles?.includes("support")
+    ) {
+      throw new ForbiddenException("Solo el equipo de la plataforma puede gestionar la base de conocimientos");
     }
   }
 
   private assertSuperAdmin(user: any) {
-    if (!user?.roles?.includes("super_admin")) {
-      throw new ForbiddenException("Solo el super admin puede realizar esta acción");
+    if (!user?.roles?.includes("super_admin") && !user?.roles?.includes("platform_admin")) {
+      throw new ForbiddenException("Solo un administrador de la plataforma puede realizar esta acción");
     }
   }
 
@@ -50,7 +54,10 @@ export class KnowledgeBaseController {
   @Get(":id")
   @ApiOperation({ summary: "Obtener un artículo publicado (o cualquiera para staff)" })
   async getOne(@CurrentUser() user: any, @Param("id") id: string) {
-    const canSeeAll = user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+    const canSeeAll =
+      user?.roles?.includes("super_admin") ||
+      user?.roles?.includes("platform_admin") ||
+      user?.roles?.includes("support");
     return this.knowledgeBaseService.getOne(id, canSeeAll);
   }
 

@@ -24,7 +24,7 @@ export default function TemplateSandboxPage() {
     if (!hasHydrated) return;
     const u = useAuthStore.getState().user;
     if (!useAuthStore.getState().isAuthenticated) { router.replace("/login"); return; }
-    if (!u?.roles?.includes("super_admin")) { router.replace("/dashboard/admin/templates"); return; }
+    if (!u?.roles?.includes("super_admin") && !u?.roles?.includes("platform_admin")) { router.replace("/dashboard/admin/templates"); return; }
 
     let cancelled = false;
     api

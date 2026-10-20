@@ -11,7 +11,7 @@ interface TicketDetail extends Ticket { replies: Array<{ id: string; message: st
 
 export default function SupportPage() {
   const { user, tenantId } = useAuthStore();
-  const isStaff = user?.roles?.includes("support") || user?.roles?.includes("super_admin");
+  const isStaff = user?.roles?.includes("support") || user?.roles?.includes("super_admin") || user?.roles?.includes("platform_admin");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [activeTicket, setActiveTicket] = useState<TicketDetail | null>(null);

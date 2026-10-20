@@ -14,7 +14,7 @@ const TABS = [
 export function AdminModuleTabs({ className = "mb-6" }: { className?: string }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const isSuper = user?.roles?.includes("super_admin");
+  const isSuper = user?.roles?.includes("super_admin") || user?.roles?.includes("platform_admin");
   const tabs = TABS.filter((t) => isSuper || user?.permissions?.includes(t.perm));
 
   return (

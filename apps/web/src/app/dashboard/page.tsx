@@ -46,12 +46,14 @@ export default function DashboardPage() {
 
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
+  const isPlatformAdmin = hasRole(user, "platform_admin");
+  const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; thumbnail?: string | null; category?: { name: string } | null }>>([]);
 
   useEffect(() => {
-    if (!tenantId || isSuperAdmin) return;
+    if (!tenantId || isPlatformStaff) return;
     api.get("/templates").then((res: any) => setTemplates((res.data || res || []).slice(0, 6))).catch(() => setTemplates([]));
-  }, [tenantId, isSuperAdmin]);
+  }, [tenantId, isPlatformStaff]);
 
   const fetchTenants = useCallback(async () => {
     try {
@@ -94,8 +96,9 @@ export default function DashboardPage() {
       const ok = await ensureSession();
       if (!ok) { router.push("/login"); return; }
       const u = useAuthStore.getState().user;
-      const superAdmin = hasRole(u, "super_admin");
-      if (superAdmin) { fetchAdminDashboard(); fetchTenants(); setLoading(false); }
+      const platformStaff =
+        hasRole(u, "super_admin") || hasRole(u, "support") || hasRole(u, "platform_admin");
+      if (platformStaff) { fetchAdminDashboard(); fetchTenants(); setLoading(false); }
       else if (tenantId) { fetchTenantDashboard(); fetchAnalytics(); fetchTenants(); }
       else { setLoading(false); }
     })();
@@ -155,7 +158,7 @@ export default function DashboardPage() {
   return (
       <main className="flex-1 p-8 bg-slate-50 overflow-auto">
         {/* SUPER ADMIN VIEW */}
-        {isSuperAdmin && (
+        {isPlatformStaff && (
           <>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
               <div><h1 className="text-2xl font-bold text-slate-900">Dashboard Global</h1><p className="text-sm text-slate-500 mt-1">Administración de la plataforma SaaS</p></div>
@@ -205,26 +208,26 @@ export default function DashboardPage() {
         )}
 
         {/* TENANT USER VIEW */}
-        {!isSuperAdmin && (
+        {!isPlatformStaff && (
           <>
             {error && <div className="card bg-red-50 border-red-200 mb-6"><p className="text-sm text-red-700">{error}</p></div>}
 
             {tenant && tenantData?.summary?.totalSites === 0 ? (
               <div className="mx-auto max-w-[1080px] px-2 py-8 sm:py-12">
                 <section className="relative overflow-hidden rounded-3xl border border-[#e6e4ef] bg-white p-7 shadow-sm sm:p-10">
-                  <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#f29200]/10 blur-3xl" />
-                  <div className="pointer-events-none absolute -bottom-32 -left-24 h-64 w-64 rounded-full bg-[#201b51]/10 blur-3xl" />
+                  <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[rgba(var(--color-secondary-rgb),0.1)] blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-32 -left-24 h-64 w-64 rounded-full bg-[rgba(var(--color-primary-rgb),0.1)] blur-3xl" />
                   <div className="relative">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#201b51]/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#201b51]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#f29200]" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(var(--color-primary-rgb),0.05)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-primary)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-secondary)]" />
                       Primeros pasos
                     </span>
                     <h1 className="mt-4 text-[30px] font-semibold leading-tight tracking-tight text-[#1f1f1f] sm:text-[36px]">
                       ¡Te damos la bienvenida!
                       <br className="hidden sm:block" /> Creemos{" "}
-                      <span className="relative inline-block whitespace-nowrap text-[#201b51]">
+                      <span className="relative inline-block whitespace-nowrap text-[var(--color-primary)]">
                         {tenant.name}
-                        <span className="absolute -bottom-1 left-0 h-[3px] w-full rounded-full bg-[#f29200]" />
+                        <span className="absolute -bottom-1 left-0 h-[3px] w-full rounded-full bg-[var(--color-secondary)]" />
                       </span>
                     </h1>
                     <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-[#616161]">
@@ -233,12 +236,12 @@ export default function DashboardPage() {
                     <div className="mt-6 flex flex-wrap items-center gap-3">
                       <Link
                         href="/dashboard/sites/new"
-                        className="inline-flex items-center gap-2 rounded-full bg-[#f29200] px-5 py-2.5 text-[13px] font-semibold text-[#201b51] shadow-sm transition hover:bg-[#e08600]"
+                        className="inline-flex items-center gap-2 rounded-full bg-[var(--color-secondary)] px-5 py-2.5 text-[13px] font-semibold text-[var(--color-primary)] shadow-sm transition hover:bg-[var(--brand-secondary-hover)]"
                       >
                         Crear mi sitio web
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                       </Link>
-                      <a href="#plantillas" className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#303030] transition hover:border-[#201b51]/30 hover:bg-[#f7f7f9]">
+                      <a href="#plantillas" className="inline-flex items-center gap-1.5 rounded-full border border-[#e3e3e3] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#303030] transition hover:border-[rgba(var(--color-primary-rgb),0.3)] hover:bg-[#f7f7f9]">
                         Ver plantillas
                       </a>
                     </div>
@@ -251,7 +254,7 @@ export default function DashboardPage() {
                     className="group flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f29200] text-sm font-bold text-[#201b51]">1</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-secondary)] text-sm font-bold text-[var(--color-primary)]">1</span>
                       <p className="text-[15px] font-semibold text-[#303030]">Crea tu sitio web</p>
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-[#616161]">
@@ -263,14 +266,14 @@ export default function DashboardPage() {
                           {t.thumbnail ? (
                             <div className="h-full w-full bg-cover bg-top" style={{ backgroundImage: `url(${t.thumbnail})` }} />
                           ) : (
-                            <div className="flex h-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-[#201b51] to-[#3b3480] px-2 text-center">
+                            <div className="flex h-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-800)] px-2 text-center">
                               <span className="text-[11px] font-semibold leading-tight text-white/90">{t.name}</span>
                             </div>
                           )}
                         </div>
                       ))}
                     </div>
-                    <span className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#201b51] px-4 py-2 text-[13px] font-semibold text-white transition group-hover:bg-[#2f2877]">
+                    <span className="mt-5 inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--color-primary)] px-4 py-2 text-[13px] font-semibold text-white transition group-hover:bg-[var(--brand-primary-hover)]">
                       Crear sitio web
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </span>
@@ -278,7 +281,7 @@ export default function DashboardPage() {
 
                   <div className="flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#201b51] text-sm font-bold text-white">2</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white">2</span>
                       <p className="text-[15px] font-semibold text-[#303030]">Publica y comparte</p>
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-[#616161]">
@@ -287,12 +290,12 @@ export default function DashboardPage() {
                     <ul className="mt-5 space-y-3 text-sm text-[#303030]">
                       {["Editor visual sin código", "Dirección web lista al publicar", "Formularios que capturan clientes", "Estadísticas de visitas"].map((f) => (
                         <li key={f} className="flex items-center gap-2.5">
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#f29200]/15 text-[11px] font-bold text-[#b36b00]">✓</span>
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(var(--color-secondary-rgb),0.15)] text-[11px] font-bold text-[var(--brand-secondary-text)]">✓</span>
                           {f}
                         </li>
                       ))}
                     </ul>
-                    <Link href="/dashboard/help" className="mt-auto inline-flex w-fit items-center gap-1.5 pt-5 text-[13px] font-semibold text-[#b36b00] hover:underline">
+                    <Link href="/dashboard/help" className="mt-auto inline-flex w-fit items-center gap-1.5 pt-5 text-[13px] font-semibold text-[var(--brand-secondary-text)] hover:underline">
                       Ver guía de inicio
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </Link>
@@ -306,7 +309,7 @@ export default function DashboardPage() {
                         <h2 className="text-[17px] font-semibold text-[#1f1f1f]">Plantillas populares</h2>
                         <p className="mt-1 text-[13px] text-[#8a8a8a]">Diseños listos para adaptar a tu marca.</p>
                       </div>
-                      <Link href="/dashboard/sites/new" className="shrink-0 text-[13px] font-semibold text-[#b36b00] hover:underline">Ver todas →</Link>
+                      <Link href="/dashboard/sites/new" className="shrink-0 text-[13px] font-semibold text-[var(--brand-secondary-text)] hover:underline">Ver todas →</Link>
                     </div>
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                       {templates.map((t) => (
@@ -319,11 +322,11 @@ export default function DashboardPage() {
                             {t.thumbnail ? (
                               <div className="h-full w-full bg-cover bg-top transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${t.thumbnail})` }} />
                             ) : (
-                              <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#201b51] to-[#3b3480] px-3 text-center text-[12px] font-semibold text-white/90">
+                              <div className="flex h-full items-center justify-center bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-800)] px-3 text-center text-[12px] font-semibold text-white/90">
                                 {t.name}
                               </div>
                             )}
-                            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#201b51] opacity-0 shadow-sm transition group-hover:opacity-100">
+                            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)] opacity-0 shadow-sm transition group-hover:opacity-100">
                               Usar plantilla
                             </span>
                           </div>
@@ -332,7 +335,7 @@ export default function DashboardPage() {
                               <p className="truncate text-[13px] font-semibold text-[#303030]">{t.name}</p>
                               {t.category?.name && <p className="mt-0.5 text-[11px] text-[#8a8a8a]">{t.category.name}</p>}
                             </div>
-                            <span className="mt-0.5 text-[#f29200] transition-transform group-hover:translate-x-0.5">→</span>
+                            <span className="mt-0.5 text-[var(--color-secondary)] transition-transform group-hover:translate-x-0.5">→</span>
                           </div>
                         </Link>
                       ))}

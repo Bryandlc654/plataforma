@@ -216,6 +216,76 @@ export class MediaService {
     return { url: fileUrl, mimeType, size: finalBuffer.length };
   }
 
+  async uploadPlatformAsset(file: Express.Multer.File) {
+    if (!file) throw new BadRequestException("No file provided");
+    if (!file.mimetype.startsWith("image/")) {
+      throw new BadRequestException("Solo se permiten imágenes");
+    }
+    if (this.requireRemote && !this.isR2Enabled) {
+      throw new ServiceUnavailableException(
+        "El almacenamiento remoto (R2) no está configurado; no se permite guardar en disco local en producción."
+      );
+    }
+
+    const ext = path.extname(file.originalname);
+    let fileBuffer: Buffer;
+    if (file.path) {
+      fileBuffer = fs.readFileSync(file.path);
+    } else {
+      fileBuffer = file.buffer;
+    }
+
+    let finalBuffer = fileBuffer;
+    let mimeType = file.mimetype;
+    let storedExt = ext;
+
+    if (!file.mimetype.includes("svg")) {
+      try {
+        const image = sharp(fileBuffer);
+        const metadata = await image.metadata();
+        const resizeTo = metadata.width && metadata.width > 1200 ? 1200 : undefined;
+        if (metadata.hasAlpha) {
+          finalBuffer = await image.resize(resizeTo).png({ compressionLevel: 9 }).toBuffer();
+          mimeType = "image/png";
+          storedExt = ".png";
+        } else {
+          finalBuffer = await image.resize(resizeTo).jpeg({ quality: 88 }).toBuffer();
+          mimeType = "image/jpeg";
+          storedExt = ".jpg";
+        }
+      } catch {
+        finalBuffer = fileBuffer;
+      }
+    }
+
+    const storedName = `branding-${uuid()}${storedExt}`;
+    const objectKey = `platform/branding/${storedName}`;
+    let fileUrl = "";
+
+    if (this.isR2Enabled && this.s3Client) {
+      const bucket = r2Bucket();
+      if (!bucket) throw new BadRequestException("R2_BUCKET_NAME is not configured");
+      try {
+        await this.s3Client.send(new PutObjectCommand({ Bucket: bucket, Key: objectKey, Body: finalBuffer, ContentType: mimeType }));
+      } catch (err: any) {
+        throw new BadRequestException(`Cloudflare R2 Error: No se pudo subir la imagen. Detalle: ${describeR2Error(err)}`);
+      }
+      fileUrl = r2UrlFor(objectKey);
+    } else {
+      const uploadDir = path.join(this.storagePath, "platform", "branding");
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      const filePath = path.join(uploadDir, storedName);
+      fs.writeFileSync(filePath, finalBuffer);
+      fileUrl = this.toAbsoluteUrl(`/uploads/platform/branding/${storedName}`);
+    }
+
+    if (file.path) {
+      try { fs.unlinkSync(file.path); } catch {}
+    }
+
+    return { url: fileUrl, mimeType, size: finalBuffer.length };
+  }
+
   async findAll(tenantId: string, folder?: string, type?: string, page = 1, limit = 30) {
     const where: any = { tenantId };
     if (folder) where.folder = folder;

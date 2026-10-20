@@ -10,6 +10,7 @@ import { CreateRoleDto, UpdateRoleDto, SetRolePermissionsDto } from "../../share
 
 const SYSTEM_ROLE_NAMES = new Set([
   "super_admin",
+  "platform_admin",
   "support",
   "owner",
   "admin",

@@ -16,7 +16,7 @@ interface LogEntry {
 
 export default function AuditPage() {
   const { user, tenantId } = useAuthStore();
-  const isAdmin = user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+  const isAdmin = user?.roles?.includes("super_admin") || user?.roles?.includes("support") || user?.roles?.includes("platform_admin");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [actions, setActions] = useState<Array<{ action: string; count: number }>>([]);
   const [filter, setFilter] = useState("");

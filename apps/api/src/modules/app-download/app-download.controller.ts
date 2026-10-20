@@ -17,8 +17,8 @@ export class AppDownloadController {
   constructor(private appDownloadService: AppDownloadService) {}
 
   private checkSuperAdmin(user: any) {
-    if (!user.roles?.includes("super_admin")) {
-      throw new BadRequestException("Solo el super admin puede gestionar la app");
+    if (!user.roles?.includes("super_admin") && !user.roles?.includes("platform_admin")) {
+      throw new BadRequestException("Solo un administrador de la plataforma puede gestionar la app");
     }
   }
 

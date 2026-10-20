@@ -25,10 +25,17 @@
     --color-primary-950: #201b51;
     --color-primary-default: #201b51;
     --color-primary: #201b51;
+    --color-primary-rgb: 32, 27, 81;
     --color-secondary: #f29200;
+    --color-secondary-rgb: 242, 146, 0;
     --color-tertiary: #201c4eb3;
     --color-on-primary: #ffffff;
-    --color-on-secondary: #ffffff;
+    --color-on-secondary: #201b51;
+    --brand-primary-hover: #120f33;
+    --brand-primary-darker: #120f33;
+    --brand-secondary-hover: #d98200;
+    --brand-secondary-light: #f7a41a;
+    --brand-secondary-text: #b36b00;
     --color-surface-container-lowest: #ffffff;
     --color-surface: #f8fafc;
     --color-background: #ffffff;
@@ -92,8 +99,8 @@
   min-height: 100vh;
   color: #fff;
   background:
-    radial-gradient(ellipse at 85% 100%, rgba(242,146,0,.3) 0%, rgba(242,146,0,0) 55%),
-    radial-gradient(ellipse at 50% 0%, #302a73 0%, #201b51 45%, #120f33 100%);
+    radial-gradient(ellipse at 85% 100%, rgba(var(--color-secondary-rgb, 242, 146, 0), .3) 0%, rgba(var(--color-secondary-rgb, 242, 146, 0), 0) 55%),
+    radial-gradient(ellipse at 50% 0%, var(--color-primary-800, #302a73) 0%, var(--color-primary, #201b51) 45%, var(--color-primary-950, #120f33) 100%);
 }
 .sp-card {
   background: #fff;
@@ -114,14 +121,14 @@
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }
-.sp-input:focus { border-color: #201b51; box-shadow: 0 0 0 1px #201b51; }
+.sp-input:focus { border-color: var(--color-primary, #201b51); box-shadow: 0 0 0 1px var(--color-primary, #201b51); }
 .sp-input::placeholder { color: #8a8a8a; }
 .sp-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 48px; width: 100%;
   border-radius: 999px;
-  background: linear-gradient(180deg, #f7a41a 0%, #e08600 100%);
-  color: #fff; font-weight: 600; font-size: 15px;
+  background: linear-gradient(180deg, var(--brand-secondary-light, #f7a41a) 0%, var(--color-secondary, #e08600) 100%);
+  color: var(--color-on-secondary, #201b51); font-weight: 600; font-size: 15px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 1px 2px rgba(0,0,0,.25);
   transition: opacity .15s, transform .05s;
 }
@@ -142,8 +149,8 @@
   transition: background .15s, color .15s;
 }
 .sp-chip:hover { background: #e6e7e8; }
-.sp-chip[data-on="true"] { background: #f29200; color: #fff; }
-.sp-link { color: #b36b00; font-size: 14px; font-weight: 500; }
+.sp-chip[data-on="true"] { background: var(--color-secondary, #f29200); color: var(--color-on-secondary, #201b51); }
+.sp-link { color: var(--brand-secondary-text, #b36b00); font-size: 14px; font-weight: 500; }
 .sp-link:hover { text-decoration: underline; }
 
 .theme-art-culinaire {

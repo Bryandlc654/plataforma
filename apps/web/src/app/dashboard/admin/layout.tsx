@@ -15,6 +15,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isSuperAdmin = user?.roles?.includes("super_admin");
   const isSupport = user?.roles?.includes("support");
+  const isPlatformAdmin = user?.roles?.includes("platform_admin");
+  const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
 
   useEffect(() => {
     if (!mounted || !hasHydrated) return;
@@ -22,13 +24,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const ok = await ensureSession();
       if (!ok) { router.push("/login"); return; }
       const u = useAuthStore.getState().user;
-      const superAdmin = u?.roles?.includes("super_admin");
-      const support = u?.roles?.includes("support");
-      if (!superAdmin && !support) { router.push("/dashboard"); }
+      const platformStaff =
+        u?.roles?.includes("super_admin") ||
+        u?.roles?.includes("support") ||
+        u?.roles?.includes("platform_admin");
+      if (!platformStaff) { router.push("/dashboard"); }
     })();
-  }, [ensureSession, hasHydrated, mounted, isAuthenticated, isSuperAdmin, isSupport, router]);
+  }, [ensureSession, hasHydrated, mounted, isAuthenticated, isPlatformStaff, router]);
 
-  if (!mounted || !hasHydrated || (!isSuperAdmin && !isSupport)) {
+  if (!mounted || !hasHydrated || !isPlatformStaff) {
     return <div className="flex h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
   }
 

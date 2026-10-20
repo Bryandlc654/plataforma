@@ -32,7 +32,7 @@ export default function UsersPage() {
       setMembers(Array.isArray(membersData) ? membersData : (membersData.items || membersData.data || []));
       const rolesData = rRes.data || rRes;
       const rolesList = Array.isArray(rolesData) ? rolesData : (rolesData.items || rolesData.data || []);
-      const tr = rolesList.filter((r: Role) => r.name !== "super_admin" && r.name !== "support" && r.name !== "owner");
+      const tr = rolesList.filter((r: Role) => r.name !== "super_admin" && r.name !== "platform_admin" && r.name !== "support" && r.name !== "owner");
       setRoles(tr);
       if (tr.length > 0 && !inviteRole) setInviteRole(tr[0].id);
     } catch {} finally { setLoading(false); }

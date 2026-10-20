@@ -26,7 +26,9 @@ export class PermissionsGuard implements CanActivate {
     const { user } = request;
 
     const isSystemUser =
-      user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+      user?.roles?.includes("super_admin") ||
+      user?.roles?.includes("platform_admin") ||
+      user?.roles?.includes("support");
     if (isSystemUser) {
       return true;
     }

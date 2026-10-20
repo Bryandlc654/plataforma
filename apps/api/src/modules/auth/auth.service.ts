@@ -415,7 +415,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
       const rp = await this.getUserRolesAndPermissions(user.id);
       const isSystemUser =
-        rp.roles.includes("super_admin") || rp.roles.includes("support");
+        rp.roles.includes("super_admin") ||
+        rp.roles.includes("platform_admin") ||
+        rp.roles.includes("support");
 
       if (!isSystemUser) {
         const memberships = await this.prisma.userTenant.findMany({
@@ -667,7 +669,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     });
 
     const isSystemUser =
-      rp.roles.includes("super_admin") || rp.roles.includes("support");
+      rp.roles.includes("super_admin") ||
+      rp.roles.includes("platform_admin") ||
+      rp.roles.includes("support");
 
     const accessibleTenants = isSystemUser
       ? userTenants

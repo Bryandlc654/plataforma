@@ -59,7 +59,9 @@ export class BillingService {
     if (!invoice) throw new BadRequestException("Invoice not found");
 
     const isSystemUser =
-      requester?.roles?.includes("super_admin") || requester?.roles?.includes("support");
+      requester?.roles?.includes("super_admin") ||
+      requester?.roles?.includes("platform_admin") ||
+      requester?.roles?.includes("support");
     if (!isSystemUser) {
       if (!requester?.tenantId) throw new ForbiddenException("Tenant context is required");
       if (invoice.tenantId !== requester.tenantId) {
@@ -247,7 +249,9 @@ export class BillingService {
 
   async markInvoiceAsPaid(invoiceId: string, externalId?: string, requester?: any) {
     const isSystemUser =
-      requester?.roles?.includes("super_admin") || requester?.roles?.includes("support");
+      requester?.roles?.includes("super_admin") ||
+      requester?.roles?.includes("platform_admin") ||
+      requester?.roles?.includes("support");
     if (!isSystemUser) {
       throw new ForbiddenException("Not allowed");
     }

@@ -29,10 +29,10 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#201b51] relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-[var(--color-primary)] relative overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#f29200] rounded-full blur-[120px]" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[var(--color-secondary)] rounded-full blur-[120px]" />
         </div>
         <div className="relative flex flex-col justify-center px-16 text-white">
           <div className="mb-4">
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full relative rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-white hover:bg-orange-500 shadow-lg shadow-secondary/30 focus:outline-none focus:ring-4 focus:ring-secondary/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full relative rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-[var(--color-on-secondary)] hover:bg-[var(--brand-secondary-hover)] shadow-lg shadow-secondary/30 focus:outline-none focus:ring-4 focus:ring-secondary/30 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <span className="inline-flex items-center gap-2">

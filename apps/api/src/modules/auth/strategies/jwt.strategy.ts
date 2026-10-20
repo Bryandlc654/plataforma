@@ -83,7 +83,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       ) ?? [];
 
     const isSuperAdmin = roles.includes("super_admin");
-    const isSystemUser = isSuperAdmin || roles.includes("support");
+    const isSystemUser =
+      isSuperAdmin || roles.includes("platform_admin") || roles.includes("support");
 
     if (!isSystemUser && userTenant?.tenant && !userTenant.tenant.isActive) {
       throw new ForbiddenException("El negocio está suspendido");

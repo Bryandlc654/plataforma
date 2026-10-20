@@ -145,7 +145,7 @@ export default function WelcomePage() {
                     type="button"
                     onClick={() => setPlanSlug(p.slug)}
                     className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
-                      planSlug === p.slug ? "border-[#f29200] ring-1 ring-[#f29200]" : "border-[#c9cccf] hover:border-[#8a8a8a]"
+                      planSlug === p.slug ? "border-[var(--color-secondary)] ring-1 ring-[var(--color-secondary)]" : "border-[#c9cccf] hover:border-[#8a8a8a]"
                     }`}
                   >
                     <span>

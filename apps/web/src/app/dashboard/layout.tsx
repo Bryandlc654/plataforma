@@ -2,9 +2,10 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { useAuthStore } from "@/stores/auth-store";
 import { AppIcon } from "@/components/ui/app-icon";
+import { usePlatformBranding } from "@/components/providers/platform-branding-provider";
+import { resolveBrandingLogo } from "@/lib/platform-branding";
 import { useEffect, useState, Fragment } from "react";
 import api from "@/lib/api";
 import { cachedJson, setCachedJson } from "@/lib/cached-fetch";
@@ -14,10 +15,14 @@ function hasPermission(user: any, perm: string) { return user?.permissions?.incl
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, tenant, tenantId, isAuthenticated, hasHydrated, logout, selectTenant, ensureSession } = useAuthStore();
+  const { branding } = usePlatformBranding();
+  const platformLogo = resolveBrandingLogo(branding.logoUrl);
   const router = useRouter();
   const pathname = usePathname();
   const isSuperAdmin = hasRole(user, "super_admin");
   const isSupport = hasRole(user, "support");
+  const isPlatformAdmin = hasRole(user, "platform_admin");
+  const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
   const [collapsed, setCollapsed] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [gateChecked, setGateChecked] = useState(false);
@@ -26,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // La cuenta de prueba muestra "La prueba termina en N días" hasta que haya un plan de pago.
   useEffect(() => {
     if (!hasHydrated) return;
-    if (!tenantId || isSuperAdmin || isSupport) { setGateChecked(true); return; }
+    if (!tenantId || isPlatformStaff) { setGateChecked(true); return; }
     (async () => {
       try {
         const res: any = await api.get(`/tenants/${tenantId}/settings`);
@@ -44,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setTrialDaysLeft(Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86400000)));
       } catch { setGateChecked(true); }
     })();
-  }, [hasHydrated, tenantId, isSuperAdmin, isSupport, router]);
+  }, [hasHydrated, tenantId, isPlatformStaff, router]);
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; slug: string; isOwner: boolean }>>([]);
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
@@ -154,6 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       title: "Configuración",
       links: [
         { href: "/dashboard/admin/templates", label: "Plantillas", icon: "admintemplates" },
+        { href: "/dashboard/admin/branding", label: "Marca de la plataforma", icon: "settings", platformAdmin: true },
         { href: "/dashboard/admin/knowledge-base", label: "Base de Conocimientos", icon: "help" },
         { href: "/dashboard/settings", label: "Configuración", icon: "settings" },
         { href: "/dashboard/support", label: "Soporte", icon: "support" },
@@ -163,14 +169,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   if (!hasHydrated || !gateChecked) {
-    return <div className="flex h-screen items-center justify-center bg-[#201b51]"><p className="text-white/60">Cargando...</p></div>;
+    return <div className="flex h-screen items-center justify-center bg-[var(--color-primary)]"><p className="text-white/60">Cargando...</p></div>;
   }
 
-  const groups = (isSuperAdmin || isSupport ? adminNavGroups : tenantNavGroups)
+  const groups = (isPlatformStaff ? adminNavGroups : tenantNavGroups)
     .map((group) => ({
       ...group,
       links: group.links.filter((link: any) => {
-        if (isSuperAdmin || isSupport) return true;
+        if (link.platformAdmin && !isSuperAdmin && !isPlatformAdmin) return false;
+        if (isPlatformStaff) return true;
         if (link.roles === "*") return true;
         if (link.perms && !link.perms.some((p: string) => hasPermission(user, p))) return false;
         if (link.href === "/dashboard/bookings-page" && capabilities?.bookings !== true) return false;
@@ -183,14 +190,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname?.startsWith(href));
 
   return (
-    <div className="flex min-h-screen bg-[#201b51]">
+    <div className="flex min-h-screen bg-[var(--color-primary)]">
       <aside className={`relative ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
         {/* Brand + toggle */}
         <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#f29200] text-sm font-black text-[#201b51]">P</span>
-              <span className="font-semibold tracking-tight">Plataforma</span>
+              {platformLogo ? (
+                <span className="flex h-7 max-w-[150px] items-center rounded-md bg-white px-1.5 py-1">
+                  <img src={platformLogo} alt="Logo de la plataforma" className="h-4 w-auto max-w-[130px] object-contain" />
+                </span>
+              ) : (
+                <>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-secondary)] text-sm font-black text-[var(--color-on-secondary)]">P</span>
+                  <span className="font-semibold tracking-tight">Plataforma</span>
+                </>
+              )}
             </Link>
           )}
           <button onClick={() => setCollapsed(!collapsed)} className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white" title={collapsed ? "Abrir menú" : "Cerrar menú"}>
@@ -199,7 +214,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Tenant selector */}
-        {!isSuperAdmin && !isSupport && tenants.length > 1 && !collapsed && (
+        {!isPlatformStaff && tenants.length > 1 && !collapsed && (
           <select value={tenantId || ""} onChange={(e) => { const t = tenants.find(x => x.id === e.target.value); if (t) handleSelectTenant(t); }} className="mb-3 w-full rounded-lg border-0 bg-white/10 px-2 py-1.5 text-[13px] text-white focus:ring-1 focus:ring-white/40">
             {tenants.map((t) => (<option key={t.id} value={t.id} className="text-black">{t.name}</option>))}
           </select>
@@ -219,7 +234,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     key={link.href}
                     href={link.href}
                     title={collapsed ? link.label : undefined}
-                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white shadow-[inset_2px_0_0_#f29200]" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
+                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white shadow-[inset_2px_0_0_var(--color-secondary)]" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
                   >
                     <AppIcon name={link.icon} className="h-[18px] w-[18px] flex-shrink-0" />
                     {!collapsed && <span className="truncate">{link.label}</span>}
@@ -229,18 +244,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           ))}
 
-          {!isSuperAdmin && !tenant && !collapsed && (
+          {!isPlatformStaff && !tenant && !collapsed && (
             <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 font-medium text-white/80 hover:bg-white/10">+ Crear negocio</Link>
           )}
         </nav>
 
         {/* Trial banner (estilo Shopify) */}
-        {!collapsed && trialDaysLeft !== null && !isSuperAdmin && !isSupport && (
-          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-[#f29200]/30 p-3">
+        {!collapsed && trialDaysLeft !== null && !isPlatformStaff && (
+          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-[rgba(var(--color-secondary-rgb),0.3)] p-3">
             <p className="mb-2 text-[13px] font-semibold">
               {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
             </p>
-            <Link href="/dashboard/billing" className="block rounded-full bg-[#f29200] py-2 text-center text-[13px] font-semibold text-[#201b51] hover:bg-[#e08600]">
+            <Link href="/dashboard/billing" className="block rounded-full bg-[var(--color-secondary)] py-2 text-center text-[13px] font-semibold text-[var(--color-on-secondary)] hover:bg-[var(--brand-secondary-hover)]">
               Elegir un plan
             </Link>
           </div>
@@ -249,7 +264,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User */}
         <div className={`border-t border-white/10 pt-3 ${collapsed ? "flex flex-col items-center gap-3" : ""}`}>
           <div className={`flex items-center gap-2.5 ${collapsed ? "" : "px-1"}`}>
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#f29200] text-xs font-bold text-[#201b51]" title={user?.email}>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-xs font-bold text-[var(--color-on-secondary)]" title={user?.email}>
               {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
             </div>
             {!collapsed && (

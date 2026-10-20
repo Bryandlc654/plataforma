@@ -62,7 +62,7 @@ export class TemplatesController {
     @Body("isPremium") isPremium?: string,
     @Body("preview") preview?: string,
   ) {
-    if (!user?.roles?.includes("super_admin")) {
+    if (!user?.roles?.includes("super_admin") && !user?.roles?.includes("platform_admin")) {
       throw new ForbiddenException("Solo el super admin puede importar plantillas");
     }
     if (!file) throw new BadRequestException("Archivo ZIP requerido");
@@ -105,7 +105,7 @@ export class TemplatesController {
     @Param("id") id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!user?.roles?.includes("super_admin")) {
+    if (!user?.roles?.includes("super_admin") && !user?.roles?.includes("platform_admin")) {
       throw new ForbiddenException("Solo el super admin puede cambiar el thumbnail de plantillas");
     }
     if (!file) throw new BadRequestException("Imagen requerida");
@@ -182,7 +182,7 @@ export class TemplatesController {
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
   @ApiOperation({ summary: "Super admin: eliminar plantilla" })
   async remove(@CurrentUser() user: any, @Param("id") id: string) {
-    if (!user?.roles?.includes("super_admin")) {
+    if (!user?.roles?.includes("super_admin") && !user?.roles?.includes("platform_admin")) {
       throw new ForbiddenException("Solo el super admin puede eliminar plantillas");
     }
     return this.templatesService.remove(id);

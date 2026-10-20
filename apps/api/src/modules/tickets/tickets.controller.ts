@@ -12,7 +12,11 @@ export class TicketsController {
   constructor(private ticketsService: TicketsService) {}
 
   private isStaff(user: any): boolean {
-    return user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+    return (
+      user?.roles?.includes("super_admin") ||
+      user?.roles?.includes("platform_admin") ||
+      user?.roles?.includes("support")
+    );
   }
 
   private assertStaff(user: any): void {
