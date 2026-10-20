@@ -34,6 +34,20 @@ export class PlatformController {
     return this.platformService.updateBranding(user, body);
   }
 
+  @Get("payments")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get platform payment gateway config" })
+  async getPayments(@CurrentUser() user: any) {
+    return this.platformService.getPaymentsPublic(user);
+  }
+
+  @Put("payments")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update platform payment gateway config (superadmin or platform admin)" })
+  async updatePayments(@CurrentUser() user: any, @Body() body: any) {
+    return this.platformService.updatePayments(user, body);
+  }
+
   @Post("branding/logo")
   @ApiBearerAuth()
   @ApiConsumes("multipart/form-data")

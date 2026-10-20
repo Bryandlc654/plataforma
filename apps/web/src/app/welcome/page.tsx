@@ -36,6 +36,7 @@ export default function WelcomePage() {
   const [goals, setGoals] = useState<string[]>(["business"]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [methods, setMethods] = useState<{ paypal: { enabled: boolean }; payphone: { enabled: boolean } } | null>(null);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -55,6 +56,13 @@ export default function WelcomePage() {
       .catch(() => setPlans([]));
   }, []);
 
+  useEffect(() => {
+    api
+      .get("/billing/payment-methods")
+      .then((res: any) => setMethods(res.data || res))
+      .catch(() => setMethods(null));
+  }, []);
+
   const plan = useMemo(() => plans.find((p) => p.slug === planSlug), [plans, planSlug]);
   const trialEnd = useMemo(() => new Date(Date.now() + 3 * 86400000), []);
 
@@ -72,6 +80,25 @@ export default function WelcomePage() {
       setError("No pudimos abrir la pasarela de pago.");
     } catch (err: any) {
       setError(err.response?.data?.message || "No pudimos abrir la pasarela de pago. Puedes omitir este paso.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startPaypal = async () => {
+    if (!planSlug) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res: any = await api.post("/billing/paypal/create-order", { planSlug });
+      const data = res.data || res;
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+      setError("No pudimos abrir PayPal.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No pudimos abrir PayPal. Puedes omitir este paso.");
     } finally {
       setBusy(false);
     }
@@ -162,9 +189,23 @@ export default function WelcomePage() {
 
               {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-              <button onClick={startPayment} disabled={busy || !plan} className="sp-btn mt-5">
-                {busy ? "Abriendo pasarela..." : "Agregar método de pago"}
-              </button>
+              {methods?.paypal?.enabled && (
+                <button onClick={startPaypal} disabled={busy || !plan} className="sp-btn mt-5">
+                  {busy ? "Abriendo PayPal..." : "Pagar con PayPal"}
+                </button>
+              )}
+              {(methods === null || methods.payphone?.enabled) && (
+                <button
+                  onClick={startPayment}
+                  disabled={busy || !plan}
+                  className={methods?.paypal?.enabled ? "sp-btn-light mt-3 w-full" : "sp-btn mt-5"}
+                >
+                  {busy ? "Abriendo pasarela..." : methods?.payphone?.enabled ? "Pagar con tarjeta" : "Agregar método de pago"}
+                </button>
+              )}
+              {methods && !methods.paypal?.enabled && !methods.payphone?.enabled && (
+                <button disabled className="sp-btn mt-5 opacity-60">Pago no disponible</button>
+              )}
               <button onClick={() => setStep("goals")} className="sp-link mt-3 block w-full text-center">
                 Omitir por ahora
               </button>

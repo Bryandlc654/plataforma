@@ -160,6 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard/admin/templates", label: "Plantillas", icon: "admintemplates" },
         { href: "/dashboard/admin/branding", label: "Marca de la plataforma", icon: "settings", platformAdmin: true },
+        { href: "/dashboard/admin/payments", label: "Pagos de la plataforma", icon: "billing", platformAdmin: true },
         { href: "/dashboard/admin/knowledge-base", label: "Base de Conocimientos", icon: "help" },
         { href: "/dashboard/settings", label: "Configuración", icon: "settings" },
         { href: "/dashboard/support", label: "Soporte", icon: "support" },

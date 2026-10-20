@@ -16,16 +16,18 @@ export default function BillingPage() {
   const [sub, setSub] = useState<CurrentSub | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [methods, setMethods] = useState<{ paypal: { enabled: boolean }; payphone: { enabled: boolean } } | null>(null);
   const [loading, setLoading] = useState(true);
   const { confirm } = useConfirm();
   useEffect(() => { fetchData(); }, []);
   const fetchData = async () => {
-    try { const [a,b,c]: any[] = await Promise.all([api.get("/subscriptions/current"), api.get("/plans"), api.get("/billing/invoices")]); setSub(a.data||a); setPlans(b.data||b); setInvoices(c.data||c); } catch {} finally { setLoading(false); }
+    try { const [a,b,c,d]: any[] = await Promise.all([api.get("/subscriptions/current"), api.get("/plans"), api.get("/billing/invoices"), api.get("/billing/payment-methods")]); setSub(a.data||a); setPlans(b.data||b); setInvoices(c.data||c); setMethods(d.data||d); } catch {} finally { setLoading(false); }
   };
   const handleUpgrade = async (planId: string) => { if(!(await confirm("¿Cambiar de plan?")))return; try{await api.post("/subscriptions/upgrade",{planId});fetchData()}catch(e:any){alert(e.response?.data?.message||"Error")} };
   const handleDowngrade = async (planId: string) => { if(!(await confirm("¿Bajar de plan?")))return; try{await api.post("/subscriptions/downgrade",{planId});fetchData()}catch(e:any){alert(e.response?.data?.message||"Error")} };
   const handleCancel = async () => { if(!(await confirm("¿Cancelar suscripción?")))return; try{await api.post("/subscriptions/cancel");fetchData()}catch(e:any){alert(e.response?.data?.message||"Error")} };
   const handlePaymentLink = async (slug: string) => { try{const r:any=await api.post("/billing/payment-link",{planSlug:slug});const d=r.data||r;if(d.paymentUrl)window.open(d.paymentUrl,"_blank")}catch(e:any){alert(e.response?.data?.message||"Error")} };
+  const handlePaypal = async (slug: string) => { try{const r:any=await api.post("/billing/paypal/create-order",{planSlug:slug});const d=r.data||r;if(d.paymentUrl)window.location.href=d.paymentUrl;else alert("No se pudo abrir PayPal")}catch(e:any){alert(e.response?.data?.message||"Error")} };
   if(loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
   return (
     <div className="p-8 max-w-4xl">
@@ -39,7 +41,7 @@ export default function BillingPage() {
       </div>
       <h2 className="font-semibold text-slate-900 mb-4">Cambiar de plan</h2>
       <div className="grid gap-4 md:grid-cols-3 mb-8">
-        {plans.map((p)=>{const isC=sub?.plan?.slug===p.slug;const isU=Number(p.price)>Number(sub?.plan?.price||0);return(<div key={p.id} className={`card border-2 ${isC?"border-primary-500 bg-primary-50/50":"border-slate-200"}`}><h3 className="font-semibold text-slate-900">{p.name}</h3><p className="text-2xl font-bold text-primary-600 mt-2">{Number(p.price)===0?"Gratis":formatCurrency(Number(p.price))}<span className="text-sm font-normal text-slate-400">/mes</span></p><ul className="mt-4 space-y-1 text-sm text-slate-600"><li>✓ {p.maxUsers} usuarios</li><li>✓ {p.maxSites} sitios</li><li>✓ {Math.round(Number(p.maxStorage)/1024/1024)} MB</li></ul>{isC?<button className="mt-4 w-full btn-secondary text-sm cursor-default" disabled>Plan actual</button>:isU?<button onClick={()=>Number(p.price)===0?handleDowngrade(p.id):handlePaymentLink(p.slug)} className="mt-4 w-full btn-primary text-sm">Subir a {p.name}</button>:<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-ghost text-sm">Bajar a {p.name}</button>}</div>)})}
+        {plans.map((p)=>{const isC=sub?.plan?.slug===p.slug;const isU=Number(p.price)>Number(sub?.plan?.price||0);return(<div key={p.id} className={`card border-2 ${isC?"border-primary-500 bg-primary-50/50":"border-slate-200"}`}><h3 className="font-semibold text-slate-900">{p.name}</h3><p className="text-2xl font-bold text-primary-600 mt-2">{Number(p.price)===0?"Gratis":formatCurrency(Number(p.price))}<span className="text-sm font-normal text-slate-400">/mes</span></p><ul className="mt-4 space-y-1 text-sm text-slate-600"><li>✓ {p.maxUsers} usuarios</li><li>✓ {p.maxSites} sitios</li><li>✓ {Math.round(Number(p.maxStorage)/1024/1024)} MB</li></ul>{isC?<button className="mt-4 w-full btn-secondary text-sm cursor-default" disabled>Plan actual</button>:isU?(Number(p.price)===0?<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-primary text-sm">Cambiar a {p.name}</button>:<div className="mt-4 space-y-2">{methods?.paypal?.enabled&&<button onClick={()=>handlePaypal(p.slug)} className="w-full btn-primary text-sm">Pagar con PayPal</button>}{methods?.payphone?.enabled&&<button onClick={()=>handlePaymentLink(p.slug)} className="w-full btn-secondary text-sm">Pagar con tarjeta</button>}{!methods?.paypal?.enabled&&!methods?.payphone?.enabled&&<button onClick={()=>alert("No hay una pasarela de pago configurada.")} className="w-full btn-secondary text-sm">Pago no disponible</button>}</div>):<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-ghost text-sm">Bajar a {p.name}</button>}</div>)})}
       </div>
       <h2 className="font-semibold text-slate-900 mb-4">Historial de pagos</h2>
       {invoices.length===0?<div className="card text-center py-8"><p className="text-sm text-slate-500">Sin facturas</p></div>:
