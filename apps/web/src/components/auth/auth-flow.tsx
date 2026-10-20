@@ -11,7 +11,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function BrandMark({ className = "" }: { className?: string }) {
   return (
     <Link href="/" className={`flex items-center gap-2 text-white ${className}`}>
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[15px] font-black text-[#201b51]">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f29200] text-[15px] font-black text-[#201b51]">
         P
       </span>
       <span className="text-lg font-semibold tracking-tight">Plataforma</span>

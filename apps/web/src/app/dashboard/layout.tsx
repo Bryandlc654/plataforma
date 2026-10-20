@@ -189,7 +189,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-black text-[#201b51]">P</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#f29200] text-sm font-black text-[#201b51]">P</span>
               <span className="font-semibold tracking-tight">Plataforma</span>
             </Link>
           )}
@@ -219,7 +219,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     key={link.href}
                     href={link.href}
                     title={collapsed ? link.label : undefined}
-                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
+                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white shadow-[inset_2px_0_0_#f29200]" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
                   >
                     <AppIcon name={link.icon} className="h-[18px] w-[18px] flex-shrink-0" />
                     {!collapsed && <span className="truncate">{link.label}</span>}
@@ -240,7 +240,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p className="mb-2 text-[13px] font-semibold">
               {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
             </p>
-            <Link href="/dashboard/billing" className="block rounded-full bg-[#f29200] py-2 text-center text-[13px] font-semibold text-white hover:bg-[#d98200]">
+            <Link href="/dashboard/billing" className="block rounded-full bg-[#f29200] py-2 text-center text-[13px] font-semibold text-[#201b51] hover:bg-[#e08600]">
               Elegir un plan
             </Link>
           </div>
@@ -249,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User */}
         <div className={`border-t border-white/10 pt-3 ${collapsed ? "flex flex-col items-center gap-3" : ""}`}>
           <div className={`flex items-center gap-2.5 ${collapsed ? "" : "px-1"}`}>
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#f29200] text-xs font-bold text-white" title={user?.email}>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#f29200] text-xs font-bold text-[#201b51]" title={user?.email}>
               {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
             </div>
             {!collapsed && (
