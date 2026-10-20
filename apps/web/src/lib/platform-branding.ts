@@ -1,3 +1,5 @@
+import { API_BASE_URL, API_ORIGIN } from "@/lib/api-config";
+
 export interface PlatformBranding {
   logoUrl: string | null;
   primaryColor: string;
@@ -121,17 +123,14 @@ export function resolveBrandingLogo(url: string | null): string {
   if (!url) return "";
   if (/^(https?:|data:|blob:)/i.test(url)) return url;
   if (url.startsWith("/uploads/")) {
-    const base = process.env.NEXT_PUBLIC_API_URL || "";
-    const origin = base.replace(/\/api\/v1\/?$/, "");
-    return `${origin}${url}`;
+    return `${API_ORIGIN}${url}`;
   }
   return url;
 }
 
 export async function fetchPlatformBranding(): Promise<PlatformBranding> {
-  const base = process.env.NEXT_PUBLIC_API_URL || "https://plataforma-api-rkav7vkxia-uc.a.run.app/api/v1";
   try {
-    const res = await fetch(`${base}/platform/branding`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/platform/branding`, { cache: "no-store" });
     if (!res.ok) return DEFAULT_BRANDING;
     const payload: any = await res.json();
     return normalizeBranding(payload?.data || payload);

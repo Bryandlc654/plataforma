@@ -121,7 +121,10 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
         await login(email, password);
         router.replace("/dashboard");
       } catch (err: any) {
-        setError(err.response?.data?.message || "Correo o contraseña incorrectos");
+        const message = err.response?.data?.message;
+        if (message) setError(message);
+        else if (!err.response) setError("No se pudo conectar con el servidor. Inténtalo de nuevo.");
+        else setError("No pudimos iniciar sesión. Inténtalo de nuevo.");
       }
       return;
     }

@@ -4,10 +4,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { applyPaletteToVariantHtml, type SitePalette } from "@/lib/site-palette";
-
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1")
-  .replace(/\/api\/v1\/?$/i, "")
-  .replace(/\/+$/, "");
+import { API_ORIGIN } from "@/lib/api-config";
 
 function resolveMediaUrl(value: any): any {
   if (typeof value === "string") {
