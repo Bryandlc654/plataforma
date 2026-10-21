@@ -17,13 +17,11 @@ export function BrandMark({ className = "" }: { className?: string }) {
   return (
     <Link href="/" className={`flex items-center gap-2 text-white ${className}`}>
       {logo ? (
-        <span className="flex h-9 max-w-[168px] items-center rounded-lg bg-white px-2 py-1 shadow-sm">
-          <img
-            src={logo}
-            alt="Logo de la plataforma"
-            className="h-5 w-auto max-w-[150px] object-contain"
-          />
-        </span>
+        <img
+          src={logo}
+          alt="Logo de la plataforma"
+          className="h-9 w-auto max-w-[168px] object-contain"
+        />
       ) : (
         <>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-[15px] font-black text-[var(--color-on-secondary)]">

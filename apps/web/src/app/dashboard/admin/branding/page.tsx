@@ -121,7 +121,7 @@ export default function PlatformBrandingPage() {
             </p>
 
             <div className="mt-5 flex flex-wrap items-center gap-4">
-              <div className="flex h-20 w-48 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
+              <div className="flex h-20 w-48 items-center justify-center overflow-hidden">
                 {logo ? (
                   <img
                     src={logo}
@@ -195,9 +195,7 @@ export default function PlatformBrandingPage() {
           <div className="mt-5 overflow-hidden rounded-xl" style={{ background: primaryColor }}>
             <div className="flex items-center gap-2 px-4 py-3 text-white">
               {logo ? (
-                <span className="flex h-7 max-w-[140px] items-center rounded-md bg-white px-1.5 py-1">
-                  <img src={logo} alt="" className="h-4 w-auto max-w-[120px] object-contain" />
-                </span>
+                <img src={logo} alt="" className="h-6 w-auto max-w-[120px] object-contain" />
               ) : (
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-md text-xs font-black"

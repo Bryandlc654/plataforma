@@ -198,9 +198,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
               {platformLogo ? (
-                <span className="flex h-7 max-w-[150px] items-center rounded-md bg-white px-1.5 py-1">
-                  <img src={platformLogo} alt="Logo de la plataforma" className="h-4 w-auto max-w-[130px] object-contain" />
-                </span>
+                <img src={platformLogo} alt="Logo de la plataforma" className="h-7 w-auto max-w-[150px] object-contain" />
               ) : (
                 <>
                   <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-secondary)] text-sm font-black text-[var(--color-on-secondary)]">P</span>
