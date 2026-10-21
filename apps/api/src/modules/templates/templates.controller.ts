@@ -121,6 +121,13 @@ export class TemplatesController {
   }
 
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
+  @Get("admin/:id/html")
+  @ApiOperation({ summary: "Admin: render a template page as published HTML" })
+  async adminPreviewHtml(@Param("id") id: string, @Query("page") page?: string) {
+    return this.templatesService.renderPreviewHtml(id, page);
+  }
+
+  @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)
   @Get("admin/:id")
   @ApiOperation({ summary: "Admin: get template by ID" })
   async adminFindById(@Param("id") id: string) {

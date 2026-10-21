@@ -4,8 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
-import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 import { useAuthStore } from "@/stores/auth-store";
 
 type Device = "desktop" | "tablet" | "mobile";
@@ -19,6 +17,9 @@ export default function TemplateSandboxPage() {
   const [error, setError] = useState("");
   const [pageId, setPageId] = useState("");
   const [device, setDevice] = useState<Device>("desktop");
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -48,10 +49,30 @@ export default function TemplateSandboxPage() {
     pages[0] ||
     null;
 
+  useEffect(() => {
+    if (!template?.id || !activePage?.path) return;
+    let cancelled = false;
+    setPreviewLoading(true);
+    setPreviewError("");
+    setPreviewHtml("");
+    api
+      .get(`/templates/admin/${template.id}/html`, { params: { page: activePage.path } })
+      .then((res: any) => {
+        if (cancelled) return;
+        const data = res.data || res;
+        setPreviewHtml(data.html || "");
+      })
+      .catch((e: any) => {
+        if (!cancelled) setPreviewError(e.response?.data?.message || "No se pudo renderizar la plantilla");
+      })
+      .finally(() => { if (!cancelled) setPreviewLoading(false); });
+    return () => { cancelled = true; };
+  }, [template?.id, activePage?.path]);
+
   const widths: Record<Device, string> = {
     desktop: "w-full max-w-[1440px]",
-    tablet: "w-[768px]",
-    mobile: "w-[390px]",
+    tablet: "w-full max-w-[768px]",
+    mobile: "w-full max-w-[390px]",
   };
 
   if (loading || !hasHydrated) {
@@ -124,14 +145,31 @@ export default function TemplateSandboxPage() {
 
       {/* Sandbox */}
       {template && activePage && (
-        <div className="py-8 bg-slate-950">
-          <div className={`mx-auto ${widths[device]} rounded-t-3xl overflow-hidden bg-white shadow-2xl border border-white/10`}>
-            <div className={`bg-slate-100 ${templateWrapperClass(template?.globalStyles, activePage.path)} ${device === "mobile" ? "min-h-[calc(100vh-3rem)]" : "min-h-[calc(100vh-6rem)]"}`}>
-              <TemplateGlobalStyles globalStyles={template?.globalStyles} pagePath={activePage.path} />
-              {activePage.blocks?.map((b: any) => (
-                <BlockRenderer key={b.id} type={b.type} content={b.content} />
-              ))}
-            </div>
+        <div className="px-4 py-6">
+          <div className={`mx-auto ${widths[device]} overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl transition-[max-width] duration-200`}>
+            {previewHtml ? (
+              <iframe
+                key={`${activePage.id}-${device}`}
+                title={`${template.name} - ${activePage.name}`}
+                srcDoc={previewHtml}
+                sandbox="allow-scripts allow-forms allow-popups allow-modals"
+                className="h-[calc(100vh-7rem)] min-h-[560px] w-full border-0 bg-white"
+              />
+            ) : (
+              <div className="flex h-[calc(100vh-7rem)] min-h-[560px] items-center justify-center bg-white px-4 text-center">
+                {previewLoading ? (
+                  <div>
+                    <svg className="mx-auto mb-3 h-6 w-6 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <p className="text-sm text-slate-400">Renderizando vista previa...</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">{previewError || "Sin vista previa"}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
