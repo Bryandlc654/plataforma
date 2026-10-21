@@ -20,14 +20,14 @@ export function BrandMark({ className = "" }: { className?: string }) {
         <img
           src={logo}
           alt="Logo de la plataforma"
-          className="h-9 w-auto max-w-[168px] object-contain"
+          className="h-12 w-auto max-w-[220px] object-contain"
         />
       ) : (
         <>
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-[15px] font-black text-[var(--color-on-secondary)]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-lg font-black text-[var(--color-on-secondary)]">
             P
           </span>
-          <span className="text-lg font-semibold tracking-tight">Plataforma</span>
+          <span className="text-xl font-semibold tracking-tight">Plataforma</span>
         </>
       )}
     </Link>
@@ -179,6 +179,31 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     }
   };
 
+  const toastNode = toast ? (
+    <div
+      role={toast.type === "error" ? "alert" : "status"}
+      aria-live={toast.type === "error" ? "assertive" : "polite"}
+      className="auth-toast flex max-w-[300px] items-center gap-2 rounded-xl border border-white/80 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm"
+    >
+      <span
+        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center ${
+          toast.type === "success" ? "text-emerald-600" : "text-red-600"
+        }`}
+      >
+        {toast.type === "success" ? (
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        )}
+      </span>
+      <p className="text-[13px] font-medium leading-tight text-[#303030]">{toast.message}</p>
+    </div>
+  ) : null;
+
   return (
     <div className="sp-dark-screen flex flex-col">
       <header className="px-8 py-6">
@@ -232,7 +257,13 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
             </form>
           </>
         ) : step === "password" ? (
-          <form onSubmit={submitPassword} className="sp-card mt-16 w-full max-w-[440px] !p-8">
+          <>
+            {toastNode && (
+              <div className="mt-16 flex w-full max-w-[440px] justify-center">
+                {toastNode}
+              </div>
+            )}
+            <form onSubmit={submitPassword} className={`sp-card w-full max-w-[440px] !p-8 ${toast ? "mt-3" : "mt-16"}`}>
             <h1 className="text-[26px] font-bold leading-tight tracking-tight">
               {mode === "login" ? "Ingresa tu contraseña" : "Crea tu contraseña"}
             </h1>
@@ -289,6 +320,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
               </button>
             )}
           </form>
+          </>
         ) : (
           <div className="sp-card mt-16 w-full max-w-[440px] !p-8">
             <h1 className="text-[26px] font-bold leading-tight tracking-tight">Revisa tu correo</h1>
@@ -354,33 +386,6 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
         <span className="font-semibold text-white/80">Política de privacidad</span>. Puedes cancelar en cualquier
         momento.
       </footer>
-
-      {toast && (
-        <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center px-4">
-          <div
-            role={toast.type === "error" ? "alert" : "status"}
-            aria-live={toast.type === "error" ? "assertive" : "polite"}
-            className="auth-toast pointer-events-auto flex max-w-[300px] items-center gap-2 rounded-xl border border-white/80 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm"
-          >
-            <span
-              className={`flex h-5 w-5 flex-shrink-0 items-center justify-center ${
-                toast.type === "success" ? "text-emerald-600" : "text-red-600"
-              }`}
-            >
-              {toast.type === "success" ? (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                </svg>
-              )}
-            </span>
-            <p className="text-[13px] font-medium leading-tight text-[#303030]">{toast.message}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
