@@ -135,7 +135,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       setError(null);
       try {
         await login(email, password);
-        showToast("success", "Redirigiendo a tu panel...");
+        showToast("success", "Sesión iniciada");
         await new Promise((resolve) => setTimeout(resolve, 900));
         router.replace("/dashboard");
       } catch (err: any) {
@@ -360,31 +360,24 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
           <div
             role={toast.type === "error" ? "alert" : "status"}
             aria-live={toast.type === "error" ? "assertive" : "polite"}
-            className={`auth-toast pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-[#ececec] border-l-4 bg-white px-5 py-4 shadow-2xl ${
-              toast.type === "success" ? "border-l-emerald-500" : "border-l-red-500"
-            }`}
+            className="auth-toast pointer-events-auto flex max-w-[300px] items-center gap-2 rounded-xl border border-white/80 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm"
           >
             <span
-              className={`auth-toast-icon flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                toast.type === "success" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
+              className={`flex h-5 w-5 flex-shrink-0 items-center justify-center ${
+                toast.type === "success" ? "text-emerald-600" : "text-red-600"
               }`}
             >
               {toast.type === "success" ? (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 </svg>
               )}
             </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#1f1f1f]">
-                {toast.type === "success" ? "Sesión iniciada" : "No se pudo iniciar sesión"}
-              </p>
-              <p className="mt-0.5 text-sm text-[#616161]">{toast.message}</p>
-            </div>
+            <p className="text-[13px] font-medium leading-tight text-[#303030]">{toast.message}</p>
           </div>
         </div>
       )}
