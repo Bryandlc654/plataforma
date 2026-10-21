@@ -25,6 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
   const [collapsed, setCollapsed] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [trialExpired, setTrialExpired] = useState(false);
   const [gateChecked, setGateChecked] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -38,19 +39,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const res: any = await api.get(`/tenants/${tenantId}/settings`);
         const data = res.data || res;
         const endsAt = data?.settings?.trial?.endsAt;
-        setGateChecked(true);
-        if (!endsAt) return setTrialDaysLeft(null);
+        if (!endsAt) {
+          setTrialDaysLeft(null);
+          setTrialExpired(false);
+          return;
+        }
         let paid = false;
         try {
           const s: any = await api.get("/subscriptions/current");
           const sub = s.data || s;
-          paid = Number(sub?.plan?.price || 0) > 0 && sub?.status === "active";
+          const periodEnd = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd).getTime() : 0;
+          paid =
+            Number(sub?.plan?.price || 0) > 0 &&
+            sub?.status === "active" &&
+            periodEnd > Date.now();
         } catch {}
-        if (paid) return setTrialDaysLeft(null);
-        setTrialDaysLeft(Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86400000)));
-      } catch { setGateChecked(true); }
+        if (paid) {
+          setTrialDaysLeft(null);
+          setTrialExpired(false);
+          return;
+        }
+        const daysLeft = Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86400000));
+        setTrialDaysLeft(daysLeft);
+        setTrialExpired(daysLeft <= 0);
+      } catch {
+        setTrialExpired(false);
+      } finally {
+        setGateChecked(true);
+      }
     })();
   }, [hasHydrated, tenantId, isPlatformStaff, router]);
+
+  useEffect(() => {
+    if (!trialExpired || isPlatformStaff) return;
+    if (pathname?.startsWith("/dashboard/billing")) return;
+    router.replace("/dashboard/billing?trial=expired");
+  }, [trialExpired, isPlatformStaff, pathname, router]);
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; slug: string; isOwner: boolean }>>([]);
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
@@ -178,6 +202,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!hasHydrated || !gateChecked) {
     return <div className="flex h-screen items-center justify-center bg-[var(--color-primary)]"><p className="text-white/60">Cargando...</p></div>;
+  }
+
+  if (trialExpired && !isPlatformStaff && !pathname?.startsWith("/dashboard/billing")) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-[var(--color-primary)] px-4 text-center text-white">
+        <span className="h-9 w-9 animate-spin rounded-full border-2 border-white/20 border-t-[var(--color-secondary)]" />
+        <p className="text-sm text-white/70">Tu prueba terminó. Redirigiendo a facturación...</p>
+      </div>
+    );
   }
 
   const groups = (isPlatformStaff ? adminNavGroups : tenantNavGroups)

@@ -77,7 +77,10 @@ function BillingSuccessContent() {
             <p className="text-sm text-slate-500 mb-6">
               PayPal confirmó el pago y tu plan ya está activo. Los cobros de planes llegarán a la cuenta configurada por el administrador.
             </p>
-            <Link href="/dashboard/billing" className="btn-primary text-sm inline-flex">Ver mi facturación</Link>
+            <div className="flex flex-col items-center gap-3">
+              <button type="button" onClick={() => { window.location.href = "/dashboard"; }} className="btn-primary text-sm inline-flex">Ir al panel</button>
+              <button type="button" onClick={() => { window.location.href = "/dashboard/billing"; }} className="text-xs font-medium text-slate-500 hover:underline">Ver facturación</button>
+            </div>
           </>
         ) : status === "error" ? (
           <>

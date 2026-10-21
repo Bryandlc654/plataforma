@@ -17,9 +17,15 @@ export default function BillingPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [methods, setMethods] = useState<{ paypal: { enabled: boolean }; payphone: { enabled: boolean } } | null>(null);
+  const [trialNotice, setTrialNotice] = useState(false);
   const [loading, setLoading] = useState(true);
   const { confirm } = useConfirm();
   useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setTrialNotice(new URLSearchParams(window.location.search).get("trial") === "expired");
+    }
+  }, []);
   const fetchData = async () => {
     try { const [a,b,c,d]: any[] = await Promise.all([api.get("/subscriptions/current"), api.get("/plans"), api.get("/billing/invoices"), api.get("/billing/payment-methods")]); setSub(a.data||a); setPlans(b.data||b); setInvoices(c.data||c); setMethods(d.data||d); } catch {} finally { setLoading(false); }
   };
@@ -33,6 +39,11 @@ export default function BillingPage() {
     <div className="p-8 max-w-4xl">
       <AdminModuleTabs />
       <h1 className="text-2xl font-bold text-slate-900 mb-8">Facturación</h1>
+      {trialNotice && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Tu prueba gratis terminó. Elige un plan de pago para reactivar el acceso al panel.
+        </div>
+      )}
       <div className="card mb-8"><h2 className="font-semibold text-slate-900 mb-4">Plan actual</h2>
         <div className="flex items-start justify-between"><div><div className="flex items-center gap-3 mb-2"><span className="text-xl font-bold text-slate-900">{sub?.plan?.name||"Free"}</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sub?.status==="active"?"bg-green-50 text-green-700":"bg-slate-50 text-slate-700"}`}>{sub?.status==="active"?"Activo":sub?.status||"Free"}</span></div>{sub?.currentPeriodEnd&&<p className="text-sm text-slate-500">Próximo pago: {formatDate(sub.currentPeriodEnd)}</p>}</div>
           <div className="text-right"><p className="text-3xl font-bold text-primary-600">{sub?.plan?.price?formatCurrency(Number(sub.plan.price)):"Gratis"}</p><p className="text-xs text-slate-400">/mes</p></div></div>
@@ -41,7 +52,7 @@ export default function BillingPage() {
       </div>
       <h2 className="font-semibold text-slate-900 mb-4">Cambiar de plan</h2>
       <div className="grid gap-4 md:grid-cols-3 mb-8">
-        {plans.map((p)=>{const isC=sub?.plan?.slug===p.slug;const isU=Number(p.price)>Number(sub?.plan?.price||0);return(<div key={p.id} className={`card border-2 ${isC?"border-primary-500 bg-primary-50/50":"border-slate-200"}`}><h3 className="font-semibold text-slate-900">{p.name}</h3><p className="text-2xl font-bold text-primary-600 mt-2">{Number(p.price)===0?"Gratis":formatCurrency(Number(p.price))}<span className="text-sm font-normal text-slate-400">/mes</span></p><ul className="mt-4 space-y-1 text-sm text-slate-600"><li>✓ {p.maxUsers} usuarios</li><li>✓ {p.maxSites} sitios</li><li>✓ {Math.round(Number(p.maxStorage)/1024/1024)} MB</li></ul>{isC?<button className="mt-4 w-full btn-secondary text-sm cursor-default" disabled>Plan actual</button>:isU?(Number(p.price)===0?<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-primary text-sm">Cambiar a {p.name}</button>:<div className="mt-4 space-y-2">{methods?.paypal?.enabled&&<button onClick={()=>handlePaypal(p.slug)} className="w-full btn-primary text-sm">Pagar con PayPal</button>}{methods?.payphone?.enabled&&<button onClick={()=>handlePaymentLink(p.slug)} className="w-full btn-secondary text-sm">Pagar con tarjeta</button>}{!methods?.paypal?.enabled&&!methods?.payphone?.enabled&&<button onClick={()=>alert("No hay una pasarela de pago configurada.")} className="w-full btn-secondary text-sm">Pago no disponible</button>}</div>):<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-ghost text-sm">Bajar a {p.name}</button>}</div>)})}
+        {(trialNotice ? plans.filter((p) => Number(p.price) > 0) : plans).map((p)=>{const isC=sub?.plan?.slug===p.slug;const isU=Number(p.price)>Number(sub?.plan?.price||0);return(<div key={p.id} className={`card border-2 ${isC?"border-primary-500 bg-primary-50/50":"border-slate-200"}`}><h3 className="font-semibold text-slate-900">{p.name}</h3><p className="text-2xl font-bold text-primary-600 mt-2">{Number(p.price)===0?"Gratis":formatCurrency(Number(p.price))}<span className="text-sm font-normal text-slate-400">/mes</span></p><ul className="mt-4 space-y-1 text-sm text-slate-600"><li>✓ {p.maxUsers} usuarios</li><li>✓ {p.maxSites} sitios</li><li>✓ {Math.round(Number(p.maxStorage)/1024/1024)} MB</li></ul>{isC?<button className="mt-4 w-full btn-secondary text-sm cursor-default" disabled>Plan actual</button>:isU?(Number(p.price)===0?<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-primary text-sm">Cambiar a {p.name}</button>:<div className="mt-4 space-y-2">{methods?.paypal?.enabled&&<button onClick={()=>handlePaypal(p.slug)} className="w-full btn-primary text-sm">Pagar con PayPal</button>}{methods?.payphone?.enabled&&<button onClick={()=>handlePaymentLink(p.slug)} className="w-full btn-secondary text-sm">Pagar con tarjeta</button>}{!methods?.paypal?.enabled&&!methods?.payphone?.enabled&&<button onClick={()=>alert("No hay una pasarela de pago configurada.")} className="w-full btn-secondary text-sm">Pago no disponible</button>}</div>):<button onClick={()=>handleDowngrade(p.id)} className="mt-4 w-full btn-ghost text-sm">Bajar a {p.name}</button>}</div>)})}
       </div>
       <h2 className="font-semibold text-slate-900 mb-4">Historial de pagos</h2>
       {invoices.length===0?<div className="card text-center py-8"><p className="text-sm text-slate-500">Sin facturas</p></div>:
