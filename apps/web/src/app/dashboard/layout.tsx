@@ -137,7 +137,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard/users", label: "Administración", icon: "shield", perms: ["user.read", "role.manage", "billing.read", "config.tenant", "audit.view"] },
         { href: "/dashboard/support", label: "Soporte", icon: "support", roles: "*" },
-        { href: "/dashboard/help", label: "Base de Conocimientos", icon: "help", roles: "*" },
       ]
     }
   ];
