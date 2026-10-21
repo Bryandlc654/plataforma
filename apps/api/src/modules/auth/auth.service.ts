@@ -243,6 +243,31 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       where: { id: userId },
       data: { passwordHash: await bcrypt.hash(password, 12) },
     });
+
+    try {
+      const profile = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          email: true,
+          firstName: true,
+          userTenants: {
+            orderBy: { joinedAt: "asc" },
+            take: 1,
+            select: { tenant: { select: { name: true } } },
+          },
+        },
+      });
+      if (profile?.email) {
+        await this.emailService.sendWelcomeEmail({
+          to: profile.email,
+          name: profile.firstName || "",
+          tenantName: profile.userTenants[0]?.tenant?.name || "",
+        });
+      }
+    } catch (err: any) {
+      this.logger.warn(`Failed to send welcome email: ${err?.message || err}`);
+    }
+
     return { message: "Contraseña creada correctamente." };
   }
 

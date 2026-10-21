@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as nodemailer from "nodemailer";
+import { PlatformService } from "../platform/platform.service";
 
 export interface SendMailOptions {
   to: string;
@@ -9,12 +10,17 @@ export interface SendMailOptions {
   text?: string;
 }
 
+type TrialStage = "day1" | "day2" | "expired" | "expired3" | "expired7";
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private platformService: PlatformService
+  ) {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>("smtp.host"),
       port: this.configService.get<number>("smtp.port"),
@@ -138,29 +144,107 @@ export class EmailService {
     });
   }
 
-  async sendWelcomeEmail(to: string, name: string) {
-    const dashboardUrl = `${this.getFrontendUrl()}/dashboard`;
-    await this.send({
-      to,
-      subject: "Bienvenido a Plataforma",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #2563EB;">¡Bienvenido a Plataforma!</h1>
-          <p>Hola ${name},</p>
-          <p>Gracias por registrarte en Plataforma. Estamos emocionados de ayudarte a construir tu presencia digital.</p>
-          <p>Con Plataforma puedes:</p>
-          <ul>
-            <li>Crear sitios web profesionales sin código</li>
-            <li>Capturar leads con formularios inteligentes</li>
-            <li>Monitorear el rendimiento de tu negocio</li>
-          </ul>
-          <p>Comienza ahora y crea tu primer sitio web.</p>
-          <a href="${dashboardUrl}" style="display: inline-block; background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 16px;">
-            Ir al dashboard
-          </a>
-        </div>
+  async sendWelcomeEmail(params: { to: string; name?: string; tenantName?: string }) {
+    const branding = await this.getBranding();
+    const frontend = this.getFrontendUrl();
+    const safeName = this.escapeHtml(params.name || "hola");
+    const tenantName = this.escapeHtml(params.tenantName || "tu negocio");
+
+    const html = this.renderEmailLayout({
+      branding,
+      title: "Tu prueba de 3 días ha comenzado",
+      body: `
+        <p style="margin:0 0 14px">Hola ${safeName},</p>
+        <p style="margin:0 0 14px">Tu cuenta de <strong>${tenantName}</strong> ya está lista. Durante los próximos 3 días puedes probar el editor, las plantillas y las herramientas para hacer crecer tu negocio.</p>
+        <ul style="margin:0 0 18px;padding-left:18px">
+          <li style="margin-bottom:6px">Crea tu sitio web con una plantilla profesional.</li>
+          <li style="margin-bottom:6px">Publica y comparte tu enlace.</li>
+          <li>Recibe leads y revisa tus estadísticas.</li>
+        </ul>
+        <p style="margin:0">Cuando quieras seguir después de la prueba, elige el plan que mejor se adapte a ti.</p>
       `,
+      ctaLabel: "Ir a mi panel",
+      ctaUrl: `${frontend}/dashboard`,
+      secondaryLabel: "Ver planes",
+      secondaryUrl: `${frontend}/dashboard/billing`,
     });
+
+    await this.send({
+      to: params.to,
+      subject: "Bienvenido a Plataforma: tu prueba de 3 días",
+      html,
+    });
+  }
+
+  async sendTrialCampaignEmail(params: {
+    to: string;
+    name?: string;
+    tenantName?: string;
+    stage: TrialStage;
+  }) {
+    const branding = await this.getBranding();
+    const frontend = this.getFrontendUrl();
+    const safeName = this.escapeHtml(params.name || "hola");
+    const tenantName = this.escapeHtml(params.tenantName || "tu negocio");
+
+    let subject = "";
+    let title = "";
+    let body = "";
+    let ctaLabel = "";
+    let ctaPath = "/dashboard/billing";
+    let secondaryLabel: string | undefined;
+    let secondaryPath: string | undefined;
+
+    switch (params.stage) {
+      case "day1":
+        subject = "Tu prueba está activa: crea tu primer sitio";
+        title = "Aprovecha tu prueba de 3 días";
+        body = `<p style="margin:0 0 14px">Hola ${safeName},</p><p style="margin:0 0 14px">Ya llevas un día de prueba en <strong>${tenantName}</strong>. El siguiente paso es crear tu sitio web: elige una plantilla, personalízala y publícala en minutos.</p><p style="margin:0">Todo lo que construyas durante la prueba queda guardado.</p>`;
+        ctaLabel = "Ir a mi panel";
+        ctaPath = "/dashboard";
+        secondaryLabel = "Ver planes";
+        secondaryPath = "/dashboard/billing";
+        break;
+      case "day2":
+        subject = "Tu prueba termina mañana";
+        title = "Tu prueba termina mañana";
+        body = `<p style="margin:0 0 14px">Hola ${safeName},</p><p style="margin:0 0 14px">Tu prueba de <strong>${tenantName}</strong> termina mañana. Elige un plan para mantener tu sitio, tus leads y tu panel activos sin interrupciones.</p><p style="margin:0">Puedes seguir desde donde lo dejaste.</p>`;
+        ctaLabel = "Elegir un plan";
+        ctaPath = "/dashboard/billing";
+        secondaryLabel = "Ir a mi panel";
+        secondaryPath = "/dashboard";
+        break;
+      case "expired":
+        subject = "Tu prueba terminó: reactiva tu cuenta";
+        title = "Tu prueba terminó";
+        body = `<p style="margin:0 0 14px">Hola ${safeName},</p><p style="margin:0 0 14px">El panel de <strong>${tenantName}</strong> está en pausa. Tus datos y tu sitio siguen guardados; elige un plan para volver a entrar y retomarlo.</p>`;
+        ctaLabel = "Reactivar cuenta";
+        break;
+      case "expired3":
+        subject = "Tu sitio te está esperando";
+        title = "Tu sitio te está esperando";
+        body = `<p style="margin:0 0 14px">Hola ${safeName},</p><p style="margin:0 0 14px">Han pasado unos días desde que terminó tu prueba. Tu sitio y tus datos siguen guardados en <strong>${tenantName}</strong>. Elige un plan para retomarlo.</p>`;
+        ctaLabel = "Elegir un plan";
+        break;
+      case "expired7":
+        subject = "Últimos días para retomar tu proyecto";
+        title = "No dejes tu proyecto a medias";
+        body = `<p style="margin:0 0 14px">Hola ${safeName},</p><p style="margin:0 0 14px">Tu cuenta de <strong>${tenantName}</strong> sigue lista para reactivarse. Elige un plan hoy y vuelve a tu panel.</p>`;
+        ctaLabel = "Reactivar cuenta";
+        break;
+    }
+
+    const html = this.renderEmailLayout({
+      branding,
+      title,
+      body,
+      ctaLabel,
+      ctaUrl: `${frontend}${ctaPath}`,
+      secondaryLabel,
+      secondaryUrl: secondaryPath ? `${frontend}${secondaryPath}` : undefined,
+    });
+
+    await this.send({ to: params.to, subject, html });
   }
 
   async sendPasswordResetEmail(to: string, token: string) {
@@ -180,5 +264,103 @@ export class EmailService {
         </div>
       `,
     });
+  }
+
+  private async getBranding() {
+    try {
+      return await this.platformService.getBranding();
+    } catch {
+      return { logoUrl: null, primaryColor: "#201b51", secondaryColor: "#f29200" };
+    }
+  }
+
+  private resolveAssetUrl(url: string | null): string {
+    if (!url) return "";
+    if (/^https?:\/\//i.test(url)) return url;
+    const base = process.env.PUBLIC_API_URL || process.env.API_URL || "";
+    return base ? `${base}${url}` : url;
+  }
+
+  private contrastText(hex: string): string {
+    const value = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#f29200";
+    const channels = [1, 3, 5].map((index) => {
+      const channel = parseInt(value.slice(index, index + 2), 16) / 255;
+      return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    });
+    const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    return luminance > 0.45 ? "#111827" : "#ffffff";
+  }
+
+  private escapeHtml(value: string): string {
+    return String(value).replace(/[&<>"']/g, (char) => {
+      const map: Record<string, string> = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      };
+      return map[char] || char;
+    });
+  }
+
+  private renderEmailLayout(opts: {
+    branding: { logoUrl: string | null; primaryColor: string; secondaryColor: string };
+    title: string;
+    body: string;
+    ctaLabel: string;
+    ctaUrl: string;
+    secondaryLabel?: string;
+    secondaryUrl?: string;
+  }): string {
+    const primary = opts.branding.primaryColor || "#201b51";
+    const secondary = opts.branding.secondaryColor || "#f29200";
+    const onSecondary = this.contrastText(secondary);
+    const logo = this.resolveAssetUrl(opts.branding.logoUrl);
+    const brandHtml = logo
+      ? `<img src="${logo}" alt="Plataforma" style="display:block;max-height:42px;max-width:180px;margin:0 auto;border:0" />`
+      : `<span style="font-size:20px;font-weight:800;color:${primary};letter-spacing:-0.02em">Plataforma</span>`;
+    const secondaryHtml =
+      opts.secondaryUrl && opts.secondaryLabel
+        ? `<div style="margin-top:14px"><a href="${opts.secondaryUrl}" style="color:${primary};font-size:13px;text-decoration:underline">${opts.secondaryLabel}</a></div>`
+        : "";
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>${opts.title}</title>
+<style>
+  @media (max-width:600px) {
+    .email-card { width: 100% !important; }
+    .email-pad { padding-left: 20px !important; padding-right: 20px !important; }
+    .email-title { font-size: 22px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f7">
+<tr><td style="padding:24px 12px">
+<table role="presentation" class="email-card" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden">
+<tr><td style="height:6px;background:${secondary}"></td></tr>
+<tr><td class="email-pad" style="padding:28px 32px 0;text-align:center">${brandHtml}</td></tr>
+<tr><td class="email-pad" style="padding:22px 32px 0;text-align:center">
+<h1 class="email-title" style="margin:0;font-size:26px;line-height:1.25;color:${primary}">${opts.title}</h1>
+</td></tr>
+<tr><td class="email-pad" style="padding:16px 32px 0;font-size:15px;line-height:1.65;color:#475569">${opts.body}</td></tr>
+<tr><td class="email-pad" style="padding:26px 32px 34px;text-align:center">
+<a href="${opts.ctaUrl}" style="display:inline-block;background:${secondary};color:${onSecondary};text-decoration:none;font-weight:700;font-size:15px;padding:14px 26px;border-radius:999px">${opts.ctaLabel}</a>
+${secondaryHtml}
+</td></tr>
+<tr><td class="email-pad" style="padding:18px 32px;background:#f8fafc;text-align:center;font-size:12px;line-height:1.6;color:#94a3b8">
+Plataforma · ${new Date().getFullYear()}<br/>
+Recibes este correo porque creaste una cuenta en Plataforma.
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
   }
 }
