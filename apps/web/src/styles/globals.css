@@ -153,6 +153,18 @@
 .sp-link { color: var(--brand-secondary-text, #b36b00); font-size: 14px; font-weight: 500; }
 .sp-link:hover { text-decoration: underline; }
 
+@keyframes auth-toast-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes auth-toast-icon {
+  0% { transform: scale(.5); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.auth-toast { animation: auth-toast-pop .28s cubic-bezier(.2,.8,.2,1) both; }
+.auth-toast-icon { animation: auth-toast-icon .38s ease-out .05s both; }
+
 .theme-art-culinaire {
   --color-primary: #000000;
   --color-on-primary: #ffffff;

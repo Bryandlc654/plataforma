@@ -55,7 +55,24 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [signingIn, setSigningIn] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const codeRef = useRef<HTMLInputElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ type, message });
+    if (type === "error") {
+      toastTimerRef.current = setTimeout(() => setToast(null), 4500);
+    }
+  };
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -116,15 +133,24 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     e.preventDefault();
     if (mode === "login") {
       if (!password) return;
+      setSigningIn(true);
+      setError(null);
       try {
-        setError(null);
         await login(email, password);
+        showToast("success", "Redirigiendo a tu panel...");
+        await new Promise((resolve) => setTimeout(resolve, 900));
         router.replace("/dashboard");
       } catch (err: any) {
-        const message = err.response?.data?.message;
-        if (message) setError(message);
-        else if (!err.response) setError("No se pudo conectar con el servidor. Inténtalo de nuevo.");
-        else setError("No pudimos iniciar sesión. Inténtalo de nuevo.");
+        setSigningIn(false);
+        const status = err.response?.status;
+        const message =
+          status === 401
+            ? "Contraseña incorrecta"
+            : err.response?.data?.message ||
+              (!err.response
+                ? "No se pudo conectar con el servidor. Inténtalo de nuevo."
+                : "No pudimos iniciar sesión. Inténtalo de nuevo.");
+        showToast("error", message);
       }
       return;
     }
@@ -242,12 +268,14 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
                 ¿Olvidaste tu contraseña?
               </Link>
             )}
-            <button type="submit" disabled={!password || isLoading || saving} className="sp-btn mt-5 !h-12 !rounded-xl">
-              {isLoading || saving
-                ? "Un momento..."
-                : mode === "login"
-                  ? "Iniciar sesión"
-                  : "Crear cuenta y continuar"}
+            <button type="submit" disabled={!password || isLoading || saving || signingIn} className="sp-btn mt-5 !h-12 !rounded-xl">
+              {signingIn
+                ? "Entrando..."
+                : isLoading || saving
+                  ? "Un momento..."
+                  : mode === "login"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta y continuar"}
             </button>
             {mode === "login" && (
               <button
@@ -328,6 +356,40 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
         <span className="font-semibold text-white/80">Política de privacidad</span>. Puedes cancelar en cualquier
         momento.
       </footer>
+
+      {toast && (
+        <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div
+            role={toast.type === "error" ? "alert" : "status"}
+            aria-live={toast.type === "error" ? "assertive" : "polite"}
+            className={`auth-toast pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-[#ececec] border-l-4 bg-white px-5 py-4 shadow-2xl ${
+              toast.type === "success" ? "border-l-emerald-500" : "border-l-red-500"
+            }`}
+          >
+            <span
+              className={`auth-toast-icon flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                toast.type === "success" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"
+              }`}
+            >
+              {toast.type === "success" ? (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#1f1f1f]">
+                {toast.type === "success" ? "Sesión iniciada" : "No se pudo iniciar sesión"}
+              </p>
+              <p className="mt-0.5 text-sm text-[#616161]">{toast.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
