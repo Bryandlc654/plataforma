@@ -170,6 +170,12 @@
 .logout-overlay { animation: logout-overlay-in .22s ease-out both; }
 .logout-card { animation: logout-card-in .32s cubic-bezier(.2,.8,.2,1) both; }
 
+@keyframes modal-pop {
+  0% { opacity: 0; transform: translateY(8px) scale(.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-pop { animation: modal-pop .22s cubic-bezier(.2,.8,.2,1) both; }
+
 .theme-art-culinaire {
   --color-primary: #000000;
   --color-on-primary: #ffffff;
