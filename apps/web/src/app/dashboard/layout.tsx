@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [collapsed, setCollapsed] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [gateChecked, setGateChecked] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // El asistente /welcome solo se muestra justo después de registrarse (ver AuthFlow); aquí no se fuerza.
   // La cuenta de prueba muestra "La prueba termina en N días" hasta que haya un plan de pago.
@@ -101,6 +102,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const handleSelectTenant = (t: any) => selectTenant({ id: t.id, name: t.name, slug: t.slug, isOwner: t.isOwner });
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    logout();
+  };
 
   // Agrupación para Clientes (Tenant)
   const tenantNavGroups = [
@@ -275,10 +283,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {!collapsed ? (
             <div className="mt-2 flex gap-3 px-1 text-[12px] text-white/55">
               <Link href="/dashboard/profile" className="hover:text-white">Mi perfil</Link>
-              <button onClick={logout} className="hover:text-red-400">Cerrar sesión</button>
+              <button onClick={handleLogout} className="hover:text-red-400">Cerrar sesión</button>
             </div>
           ) : (
-            <button onClick={logout} title="Cerrar sesión" className="text-white/50 hover:text-red-400">
+            <button onClick={handleLogout} title="Cerrar sesión" className="text-white/50 hover:text-red-400">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>
           )}
@@ -288,6 +296,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-w-0 flex-1 p-0 lg:py-2 lg:pr-2">
         <div className="h-full min-h-screen overflow-auto bg-[#f1f1f1] lg:min-h-0 lg:rounded-xl lg:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">{children}</div>
       </div>
+
+      {loggingOut && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="logout-overlay fixed inset-0 z-[200] flex items-center justify-center bg-[var(--color-primary)]"
+        >
+          <div className="logout-card flex flex-col items-center gap-4 text-white">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-[var(--color-secondary)]" />
+            <p className="text-sm font-medium text-white/80">Cerrando sesión...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
