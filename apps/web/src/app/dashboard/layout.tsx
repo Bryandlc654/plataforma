@@ -24,6 +24,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isPlatformAdmin = hasRole(user, "platform_admin");
   const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false); // en pantallas pequeñas el menú es un cajón
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [trialExpired, setTrialExpired] = useState(false);
   const [gateChecked, setGateChecked] = useState(false);
@@ -232,7 +234,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-[var(--color-primary)]">
-      <aside className={`relative ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
+      {mobileOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
+      <aside className={`fixed inset-y-0 left-0 z-40 overflow-y-auto bg-[var(--color-primary)] transition-transform lg:relative lg:z-auto lg:translate-x-0 lg:overflow-visible lg:bg-transparent ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
         {/* Brand + toggle */}
         <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
           {!collapsed && (
@@ -327,6 +330,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="min-w-0 flex-1 p-0 lg:py-2 lg:pr-2">
+        <div className="flex items-center gap-3 px-4 py-3 text-white lg:hidden">
+          <button onClick={() => setMobileOpen(true)} aria-label="Abrir menú" className="rounded-md p-1.5 hover:bg-white/10">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <span className="text-sm font-semibold">Plataforma</span>
+        </div>
         <div className="h-full min-h-screen overflow-auto bg-[#f1f1f1] lg:min-h-0 lg:rounded-xl lg:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">{children}</div>
       </div>
 
