@@ -13,6 +13,14 @@ import { useAuthStore } from "@/stores/auth-store";
 interface Category { id: string; name: string; slug: string; }
 interface Template { id: string; name: string; description?: string | null; thumbnail?: string | null; category: Category | null; _count: { pages: number }; }
 
+/** Qué buscar en cada plantilla según lo que el cliente dijo que quiere crear. */
+const GOAL_MATCH: Record<string, { label: string; re: RegExp }> = {
+  store: { label: "vender productos online", re: /e-?commerce|tienda|store|shop|venta|catálogo|catalogo/i },
+  bookings: { label: "recibir reservas o citas", re: /reserva|cita|booking|salon|salón|spa|restaurante|cl[ií]nica|agenda/i },
+  portfolio: { label: "mostrar tu portafolio", re: /portafolio|portfolio|creativ|fotograf|dise[ñn]o/i },
+  landing: { label: "captar clientes", re: /landing|captaci|lead|campa[ñn]a/i },
+};
+
 const btnPrimary = "inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60";
 
 export default function NewSitePage() {
@@ -28,6 +36,13 @@ export default function NewSitePage() {
   const [creating, setCreating] = useState<string | null>(null); // nombre mostrado mientras se crea
   const [stage, setStage] = useState<"creating" | "opening">("creating");
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
+  const [goals, setGoals] = useState<string[]>([]);
+
+  useEffect(() => {
+    const g = new URLSearchParams(window.location.search).get("goals");
+    if (g) setGoals(g.split(",").filter((x) => GOAL_MATCH[x]));
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -47,17 +62,24 @@ export default function NewSitePage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [preview]);
 
+  const isRecommended = (t: Template) =>
+    goals.some((g) => GOAL_MATCH[g].re.test(`${t.name} ${t.description || ""} ${t.category?.name || ""}`));
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return templates.filter((t) =>
+    const list = templates.filter((t) =>
       (activeCategory === "all" || t.category?.id === activeCategory) &&
       (!q || t.name.toLowerCase().includes(q) || (t.description || "").toLowerCase().includes(q) || (t.category?.name || "").toLowerCase().includes(q)));
-  }, [templates, activeCategory, search]);
+    // Las recomendadas van primero; nunca se oculta nada.
+    return [...list].sort((a, b) => Number(isRecommended(b)) - Number(isRecommended(a)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templates, activeCategory, search, goals]);
 
   /** Crea el sitio al instante: el nombre se puede cambiar luego dentro del editor. */
   const createSite = async (template: Template | null) => {
     if (creating) return;
     setError("");
+    setLimitReached(false);
     setStage("creating");
     setCreating(template?.name || "Página en blanco");
     try {
@@ -69,7 +91,9 @@ export default function NewSitePage() {
     } catch (err: any) {
       setCreating(null);
       setPreview(null);
-      setError(err.response?.data?.message || "No se pudo crear el sitio. Inténtalo de nuevo.");
+      const msg: string = err.response?.data?.message || "No se pudo crear el sitio. Inténtalo de nuevo.";
+      setLimitReached(/l[ií]mite/i.test(msg));
+      setError(msg);
     }
   };
 
@@ -109,7 +133,20 @@ export default function NewSitePage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-        {error && <div className="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><span>{error}</span><button onClick={() => setError("")}><HiOutlineX className="h-4 w-4" /></button></div>}
+        {goals.length > 0 && !search && (
+          <p className="mb-6 text-sm text-slate-500">
+            Ordenamos las plantillas para <strong className="text-slate-700">{goals.map((g) => GOAL_MATCH[g].label).join(" y ")}</strong>. Puedes elegir cualquiera.
+          </p>
+        )}
+        {error && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>{error}</span>
+            <span className="flex flex-shrink-0 items-center gap-3">
+              {limitReached && <Link href="/dashboard/billing" className="font-semibold underline">Ver planes</Link>}
+              <button onClick={() => setError("")} aria-label="Cerrar aviso"><HiOutlineX className="h-4 w-4" /></button>
+            </span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Empezar en blanco */}
@@ -138,7 +175,10 @@ export default function NewSitePage() {
                   <button onClick={() => { setDevice("desktop"); setPreview(t); }} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow hover:bg-slate-50"><HiOutlineEye className="h-4 w-4" />Vista previa</button>
                   <button onClick={() => createSite(t)} className={btnPrimary}>Usar</button>
                 </div>
-                {t.category && <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm">{t.category.name}</span>}
+                <div className="absolute left-3 top-3 flex gap-1.5">
+                  {isRecommended(t) && <span className="rounded-full bg-[color:var(--color-secondary)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-on-secondary,#201b51)] shadow-sm">Recomendada</span>}
+                  {t.category && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm">{t.category.name}</span>}
+                </div>
               </div>
               <div className="flex flex-1 flex-col p-4">
                 <h3 className="font-semibold text-slate-900">{t.name}</h3>

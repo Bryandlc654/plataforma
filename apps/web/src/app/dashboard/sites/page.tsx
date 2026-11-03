@@ -6,8 +6,9 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate } from "@/lib/utils";
 import { useConfirm } from "@/components/providers/confirm-provider";
+import { sitePublicUrl, siteDisplayUrl } from "@/lib/site-url";
 
-interface Site { id: string; name: string; subdomain: string; isPublished: boolean; primaryColor: string; createdAt: string; updatedAt: string; _count: { pages: number }; template: { id: string; name: string } | null; }
+interface Site { id: string; name: string; subdomain: string; domain?: string | null; isPublished: boolean; primaryColor: string; createdAt: string; updatedAt: string; _count: { pages: number }; template: { id: string; name: string } | null; }
 
 export default function SitesPage() {
   const router = useRouter(); const { tenant, isAuthenticated } = useAuthStore();
@@ -71,10 +72,10 @@ export default function SitesPage() {
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-sm text-slate-900 mb-1">{site.name}</h3>
-                <p className="text-xs text-slate-400 mb-3 truncate">{typeof window !== "undefined" ? `${window.location.origin}/${site.subdomain}` : `/${site.subdomain}`}</p>
+                <p className="text-xs text-slate-400 mb-3 truncate">{siteDisplayUrl(site)}</p>
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                   <Link href={`/dashboard/sites/${site.id}`} className="flex-1 text-center text-xs font-medium text-[color:var(--color-primary)] hover:text-[color:var(--color-primary)] py-2 rounded-lg hover:bg-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)] transition-colors">Editar</Link>
-                  {site.isPublished && <Link href={`/${site.subdomain}`} target="_blank" className="text-xs text-slate-400 hover:text-[color:var(--color-primary)] py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">Visitar</Link>}
+                  {site.isPublished ? <a href={sitePublicUrl(site)} target="_blank" rel="noopener" className="text-xs text-slate-400 hover:text-[color:var(--color-primary)] py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">Visitar</a> : <Link href={`/dashboard/sites/${site.id}/preview`} target="_blank" className="text-xs text-slate-400 hover:text-[color:var(--color-primary)] py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">Vista previa</Link>}
                   <button onClick={() => deleteSite(site)} className="text-xs text-slate-300 hover:text-red-500 py-2 px-2 rounded-lg hover:bg-red-50 transition-colors"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                 </div>
               </div>

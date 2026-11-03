@@ -968,3 +968,32 @@ model PlatformSetting {
 
   @@map("platform_settings")
 }
+
+/// Pedido de compra de dominio (Hostinger) pagado por el cliente con PayPal.
+model DomainOrder {
+  id                     String    @id @default(uuid())
+  tenantId               String    @map("tenant_id")
+  siteId                 String?   @map("site_id")
+  domain                 String
+  hostingerItemId        String    @map("hostinger_item_id")
+  years                  Int       @default(1)
+  /// Precio cobrado al cliente, en centavos.
+  priceCents             Int       @map("price_cents")
+  currency               String    @default("USD")
+  /// pending_payment | paid | registering | registered | pending_registration | refunded | failed
+  status                 String    @default("pending_payment")
+  paypalOrderId          String?   @map("paypal_order_id")
+  paypalCaptureId        String?   @map("paypal_capture_id")
+  hostingerOrderId       String?   @map("hostinger_order_id")
+  hostingerSubscriptionId String?  @map("hostinger_subscription_id")
+  dnsConnected           Boolean   @default(false) @map("dns_connected")
+  errorMessage           String?   @map("error_message") @db.Text
+  createdByUserId        String?   @map("created_by_user_id")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  registeredAt           DateTime? @map("registered_at")
+
+  @@index([tenantId, createdAt])
+  @@index([domain])
+  @@map("domain_orders")
+}

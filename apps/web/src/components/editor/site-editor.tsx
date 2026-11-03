@@ -14,6 +14,8 @@ import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
+import { sitePublicUrl } from "@/lib/site-url";
+import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { useConfirm } from "@/components/providers/confirm-provider";
@@ -33,6 +35,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
   const [showAddPage, setShowAddPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDomainSearch, setShowDomainSearch] = useState(false);
+  const [publishedModal, setPublishedModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const customizedRef = useRef(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("theme");
   const [showPagesModal, setShowPagesModal] = useState(false);
   const [newPageName, setNewPageName] = useState("");
@@ -278,6 +284,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     setDirty(true);
     setHasChanges(true);
     scheduleSave();
+    if (!customizedRef.current && site && !site.settings?.setup?.customized) {
+      customizedRef.current = true;
+      const settings = { ...(site.settings || {}), setup: { ...(site.settings?.setup || {}), customized: true } };
+      setSite(p => (p ? { ...p, settings } : p));
+      api.put(`/sites/${siteId}`, { settings }).catch(() => { customizedRef.current = false; });
+    }
   };
 
   const openPicker = (afterIndex: number | null = null) => { setInsertAfterIndex(afterIndex); setShowAddBlock(true); };
@@ -396,10 +408,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       await savePending();
       if (Object.keys(pendingBlocksRef.current).length > 0) { setToast("Hay cambios sin guardar; inténtalo de nuevo en unos segundos"); return; }
+      const firstPublish = !site?.isPublished;
       await api.post(`/sites/${siteId}/publish`);
       setSite(p => p ? { ...p, isPublished: true } : p);
       setHasChanges(false);
-      setToast("¡Sitio publicado!");
+      if (firstPublish) setPublishedModal(true);
+      else setToast("¡Cambios publicados!");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al publicar"); }
     finally { setPublishing(false); }
   };
@@ -446,12 +460,19 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><svg className="animate-spin h-8 w-8 text-[color:var(--color-primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-slate-500">Cargando editor...</p></div></div>;
   if (!site) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><h2 className="text-xl font-semibold text-slate-900 mb-2">Sitio no encontrado</h2><Link href="/dashboard/sites" className="btn-primary inline-flex items-center gap-1.5"><HiOutlineArrowLeft className="h-4 w-4" /> Volver</Link></div></div>;
 
-  const openPreview = () => {
-    const url = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
-    window.open(url, "_blank");
-  };
+  // La vista previa muestra lo guardado hoy, también cuando el sitio aún es un borrador.
+  const openPreview = () => window.open(`/dashboard/sites/${siteId}/preview`, "_blank");
   const hasPages = site.pages.length > 0;
-  const publicUrl = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
+  const publicUrl = sitePublicUrl(site);
+  const guide = [
+    { id: "template", label: "Elegiste tu plantilla", hint: "", done: true },
+    { id: "customize", label: "Personaliza tu sitio", hint: "Haz clic en un texto o imagen de la página para cambiarlo.", done: !!site.settings?.setup?.customized },
+    { id: "domain", label: "Conecta tu dominio", hint: "Busca y compra tu dirección propia, ej. minegocio.com.", done: !!site.domain, actionLabel: "Buscar dominio", onAction: () => setShowDomainSearch(true) },
+    { id: "publish", label: "Publica tu sitio", hint: "Así tus clientes podrán verlo en internet.", done: site.isPublished, actionLabel: "Publicar", onAction: () => publish() },
+  ];
+  const copyUrl = async () => {
+    try { await navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* sin portapapeles */ }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-white">
@@ -480,6 +501,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         onPublish={publish}
         onUnpublish={unpublish}
         onPreview={openPreview}
+        guide={guide}
         onTheme={() => { setSettingsTab("theme"); setShowSettings(true); }}
         onSettings={() => { setSettingsTab("config"); setShowSettings(true); }}
       />
@@ -551,6 +573,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             dnsStatus={dnsStatus}
             checkingDns={checkingDns}
             onCheckDns={checkDomainDns}
+            onBuyDomain={() => setShowDomainSearch(true)}
           />
         )}
 
@@ -570,6 +593,28 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </aside>
         )}
       </div>
+
+      {showDomainSearch && <DomainSearchModal siteId={siteId} initialQuery={site.name} onClose={() => setShowDomainSearch(false)} />}
+
+      {publishedModal && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setPublishedModal(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
+            <h3 className="text-lg font-bold text-slate-900">¡Tu sitio ya está en internet!</h3>
+            <p className="mt-1 text-sm text-slate-500">Comparte esta dirección con tus clientes:</p>
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 pl-3">
+              <a href={publicUrl} target="_blank" rel="noopener" className="min-w-0 flex-1 truncate text-left text-sm font-medium text-[color:var(--color-primary)] hover:underline">{publicUrl.replace(/^https?:\/\//, "")}</a>
+              <button onClick={copyUrl} className="flex-shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50">{copied ? "¡Copiado!" : "Copiar"}</button>
+            </div>
+            {!site.domain && (
+              <button onClick={() => { setPublishedModal(false); setShowDomainSearch(true); }} className="mt-4 w-full rounded-lg border border-dashed border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] px-3 py-2 text-sm font-semibold text-[color:var(--color-primary)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)]">
+                Dale una dirección propia a tu sitio
+              </button>
+            )}
+            <button onClick={() => setPublishedModal(false)} className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700">Seguir editando</button>
+          </div>
+        </div>
+      )}
 
       {/* BLOCK PALETTE MODAL */}
       {showAddBlock && <SectionPicker onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}

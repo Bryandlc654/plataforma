@@ -143,6 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       links: [
         { href: "/dashboard", label: "Inicio", icon: "home", roles: "*" },
         { href: "/dashboard/sites", label: "Sitios Web", icon: "sites", perms: ["site.read"] },
+        { href: "/dashboard/domains", label: "Dominios", icon: "globe", perms: ["site.read"] },
         { href: "/dashboard/media", label: "Archivos Media", icon: "media", perms: ["site.read"] },
         { href: "/dashboard/app-download", label: "App Movil", icon: "appdownload", perms: ["site.read"] },
       ]
