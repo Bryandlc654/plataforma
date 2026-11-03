@@ -104,6 +104,7 @@ export function SectionsSidebar({ pageName, blocks, activeBlockId, onSelect, onR
           Agregar sección
         </button>
       </div>
+      <p className="border-t border-slate-100 px-4 py-3 text-[11px] leading-snug text-slate-400">Haz clic en cualquier texto o imagen de la página para editarlo directamente.</p>
     </aside>
   );
 }

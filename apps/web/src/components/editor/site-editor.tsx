@@ -9,7 +9,7 @@ import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templat
 import { DEFAULT_SITE_PALETTE, PALETTE_LABELS, PALETTE_PRESETS, hasExplicitPalette, resolveSitePalette, type PaletteRole, type SitePalette } from "@/lib/site-palette";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
-import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineCursorClick } from "react-icons/hi";
+import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SectionPicker } from "@/components/editor/section-picker";
@@ -25,6 +25,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showBlockPanel, setShowBlockPanel] = useState(false);
   const [device, setDevice] = useState<EditorDevice>("desktop");
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
@@ -440,7 +441,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             {activePage && sortedBlocks.length > 0 ? (
               <>
                 {sortedBlocks.map((block, idx) => (
-                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} palette={variantPalette} />
+                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} onOpenSettings={() => setShowBlockPanel(true)} palette={variantPalette} />
                 ))}
                 <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[#201b51]/5 hover:text-[#201b51]">
                   <HiOutlinePlus className="h-4 w-4" /> Agregar sección
@@ -460,29 +461,21 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </div>
         </main>
 
-        {/* PROPERTIES PANEL */}
-        <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white">
-          {activeBlock ? (
-            <>
-              <div className="flex-shrink-0 border-b border-slate-200 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-slate-900">{BLOCK_META[activeBlock.type]?.label || activeBlock.type}</h3>
-                  <button onClick={() => setActiveBlockId(null)} className="rounded-lg p-1 text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4" /></button>
-                </div>
-                <p className="mt-0.5 text-xs text-slate-400">{BLOCK_META[activeBlock.type]?.description}</p>
+        {/* AJUSTES AVANZADOS (opcional): la edición normal es directa sobre la página */}
+        {showBlockPanel && activeBlock && (
+          <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white">
+            <div className="flex-shrink-0 border-b border-slate-200 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900">Ajustes · {BLOCK_META[activeBlock.type]?.label || activeBlock.type}</h3>
+                <button onClick={() => setShowBlockPanel(false)} className="rounded-lg p-1 text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4" /></button>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <BlockEditor type={activeBlock.type} content={activeBlock.content} onChange={c => updateBlock(activeBlock.id, c)} />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#201b51]/10 text-[#201b51]"><HiOutlineCursorClick className="h-6 w-6" /></div>
-              <p className="text-sm font-semibold text-slate-700">Elige una sección</p>
-              <p className="mt-1 text-xs text-slate-400">Haz clic en cualquier parte de la página, o en la lista de la izquierda, para editar su contenido.</p>
+              <p className="mt-0.5 text-xs text-slate-400">Opciones avanzadas: elementos, íconos, enlaces y estilos.</p>
             </div>
-          )}
-        </aside>
+            <div className="flex-1 overflow-y-auto">
+              <BlockEditor type={activeBlock.type} content={activeBlock.content} onChange={c => updateBlock(activeBlock.id, c)} />
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* BLOCK PALETTE MODAL */}
