@@ -12,6 +12,7 @@ import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
+import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { useConfirm } from "@/components/providers/confirm-provider";
@@ -31,6 +32,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
   const [showAddPage, setShowAddPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("theme");
   const [showPagesModal, setShowPagesModal] = useState(false);
   const [newPageName, setNewPageName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -410,7 +412,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         onPublish={publish}
         onUnpublish={unpublish}
         onPreview={openPreview}
-        onSettings={() => setShowSettings(true)}
+        onTheme={() => { setSettingsTab("theme"); setShowSettings(true); }}
+        onSettings={() => { setSettingsTab("config"); setShowSettings(true); }}
       />
 
       <div className="flex min-h-0 flex-1">
@@ -461,8 +464,28 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </div>
         </main>
 
+        {/* TEMA Y CONFIGURACIÓN DEL SITIO */}
+        {showSettings && (
+          <SiteSettingsPanel
+            tab={settingsTab}
+            onTabChange={setSettingsTab}
+            onClose={() => { setShowSettings(false); saveSiteSettings(); }}
+            onSave={() => { saveSiteSettings(); }}
+            form={siteSettings}
+            onFormChange={setSiteSettings}
+            palette={palette}
+            onPreset={(pl) => { setPalette(pl); setPaletteDirty(true); }}
+            onColor={updatePaletteColor}
+            unpublishedBehavior={unpublishedBehavior}
+            onUnpublishedBehavior={setUnpublishedBehavior}
+            dnsStatus={dnsStatus}
+            checkingDns={checkingDns}
+            onCheckDns={checkDomainDns}
+          />
+        )}
+
         {/* AJUSTES AVANZADOS (opcional): la edición normal es directa sobre la página */}
-        {showBlockPanel && activeBlock && (
+        {showBlockPanel && activeBlock && !showSettings && (
           <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white">
             <div className="flex-shrink-0 border-b border-slate-200 px-4 py-3">
               <div className="flex items-center justify-between">
@@ -494,92 +517,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               <div className="space-y-0.5">{[...site.pages].sort((a,b)=>a.sortOrder-b.sortOrder).map(page=>(<div key={page.id} className="group relative"><button onClick={()=>{setActivePageId(page.id);setActiveBlockId(null);setShowPagesModal(false)}} className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${page.id===activePageId?"bg-primary-50 border border-primary-200 text-primary-700 font-medium":"text-slate-600 hover:bg-slate-50 border border-transparent"}`}><div className="flex items-center justify-between"><span className="truncate">{page.name}{page.isDefault&&<span className="text-[10px] bg-primary-100 text-primary-600 rounded px-1 ml-1 font-medium">Home</span>}</span><span className="text-xs text-slate-400">{page.blocks.length}</span></div></button><div className="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={e=>{e.stopPropagation();duplicatePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-blue-200 flex items-center justify-center text-blue-400 hover:text-blue-600"><HiOutlineDuplicate className="h-3 w-3"/></button>{!page.isDefault&&<button onClick={e=>{e.stopPropagation();deletePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-400 hover:text-red-600"><HiOutlineX className="h-3 w-3"/></button>}</div></div>))}</div>
             </div>
             <div className="border-t border-slate-200 p-3 flex gap-2">
-              <button onClick={()=>{setShowSettings(true);setShowPagesModal(false)}} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineCog className="h-3.5 w-3.5"/>Configuración</button>
+              <button onClick={()=>{setSettingsTab("config");setShowSettings(true);setShowPagesModal(false)}} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineCog className="h-3.5 w-3.5"/>Configuración</button>
               {site.isPublished&&<a href={publicUrl} target="_blank" rel="noopener" className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineEye className="h-3.5 w-3.5"/>Ver sitio</a>}
             </div>
           </div>
         </div>
       )}
-
-      {/* SETTINGS MODAL */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20" onClick={()=>setShowSettings(false)}>
-          <div className="absolute inset-0 bg-black/30"/>
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[75vh] overflow-y-auto m-4 z-10" onClick={e=>e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white"><h3 className="font-semibold text-sm text-slate-900">Configuración</h3><button onClick={()=>{setShowSettings(false);saveSiteSettings()}} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
-            <div className="p-4 space-y-3">
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Nombre</label><input className="input-field text-xs" value={siteSettings.name} onChange={e=>setSiteSettings({...siteSettings,name:e.target.value})}/></div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <div>
-                  <p className="text-xs font-semibold text-slate-700">Paleta de colores</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Se aplica de forma global a toda la web.</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {PALETTE_PRESETS.map((preset) => (
-                    <button
-                      key={preset.name}
-                      type="button"
-                      onClick={() => { setPalette({ ...preset.palette }); setPaletteDirty(true); }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-primary-300 hover:bg-primary-50"
-                      title={`Aplicar paleta ${preset.name}`}
-                    >
-                      <span className="flex -space-x-1">
-                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.primary }} />
-                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.secondary }} />
-                        <span className="h-3 w-3 rounded-full border border-white" style={{ background: preset.palette.accent }} />
-                      </span>
-                      {preset.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["primary", "secondary", "accent", "background", "surface", "text"] as PaletteRole[]).map((role) => (
-                    <div key={role}>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">{PALETTE_LABELS[role]}</label>
-                      <div className="flex gap-2">
-                        <input type="color" className="h-8 w-8 rounded border-0 p-0 cursor-pointer" value={palette[role]} onChange={e=>updatePaletteColor(role, e.target.value)}/>
-                        <input className="input-field text-xs flex-1" value={palette[role]} onChange={e=>updatePaletteColor(role, e.target.value)}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                <div>
-                  <p className="text-xs font-semibold text-slate-700">Al despublicar el sitio</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Qué verá el visitante mientras la web está despublicada.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: "404", label: "Página 404" },
-                    { value: "maintenance", label: "En mantenimiento" },
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setUnpublishedBehavior(opt.value)}
-                      className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${unpublishedBehavior === opt.value ? "border-primary-400 bg-primary-50 text-primary-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Logo URL</label><input className="input-field text-xs" value={siteSettings.logoUrl} onChange={e=>setSiteSettings({...siteSettings,logoUrl:e.target.value})} placeholder="https://..."/></div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Favicon</label><ImageField label="Favicon" value={siteSettings.faviconUrl} onChange={v=>setSiteSettings({...siteSettings,faviconUrl:v})}/></div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <div><label className="block text-xs font-semibold text-slate-700 mb-1">Dominio personalizado</label><div className="flex gap-2"><input className="input-field text-xs flex-1" value={siteSettings.domain} onChange={e=>setSiteSettings({...siteSettings,domain:e.target.value})} placeholder="www.midominio.com"/><button onClick={checkDomainDns} disabled={checkingDns||!siteSettings.domain} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 whitespace-nowrap">{checkingDns?"Verificando...":"Verificar"}</button></div></div>
-                {dnsStatus==="checking"&&<div className="flex items-center gap-2 text-xs text-slate-500"><svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Verificando DNS...</div>}
-                {dnsStatus==="ok"&&<div className="rounded-lg bg-green-50 border border-green-200 p-2.5"><p className="text-xs font-medium text-green-700">Dominio conectado</p><p className="text-xs text-green-600 mt-0.5">Tu sitio en <strong>https://{siteSettings.domain}</strong></p></div>}
-                {dnsStatus==="error"&&<div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5"><p className="text-xs font-medium text-amber-700">DNS no configurado</p><p className="text-xs text-amber-600 mt-0.5">Apunta tu dominio al servidor y verifica de nuevo.</p></div>}
-              </div>
-              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3"><p className="text-xs font-medium text-slate-700 mb-0.5">SEO del sitio</p><p className="text-xs text-slate-500 mb-2">Los metadatos, títulos y OpenGraph se gestionan desde el módulo SEO.</p><Link href="/dashboard/seo" onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"><HiOutlineCog className="h-3.5 w-3.5" />Ir al módulo SEO</Link></div>
-              <button onClick={()=>{saveSiteSettings();setShowSettings(false)}} className="w-full btn-primary text-xs">Guardar cambios</button>
-            </div>
-          </div>
-        </div>
-      )}
-
 
       <style jsx global>{`
         @keyframes fade-in{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}.animate-fade-in{animation:fade-in .2s ease-out}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  HiOutlineArrowLeft, HiOutlineCheck, HiOutlineChevronDown, HiOutlineCog, HiOutlineDesktopComputer,
+  HiOutlineArrowLeft, HiOutlineCheck, HiOutlineChevronDown, HiOutlineCog, HiOutlineColorSwatch, HiOutlineDesktopComputer,
   HiOutlineDeviceMobile, HiOutlineDocumentText, HiOutlineEye,
 } from "react-icons/hi";
 
@@ -32,6 +32,7 @@ interface Props {
   onPublish: () => void;
   onUnpublish: () => void;
   onPreview: () => void;
+  onTheme: () => void;
   onSettings: () => void;
 }
 
@@ -127,6 +128,7 @@ export function EditorTopBar(p: Props) {
         <button onClick={p.onRedo} disabled={!p.canRedo} className={iconBtn} title="Rehacer (Ctrl+Shift+Z)">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a5 5 0 00-5 5v2m15-7l-4-4m4 4l-4 4" /></svg>
         </button>
+        <button onClick={p.onTheme} className={iconBtn} title="Tema (colores y logo)"><HiOutlineColorSwatch className="h-4 w-4" /></button>
         <button onClick={p.onSettings} className={iconBtn} title="Configuración del sitio"><HiOutlineCog className="h-4 w-4" /></button>
         <button onClick={p.onPreview} className={iconBtn} title="Vista previa"><HiOutlineEye className="h-4 w-4" /></button>
         <div className="mx-1 min-w-[96px] text-right">{saveLabel(p.saving, p.dirty, p.lastSaved)}</div>
