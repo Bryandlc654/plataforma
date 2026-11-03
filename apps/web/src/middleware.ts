@@ -8,6 +8,10 @@ const PLATFORM_HOSTNAMES = ["localhost", "build.icebergup.com", "127.0.0.1"];
 // de sitios de clientes).
 const PLATFORM_HOST_SUFFIXES = [".icebergup.com", ".vercel.app", ".onrender.com"];
 
+// Subdominios reales de sitios (negocio.plataforma.com). Solo se activan si se define el dominio base.
+const SITE_BASE_DOMAIN = (process.env.NEXT_PUBLIC_SITE_BASE_DOMAIN || "").trim().toLowerCase().replace(/^\.+|\.+$/g, "");
+const RESERVED_SUBDOMAINS = ["www", "build", "app", "api", "admin", "mail", "dashboard"];
+
 const protectedPaths = ["/dashboard", "/welcome"];
 const authPaths = ["/login", "/register"];
 
@@ -19,17 +23,26 @@ export async function middleware(request: NextRequest) {
   // Custom domain routing: serve the site mapped to this domain at ANY path.
   // Platform hosts (the app itself, subdomains of the platform) fall through to
   // the [subdomain] route so the correct site is served and tracked.
+  let siteSubdomain: string | null = null;
+  if (SITE_BASE_DOMAIN && cleanHost.endsWith(`.${SITE_BASE_DOMAIN}`)) {
+    const label = cleanHost.slice(0, -(SITE_BASE_DOMAIN.length + 1));
+    if (label && !label.includes(".") && !RESERVED_SUBDOMAINS.includes(label)) siteSubdomain = label;
+  }
+
   const isPlatformHost =
-    PLATFORM_HOSTNAMES.includes(cleanHost) ||
-    PLATFORM_HOST_SUFFIXES.some((suffix) => cleanHost.endsWith(suffix));
+    !siteSubdomain &&
+    (PLATFORM_HOSTNAMES.includes(cleanHost) ||
+      PLATFORM_HOST_SUFFIXES.some((suffix) => cleanHost.endsWith(suffix)));
 
   if (!isPlatformHost) {
     const apiBase = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
     // Try the exact host first; if not found, retry with the "www." variant so that
     // apex domains (e.g. rodriplast.com) resolve to the site mapped to www.rodriplast.com.
-    const hosts = cleanHost.startsWith("www.")
-      ? [cleanHost, cleanHost.slice(4)]
-      : [cleanHost, `www.${cleanHost}`];
+    const hosts = siteSubdomain
+      ? [siteSubdomain]
+      : cleanHost.startsWith("www.")
+        ? [cleanHost, cleanHost.slice(4)]
+        : [cleanHost, `www.${cleanHost}`];
     try {
       for (const host of hosts) {
         let apiUrl = `${apiBase}/p/${host}`;

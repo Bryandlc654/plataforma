@@ -11,7 +11,10 @@ export type EditorDevice = "desktop" | "mobile";
 
 interface PageLite { id: string; name: string; isDefault: boolean; sortOrder: number; }
 
+export interface GuideStep { id: string; label: string; hint: string; done: boolean; actionLabel?: string; onAction?: () => void; }
+
 interface Props {
+  guide?: GuideStep[];
   siteName: string;
   isPublished: boolean;
   pages: PageLite[];
@@ -55,8 +58,19 @@ function saveLabel(saving: boolean, dirty: boolean, saveError: boolean, lastSave
 
 export function EditorTopBar(p: Props) {
   const [pagesOpen, setPagesOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const guideRef = useRef<HTMLDivElement>(null);
+  const steps = p.guide || [];
+  const doneCount = steps.filter((s) => s.done).length;
   const ref = useRef<HTMLDivElement>(null);
   const activePage = p.pages.find((x) => x.id === p.activePageId);
+
+  useEffect(() => {
+    if (!guideOpen) return;
+    const close = (e: MouseEvent) => { if (guideRef.current && !guideRef.current.contains(e.target as Node)) setGuideOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [guideOpen]);
 
   useEffect(() => {
     if (!pagesOpen) return;
@@ -131,6 +145,37 @@ export function EditorTopBar(p: Props) {
         <button onClick={p.onRedo} disabled={!p.canRedo} className={iconBtn} title="Rehacer (Ctrl+Shift+Z)">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a5 5 0 00-5 5v2m15-7l-4-4m4 4l-4 4" /></svg>
         </button>
+        {steps.length > 0 && doneCount < steps.length && (
+          <div className="relative" ref={guideRef}>
+            <button
+              onClick={() => setGuideOpen((v) => !v)}
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-[color:color-mix(in_srgb,var(--color-secondary)_60%,transparent)] bg-[color:color-mix(in_srgb,var(--color-secondary)_12%,transparent)] px-2.5 text-xs font-semibold text-slate-700 hover:bg-[color:color-mix(in_srgb,var(--color-secondary)_20%,transparent)]"
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--color-secondary)] text-[10px] font-bold text-[color:var(--color-on-secondary,#201b51)]">{doneCount}</span>
+              de {steps.length} pasos
+            </button>
+            {guideOpen && (
+              <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+                <p className="text-sm font-semibold text-slate-900">Deja tu sitio listo</p>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[color:var(--color-primary)] transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} /></div>
+                <ul className="mt-3 space-y-3">
+                  {steps.map((s) => (
+                    <li key={s.id} className="flex gap-2.5">
+                      <span className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[10px] ${s.done ? "bg-green-500 text-white" : "border border-slate-300"}`}>{s.done ? "✓" : ""}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-[13px] font-medium ${s.done ? "text-slate-400 line-through" : "text-slate-800"}`}>{s.label}</p>
+                        {!s.done && s.hint && <p className="text-xs text-slate-500">{s.hint}</p>}
+                        {!s.done && s.onAction && (
+                          <button onClick={() => { setGuideOpen(false); s.onAction?.(); }} className="mt-1.5 rounded-md bg-[color:var(--color-primary)] px-2.5 py-1 text-xs font-semibold text-white hover:opacity-90">{s.actionLabel}</button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
         <button onClick={p.onTheme} className={iconBtn} title="Tema (colores y logo)"><HiOutlineColorSwatch className="h-4 w-4" /></button>
         <button onClick={p.onSettings} className={iconBtn} title="Configuración del sitio"><HiOutlineCog className="h-4 w-4" /></button>
         <button onClick={p.onPreview} className={iconBtn} title="Vista previa"><HiOutlineEye className="h-4 w-4" /></button>

@@ -10,6 +10,67 @@ type Phase = "checking" | "registered" | "pending" | "failed" | "error";
 
 interface Order { id: string; siteId: string | null; domain: string; status: string; dnsConnected: boolean; errorMessage: string | null; }
 
+type Conn = { step: "registering" | "verifying" | "ready" | "attention" | "failed"; message?: string } | null;
+
+function Check({ done, spin, children }: { done?: boolean; spin?: boolean; children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-2.5 text-left text-sm">
+      <span className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[11px] ${done ? "bg-green-500 text-white" : "border border-slate-300 text-slate-300"}`}>
+        {done ? "✓" : spin ? <svg className="h-3 w-3 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> : null}
+      </span>
+      <span className={done ? "text-slate-700" : "text-slate-500"}>{children}</span>
+    </li>
+  );
+}
+
+function RegisteredProgress({ order, back }: { order: Order; back: string }) {
+  const [conn, setConn] = useState<Conn>(null);
+  const [tries, setTries] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async (n: number) => {
+      try {
+        const res: any = await api.get(`/domains/orders/${order.id}/connection`);
+        if (!active) return;
+        const c = (res.data || res) as Conn;
+        setConn(c);
+        setTries(n);
+        if (c?.step === "verifying" && n < 36) timer = setTimeout(() => poll(n + 1), 5000); // hasta ~3 min
+      } catch {
+        if (active && n < 36) timer = setTimeout(() => poll(n + 1), 5000);
+      }
+    };
+    poll(0);
+    return () => { active = false; clearTimeout(timer); };
+  }, [order.id]);
+
+  const ready = conn?.step === "ready";
+  const waiting = !ready && order.dnsConnected;
+
+  return (
+    <>
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
+      <h1 className="mb-1 text-lg font-bold text-slate-900">¡{order.domain} es tuyo!</h1>
+      <p className="mb-5 text-sm text-slate-500">Lo estamos conectando a tu sitio. No tienes que hacer nada más.</p>
+      <ul className="mx-auto mb-6 max-w-xs space-y-2.5">
+        <Check done>Pago confirmado</Check>
+        <Check done>Dominio registrado</Check>
+        <Check done={order.dnsConnected} spin={!order.dnsConnected}>Conectado con tu sitio</Check>
+        <Check done={ready} spin={waiting}>{ready ? "¡Tu sitio ya responde en tu dominio!" : "Esperando que internet reconozca tu dominio"}</Check>
+      </ul>
+      {!ready && waiting && <p className="mb-5 text-xs text-slate-400">{tries >= 36 ? "Sigue en proceso. Puede tardar hasta unas horas; lo verás como \"Funcionando\" en Dominios." : "Puede tardar desde unos minutos hasta unas horas."}</p>}
+      {!order.dnsConnected && <p className="mb-5 text-xs text-amber-600">No pudimos conectar el DNS automáticamente. Contacta a soporte y lo resolvemos.</p>}
+      <div className="flex flex-col items-center gap-3">
+        {ready && <a href={`https://${order.domain}`} target="_blank" rel="noopener" className="btn-primary inline-flex text-sm">Ver mi sitio</a>}
+        <Link href={back} className={ready ? "text-xs font-medium text-slate-500 hover:underline" : "btn-primary inline-flex text-sm"}>Volver al editor</Link>
+        <Link href="/dashboard/domains" className="text-xs font-medium text-slate-500 hover:underline">Ver mis dominios</Link>
+      </div>
+    </>
+  );
+}
+
 function DomainSuccessContent() {
   const searchParams = useSearchParams();
   const { hasHydrated, ensureSession } = useAuthStore();
@@ -61,15 +122,7 @@ function DomainSuccessContent() {
             <p className="text-sm text-slate-500">Estamos registrando tu dominio. No cierres esta ventana.</p>
           </>
         )}
-        {phase === "registered" && order && (
-          <>
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
-            <h1 className="mb-2 text-lg font-bold text-slate-900">¡{order.domain} es tuyo!</h1>
-            <p className="mb-2 text-sm text-slate-500">El dominio quedó registrado y asignado a tu sitio.</p>
-            <p className="mb-6 text-xs text-slate-400">{order.dnsConnected ? "Ya configuramos el DNS. Puede tardar desde unos minutos hasta unas horas en funcionar." : "No pudimos configurar el DNS automáticamente; puedes verificarlo en Configuración del sitio."}</p>
-            <Link href={back} className="btn-primary inline-flex text-sm">Volver al editor</Link>
-          </>
-        )}
+        {phase === "registered" && order && <RegisteredProgress order={order} back={back} />}
         {phase === "pending" && order && (
           <>
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-2xl text-amber-600">…</div>

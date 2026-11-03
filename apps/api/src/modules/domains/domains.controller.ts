@@ -32,6 +32,12 @@ export class DomainsController {
     return this.domains.listOrders(user.tenantId);
   }
 
+  @Get("orders/:id/connection")
+  @ApiOperation({ summary: "Avance de la conexión automática del dominio" })
+  connection(@CurrentUser() user: any, @Param("id") id: string) {
+    return this.domains.connection(user.tenantId, id);
+  }
+
   @Get("orders/:id")
   @ApiOperation({ summary: "Estado de un pedido de dominio" })
   order(@CurrentUser() user: any, @Param("id") id: string) {

@@ -354,6 +354,35 @@ export class DomainsService {
     return this.serialize(updated);
   }
 
+  /**
+   * Avance de la conexión del dominio, para mostrarlo al cliente:
+   * registrando → verificando (el DNS aún no responde) → listo.
+   */
+  async connection(tenantId: string, id: string) {
+    const order = await this.prisma.domainOrder.findFirst({ where: { id, tenantId } });
+    if (!order) throw new NotFoundException("Pedido no encontrado.");
+    const base = { domain: order.domain, siteId: order.siteId, orderStatus: order.status };
+
+    if (order.status === "registered") {
+      if (!order.dnsConnected || !order.siteId) {
+        return { ...base, step: "attention" as const, message: order.errorMessage || "El dominio está registrado, pero falta conectarlo a tu sitio." };
+      }
+      try {
+        const check: any = await this.sites.checkDomainDns(order.siteId, tenantId, order.domain);
+        // Con Vercel configurado manda su verificación; si no, el dominio debe resolver a la IP que configuramos.
+        const expectedA = process.env.DOMAIN_DNS_A || "76.76.21.21";
+        const verified = check.vercelConfigured && check.vercel
+          ? check.pointsToServer
+          : (check.resolvedIps || []).includes(expectedA);
+        return { ...base, step: verified ? ("ready" as const) : ("verifying" as const), resolvedIps: check.resolvedIps };
+      } catch {
+        return { ...base, step: "verifying" as const, resolvedIps: [] as string[] };
+      }
+    }
+    if (["pending_registration", "paid", "registering", "capturing"].includes(order.status)) return { ...base, step: "registering" as const };
+    return { ...base, step: "failed" as const, message: order.errorMessage };
+  }
+
   async listOrders(tenantId: string) {
     const orders = await this.prisma.domainOrder.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 50 });
     return orders.map((o) => this.serialize(o));

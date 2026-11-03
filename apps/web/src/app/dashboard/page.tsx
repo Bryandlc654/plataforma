@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import api from "@/lib/api";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { AppIcon } from "@/components/ui/app-icon";
+import { SetupGuideCard } from "@/components/dashboard/setup-guide-card";
 
 interface TenantStats {
   summary: { totalSites: number; totalLeads: number; totalUsers: number; leadsLast30Days: number };
@@ -364,6 +365,8 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 </div>
+
+                <SetupGuideCard />
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
                   <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/sites")}>

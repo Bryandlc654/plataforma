@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HiOutlineCheckCircle, HiOutlineGlobeAlt, HiOutlineSearch, HiOutlineX } from "react-icons/hi";
 import api from "@/lib/api";
 
@@ -22,9 +22,10 @@ const money = (cents: number | null, currency: string | null) =>
 
 const brandBtn = "inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60";
 
-export function DomainSearchModal({ siteId, onClose }: { siteId: string; onClose: () => void }) {
+export function DomainSearchModal({ siteId, onClose, initialQuery }: { siteId: string; onClose: () => void; initialQuery?: string }) {
   const [status, setStatus] = useState<Status | null>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery || "");
+  const autoSearched = useRef(false);
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
   const [suggestions, setSuggestions] = useState<Result[]>([]);
@@ -36,18 +37,28 @@ export function DomainSearchModal({ siteId, onClose }: { siteId: string; onClose
     api.get("/domains/status").then((r: any) => setStatus(r.data || r)).catch(() => setStatus({ configured: false, purchasesEnabled: false, paypalEnabled: false }));
   }, []);
 
+  // Si ya conocemos el nombre del negocio, la búsqueda arranca sola.
+  useEffect(() => {
+    if (status?.configured && initialQuery && !autoSearched.current) {
+      autoSearched.current = true;
+      search(undefined, initialQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !paying) onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, paying]);
 
-  const search = async (e?: React.FormEvent) => {
+  const search = async (e?: React.FormEvent, override?: string) => {
     e?.preventDefault();
-    if (!query.trim() || searching) return;
+    const q = (override ?? query).trim();
+    if (!q || searching) return;
     setSearching(true); setError(""); setSelected(null);
     try {
-      const res: any = await api.get("/domains/search", { params: { q: query.trim() } });
+      const res: any = await api.get("/domains/search", { params: { q } });
       const data = res.data || res;
       setResults(data.results || []);
       setSuggestions(data.suggestions || []);

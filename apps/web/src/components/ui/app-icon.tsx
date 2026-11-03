@@ -1,8 +1,9 @@
-import { HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone, HiShieldCheck, HiNewspaper, HiLightBulb } from "react-icons/hi2";
+import { HiGlobeAlt, HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone, HiShieldCheck, HiNewspaper, HiLightBulb } from "react-icons/hi2";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: HiHome,
   sites: HiSquares2X2,
+  globe: HiGlobeAlt,
   forms: HiBars3,
   leads: HiEnvelope,
   analytics: HiChartBar,

@@ -34,6 +34,7 @@ export default function WelcomePage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [planSlug, setPlanSlug] = useState<string>("");
   const [goals, setGoals] = useState<string[]>(["business"]);
+  const [businessName, setBusinessName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [methods, setMethods] = useState<{ paypal: { enabled: boolean }; payphone: { enabled: boolean } } | null>(null);
@@ -106,16 +107,24 @@ export default function WelcomePage() {
 
   const finish = async (skipGoals = false) => {
     setBusy(true);
+    const name = businessName.trim();
+    const chosen = skipGoals ? [] : goals;
     try {
       if (tenantId) {
+        // El nombre del negocio también será el nombre del primer sitio.
+        if (name) {
+          await api.put(`/tenants/${tenantId}`, { name });
+          useAuthStore.setState((s: any) => ({ tenant: s.tenant ? { ...s.tenant, name } : s.tenant }));
+        }
         await api.put(`/tenants/${tenantId}/settings`, {
-          onboarding: { completed: true, goals: skipGoals ? [] : goals },
+          onboarding: { completed: true, goals: chosen },
         });
       }
     } catch {
       // No bloquea: el panel sigue funcionando aunque no se guarden las preferencias.
     }
-    router.replace(goals.includes("store") && !skipGoals ? "/dashboard?setup=store" : "/dashboard");
+    // Directo a elegir plantilla (ya ordenada según lo que quiere crear).
+    router.replace(chosen.length ? `/dashboard/sites/new?goals=${chosen.join(",")}` : "/dashboard/sites/new");
   };
 
   const toggleGoal = (id: string) =>
@@ -218,11 +227,22 @@ export default function WelcomePage() {
         </main>
       ) : (
         <main className="flex flex-1 flex-col items-center px-4 pb-16 pt-8">
-          <h1 className="text-center text-[30px] font-medium tracking-tight">¿Qué quieres crear?</h1>
+          <h1 className="text-center text-[30px] font-medium tracking-tight">Cuéntanos de tu negocio</h1>
           <p className="mt-2 text-center text-lg text-white/60">
-            Selecciona todo lo que corresponda. Personalizaremos tu configuración.
+            Con esto te mostramos las plantillas que mejor te sirven.
           </p>
           <div className="sp-card mt-10 w-full max-w-[520px] !p-6">
+            <label htmlFor="business-name" className="mb-1.5 block text-sm font-medium text-[#303030]">Nombre de tu negocio</label>
+            <input
+              id="business-name"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              maxLength={60}
+              placeholder="Ej. Panadería La Esquina"
+              className="sp-input mb-5"
+              autoFocus
+            />
+            <p className="mb-2 text-sm font-medium text-[#303030]">¿Qué quieres crear?</p>
             <div className="flex flex-wrap gap-2">
               {GOALS.map((g) => (
                 <button

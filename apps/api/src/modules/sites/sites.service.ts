@@ -29,11 +29,11 @@ export class SitesService {
       where: { id: tenantId },
       select: { id: true, isActive: true, maxSites: true, plan: { select: { slug: true, price: true } } },
     });
-    if (!tenant) throw new NotFoundException("Tenant not found");
-    if (!tenant.isActive) throw new ForbiddenException("Tenant is suspended");
+    if (!tenant) throw new NotFoundException("No se encontró tu cuenta.");
+    if (!tenant.isActive) throw new ForbiddenException("Tu cuenta está suspendida. Contacta a soporte.");
 
     const siteCount = await this.prisma.site.count({ where: { tenantId, deletedAt: null } });
-    if (siteCount >= tenant.maxSites) throw new ForbiddenException("Site limit reached for your plan");
+    if (siteCount >= tenant.maxSites) throw new ForbiddenException("Llegaste al límite de sitios de tu plan. Mejora tu plan para crear más.");
 
     let subdomain: string;
     if (dto.subdomain) {
@@ -45,7 +45,7 @@ export class SitesService {
         .replace(/^-|-$/g, "")
         .substring(0, 63);
 
-      if (subdomain.length < 3) throw new ForbiddenException("Subdomain must be at least 3 characters");
+      if (subdomain.length < 3) throw new ForbiddenException("El subdominio debe tener al menos 3 caracteres.");
       if (RESERVED_PATHS.includes(subdomain)) throw new ConflictException(`El dominio "${subdomain}" es reservado y no puede ser usado.`);
 
       const existing = await this.prisma.site.findUnique({ where: { subdomain }, select: { id: true } });
@@ -117,8 +117,7 @@ export class SitesService {
           domain: dto.domain,
           templateId: dto.templateId,
           settings: template?.globalStyles ? ({ globalStyles: template.globalStyles } as any) : {},
-          isPublished: true,
-          publishedAt: new Date(),
+          isPublished: false,
         },
         select: { id: true, tenantId: true, subdomain: true, domain: true },
       });
@@ -176,7 +175,7 @@ export class SitesService {
         where: { tenantId, deletedAt: null },
         select: {
           id: true, name: true, subdomain: true, domain: true, isPublished: true,
-          primaryColor: true, logoUrl: true, faviconUrl: true, createdAt: true, updatedAt: true,
+          primaryColor: true, logoUrl: true, faviconUrl: true, createdAt: true, updatedAt: true, settings: true,
           _count: { select: { pages: true } },
         template: { select: { id: true, name: true } },
         },
@@ -187,7 +186,9 @@ export class SitesService {
       this.prisma.site.count({ where: { tenantId, deletedAt: null } }),
     ]);
 
-    return { items, total, page, limit };
+    // Solo se envía si el sitio ya fue personalizado; no el JSON completo de ajustes.
+    const slim = items.map(({ settings, ...site }) => ({ ...site, customized: !!(settings as any)?.setup?.customized }));
+    return { items: slim, total, page, limit };
   }
 
   async getCapabilities(tenantId: string) {
@@ -265,7 +266,7 @@ export class SitesService {
         template: { select: { id: true, name: true } },
       },
     });
-    if (!site) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Sitio no encontrado.");
     return site;
   }
 
@@ -283,7 +284,7 @@ export class SitesService {
       where: { id, tenantId, deletedAt: null },
       select: { id: true, domain: true },
     });
-    if (!current) throw new NotFoundException("Site not found");
+    if (!current) throw new NotFoundException("Sitio no encontrado.");
 
     if (data.domain) {
       data.domain = data.domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
@@ -291,7 +292,7 @@ export class SitesService {
       if (reserved.includes(data.domain)) throw new ConflictException("Este dominio está reservado para la plataforma.");
       if (data.domain.endsWith(".icebergup.com") || data.domain.endsWith(".run.app") || data.domain.endsWith(".vercel.app")) throw new ConflictException("No puedes usar un subdominio de la plataforma como dominio de sitio.");
       const existing = await this.prisma.site.findUnique({ where: { domain: data.domain }, select: { id: true } });
-      if (existing && existing.id !== id) throw new ConflictException("Domain already in use");
+      if (existing && existing.id !== id) throw new ConflictException("Este dominio ya está en uso.");
     }
 
     const oldDomain = current.domain || undefined;
@@ -329,7 +330,7 @@ export class SitesService {
       where: { id, tenantId, deletedAt: null },
       select: { id: true, domain: true },
     });
-    if (!site) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Sitio no encontrado.");
 
     if (site.domain) await this.vercel.removeDomain(site.domain);
 
@@ -345,7 +346,7 @@ export class SitesService {
       where: { id, tenantId, deletedAt: null },
       select: { id: true },
     });
-    if (!site) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Sitio no encontrado.");
 
     const cleanDomain = domain.toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "").trim();
 
@@ -418,7 +419,7 @@ export class SitesService {
       where: { id, tenantId, deletedAt: null },
       select: { id: true, settings: true },
     });
-    if (!site) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Sitio no encontrado.");
 
     const settings = ((site.settings as any) || {});
 
@@ -444,7 +445,7 @@ export class SitesService {
       where: { id, tenantId, deletedAt: null },
       select: { id: true, settings: true },
     });
-    if (!site) throw new NotFoundException("Site not found");
+    if (!site) throw new NotFoundException("Sitio no encontrado.");
 
     const settings = ((site.settings as any) || {});
 
