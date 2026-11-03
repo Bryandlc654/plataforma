@@ -93,7 +93,7 @@ export function EditorTopBar(p: Props) {
                 <button
                   key={pg.id}
                   onClick={() => { p.onSelectPage(pg.id); setPagesOpen(false); }}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs ${pg.id === p.activePageId ? "bg-[#201b51]/10 font-semibold text-[#201b51]" : "text-slate-700 hover:bg-slate-50"}`}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs ${pg.id === p.activePageId ? "bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)] font-semibold text-[color:var(--color-primary)]" : "text-slate-700 hover:bg-slate-50"}`}
                 >
                   <span className="truncate">{pg.name}</span>
                   {pg.isDefault && <span className="text-[10px] text-slate-400">Inicio</span>}
@@ -102,7 +102,7 @@ export function EditorTopBar(p: Props) {
               <div className="my-1 border-t border-slate-100" />
               <button
                 onClick={() => { setPagesOpen(false); p.onManagePages(); }}
-                className="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-[#201b51] hover:bg-slate-50"
+                className="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-[color:var(--color-primary)] hover:bg-slate-50"
               >
                 Administrar páginas…
               </button>
@@ -116,7 +116,7 @@ export function EditorTopBar(p: Props) {
               key={key}
               onClick={() => p.onDeviceChange(key)}
               title={label}
-              className={`flex h-7 w-8 items-center justify-center rounded-md ${p.device === key ? "bg-[#201b51] text-white" : "text-slate-500 hover:bg-slate-100"}`}
+              className={`flex h-7 w-8 items-center justify-center rounded-md ${p.device === key ? "bg-[color:var(--color-primary)] text-white" : "text-slate-500 hover:bg-slate-100"}`}
             >
               <Icon className="h-4 w-4" />
             </button>
@@ -136,14 +136,15 @@ export function EditorTopBar(p: Props) {
         <button onClick={p.onPreview} className={iconBtn} title="Vista previa"><HiOutlineEye className="h-4 w-4" /></button>
         <div className="mx-1 min-w-[96px] text-right">{saveLabel(p.saving, p.dirty, p.saveError, p.lastSaved, p.onRetry)}</div>
         {!p.hasChanges && p.isPublished ? (
-          <button onClick={p.onUnpublish} className="h-8 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-medium text-amber-700 hover:bg-amber-100">
+          <button data-tour="publish" onClick={p.onUnpublish} className="h-8 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-medium text-amber-700 hover:bg-amber-100">
             Despublicar
           </button>
         ) : (
           <button
+            data-tour="publish"
             onClick={p.onPublish}
             disabled={p.publishing}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[#2f2877] to-[#201b51] px-4 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-4 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
           >
             {p.publishing ? <><Spinner />Publicando…</> : p.isPublished ? "Publicar cambios" : "Publicar"}
           </button>

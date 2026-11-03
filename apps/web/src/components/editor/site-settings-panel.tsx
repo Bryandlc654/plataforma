@@ -41,7 +41,7 @@ export function SiteSettingsPanel(p: Props) {
             <button
               key={key}
               onClick={() => p.onTabChange(key)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${p.tab === key ? "bg-[#201b51] text-white" : "text-slate-500 hover:bg-slate-100"}`}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${p.tab === key ? "bg-[color:var(--color-primary)] text-white" : "text-slate-500 hover:bg-slate-100"}`}
             >
               {text}
             </button>
@@ -63,7 +63,7 @@ export function SiteSettingsPanel(p: Props) {
                   key={preset.name}
                   type="button"
                   onClick={() => p.onPreset({ ...preset.palette })}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-[#201b51]/40 hover:bg-[#201b51]/5"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)]"
                   title={`Aplicar paleta ${preset.name}`}
                 >
                   <span className="flex -space-x-1">
@@ -104,7 +104,7 @@ export function SiteSettingsPanel(p: Props) {
               <label className="block text-xs font-semibold text-slate-700">Dominio personalizado</label>
               <div className="flex gap-2">
                 <input className="input-field flex-1 text-xs" value={p.form.domain} onChange={(e) => set({ domain: e.target.value })} placeholder="www.midominio.com" />
-                <button onClick={p.onCheckDns} disabled={p.checkingDns || !p.form.domain} className="whitespace-nowrap rounded-lg bg-[#201b51] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50">
+                <button onClick={p.onCheckDns} disabled={p.checkingDns || !p.form.domain} className="whitespace-nowrap rounded-lg bg-[color:var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50">
                   {p.checkingDns ? "Verificando…" : "Verificar"}
                 </button>
               </div>
@@ -123,7 +123,7 @@ export function SiteSettingsPanel(p: Props) {
                     key={value}
                     type="button"
                     onClick={() => p.onUnpublishedBehavior(value)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${p.unpublishedBehavior === value ? "border-[#201b51] bg-[#201b51]/10 text-[#201b51]" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${p.unpublishedBehavior === value ? "border-[color:var(--color-primary)] bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[color:var(--color-primary)]" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
                   >
                     {text}
                   </button>
@@ -134,14 +134,14 @@ export function SiteSettingsPanel(p: Props) {
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <p className="mb-0.5 text-xs font-medium text-slate-700">SEO del sitio</p>
               <p className="mb-2 text-xs text-slate-500">Títulos, descripciones y OpenGraph se gestionan desde el módulo SEO.</p>
-              <Link href="/dashboard/seo" onClick={p.onSave} className="text-xs font-semibold text-[#201b51] hover:underline">Ir al módulo SEO →</Link>
+              <Link href="/dashboard/seo" onClick={p.onSave} className="text-xs font-semibold text-[color:var(--color-primary)] hover:underline">Ir al módulo SEO →</Link>
             </div>
           </>
         )}
       </div>
 
       <div className="border-t border-slate-200 p-3">
-        <button onClick={p.onSave} className="w-full rounded-lg bg-gradient-to-b from-[#2f2877] to-[#201b51] py-2 text-xs font-semibold text-white hover:opacity-90">Guardar cambios</button>
+        <button onClick={p.onSave} className="w-full rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] py-2 text-xs font-semibold text-white hover:opacity-90">Guardar cambios</button>
       </div>
     </aside>
   );

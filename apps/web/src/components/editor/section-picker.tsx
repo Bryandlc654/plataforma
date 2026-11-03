@@ -22,7 +22,7 @@ const WIRE: Record<string, Wire> = {
 };
 
 const bar = "rounded-sm bg-slate-300";
-const accent = "rounded-sm bg-[#201b51]";
+const accent = "rounded-sm bg-[color:var(--color-primary)]";
 
 /** Boceto esquemático de la sección (ligero, sin renderizar el bloque real). */
 function Wireframe({ kind }: { kind: Wire }) {
@@ -39,7 +39,7 @@ function Wireframe({ kind }: { kind: Wire }) {
     case "split":
       return <div className={`${box} flex-row items-center`}><div className="h-full w-2/5 rounded bg-slate-200" /><div className="flex flex-1 flex-col gap-1.5"><div className={`${bar} h-2 w-3/4`} /><div className={`${bar} h-1 w-full opacity-60`} /><div className={`${bar} h-1 w-5/6 opacity-60`} /></div></div>;
     case "cta":
-      return <div className={`${box} items-center justify-center bg-[#201b51]/10`}><div className={`${bar} h-2 w-2/3 bg-[#201b51]/60`} /><div className="mt-1 h-3 w-12 rounded-sm bg-[#f29200]" /></div>;
+      return <div className={`${box} items-center justify-center bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)]`}><div className={`${bar} h-2 w-2/3 bg-[color:color-mix(in_srgb,var(--color-primary)_60%,transparent)]`} /><div className="mt-1 h-3 w-12 rounded-sm bg-[color:var(--color-secondary)]" /></div>;
     case "form":
       return <div className={`${box} items-center`}><div className={`${bar} h-2 w-1/3`} /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-slate-300" /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-slate-300" /><div className={`${accent} h-2.5 w-3/5`} /></div>;
     case "footer":
@@ -49,9 +49,9 @@ function Wireframe({ kind }: { kind: Wire }) {
     case "stats":
       return <div className={`${box} justify-center`}><div className="flex justify-around">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col items-center gap-1"><div className={`${accent} h-3 w-6`} /><div className={`${bar} h-1 w-6`} /></div>)}</div></div>;
     case "quote":
-      return <div className={`${box} items-center justify-center`}><div className="text-lg leading-none text-[#f29200]">“</div><div className={`${bar} h-1.5 w-3/4`} /><div className={`${bar} h-1.5 w-1/2 opacity-60`} /></div>;
+      return <div className={`${box} items-center justify-center`}><div className="text-lg leading-none text-[color:var(--color-secondary)]">“</div><div className={`${bar} h-1.5 w-3/4`} /><div className={`${bar} h-1.5 w-1/2 opacity-60`} /></div>;
     case "pricing":
-      return <div className={box}><div className="grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className={`flex flex-col items-center gap-1 rounded bg-white p-1 ring-1 ${i === 1 ? "ring-[#201b51]" : "ring-slate-200"}`}><div className={`${bar} h-1 w-1/2`} /><div className={`${accent} h-2 w-2/3`} /></div>)}</div></div>;
+      return <div className={box}><div className="grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className={`flex flex-col items-center gap-1 rounded bg-white p-1 ring-1 ${i === 1 ? "ring-[color:var(--color-primary)]" : "ring-slate-200"}`}><div className={`${bar} h-1 w-1/2`} /><div className={`${accent} h-2 w-2/3`} /></div>)}</div></div>;
     default:
       return <div className={`${box} items-end justify-end`}><div className="h-5 w-5 rounded-full bg-green-500" /></div>;
   }
@@ -101,7 +101,7 @@ export function SectionPicker({ onAdd, onClose }: Props) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar sección…"
-              className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-[#201b51] focus:outline-none focus:ring-2 focus:ring-[#201b51]/15"
+              className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -109,7 +109,7 @@ export function SectionPicker({ onAdd, onClose }: Props) {
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${cat === c ? "bg-[#201b51] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${cat === c ? "bg-[color:var(--color-primary)] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
               >
                 {c}
               </button>
@@ -126,11 +126,11 @@ export function SectionPicker({ onAdd, onClose }: Props) {
                   <button
                     key={t}
                     onClick={() => { onAdd(t); onClose(); }}
-                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-[#201b51]/40 hover:shadow-lg"
+                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] hover:shadow-lg"
                   >
                     <div className="aspect-[16/10] border-b border-slate-100 bg-slate-50"><Wireframe kind={WIRE[t] || "dot"} /></div>
                     <div className="p-2.5">
-                      <p className="truncate text-[13px] font-semibold text-slate-800 group-hover:text-[#201b51]">{BLOCK_META[t].label}</p>
+                      <p className="truncate text-[13px] font-semibold text-slate-800 group-hover:text-[color:var(--color-primary)]">{BLOCK_META[t].label}</p>
                       <p className="line-clamp-2 text-[11px] leading-snug text-slate-400">{BLOCK_META[t].description}</p>
                     </div>
                   </button>

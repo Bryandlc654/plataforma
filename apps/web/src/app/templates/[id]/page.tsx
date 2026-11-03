@@ -13,6 +13,8 @@ export default function TemplatePreviewPage() {
   const [template, setTemplate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [embed, setEmbed] = useState(false); // dentro del selector de plantillas: sin barra superior
+  useEffect(() => { setEmbed(new URLSearchParams(window.location.search).get("embed") === "1"); }, []);
 
   useEffect(() => {
     if (id) {
@@ -60,7 +62,7 @@ export default function TemplatePreviewPage() {
   return (
     <div className="min-h-screen bg-white relative pb-20">
       {/* Top Floating Header for Preview Mode */}
-      <div className="fixed top-0 left-0 right-0 z-[9999] bg-slate-900 text-white px-4 py-3 flex items-center justify-between shadow-lg">
+      {!embed && <div className="fixed top-0 left-0 right-0 z-[9999] bg-slate-900 text-white px-4 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => window.close()} 
@@ -73,10 +75,10 @@ export default function TemplatePreviewPage() {
             <span className="font-semibold text-sm">{template.name}</span>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Render Template Blocks */}
-      <div className={`pt-12 ${templateWrapperClass(template.globalStyles, defaultPage?.path)} ${template.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background text-on-background font-body-md text-body-md selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant' : ''}`}>
+      <div className={`${embed ? "" : "pt-12"} ${templateWrapperClass(template.globalStyles, defaultPage?.path)} ${template.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background text-on-background font-body-md text-body-md selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant' : ''}`}>
         <TemplateGlobalStyles globalStyles={template.globalStyles} pagePath={defaultPage?.path} />
         {blocks.length === 0 ? (
           <div className="flex items-center justify-center h-64 text-slate-500">

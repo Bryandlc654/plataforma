@@ -13,6 +13,7 @@ import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLe
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
+import { EditorTour } from "@/components/editor/editor-tour";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { useConfirm } from "@/components/providers/confirm-provider";
@@ -442,7 +443,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     finally { setCheckingDns(false); }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><svg className="animate-spin h-8 w-8 text-primary-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-slate-500">Cargando editor...</p></div></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><svg className="animate-spin h-8 w-8 text-[color:var(--color-primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-slate-500">Cargando editor...</p></div></div>;
   if (!site) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><h2 className="text-xl font-semibold text-slate-900 mb-2">Sitio no encontrado</h2><Link href="/dashboard/sites" className="btn-primary inline-flex items-center gap-1.5"><HiOutlineArrowLeft className="h-4 w-4" /> Volver</Link></div></div>;
 
   const openPreview = () => {
@@ -483,6 +484,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         onSettings={() => { setSettingsTab("config"); setShowSettings(true); }}
       />
 
+      <EditorTour ready={!loading && !!site} />
+
       <div className="flex min-h-0 flex-1">
         <SectionsSidebar
           pageName={activePage?.name}
@@ -497,7 +500,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         />
 
         {/* CANVAS */}
-        <main className={`flex-1 overflow-y-auto bg-slate-200/70 ${device === "mobile" ? "py-6" : ""}`} onClick={() => setActiveBlockId(null)}>
+        <main data-tour="canvas" className={`flex-1 overflow-y-auto bg-slate-200/70 ${device === "mobile" ? "py-6" : ""}`} onClick={() => setActiveBlockId(null)}>
           <div
             className={`mx-auto bg-white transition-all duration-200 ${device === "mobile" ? "w-[390px] max-w-full overflow-hidden rounded-2xl shadow-xl ring-1 ring-slate-300" : "min-h-full w-full"} ${templateWrapperClass(site?.settings?.globalStyles, activePage?.path)} ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}
             onClick={(e) => e.stopPropagation()}
@@ -513,7 +516,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                 {sortedBlocks.map((block, idx) => (
                   <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} onOpenSettings={() => setShowBlockPanel(true)} palette={variantPalette} />
                 ))}
-                <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[#201b51]/5 hover:text-[#201b51]">
+                <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)] hover:text-[color:var(--color-primary)]">
                   <HiOutlinePlus className="h-4 w-4" /> Agregar sección
                 </button>
               </>
@@ -523,8 +526,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                   <h3 className="mb-2 text-lg font-bold text-slate-700">{hasPages ? "Esta página está vacía" : "Crea tu primera página"}</h3>
                   <p className="mb-6 text-sm text-slate-500">{hasPages ? "Agrega una sección para empezar a diseñar." : "Necesitas al menos una página para editar tu sitio."}</p>
                   {hasPages
-                    ? <button onClick={() => openPicker()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#201b51] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"><HiOutlinePlus className="h-4 w-4" /> Agregar sección</button>
-                    : <button onClick={() => setShowPagesModal(true)} className="rounded-lg bg-[#201b51] px-4 py-2 text-sm font-semibold text-white hover:opacity-90">+ Crear página</button>}
+                    ? <button onClick={() => openPicker()} className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"><HiOutlinePlus className="h-4 w-4" /> Agregar sección</button>
+                    : <button onClick={() => setShowPagesModal(true)} className="rounded-lg bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90">+ Crear página</button>}
                 </div>
               </div>
             )}
@@ -579,9 +582,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             <div className="flex items-center justify-between p-4 border-b border-slate-200"><h3 className="font-semibold text-sm text-slate-900">Páginas ({site.pages.length})</h3><button onClick={()=>setShowPagesModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
             <div className="flex-1 overflow-y-auto p-3">
               {showAddPage?(
-                <div className="mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200"><input className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 mb-2" placeholder="Ej: Servicios, Contacto..." value={newPageName} onChange={e=>setNewPageName(e.target.value)} autoFocus onKeyDown={e=>e.key==="Enter"&&addPage()}/><div className="flex gap-1.5"><button onClick={addPage} className="flex-1 rounded-lg bg-primary-600 text-white text-xs py-1.5 font-medium">Crear</button><button onClick={()=>{setShowAddPage(false);setNewPageName("")}} className="rounded-lg border border-slate-200 text-xs py-1.5 px-3 text-slate-500">Cancelar</button></div></div>
-              ):<button onClick={()=>setShowAddPage(true)} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-xs font-medium text-slate-400 hover:text-primary-600 hover:border-primary-200 hover:bg-primary-50/30 transition-all mb-3">+ Nueva página</button>}
-              <div className="space-y-0.5">{[...site.pages].sort((a,b)=>a.sortOrder-b.sortOrder).map(page=>(<div key={page.id} className="group relative"><button onClick={()=>{setActivePageId(page.id);setActiveBlockId(null);setShowPagesModal(false)}} className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${page.id===activePageId?"bg-primary-50 border border-primary-200 text-primary-700 font-medium":"text-slate-600 hover:bg-slate-50 border border-transparent"}`}><div className="flex items-center justify-between"><span className="truncate">{page.name}{page.isDefault&&<span className="text-[10px] bg-primary-100 text-primary-600 rounded px-1 ml-1 font-medium">Home</span>}</span><span className="text-xs text-slate-400">{page.blocks.length}</span></div></button><div className="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={e=>{e.stopPropagation();duplicatePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-blue-200 flex items-center justify-center text-blue-400 hover:text-blue-600"><HiOutlineDuplicate className="h-3 w-3"/></button>{!page.isDefault&&<button onClick={e=>{e.stopPropagation();deletePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-400 hover:text-red-600"><HiOutlineX className="h-3 w-3"/></button>}</div></div>))}</div>
+                <div className="mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200"><input className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)]0/20 mb-2" placeholder="Ej: Servicios, Contacto..." value={newPageName} onChange={e=>setNewPageName(e.target.value)} autoFocus onKeyDown={e=>e.key==="Enter"&&addPage()}/><div className="flex gap-1.5"><button onClick={addPage} className="flex-1 rounded-lg bg-[color:var(--color-primary)] text-white text-xs py-1.5 font-medium">Crear</button><button onClick={()=>{setShowAddPage(false);setNewPageName("")}} className="rounded-lg border border-slate-200 text-xs py-1.5 px-3 text-slate-500">Cancelar</button></div></div>
+              ):<button onClick={()=>setShowAddPage(true)} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-xs font-medium text-slate-400 hover:text-[color:var(--color-primary)] hover:border-[color:color-mix(in_srgb,var(--color-primary)_22%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_2%,transparent)] transition-all mb-3">+ Nueva página</button>}
+              <div className="space-y-0.5">{[...site.pages].sort((a,b)=>a.sortOrder-b.sortOrder).map(page=>(<div key={page.id} className="group relative"><button onClick={()=>{setActivePageId(page.id);setActiveBlockId(null);setShowPagesModal(false)}} className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${page.id===activePageId?"bg-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)] border border-[color:color-mix(in_srgb,var(--color-primary)_22%,transparent)] text-[color:var(--color-primary)] font-medium":"text-slate-600 hover:bg-slate-50 border border-transparent"}`}><div className="flex items-center justify-between"><span className="truncate">{page.name}{page.isDefault&&<span className="text-[10px] bg-[color:color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[color:var(--color-primary)] rounded px-1 ml-1 font-medium">Home</span>}</span><span className="text-xs text-slate-400">{page.blocks.length}</span></div></button><div className="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={e=>{e.stopPropagation();duplicatePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-blue-200 flex items-center justify-center text-blue-400 hover:text-blue-600"><HiOutlineDuplicate className="h-3 w-3"/></button>{!page.isDefault&&<button onClick={e=>{e.stopPropagation();deletePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-400 hover:text-red-600"><HiOutlineX className="h-3 w-3"/></button>}</div></div>))}</div>
             </div>
             <div className="border-t border-slate-200 p-3 flex gap-2">
               <button onClick={()=>{setSettingsTab("config");setShowSettings(true);setShowPagesModal(false)}} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineCog className="h-3.5 w-3.5"/>Configuración</button>

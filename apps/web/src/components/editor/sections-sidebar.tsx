@@ -35,7 +35,7 @@ function Row({ block, active, onSelect, onDuplicate, onToggleHidden, onDelete }:
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`group relative ${isDragging ? "z-10 opacity-80 shadow-lg" : ""}`}
     >
-      <div className={`flex items-center rounded-lg ${active ? "bg-[#201b51]/10" : "hover:bg-slate-50"}`}>
+      <div className={`flex items-center rounded-lg ${active ? "bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)]" : "hover:bg-slate-50"}`}>
         <button
           {...attributes}
           {...listeners}
@@ -47,9 +47,9 @@ function Row({ block, active, onSelect, onDuplicate, onToggleHidden, onDelete }:
         </button>
         <button
           onClick={() => onSelect(block.id)}
-          className={`flex min-w-0 flex-1 items-center gap-2 py-2 pr-2 text-left text-[13px] ${active ? "font-semibold text-[#201b51]" : "text-slate-700"} ${block.hidden ? "opacity-50" : ""}`}
+          className={`flex min-w-0 flex-1 items-center gap-2 py-2 pr-2 text-left text-[13px] ${active ? "font-semibold text-[color:var(--color-primary)]" : "text-slate-700"} ${block.hidden ? "opacity-50" : ""}`}
         >
-          <HiOutlineViewGrid className={`h-4 w-4 flex-shrink-0 ${active ? "text-[#201b51]" : "text-slate-400"}`} />
+          <HiOutlineViewGrid className={`h-4 w-4 flex-shrink-0 ${active ? "text-[color:var(--color-primary)]" : "text-slate-400"}`} />
           <span className="truncate">{BLOCK_META[block.type]?.label || block.type}</span>
         </button>
         <div className={`mr-1 items-center rounded-md bg-white/95 ring-1 ring-slate-200 ${block.hidden ? "flex" : "hidden group-hover:flex"}`}>
@@ -81,7 +81,7 @@ export function SectionsSidebar({ pageName, blocks, activeBlockId, onSelect, onR
   };
 
   return (
-    <aside className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside data-tour="sections" className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="border-b border-slate-100 px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Página</p>
         <p className="truncate text-sm font-semibold text-slate-800">{pageName || "—"}</p>
@@ -99,8 +99,8 @@ export function SectionsSidebar({ pageName, blocks, activeBlockId, onSelect, onR
           </SortableContext>
         </DndContext>
 
-        <button onClick={onAdd} className="mt-2 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#201b51] hover:bg-[#201b51]/5">
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#201b51] text-white"><HiOutlinePlus className="h-3 w-3" /></span>
+        <button onClick={onAdd} className="mt-2 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[color:var(--color-primary)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)]">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white"><HiOutlinePlus className="h-3 w-3" /></span>
           Agregar sección
         </button>
       </div>

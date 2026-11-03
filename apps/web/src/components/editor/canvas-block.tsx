@@ -34,7 +34,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
     const multiline = original.includes("\n");
     const prev = { outline: el.style.outline, offset: el.style.outlineOffset, cursor: el.style.cursor };
     el.contentEditable = "true";
-    el.style.outline = "2px solid #f29200";
+    el.style.outline = "2px solid var(--color-secondary, #f29200)";
     el.style.outlineOffset = "2px";
     el.style.cursor = "text";
     el.focus();
@@ -91,16 +91,16 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
   return (
     <div id={`block-${block.id}`} ref={rootRef} onClickCapture={onClickCapture} className="inline-edit-root group/block relative cursor-pointer">
       <div
-        className={`pointer-events-none absolute inset-0 z-10 transition-colors ${active ? "ring-2 ring-inset ring-[#201b51]" : "ring-0 ring-inset ring-[#201b51]/40 group-hover/block:ring-2"}`}
+        className={`pointer-events-none absolute inset-0 z-10 transition-colors ${active ? "ring-2 ring-inset ring-[color:var(--color-primary)]" : "ring-0 ring-inset ring-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] group-hover/block:ring-2"}`}
       />
       <div data-editor-ui className={`absolute left-2 top-2 z-20 flex items-center gap-1 transition-opacity ${active || hidden ? "opacity-100" : "pointer-events-none opacity-0 group-hover/block:opacity-100"}`}>
-        <span className="rounded-md bg-[#201b51] px-2 py-0.5 text-[11px] font-medium text-white shadow">
+        <span className="rounded-md bg-[color:var(--color-primary)] px-2 py-0.5 text-[11px] font-medium text-white shadow">
           {BLOCK_META[block.type]?.label || block.type}{hidden ? " · Oculta" : ""}
         </span>
         {active && (
           <button
             onClick={(e) => { e.stopPropagation(); onOpenSettings(); }}
-            className="flex items-center gap-1 rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[#201b51] shadow ring-1 ring-slate-200 hover:bg-slate-50"
+            className="flex items-center gap-1 rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[color:var(--color-primary)] shadow ring-1 ring-slate-200 hover:bg-slate-50"
             title="Más opciones de esta sección"
           >
             <HiOutlineAdjustments className="h-3.5 w-3.5" />Ajustes
@@ -114,7 +114,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
         data-editor-ui
         onClick={(e) => { e.stopPropagation(); onInsertAfter(block.id); }}
         title="Agregar sección aquí"
-        className="absolute -bottom-3.5 left-1/2 z-30 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-[#201b51] text-white opacity-0 shadow-lg ring-2 ring-white transition-opacity hover:scale-110 group-hover/block:opacity-100"
+        className="absolute -bottom-3.5 left-1/2 z-30 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white opacity-0 shadow-lg ring-2 ring-white transition-opacity hover:scale-110 group-hover/block:opacity-100"
       >
         <HiOutlinePlus className="h-4 w-4" />
       </button>
@@ -137,7 +137,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
 
       <style jsx global>{`
         .inline-edit-root :is(h1,h2,h3,h4,h5,h6,p,span,a,button,li,label,small,strong,em,blockquote,td,th):not(:has(*)):hover {
-          outline: 1px dashed rgba(242, 146, 0, 0.9);
+          outline: 1px dashed color-mix(in srgb, var(--color-secondary, #f29200) 90%, transparent);
           outline-offset: 2px;
           cursor: text;
         }
