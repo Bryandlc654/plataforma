@@ -219,6 +219,10 @@ export class PublishingService {
     };
   }
 
+  async renderTemplatePreview(site: any, pagePath?: string): Promise<string> {
+    return this.renderFullSite(site, pagePath);
+  }
+
   async getPublicHtml(subdomain: string, path?: string): Promise<{ html: string; status: number }> {
     const cacheKey = `${subdomain}:${path || "/"}`;
     const cached = this.getCached(this.htmlCache, cacheKey);

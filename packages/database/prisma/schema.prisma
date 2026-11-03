@@ -960,3 +960,11 @@ model KnowledgeBaseArticle {
   @@index([isPublished, sortOrder])
   @@map("knowledge_base_articles")
 }
+
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}

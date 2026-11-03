@@ -41,7 +41,8 @@ import { LinktreesModule } from './modules/linktrees/linktrees.module';
 import { PopupsModule } from './modules/popups/popups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BlogModule } from './modules/blog/blog.module';
-import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
+import { KnowledgeBaseModule } from "./modules/knowledge-base/knowledge-base.module";
+import { PlatformModule } from "./modules/platform/platform.module";
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.mod
     PaymentsModule,
     BlogModule,
     KnowledgeBaseModule,
+    PlatformModule,
   ],
   providers: [
     {

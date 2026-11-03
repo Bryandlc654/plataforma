@@ -23,7 +23,7 @@ function formatBytes(bytes: number): string {
 
 export default function AppDownloadPage() {
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.roles?.includes("super_admin");
+  const isSuperAdmin = user?.roles?.includes("super_admin") || user?.roles?.includes("platform_admin");
   const [apkInfo, setApkInfo] = useState<ApkInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

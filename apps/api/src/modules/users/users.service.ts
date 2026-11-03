@@ -236,7 +236,7 @@ export class UsersService {
 
     const systemRoles = (isSystemUser?.userTenants || [])
       .flatMap((ut) => ut.roles.map((r) => r.role.name))
-      .filter((r) => r === "super_admin" || r === "support");
+      .filter((r) => r === "super_admin" || r === "platform_admin" || r === "support");
 
     if (systemRoles.length > 0) {
       throw new ForbiddenException(`Cannot delete a user with role ${systemRoles[0]}`);

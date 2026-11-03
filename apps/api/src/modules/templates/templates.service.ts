@@ -8,12 +8,16 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { PublishingService } from "../publishing/publishing.service";
 
 @Injectable()
 export class TemplatesService implements OnModuleInit {
   private readonly logger = new Logger(TemplatesService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private publishingService: PublishingService
+  ) {}
 
   onModuleInit() {
     // Backfill idempotente: asegura la página 404 en las plantillas existentes.
@@ -199,6 +203,32 @@ export class TemplatesService implements OnModuleInit {
     });
     if (!template) throw new NotFoundException("Template not found");
     return template;
+  }
+
+  async renderPreviewHtml(id: string, pagePath?: string) {
+    const template = await this.adminFindById(id);
+    const site = {
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      subdomain: `preview-${template.id}`,
+      customDomain: null,
+      logoUrl: null,
+      faviconUrl: null,
+      primaryColor: null,
+      secondaryColor: null,
+      settings: { globalStyles: template.globalStyles },
+      tenantId: "00000000-0000-0000-0000-000000000000",
+      tenant: null,
+      isPublished: true,
+      pages: template.pages.map((page: any) => ({
+        ...page,
+        blocks: page.blocks.map((block: any) => ({ ...block })),
+      })),
+    };
+
+    const html = await this.publishingService.renderTemplatePreview(site, pagePath);
+    return { html };
   }
 
   async getCategories() {

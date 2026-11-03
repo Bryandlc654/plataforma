@@ -32,7 +32,9 @@ export class TenantGuard implements CanActivate {
 
     const user = request.user;
     const isSystemUser =
-      user?.roles?.includes("super_admin") || user?.roles?.includes("support");
+      user?.roles?.includes("super_admin") ||
+      user?.roles?.includes("platform_admin") ||
+      user?.roles?.includes("support");
 
     if (!tenant.isActive && !isSystemUser) {
       throw new ForbiddenException("Tenant is suspended");

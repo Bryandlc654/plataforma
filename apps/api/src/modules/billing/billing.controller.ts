@@ -53,6 +53,37 @@ export class BillingController {
     return this.billingService.generatePaymentLink(user.tenantId, planSlug);
   }
 
+  @Get("payment-methods")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get available payment methods for plans" })
+  async getPaymentMethods() {
+    return this.billingService.getPaymentMethods();
+  }
+
+  @Post("paypal/create-order")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Create a PayPal order for a plan" })
+  async createPaypalOrder(
+    @CurrentUser() user: any,
+    @Body("planSlug") planSlug: string
+  ) {
+    return this.billingService.createPaypalPlanOrder(user.tenantId, planSlug);
+  }
+
+  @Post("paypal/capture-order")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Capture a PayPal order for a plan" })
+  async capturePaypalOrder(
+    @CurrentUser() user: any,
+    @Body("invoiceId") invoiceId: string,
+    @Body("orderId") orderId: string
+  ) {
+    return this.billingService.capturePaypalPlanOrder(user.tenantId, invoiceId, orderId);
+  }
+
   @Post("invoices/:id/pay")
   @UseGuards(JwtAuthGuard)
   @RequirePermissions(PERMISSIONS.CONFIG_SYSTEM)

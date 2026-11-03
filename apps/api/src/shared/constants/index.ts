@@ -33,6 +33,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
+  PLATFORM_ADMIN: "platform_admin",
   SUPPORT: "support",
   OWNER: "owner",
   ADMIN: "admin",
@@ -46,6 +47,7 @@ export type RoleSlug = (typeof ROLES)[keyof typeof ROLES];
 
 export const ROLE_PERMISSIONS: Record<RoleSlug, string[]> = {
   super_admin: Object.values(PERMISSIONS),
+  platform_admin: Object.values(PERMISSIONS),
   support: [
     PERMISSIONS.AUDIT_VIEW,
     PERMISSIONS.BILLING_READ,

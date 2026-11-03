@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
     try { const res: any = await api.get("/roles");
       const payload = res.data || res;
       const list = Array.isArray(payload) ? payload : (payload.items || payload.data || []);
-      setRoles(list.filter((r: any) => r.name !== "super_admin" && r.name !== "support"));
+      setRoles(list.filter((r: any) => r.name !== "super_admin" && r.name !== "platform_admin" && r.name !== "support"));
     }
     catch {}
   };
@@ -137,7 +137,7 @@ export default function AdminUsersPage() {
   }
 
   const roleLabel = (roles: string[]) => {
-    const map: Record<string, string> = { super_admin: "Super Admin", owner: "Owner", admin: "Admin", editor: "Editor", marketing: "Marketing", billing: "Billing", viewer: "Viewer", support: "Soporte" };
+    const map: Record<string, string> = { super_admin: "Super Admin", platform_admin: "Admin de plataforma", owner: "Owner", admin: "Admin del negocio", editor: "Editor", marketing: "Marketing", billing: "Billing", viewer: "Viewer", support: "Soporte" };
     return roles.map((r) => map[r] || r).join(", ");
   };
 
@@ -187,9 +187,10 @@ export default function AdminUsersPage() {
           >
             <option value="">Todos los roles</option>
             <option value="super_admin">Super Admin</option>
+            <option value="platform_admin">Admin de plataforma</option>
             <option value="support">Soporte</option>
             <option value="owner">Owner</option>
-            <option value="admin">Admin</option>
+            <option value="admin">Admin del negocio</option>
             <option value="editor">Editor</option>
             <option value="marketing">Marketing</option>
             <option value="billing">Billing</option>
@@ -240,6 +241,7 @@ export default function AdminUsersPage() {
                             allRoles.map((r) => (
                               <span key={r} className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                 r === "super_admin" ? "bg-purple-50 text-purple-700" :
+                                r === "platform_admin" ? "bg-indigo-50 text-indigo-700" :
                                 r === "owner" ? "bg-blue-50 text-blue-700" :
                                 r === "admin" ? "bg-amber-50 text-amber-700" :
                                 r === "support" ? "bg-teal-50 text-teal-700" :

@@ -38,6 +38,7 @@ export default () => ({
   smtp: {
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: parseInt(process.env.SMTP_PORT || "587", 10),
+    secure: process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
     user: process.env.SMTP_USER,
     password: process.env.SMTP_PASSWORD,
     from: process.env.MAIL_FROM || "noreply@icebergup.com",

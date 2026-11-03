@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import api from "@/lib/api";
 import Markdown from "@/components/kb/markdown";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface KbArticle {
   id: string;
@@ -18,6 +20,11 @@ interface KbArticle {
 }
 
 export default function HelpPage() {
+  const { user } = useAuthStore();
+  const isPlatformStaff =
+    user?.roles?.includes("super_admin") ||
+    user?.roles?.includes("platform_admin") ||
+    user?.roles?.includes("support");
   const [articles, setArticles] = useState<KbArticle[]>([]);
   const [categories, setCategories] = useState<{ name: string; count: number }[]>([]);
   const [activeCategory, setActiveCategory] = useState("Todos");
@@ -75,6 +82,15 @@ export default function HelpPage() {
   if (selected) {
     return (
       <main className="mx-auto w-full max-w-3xl p-6 lg:p-10">
+        {!isPlatformStaff && (
+          <Link
+            href="/dashboard/support"
+            className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
+          >
+            <span className="material-symbols-outlined text-base">arrow_back</span>
+            Volver a Soporte
+          </Link>
+        )}
         <button
           onClick={() => setSelected(null)}
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
@@ -102,6 +118,15 @@ export default function HelpPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl p-6 lg:p-10">
+      {!isPlatformStaff && (
+        <Link
+          href="/dashboard/support"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Volver a Soporte
+        </Link>
+      )}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Base de Conocimientos</h1>
         <p className="mt-1 text-sm text-slate-500">

@@ -55,7 +55,7 @@ export class SeedService implements OnModuleInit {
     const roleEntries = (Object.entries(ROLES) as Array<[string, string]>).map(([, name]: [string, string]) => ({
       name,
       description: this.getRoleDescription(name),
-      level: name === "super_admin" || name === "support" ? "platform" : "tenant",
+      level: name === "super_admin" || name === "platform_admin" || name === "support" ? "platform" : "tenant",
       isSystem: true,
     }));
 
@@ -376,6 +376,7 @@ export class SeedService implements OnModuleInit {
   private getRoleDescription(name: string): string {
     const descriptions: Record<string, string> = {
       super_admin: "Administrador principal de la plataforma SaaS",
+      platform_admin: "Administrador operativo de la plataforma SaaS",
       support: "Equipo de soporte tecnico y comercial",
       owner: "Propietario del negocio, maximo administrador del tenant",
       admin: "Administrador operativo del negocio",

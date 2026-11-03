@@ -43,7 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       : requestedTenantIdRaw;
 
     const includeRoles = {
-      tenant: { select: { isActive: true } },
+      tenant: { select: { isActive: true, settings: true } },
       roles: {
         include: {
           role: {
@@ -83,10 +83,35 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       ) ?? [];
 
     const isSuperAdmin = roles.includes("super_admin");
-    const isSystemUser = isSuperAdmin || roles.includes("support");
+    const isSystemUser =
+      isSuperAdmin || roles.includes("platform_admin") || roles.includes("support");
 
     if (!isSystemUser && userTenant?.tenant && !userTenant.tenant.isActive) {
       throw new ForbiddenException("El negocio está suspendido");
+    }
+
+    if (!isSystemUser && userTenant?.tenant && !this.isTrialBypassPath(req)) {
+      const trialEndsRaw = (userTenant.tenant.settings as any)?.trial?.endsAt;
+      const trialEndsAt = trialEndsRaw ? new Date(trialEndsRaw) : null;
+      const trialExpired =
+        !!trialEndsAt &&
+        !Number.isNaN(trialEndsAt.getTime()) &&
+        trialEndsAt.getTime() <= Date.now();
+
+      if (trialExpired) {
+        const activeSubs = await this.prisma.subscription.findMany({
+          where: {
+            tenantId: userTenant.tenantId,
+            status: "active",
+            currentPeriodEnd: { gt: new Date() },
+          },
+          select: { plan: { select: { price: true } } },
+        });
+        const hasPaidPlan = activeSubs.some((sub) => Number(sub.plan?.price || 0) > 0);
+        if (!hasPaidPlan) {
+          throw new ForbiddenException("Tu prueba gratis terminó. Elige un plan para continuar.");
+        }
+      }
     }
 
     return {
@@ -99,5 +124,21 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       tenantId: userTenant?.tenantId || null,
       isSuperAdmin,
     };
+  }
+
+  private isTrialBypassPath(req: any): boolean {
+    const path = String(req?.originalUrl || req?.url || "").split("?")[0];
+    const allowedPrefixes = [
+      "/api/v1/auth",
+      "/api/v1/billing",
+      "/api/v1/subscriptions",
+      "/api/v1/plans",
+      "/api/v1/users/profile",
+      "/api/v1/users/tenants",
+      "/api/v1/sites/capabilities",
+      "/api/v1/platform/branding",
+    ];
+    if (allowedPrefixes.some((prefix) => path.startsWith(prefix))) return true;
+    return /^\/api\/v1\/tenants\/[^/]+\/settings\/?$/.test(path);
   }
 }

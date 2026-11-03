@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { resolveApiBaseUrl } from "@/lib/api-config";
 
 export async function GET(
   request: Request,
@@ -10,7 +11,7 @@ export async function GET(
     return new NextResponse("Not Found", { status: 404 });
   }
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+  const apiBase = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
   const file = path[path.length - 1];
 
   if (file === "sitemap.xml" || file === "robots.txt") {

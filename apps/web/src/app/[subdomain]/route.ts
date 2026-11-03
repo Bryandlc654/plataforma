@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { resolveApiBaseUrl } from "@/lib/api-config";
 
 export async function GET(
   request: Request,
@@ -11,7 +12,7 @@ export async function GET(
   }
 
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+    const apiBase = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
     
     // Call the public API endpoint that returns the full HTML string
     const res = await fetch(`${apiBase}/p/${subdomain}`, {

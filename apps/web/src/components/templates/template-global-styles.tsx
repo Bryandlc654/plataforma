@@ -6,10 +6,7 @@ import {
   paletteCssVariables,
   type SitePalette,
 } from "@/lib/site-palette";
-
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1")
-  .replace(/\/api\/v1\/?$/i, "")
-  .replace(/\/+$/, "");
+import { API_ORIGIN } from "@/lib/api-config";
 
 const ASSET_RE = /\{\{__ED::asset:([^{}]+)\}\}/g;
 

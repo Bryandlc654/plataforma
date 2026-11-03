@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth-store";
+import { API_BASE_URL } from "@/lib/api-config";
 
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -8,7 +9,7 @@ function getCookie(name: string): string | null {
 }
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://plataforma-api-rkav7vkxia-uc.a.run.app/api/v1",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

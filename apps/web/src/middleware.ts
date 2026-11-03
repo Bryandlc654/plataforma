@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { resolveApiBaseUrl } from "@/lib/api-config";
 
 const PLATFORM_HOSTNAMES = ["localhost", "build.icebergup.com", "127.0.0.1"];
 
@@ -23,7 +24,7 @@ export async function middleware(request: NextRequest) {
     PLATFORM_HOST_SUFFIXES.some((suffix) => cleanHost.endsWith(suffix));
 
   if (!isPlatformHost) {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+    const apiBase = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
     // Try the exact host first; if not found, retry with the "www." variant so that
     // apex domains (e.g. rodriplast.com) resolve to the site mapped to www.rodriplast.com.
     const hosts = cleanHost.startsWith("www.")

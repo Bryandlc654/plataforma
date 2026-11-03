@@ -4,17 +4,32 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import { usePlatformBranding } from "@/components/providers/platform-branding-provider";
+import { resolveBrandingLogo } from "@/lib/platform-branding";
 import api from "@/lib/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function BrandMark({ className = "" }: { className?: string }) {
+  const { branding } = usePlatformBranding();
+  const logo = resolveBrandingLogo(branding.logoUrl);
+
   return (
     <Link href="/" className={`flex items-center gap-2 text-white ${className}`}>
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[15px] font-black text-[#201b51]">
-        P
-      </span>
-      <span className="text-lg font-semibold tracking-tight">Plataforma</span>
+      {logo ? (
+        <img
+          src={logo}
+          alt="Logo de la plataforma"
+          className="h-12 w-auto max-w-[220px] object-contain"
+        />
+      ) : (
+        <>
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-lg font-black text-[var(--color-on-secondary)]">
+            P
+          </span>
+          <span className="text-xl font-semibold tracking-tight">Plataforma</span>
+        </>
+      )}
     </Link>
   );
 }
@@ -38,7 +53,24 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [signingIn, setSigningIn] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const codeRef = useRef<HTMLInputElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ type, message });
+    if (type === "error") {
+      toastTimerRef.current = setTimeout(() => setToast(null), 4500);
+    }
+  };
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -99,12 +131,24 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     e.preventDefault();
     if (mode === "login") {
       if (!password) return;
+      setSigningIn(true);
+      setError(null);
       try {
-        setError(null);
         await login(email, password);
+        showToast("success", "Sesión iniciada");
+        await new Promise((resolve) => setTimeout(resolve, 900));
         router.replace("/dashboard");
       } catch (err: any) {
-        setError(err.response?.data?.message || "Correo o contraseña incorrectos");
+        setSigningIn(false);
+        const status = err.response?.status;
+        const message =
+          status === 401
+            ? "Contraseña incorrecta"
+            : err.response?.data?.message ||
+              (!err.response
+                ? "No se pudo conectar con el servidor. Inténtalo de nuevo."
+                : "No pudimos iniciar sesión. Inténtalo de nuevo.");
+        showToast("error", message);
       }
       return;
     }
@@ -134,6 +178,31 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       setError(err.response?.data?.message || "No se pudo reenviar el código");
     }
   };
+
+  const toastNode = toast ? (
+    <div
+      role={toast.type === "error" ? "alert" : "status"}
+      aria-live={toast.type === "error" ? "assertive" : "polite"}
+      className="auth-toast flex max-w-[300px] items-center gap-2 rounded-xl border border-white/80 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm"
+    >
+      <span
+        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center ${
+          toast.type === "success" ? "text-emerald-600" : "text-red-600"
+        }`}
+      >
+        {toast.type === "success" ? (
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        )}
+      </span>
+      <p className="text-[13px] font-medium leading-tight text-[#303030]">{toast.message}</p>
+    </div>
+  ) : null;
 
   return (
     <div className="sp-dark-screen flex flex-col">
@@ -188,7 +257,13 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
             </form>
           </>
         ) : step === "password" ? (
-          <form onSubmit={submitPassword} className="sp-card mt-16 w-full max-w-[440px] !p-8">
+          <>
+            {toastNode && (
+              <div className="mt-16 flex w-full max-w-[440px] justify-center">
+                {toastNode}
+              </div>
+            )}
+            <form onSubmit={submitPassword} className={`sp-card w-full max-w-[440px] !p-8 ${toast ? "mt-3" : "mt-16"}`}>
             <h1 className="text-[26px] font-bold leading-tight tracking-tight">
               {mode === "login" ? "Ingresa tu contraseña" : "Crea tu contraseña"}
             </h1>
@@ -222,12 +297,14 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
                 ¿Olvidaste tu contraseña?
               </Link>
             )}
-            <button type="submit" disabled={!password || isLoading || saving} className="sp-btn mt-5 !h-12 !rounded-xl">
-              {isLoading || saving
-                ? "Un momento..."
-                : mode === "login"
-                  ? "Iniciar sesión"
-                  : "Crear cuenta y continuar"}
+            <button type="submit" disabled={!password || isLoading || saving || signingIn} className="sp-btn mt-5 !h-12 !rounded-xl">
+              {signingIn
+                ? "Entrando..."
+                : isLoading || saving
+                  ? "Un momento..."
+                  : mode === "login"
+                    ? "Iniciar sesión"
+                    : "Crear cuenta y continuar"}
             </button>
             {mode === "login" && (
               <button
@@ -243,6 +320,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
               </button>
             )}
           </form>
+          </>
         ) : (
           <div className="sp-card mt-16 w-full max-w-[440px] !p-8">
             <h1 className="text-[26px] font-bold leading-tight tracking-tight">Revisa tu correo</h1>
