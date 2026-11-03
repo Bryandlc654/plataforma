@@ -14,6 +14,7 @@ import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
+import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { useConfirm } from "@/components/providers/confirm-provider";
@@ -33,6 +34,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
   const [showAddPage, setShowAddPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDomainSearch, setShowDomainSearch] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("theme");
   const [showPagesModal, setShowPagesModal] = useState(false);
   const [newPageName, setNewPageName] = useState("");
@@ -551,6 +553,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             dnsStatus={dnsStatus}
             checkingDns={checkingDns}
             onCheckDns={checkDomainDns}
+            onBuyDomain={() => setShowDomainSearch(true)}
           />
         )}
 
@@ -570,6 +573,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           </aside>
         )}
       </div>
+
+      {showDomainSearch && <DomainSearchModal siteId={siteId} onClose={() => setShowDomainSearch(false)} />}
 
       {/* BLOCK PALETTE MODAL */}
       {showAddBlock && <SectionPicker onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}

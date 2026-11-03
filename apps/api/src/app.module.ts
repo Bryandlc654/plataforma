@@ -43,6 +43,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { KnowledgeBaseModule } from "./modules/knowledge-base/knowledge-base.module";
 import { PlatformModule } from "./modules/platform/platform.module";
+import { DomainsModule } from "./modules/domains/domains.module";
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { PlatformModule } from "./modules/platform/platform.module";
     BlogModule,
     KnowledgeBaseModule,
     PlatformModule,
+    DomainsModule,
   ],
   providers: [
     {
