@@ -39,19 +39,28 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [publishing, setPublishing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState({ name: "", primaryColor: "#2563EB", secondaryColor: "#1E40AF", logoUrl: "", faviconUrl: "", domain: "" });
   const [palette, setPalette] = useState<SitePalette>(DEFAULT_SITE_PALETTE);
   const [paletteDirty, setPaletteDirty] = useState(false);
   const [unpublishedBehavior, setUnpublishedBehavior] = useState<"404" | "maintenance">("404");
   const [history, setHistory] = useState<Site[]>([]);
-  const [historyIdx, setHistoryIdx] = useState(-1);
+  const [historyIdx, setHistoryIdxState] = useState(-1);
+  const historyRef = useRef<Site[]>([]);
+  const histPos = useRef(-1);
+  
   const [dnsStatus, setDnsStatus] = useState<"idle"|"checking"|"ok"|"error">("idle");
   const [dnsResult, setDnsResult] = useState<any>(null);
   const [checkingDns, setCheckingDns] = useState(false);
   const pendingBlocksRef = useRef<Record<string, any>>({});
   const pendingSeoRef = useRef<{ seoTitle?: string; seoDesc?: string }>({});
-  const isUndoRedo = useRef(false);
+  const inflightRef = useRef<Promise<void> | null>(null);
+  const rerunRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savePendingRef = useRef<() => Promise<void>>(async () => {});
   const { confirm } = useConfirm();
 
   const fetchSite = useCallback(async () => {
@@ -60,6 +69,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const res: any = await api.get(`/sites/${siteId}`);
       const s = (res.data || res) as Site;
       setSite(s);
+      historyRef.current = [JSON.parse(JSON.stringify(s))];
+      histPos.current = 0;
+      setHistory([...historyRef.current]);
+      setHistoryIdxState(0);
       setSiteSettings({ name: s.name, primaryColor: s.primaryColor || "#2563EB", secondaryColor: s.secondaryColor || "#1E40AF", logoUrl: s.logoUrl || "", faviconUrl: s.faviconUrl || "", domain: s.domain || "" });
       setPalette(resolveSitePalette(s.settings, s.primaryColor, s.secondaryColor));
       setPaletteDirty(false);
@@ -72,30 +85,38 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   useEffect(() => { fetchSite(); }, [fetchSite]);
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); } }, [toast]);
 
+  /** Historial con referencias: evita duplicados (StrictMode) y conserva el estado inicial. */
   const pushHistory = useCallback((s: Site) => {
-    if (isUndoRedo.current) { isUndoRedo.current = false; return; }
-    setHistory(prev => {
-      const next = prev.slice(0, historyIdx + 1);
-      next.push(JSON.parse(JSON.stringify(s)));
-      if (next.length > 50) next.shift();
-      return next;
-    });
-    setHistoryIdx(prev => Math.min(prev + 1, 49));
-  }, [historyIdx]);
+    const h = historyRef.current;
+    const json = JSON.stringify(s);
+    if (histPos.current >= 0 && JSON.stringify(h[histPos.current]) === json) return;
+    h.splice(histPos.current + 1);
+    h.push(JSON.parse(json));
+    if (h.length > 50) h.shift();
+    histPos.current = h.length - 1;
+    setHistory([...h]);
+    setHistoryIdxState(histPos.current);
+  }, []);
 
   const undo = useCallback(() => {
-    if (historyIdx <= 0) return;
-    isUndoRedo.current = true;
-    const target = history[historyIdx - 1];
-    if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev - 1); setDirty(true); }
-  }, [history, historyIdx]);
+    if (histPos.current <= 0) return;
+    const target = historyRef.current[histPos.current - 1];
+    if (!target) return;
+    if (site) queueContentDiff(site, target);
+    histPos.current -= 1;
+    setHistoryIdxState(histPos.current);
+    setSite(JSON.parse(JSON.stringify(target)));
+  }, [site]);
 
   const redo = useCallback(() => {
-    if (historyIdx >= history.length - 1) return;
-    isUndoRedo.current = true;
-    const target = history[historyIdx + 1];
-    if (target) { setSite(JSON.parse(JSON.stringify(target))); setHistoryIdx(prev => prev + 1); setDirty(true); }
-  }, [history, historyIdx]);
+    if (histPos.current >= historyRef.current.length - 1) return;
+    const target = historyRef.current[histPos.current + 1];
+    if (!target) return;
+    if (site) queueContentDiff(site, target);
+    histPos.current += 1;
+    setHistoryIdxState(histPos.current);
+    setSite(JSON.parse(JSON.stringify(target)));
+  }, [site]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -106,7 +127,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
   }, [undo, redo]);
 
-  useEffect(() => { if (!dirty) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
+  useEffect(() => { if (!dirty && !saving && !saveError) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty, saving, saveError]);
 
   const activePage = site?.pages.find(p => p.id === activePageId);
   const sortedBlocks = activePage ? [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder) : [];
@@ -133,28 +154,66 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     setPaletteDirty(true);
   };
 
-  const savePending = useCallback(async () => {
-    const pendingBlocks = Object.entries(pendingBlocksRef.current);
-    const pendingSeo = pendingSeoRef.current;
-    if (pendingBlocks.length === 0 && !pendingSeo.seoTitle && !pendingSeo.seoDesc) return;
-    setSaving(true);
-    try {
-      for (const [id, content] of pendingBlocks) {
-        await api.put(`/blocks/${id}`, { content });
-      }
-      if (pendingSeo.seoTitle || pendingSeo.seoDesc) {
-        await api.put(`/seo/sites/${siteId}`, pendingSeo);
-      }
-      pendingBlocksRef.current = {};
-      pendingSeoRef.current = {};
-      setLastSaved(new Date());
-      setDirty(false);
-    } catch (err: any) {
-      setToast(err.response?.data?.message || "Error al guardar");
-    } finally {
+  /** Guarda lo pendiente de a una tanda por vez; si llegan cambios mientras guarda, repite al terminar. */
+  const savePending = useCallback((): Promise<void> => {
+    if (inflightRef.current) { rerunRef.current = true; return inflightRef.current; }
+    const run = async () => {
+      do {
+        rerunRef.current = false;
+        const blocks = { ...pendingBlocksRef.current };
+        const seo = { ...pendingSeoRef.current };
+        const hasSeo = !!(seo.seoTitle || seo.seoDesc);
+        if (Object.keys(blocks).length === 0 && !hasSeo) break;
+        setSaving(true);
+        try {
+          for (const [id, content] of Object.entries(blocks)) await api.put(`/blocks/${id}`, { content });
+          if (hasSeo) await api.put(`/seo/sites/${siteId}`, seo);
+          // Solo se descarta lo que no cambió mientras se guardaba.
+          for (const [id, content] of Object.entries(blocks)) if (pendingBlocksRef.current[id] === content) delete pendingBlocksRef.current[id];
+          if (hasSeo && pendingSeoRef.current.seoTitle === seo.seoTitle && pendingSeoRef.current.seoDesc === seo.seoDesc) pendingSeoRef.current = {};
+          setLastSaved(new Date());
+          setSaveError(false);
+        } catch (err: any) {
+          setSaveError(true);
+          setToast(err.response?.data?.message || "No se pudo guardar. Reintentando…");
+          retryRef.current = setTimeout(() => { savePendingRef.current(); }, 5000);
+          break;
+        }
+      } while (rerunRef.current);
+      setDirty(Object.keys(pendingBlocksRef.current).length > 0 || !!(pendingSeoRef.current.seoTitle || pendingSeoRef.current.seoDesc));
       setSaving(false);
-    }
+    };
+    const p = run().finally(() => { inflightRef.current = null; });
+    inflightRef.current = p;
+    return p;
   }, [siteId]);
+  savePendingRef.current = savePending;
+
+  /** Programa un guardado automático 1,2 s después del último cambio. */
+  const scheduleSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+    saveTimerRef.current = setTimeout(() => { savePendingRef.current(); }, 1200);
+  }, []);
+
+  /** Tras deshacer/rehacer, manda al servidor los bloques cuyo contenido cambió. */
+  const queueContentDiff = (from: Site, to: Site) => {
+    const before = new Map<string, any>();
+    from.pages.forEach(pg => pg.blocks.forEach(b => before.set(b.id, b.content)));
+    to.pages.forEach(pg => pg.blocks.forEach(b => {
+      if (before.has(b.id) && JSON.stringify(before.get(b.id)) !== JSON.stringify(b.content)) pendingBlocksRef.current[b.id] = b.content;
+    }));
+    setDirty(true);
+    setHasChanges(true);
+    scheduleSave();
+  };
+
+  // Al salir de la pestaña o cerrar, intenta guardar lo pendiente.
+  useEffect(() => {
+    const flush = () => { if (document.visibilityState === "hidden") savePendingRef.current(); };
+    document.addEventListener("visibilitychange", flush);
+    return () => { document.removeEventListener("visibilitychange", flush); if (saveTimerRef.current) clearTimeout(saveTimerRef.current); if (retryRef.current) clearTimeout(retryRef.current); };
+  }, []);
 
   const addPage = async () => {
     if (!newPageName.trim()) return;
@@ -216,6 +275,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     });
     pendingBlocksRef.current[blockId] = content;
     setDirty(true);
+    setHasChanges(true);
+    scheduleSave();
   };
 
   const openPicker = (afterIndex: number | null = null) => { setInsertAfterIndex(afterIndex); setShowAddBlock(true); };
@@ -236,7 +297,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       pushHistory(next);
       return next;
     });
-    setDirty(true);
+    setHasChanges(true);
   };
 
   const addBlock = async (type: string) => {
@@ -287,7 +348,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         pushHistory(next);
         return next;
       });
-      setDirty(true);
+      setHasChanges(true);
       setToast(styles.hidden ? "Sección oculta (no se publicará)" : "Sección visible");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al actualizar"); }
   };
@@ -295,6 +356,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const deleteBlock = async (blockId: string) => {
     if (!(await confirm({ title: "Eliminar bloque", message: "¿Eliminar este bloque?" }))) return;
     try {
+      delete pendingBlocksRef.current[blockId];
       await api.delete(`/blocks/${blockId}`);
       setSite(p => {
         if (!p) return p;
@@ -303,7 +365,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         return next;
       });
       if (activeBlockId === blockId) setActiveBlockId(null);
-      setDirty(true);
+      setHasChanges(true);
       setToast("Bloque eliminado");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al eliminar bloque"); }
   };
@@ -319,7 +381,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       pushHistory(next);
       return next;
     });
-    setDirty(true);
+    setHasChanges(true);
 
     try {
       await api.put(`/pages/${activePageId}/blocks/reorder`, { blockIds });
@@ -330,9 +392,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const publish = async () => {
     setPublishing(true);
     try {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       await savePending();
+      if (Object.keys(pendingBlocksRef.current).length > 0) { setToast("Hay cambios sin guardar; inténtalo de nuevo en unos segundos"); return; }
       await api.post(`/sites/${siteId}/publish`);
       setSite(p => p ? { ...p, isPublished: true } : p);
+      setHasChanges(false);
       setToast("¡Sitio publicado!");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al publicar"); }
     finally { setPublishing(false); }
@@ -406,9 +471,11 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         canRedo={historyIdx < history.length - 1}
         saving={saving}
         dirty={dirty}
+        hasChanges={hasChanges}
+        saveError={saveError}
         lastSaved={lastSaved}
         publishing={publishing}
-        onSave={() => savePending()}
+        onRetry={() => savePending()}
         onPublish={publish}
         onUnpublish={unpublish}
         onPreview={openPreview}

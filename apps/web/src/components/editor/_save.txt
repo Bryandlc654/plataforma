@@ -1,0 +1,61 @@
+  /** Guarda lo pendiente de a una tanda por vez; si llegan cambios mientras guarda, repite al terminar. */
+  const savePending = useCallback((): Promise<void> => {
+    if (inflightRef.current) { rerunRef.current = true; return inflightRef.current; }
+    const run = async () => {
+      do {
+        rerunRef.current = false;
+        const blocks = { ...pendingBlocksRef.current };
+        const seo = { ...pendingSeoRef.current };
+        const hasSeo = !!(seo.seoTitle || seo.seoDesc);
+        if (Object.keys(blocks).length === 0 && !hasSeo) break;
+        setSaving(true);
+        try {
+          for (const [id, content] of Object.entries(blocks)) await api.put(`/blocks/${id}`, { content });
+          if (hasSeo) await api.put(`/seo/sites/${siteId}`, seo);
+          // Solo se descarta lo que no cambió mientras se guardaba.
+          for (const [id, content] of Object.entries(blocks)) if (pendingBlocksRef.current[id] === content) delete pendingBlocksRef.current[id];
+          if (hasSeo && pendingSeoRef.current.seoTitle === seo.seoTitle && pendingSeoRef.current.seoDesc === seo.seoDesc) pendingSeoRef.current = {};
+          setLastSaved(new Date());
+          setSaveError(false);
+        } catch (err: any) {
+          setSaveError(true);
+          setToast(err.response?.data?.message || "No se pudo guardar. Reintentando…");
+          retryRef.current = setTimeout(() => { savePendingRef.current(); }, 5000);
+          break;
+        }
+      } while (rerunRef.current);
+      setDirty(Object.keys(pendingBlocksRef.current).length > 0 || !!(pendingSeoRef.current.seoTitle || pendingSeoRef.current.seoDesc));
+      setSaving(false);
+    };
+    const p = run().finally(() => { inflightRef.current = null; });
+    inflightRef.current = p;
+    return p;
+  }, [siteId]);
+  savePendingRef.current = savePending;
+
+  /** Programa un guardado automático 1,2 s después del último cambio. */
+  const scheduleSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+    saveTimerRef.current = setTimeout(() => { savePendingRef.current(); }, 1200);
+  }, []);
+
+  /** Tras deshacer/rehacer, manda al servidor los bloques cuyo contenido cambió. */
+  const queueContentDiff = (from: Site, to: Site) => {
+    const before = new Map<string, any>();
+    from.pages.forEach(pg => pg.blocks.forEach(b => before.set(b.id, b.content)));
+    to.pages.forEach(pg => pg.blocks.forEach(b => {
+      if (before.has(b.id) && JSON.stringify(before.get(b.id)) !== JSON.stringify(b.content)) pendingBlocksRef.current[b.id] = b.content;
+    }));
+    setDirty(true);
+    setHasChanges(true);
+    scheduleSave();
+  };
+
+  // Al salir de la pestaña o cerrar, intenta guardar lo pendiente.
+  useEffect(() => {
+    const flush = () => { if (document.visibilityState === "hidden") savePendingRef.current(); };
+    document.addEventListener("visibilitychange", flush);
+    return () => { document.removeEventListener("visibilitychange", flush); if (saveTimerRef.current) clearTimeout(saveTimerRef.current); if (retryRef.current) clearTimeout(retryRef.current); };
+  }, []);
+

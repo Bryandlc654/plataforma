@@ -26,6 +26,8 @@ interface Props {
 export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, onInsertAfter, onContentChange, onOpenSettings, palette }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [imagePath, setImagePath] = useState<Path | null>(null);
+  /** Al editar texto el navegador reemplaza los nodos que React conoce; se vuelve a montar el bloque para mantenerlos sincronizados. */
+  const [epoch, setEpoch] = useState(0);
   const leaves = useMemo(() => collectStrings(sourceContent), [sourceContent]);
 
   const startTextEdit = (el: HTMLElement, path: Path, original: string) => {
@@ -51,8 +53,8 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
       el.style.outlineOffset = prev.offset;
       el.style.cursor = prev.cursor;
       const next = multiline ? el.innerText : (el.textContent || "").replace(/\s*\n\s*/g, " ");
-      if (cancelled) { el.textContent = original; return; }
-      if (next !== original) onContentChange(block.id, setIn(sourceContent, path, next));
+      if (!cancelled && next !== original) onContentChange(block.id, setIn(sourceContent, path, next));
+      setEpoch((n) => n + 1);
     };
     const onKey = (e: KeyboardEvent) => {
       e.stopPropagation();
@@ -105,7 +107,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
           </button>
         )}
       </div>
-      <div className={hidden ? "opacity-40 grayscale" : ""}>
+      <div key={epoch} className={hidden ? "opacity-40 grayscale" : ""}>
         <BlockRenderer type={block.type} content={block.content} palette={palette} />
       </div>
       <button

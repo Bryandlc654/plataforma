@@ -26,9 +26,12 @@ interface Props {
   canRedo: boolean;
   saving: boolean;
   dirty: boolean;
+  /** Hay cambios hechos desde la última publicación. */
+  hasChanges: boolean;
+  saveError: boolean;
   lastSaved: Date | null;
   publishing: boolean;
-  onSave: () => void;
+  onRetry: () => void;
   onPublish: () => void;
   onUnpublish: () => void;
   onPreview: () => void;
@@ -43,9 +46,9 @@ const Spinner = ({ className = "h-3 w-3" }: { className?: string }) => (
   </svg>
 );
 
-function saveLabel(saving: boolean, dirty: boolean, lastSaved: Date | null) {
-  if (saving) return <span className="flex items-center gap-1 text-xs text-slate-500"><Spinner className="h-3 w-3" />Guardando…</span>;
-  if (dirty) return <span className="text-xs text-amber-600">Cambios sin guardar</span>;
+function saveLabel(saving: boolean, dirty: boolean, saveError: boolean, lastSaved: Date | null, onRetry: () => void) {
+  if (saveError) return <button onClick={onRetry} className="text-xs font-medium text-red-600 hover:underline">No se pudo guardar · Reintentar</button>;
+  if (saving || dirty) return <span className="flex items-center justify-end gap-1 text-xs text-slate-500"><Spinner className="h-3 w-3" />Guardando…</span>;
   if (lastSaved) return <span className="text-xs text-slate-400">Guardado</span>;
   return null;
 }
@@ -131,27 +134,18 @@ export function EditorTopBar(p: Props) {
         <button onClick={p.onTheme} className={iconBtn} title="Tema (colores y logo)"><HiOutlineColorSwatch className="h-4 w-4" /></button>
         <button onClick={p.onSettings} className={iconBtn} title="Configuración del sitio"><HiOutlineCog className="h-4 w-4" /></button>
         <button onClick={p.onPreview} className={iconBtn} title="Vista previa"><HiOutlineEye className="h-4 w-4" /></button>
-        <div className="mx-1 min-w-[96px] text-right">{saveLabel(p.saving, p.dirty, p.lastSaved)}</div>
-        {p.dirty && (
-          <button
-            onClick={p.onSave}
-            disabled={p.saving}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-          >
-            <HiOutlineCheck className="h-3.5 w-3.5" />Guardar
-          </button>
-        )}
-        {!p.dirty && p.isPublished ? (
+        <div className="mx-1 min-w-[96px] text-right">{saveLabel(p.saving, p.dirty, p.saveError, p.lastSaved, p.onRetry)}</div>
+        {!p.hasChanges && p.isPublished ? (
           <button onClick={p.onUnpublish} className="h-8 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-medium text-amber-700 hover:bg-amber-100">
             Despublicar
           </button>
         ) : (
           <button
             onClick={p.onPublish}
-            disabled={p.publishing || p.saving}
+            disabled={p.publishing}
             className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[#2f2877] to-[#201b51] px-4 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
           >
-            {p.publishing ? <><Spinner />Publicando…</> : p.dirty ? "Publicar cambios" : p.isPublished ? "Actualizar" : "Publicar"}
+            {p.publishing ? <><Spinner />Publicando…</> : p.isPublished ? "Publicar cambios" : "Publicar"}
           </button>
         )}
       </div>
