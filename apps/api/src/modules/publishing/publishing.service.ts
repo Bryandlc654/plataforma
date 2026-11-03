@@ -101,6 +101,7 @@ export class PublishingService {
     });
 
     if (!site) throw new NotFoundException("Site not found");
+    for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
     for (const page of site.pages) {
       if (page.blocks) {
@@ -200,6 +201,7 @@ export class PublishingService {
     });
 
     if (!site) throw new NotFoundException("Site not found");
+    for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
     return {
       site: {
@@ -248,6 +250,7 @@ export class PublishingService {
       });
 
       if (!site) throw new NotFoundException("Site not found");
+      for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
       // Sitio despublicado: mostrar página de mantenimiento (503) o 404 según la config.
       if (!site.isPublished) {

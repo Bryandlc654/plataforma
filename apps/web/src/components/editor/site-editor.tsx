@@ -12,64 +12,13 @@ import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash, HiOutlineCursorClick } from "react-icons/hi";
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
+import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
 interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; }
-
-const blockCategories: Record<string, string[]> = {
-  "Encabezado": ["hero", "header"],
-  "Contenido": ["services", "features", "stats", "portfolio", "benefits", "process", "about", "faq", "testimonials", "gallery", "image", "video"],
-  "Conversión": ["cta", "pricing", "contact", "form", "review-form"],
-  "Social": ["whatsapp", "team"],
-  "Estructura": ["footer"],
-};
-
-
-function BlockPalette({ onAdd, onClose }: { onAdd: (type: string) => void; onClose: () => void }) {
-  const [search, setSearch] = useState("");
-  const filtered = Object.entries(blockCategories).map(([cat, types]) => ({
-    cat,
-    types: types.filter(t => !search || BLOCK_META[t]?.label?.toLowerCase().includes(search.toLowerCase()) || t.includes(search.toLowerCase())),
-  })).filter(g => g.types.length > 0);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/30" />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[75vh] flex flex-col m-4 z-10" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="font-semibold text-sm text-slate-900">Agregar bloque</h3>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4" /></button>
-        </div>
-        <div className="p-3 border-b border-slate-100">
-          <input className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20" placeholder="Buscar bloque..." value={search} onChange={e => setSearch(e.target.value)} autoFocus />
-        </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {filtered.map(({ cat, types }) => (
-            <div key={cat}>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">{cat}</h4>
-              <div className="grid grid-cols-2 gap-1.5">
-                {types.map(type => (
-                  <button key={type} onClick={() => { onAdd(type); onClose(); }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left hover:bg-primary-50 hover:border-primary-200 border border-slate-100 transition-all group">
-                    <div className="h-8 w-8 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm">{BLOCK_META[type]?.icon === "Megaphone" ? "📢" : BLOCK_META[type]?.icon === "HelpCircle" ? "❓" : BLOCK_META[type]?.icon === "Star" ? "⭐" : BLOCK_META[type]?.icon === "Mail" ? "✉️" : BLOCK_META[type]?.icon === "Users" ? "👥" : BLOCK_META[type]?.icon === "DollarSign" ? "💰" : BLOCK_META[type]?.icon === "Image" ? "🖼️" : BLOCK_META[type]?.icon === "Play" ? "▶️" : "📦"}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-slate-700 group-hover:text-primary-700 truncate">{BLOCK_META[type]?.label || type}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{BLOCK_META[type]?.description}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function SiteEditor({ siteId }: { siteId: string }) {
   const [site, setSite] = useState<Site | null>(null);
@@ -78,6 +27,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [loading, setLoading] = useState(true);
   const [device, setDevice] = useState<EditorDevice>("desktop");
   const [showAddBlock, setShowAddBlock] = useState(false);
+  const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
   const [showAddPage, setShowAddPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPagesModal, setShowPagesModal] = useState(false);
@@ -265,23 +215,78 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     setDirty(true);
   };
 
+  const openPicker = (afterIndex: number | null = null) => { setInsertAfterIndex(afterIndex); setShowAddBlock(true); };
+
+  /** Inserta el bloque devuelto por la API en la posición indicada y renumera el orden local. */
+  const insertLocal = (newBlock: Block, afterIndex: number | null) => {
+    setSite(p => {
+      if (!p) return p;
+      const next = {
+        ...p,
+        pages: p.pages.map(pg => {
+          if (pg.id !== activePageId) return pg;
+          const sorted = [...pg.blocks].sort((a, b) => a.sortOrder - b.sortOrder);
+          sorted.splice(afterIndex === null ? sorted.length : afterIndex + 1, 0, newBlock);
+          return { ...pg, blocks: sorted.map((b, i) => ({ ...b, sortOrder: i })) };
+        }),
+      };
+      pushHistory(next);
+      return next;
+    });
+    setDirty(true);
+  };
+
   const addBlock = async (type: string) => {
     if (!activePageId) return;
+    const afterIndex = insertAfterIndex;
     try {
       let content = getBlockDefaultContent(type as any);
       const tmplVariant = activePage?.blocks?.[0]?.content?.variant;
       if (tmplVariant && !content.variant) content = { ...content, variant: tmplVariant };
-      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type, content });
-      const newBlock = res.data || res;
+      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type, content, ...(afterIndex !== null ? { afterIndex } : {}) });
+      const newBlock = (res.data || res) as Block;
+      insertLocal(newBlock, afterIndex);
+      setActiveBlockId(newBlock.id);
+      setTimeout(() => document.getElementById(`block-${newBlock.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+      setToast(`${BLOCK_META[type]?.label || type} agregado`);
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al agregar bloque"); }
+  };
+
+  const duplicateBlock = async (blockId: string) => {
+    if (!activePageId) return;
+    const idx = sortedBlocks.findIndex(b => b.id === blockId);
+    const src = sortedBlocks[idx];
+    if (!src) return;
+    if (src.type === "header" || src.type === "footer") { setToast("El encabezado y el pie son compartidos; no se pueden duplicar"); return; }
+    try {
+      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type: src.type, content: JSON.parse(JSON.stringify(src.content)), afterIndex: idx });
+      const copy = (res.data || res) as Block;
+      if (src.styles) {
+        await api.put(`/blocks/${copy.id}`, { styles: src.styles });
+        copy.styles = src.styles;
+      }
+      insertLocal(copy, idx);
+      setActiveBlockId(copy.id);
+      setToast("Sección duplicada");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al duplicar"); }
+  };
+
+  const toggleHidden = async (blockId: string) => {
+    const block = sortedBlocks.find(b => b.id === blockId);
+    if (!block) return;
+    const styles = { ...(block.styles || {}), hidden: !block.styles?.hidden };
+    if (!styles.hidden) delete styles.hidden;
+    try {
+      await api.put(`/blocks/${blockId}`, { styles });
       setSite(p => {
         if (!p) return p;
-        const next = { ...p, pages: p.pages.map(pg => pg.id === activePageId ? { ...pg, blocks: [...pg.blocks, newBlock] } : pg) };
+        const next = { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.map(b => b.id === blockId ? { ...b, styles } : b) })) };
         pushHistory(next);
         return next;
       });
       setDirty(true);
-      setToast(`${BLOCK_META[type]?.label || type} agregado`);
-    } catch (err: any) { setToast(err.response?.data?.message || "Error al agregar bloque"); }
+      setToast(styles.hidden ? "Sección oculta (no se publicará)" : "Sección visible");
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al actualizar"); }
   };
 
   const deleteBlock = async (blockId: string) => {
@@ -300,19 +305,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     } catch (err: any) { setToast(err.response?.data?.message || "Error al eliminar bloque"); }
   };
 
-  const moveBlock = async (blockId: string, direction: "up" | "down") => {
+  const reorderBlocks = async (blockIds: string[]) => {
     if (!activePageId || !activePage) return;
-    const sorted = [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder);
-    const idx = sorted.findIndex(b => b.id === blockId);
-    if (idx < 0) return;
-    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= sorted.length) return;
-
-    const newOrder = [...sorted];
-    [newOrder[idx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[idx]];
-    const blockIds = newOrder.map(b => b.id);
-
-    const reorderedBlocks = newOrder.map((b, i) => ({ ...b, sortOrder: i }));
+    const byId = new Map(activePage.blocks.map(b => [b.id, b]));
+    const reorderedBlocks = blockIds.map((id, i) => ({ ...byId.get(id)!, sortOrder: i }));
 
     setSite(p => {
       if (!p) return p;
@@ -324,8 +320,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
     try {
       await api.put(`/pages/${activePageId}/blocks/reorder`, { blockIds });
-    } catch (err: any) { setToast(err.response?.data?.message || "Error al reordenar"); }
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al reordenar"); fetchSite(); }
   };
+
 
   const publish = async () => {
     setPublishing(true);
@@ -388,7 +385,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const publicUrl = site.domain ? `https://${site.domain}` : `/${site.subdomain}`;
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-white">
+    <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-white">
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">{toast}</div>}
 
       <EditorTopBar
@@ -418,12 +415,14 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       <div className="flex min-h-0 flex-1">
         <SectionsSidebar
           pageName={activePage?.name}
-          blocks={sortedBlocks}
+          blocks={sortedBlocks.map(b => ({ id: b.id, type: b.type, hidden: !!b.styles?.hidden }))}
           activeBlockId={activeBlockId}
           onSelect={(id) => { setActiveBlockId(id); document.getElementById(`block-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-          onMove={moveBlock}
+          onReorder={reorderBlocks}
+          onDuplicate={duplicateBlock}
+          onToggleHidden={toggleHidden}
           onDelete={deleteBlock}
-          onAdd={() => setShowAddBlock(true)}
+          onAdd={() => openPicker()}
         />
 
         {/* CANVAS */}
@@ -440,10 +439,10 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             />
             {activePage && sortedBlocks.length > 0 ? (
               <>
-                {sortedBlocks.map((block) => (
-                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} onSelect={setActiveBlockId} palette={variantPalette} />
+                {sortedBlocks.map((block, idx) => (
+                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} palette={variantPalette} />
                 ))}
-                <button onClick={() => setShowAddBlock(true)} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[#201b51]/5 hover:text-[#201b51]">
+                <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[#201b51]/5 hover:text-[#201b51]">
                   <HiOutlinePlus className="h-4 w-4" /> Agregar sección
                 </button>
               </>
@@ -453,7 +452,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
                   <h3 className="mb-2 text-lg font-bold text-slate-700">{hasPages ? "Esta página está vacía" : "Crea tu primera página"}</h3>
                   <p className="mb-6 text-sm text-slate-500">{hasPages ? "Agrega una sección para empezar a diseñar." : "Necesitas al menos una página para editar tu sitio."}</p>
                   {hasPages
-                    ? <button onClick={() => setShowAddBlock(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#201b51] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"><HiOutlinePlus className="h-4 w-4" /> Agregar sección</button>
+                    ? <button onClick={() => openPicker()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#201b51] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"><HiOutlinePlus className="h-4 w-4" /> Agregar sección</button>
                     : <button onClick={() => setShowPagesModal(true)} className="rounded-lg bg-[#201b51] px-4 py-2 text-sm font-semibold text-white hover:opacity-90">+ Crear página</button>}
                 </div>
               </div>
@@ -487,7 +486,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       </div>
 
       {/* BLOCK PALETTE MODAL */}
-      {showAddBlock && <BlockPalette onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}
+      {showAddBlock && <SectionPicker onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}
 
       {/* PAGES MODAL */}
       {showPagesModal && (
