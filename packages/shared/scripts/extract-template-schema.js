@@ -190,9 +190,15 @@ function analyzeFile(variant, file) {
       return null;
     };
 
+    // `used`: el campo se usa por sí mismo (no solo como alternativa de otro). Un campo usado
+    // nunca se oculta como "alternativo" (c.imageAlt || c.title no esconde el título).
     const addField = (key, def) => {
       if (IGNORED_KEYS.has(key)) return;
-      for (const t of labels) mergeDefault(fieldOf(t, key), def);
+      for (const t of labels) {
+        const f = fieldOf(t, key);
+        f.used = true;
+        mergeDefault(f, def);
+      }
     };
     const addItemField = (listKey, itemKey, def) => {
       if (IGNORED_KEYS.has(itemKey)) return;
@@ -200,12 +206,14 @@ function analyzeFile(variant, file) {
         const f = fieldOf(t, listKey);
         f.items = f.items || {};
         f.items[itemKey] = f.items[itemKey] || {};
+        f.items[itemKey].used = true;
         mergeDefault(f.items[itemKey], def);
       }
     };
     const addListDefault = (listKey, def) => {
       for (const t of labels) {
         const f = fieldOf(t, listKey);
+        f.used = true;
         f.list = true;
         mergeDefault(f, def);
         if (Array.isArray(def)) {
@@ -326,10 +334,15 @@ function analyzeFile(variant, file) {
   };
   visitSwitch(source);
 
-  // Limpia valores sin default.
+  // Limpia: valores sin default y "alternativos" que en realidad se usan por sí mismos.
+  const tidy = (f) => {
+    if (f.used && f.aliasOf) delete f.aliasOf;
+    delete f.used;
+  };
   for (const type of Object.keys(types)) {
     for (const f of Object.values(types[type])) {
-      if (f.items) for (const it of Object.values(f.items)) if (it.default === undefined) delete it.default;
+      tidy(f);
+      if (f.items) for (const it of Object.values(f.items)) { tidy(it); if (it.default === undefined) delete it.default; }
     }
   }
   return types;

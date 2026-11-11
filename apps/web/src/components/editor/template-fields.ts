@@ -17,6 +17,8 @@ export interface FieldDef {
   kind: FieldKind;
   default?: unknown;
   options?: { label: string; value: string }[];
+  /** Lista que se puede llenar con productos de la tienda. */
+  productList?: boolean;
   /** Para listas: campos de cada elemento. Para grupos (objetos): sus campos. */
   itemFields?: FieldDef[];
 }
@@ -124,13 +126,14 @@ function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: 
   values.forEach((v) => { if (v && typeof v === "object" && !Array.isArray(v)) Object.keys(v).forEach(add); });
   return keys.map((k) => {
     const sample = values.find((v) => v && v[k] != null)?.[k] ?? schemaItems?.[k]?.default ?? "";
-    const kind = kindOf(k, sample, listKey);
+    const itemSelect = cfg.itemSelects?.[listKey]?.[k];
+    const kind: FieldKind = itemSelect ? "select" : kindOf(k, sample, listKey);
     const def: FieldDef = {
       key: k,
       label: labels[k] || labelFor(k),
       kind,
       default: schemaItems?.[k]?.default,
-      options: kind === "select" ? (listKey === "fields" && k === "type" ? FORM_FIELD_TYPES : SELECTS[k]) : undefined,
+      options: kind === "select" ? (itemSelect || (listKey === "fields" && k === "type" ? FORM_FIELD_TYPES : SELECTS[k])) : undefined,
     };
     if (kind === "list") def.itemFields = itemFieldDefs(k, undefined, Array.isArray(sample) ? sample : []);
     if (kind === "group") def.itemFields = groupFieldDefs(sample);
@@ -189,6 +192,7 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
       : s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
     const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: HINTS[key], kind, default: s?.default, options: kind === "select" ? options : undefined };
     if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : [], cfg);
+    if (kind === "list" && cfg.productLists?.includes(key)) def.productList = true;
     // Objetos anidados (plantillas importadas): sus campos se editan agrupados.
     if (kind === "group") def.itemFields = groupFieldDefs(value);
     return def;

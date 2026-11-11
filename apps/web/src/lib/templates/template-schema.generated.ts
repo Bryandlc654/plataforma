@@ -400,12 +400,8 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           }
         }
       },
-      "buttonText": {
-        "aliasOf": "linkText"
-      },
-      "linkText": {
-        "aliasOf": "buttonText"
-      },
+      "buttonText": {},
+      "linkText": {},
       "linkUrl": {
         "aliasOf": "buttonUrl"
       },
@@ -970,8 +966,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         ],
         "items": {
           "icon": {
-            "default": "bi-facebook",
-            "aliasOf": "label"
+            "default": "bi-facebook"
           },
           "url": {
             "default": "#"
@@ -2709,8 +2704,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
             "default": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop"
           },
           "title": {
-            "default": "Agencia Digital",
-            "aliasOf": "alt"
+            "default": "Agencia Digital"
           },
           "alt": {
             "default": "Graduado Emprendedor"
@@ -3467,8 +3461,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         ],
         "items": {
           "icon": {
-            "default": "fa-brands fa-facebook-f",
-            "aliasOf": "label"
+            "default": "fa-brands fa-facebook-f"
           },
           "url": {
             "default": "#"
@@ -3694,6 +3687,10 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "autoplaySeconds": {
         "default": 6
+      },
+      "imageColor": {},
+      "imageOpacity": {
+        "default": 60
       }
     },
     "features": {
@@ -3709,6 +3706,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           "desc": {}
         }
       },
+      "layout": {},
       "title": {
         "default": "Catálogo"
       },
@@ -3721,8 +3719,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
     "cta": {
       "newsletter": {},
       "title": {
-        "default": "ÚNETE AL CLUB",
-        "aliasOf": "imageAlt"
+        "default": "ÚNETE AL CLUB"
       },
       "subtitle": {},
       "placeholder": {
@@ -3914,7 +3911,8 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           },
           "url": {
             "default": "#"
-          }
+          },
+          "network": {}
         }
       },
       "copyright": {},
@@ -4164,8 +4162,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
             "default": "text"
           },
           "name": {
-            "default": "name",
-            "aliasOf": "label"
+            "default": "name"
           },
           "required": {}
         }
@@ -4312,7 +4309,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
             "default": "text"
           },
           "name": {
-            "aliasOf": "label",
             "default": "message"
           },
           "label": {},
@@ -4353,9 +4349,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       }
     },
     "stats": {
-      "subtitle": {
-        "aliasOf": "title"
-      },
+      "subtitle": {},
       "title": {},
       "items": {
         "list": true,

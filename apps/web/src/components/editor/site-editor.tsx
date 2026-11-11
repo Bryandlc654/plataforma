@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
 import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/blocks";
@@ -12,6 +12,7 @@ import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLe
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SectionSettings } from "@/components/editor/section-settings";
+import { withDefaults } from "@/components/editor/template-fields";
 import { LinkOptionsContext, type LinkOptions } from "@/components/editor/link-field";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
@@ -20,11 +21,27 @@ import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { CanvasFrame } from "@/components/editor/canvas-frame";
-import { genericPageBaseCss, isTemplateVariant, paletteCssVariables, templateCanvasClass } from "@/lib/templates";
+import { genericPageBaseCss, isTemplateVariant, paletteCssVariables, renderGenericBlockHtml, renderTemplateVariantHtml, sanitizeTemplateContent, templateCanvasClass, TEMPLATE_SCHEMA } from "@/lib/templates";
 import { useConfirm } from "@/components/providers/confirm-provider";
 import { SHARED_BLOCK_TYPES, byOrder, patchBlock, remapBlockIds, sameJson, slugify, uniqueSlug, withSnapshotBlocks, type Block, type Site } from "@/components/editor/editor-model";
 import { PagesModal } from "@/components/editor/pages-modal";
 import { PublishedModal } from "@/components/editor/published-modal";
+
+/** Id y título de una sección tal como se dibuja (para enlazarla desde un botón o menú). */
+function sectionAnchor(type: string, content: any): { id: string; title: string } | null {
+  try {
+    const html = isTemplateVariant(content?.variant)
+      ? renderTemplateVariantHtml(type, content, "")
+      : renderGenericBlockHtml(type, sanitizeTemplateContent(content || {}), { apiBaseUrl: "" });
+    const id = html && /\bid="([A-Za-z][\w-]*)"/.exec(html)?.[1];
+    if (!id) return null;
+    const heading = /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/i.exec(html || "")?.[1] || "";
+    const title = heading.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim().slice(0, 40);
+    return { id, title };
+  } catch {
+    return null;
+  }
+}
 
 export function SiteEditor({ siteId }: { siteId: string }) {
   const [site, setSite] = useState<Site | null>(null);
@@ -224,24 +241,32 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const activeBlock = sortedBlocks.find(b => b.id === activeBlockId);
 
   /**
-   * Destinos para los enlaces y botones: las páginas del sitio y las secciones de la página
-   * abierta (cada sección tiene su id en el lienzo: #catalogo, #promociones…).
+   * Destinos para los enlaces y botones: todas las páginas del sitio y, de cada una, sus
+   * secciones (el id que tiene cada sección al dibujarse: #catalogo, #promociones…).
    */
-  const linkOptions: LinkOptions = (() => {
-    const pages = [...(site?.pages || [])]
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((pg) => ({ label: pg.isDefault ? `${pg.name} (inicio)` : pg.name, value: pg.isDefault ? "/" : pg.path }));
-    const sections: { label: string; value: string }[] = [];
-    const seen = new Set<string>();
-    for (const b of sortedBlocks) {
-      const el = canvasDoc?.getElementById(`block-${b.id}`)?.querySelector<HTMLElement>("[id]");
-      const id = el?.id;
-      if (!id || id.startsWith("block-") || seen.has(id)) continue;
-      seen.add(id);
-      sections.push({ label: `${BLOCK_META[b.type]?.label || b.type} (#${id})`, value: `#${id}` });
-    }
-    return { pages, sections };
-  })();
+  const linkOptions: LinkOptions = useMemo(() => {
+    const pages = [...(site?.pages || [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    return {
+      pages: pages.map((pg) => {
+        const path = pg.isDefault ? "/" : pg.path;
+        const current = pg.id === activePageId;
+        const seen = new Set<string>();
+        const sections = [...pg.blocks].sort(byOrder).flatMap((b) => {
+          if (b.styles?.hidden || b.type === "header" || b.type === "footer") return [];
+          const anchor = sectionAnchor(b.type, b.content);
+          if (!anchor || seen.has(anchor.id)) return [];
+          seen.add(anchor.id);
+          const name = BLOCK_META[b.type]?.label || b.type;
+          return [{ label: anchor.title ? `${name}: ${anchor.title}` : name, value: current ? `#${anchor.id}` : `${path === "/" ? "" : path}/#${anchor.id}` }];
+        });
+        return { label: pg.isDefault ? `${pg.name} (inicio)` : pg.name, value: path, current, sections };
+      }),
+    };
+  }, [site?.pages, activePageId]);
+
+  /** Plantilla de diseño del sitio (la de sus secciones) y los tipos de sección que sabe dibujar. */
+  const siteVariant: string | undefined = (site?.pages || []).flatMap((pg) => pg.blocks).map((b) => b.content?.variant).find((v) => v && TEMPLATE_SCHEMA[v]);
+  const allowedSectionTypes = siteVariant ? Object.keys(TEMPLATE_SCHEMA[siteVariant]).filter((t) => t !== "checkout" && t !== "sorteo-form") : undefined;
 
   const paletteActive = hasExplicitPalette(site?.settings) || paletteDirty;
   const variantPalette = paletteActive ? palette : undefined;
@@ -420,8 +445,9 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     const afterIndex = insertAfterIndex;
     try {
       let content = getBlockDefaultContent(type as any);
-      const tmplVariant = activePage?.blocks?.[0]?.content?.variant;
-      if (tmplVariant && !content.variant) content = { ...content, variant: tmplVariant };
+      const tmplVariant = siteVariant;
+      // Con plantilla de diseño propio: la sección nueva trae el contenido de ejemplo de la plantilla.
+      if (tmplVariant && !content.variant) content = { ...content, ...withDefaults(type, { variant: tmplVariant }) };
       const res: any = await api.post(`/pages/${activePageId}/blocks`, { type, content, ...(afterIndex !== null ? { afterIndex } : {}) });
       const newBlock = (res.data || res) as Block;
       insertLocal(newBlock, afterIndex);
@@ -721,7 +747,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       )}
 
       {/* BLOCK PALETTE MODAL */}
-      {showAddBlock && <SectionPicker onAdd={addBlock} onClose={() => setShowAddBlock(false)} />}
+      {showAddBlock && <SectionPicker onAdd={addBlock} onClose={() => setShowAddBlock(false)} allowedTypes={allowedSectionTypes} />}
 
       {/* PAGES MODAL */}
       {showPagesModal && (

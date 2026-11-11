@@ -9,6 +9,7 @@ import { BLOCK_META } from "@/components/blocks";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { IconPicker } from "./icon-picker";
 import { LinkField } from "./link-field";
+import { ProductPicker, productToItem } from "./product-picker";
 import { blankItem, fieldsFor, type FieldDef } from "./template-fields";
 
 interface Props {
@@ -104,8 +105,12 @@ function FieldInput({ field, value, onChange }: { field: FieldDef; value: any; o
       return (
         <label className="block">
           <Label>{field.label}</Label>
-          <select className={inputCls} value={value ?? ""} onChange={(e) => onChange(e.target.value)}>
+          <select className={inputCls} value={value === true ? "true" : String(value ?? "")} onChange={(e) => onChange(e.target.value)}>
             {(field.options || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {/* Un valor que no está en la lista (p. ej. un emoji) se conserva como personalizado. */}
+            {value !== "" && value != null && value !== true && !(field.options || []).some((o) => o.value === String(value)) && (
+              <option value={String(value)}>Personalizado: {String(value)}</option>
+            )}
           </select>
         </label>
       );
@@ -139,6 +144,7 @@ function itemTitle(item: any, field: FieldDef, index: number): string {
 function ListControl({ field, value, onChange }: { field: FieldDef; value: any[]; onChange: (v: any[]) => void }) {
   const list = Array.isArray(value) ? value : [];
   const [open, setOpen] = useState<number | null>(null);
+  const [picking, setPicking] = useState(false);
   const isStrings = field.kind === "stringList";
 
   const update = (i: number, item: any) => onChange(list.map((it, j) => (j === i ? item : it)));
@@ -191,12 +197,29 @@ function ListControl({ field, value, onChange }: { field: FieldDef; value: any[]
             )}
           </li>
         ))}
+        {field.productList && (
+          <li>
+            <button onClick={() => setPicking(true)} className="flex w-full items-center gap-2 border-b border-[#ebebeb] px-3 py-2 text-left text-[13px] font-semibold text-[color:var(--color-primary)] hover:bg-[#f7f7f7]">
+              <HiOutlinePlus className="h-3.5 w-3.5" /> Agregar productos de mi tienda
+            </button>
+          </li>
+        )}
         <li>
           <button onClick={add} className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-medium text-[color:var(--color-primary)] hover:bg-[#f7f7f7]">
-            <HiOutlinePlus className="h-3.5 w-3.5" /> Agregar {field.label.toLowerCase().replace(/^más /, "").replace(/«.*»/, "").replace(/s$/, "").replace(/(ione)$/, "ión")}
+            <HiOutlinePlus className="h-3.5 w-3.5" /> {field.productList ? "Agregar manualmente" : "Agregar"} {field.productList ? "" : field.label.toLowerCase().replace(/^más /, "").replace(/«.*»/, "").replace(/s$/, "").replace(/(ione)$/, "ión")}
           </button>
         </li>
       </ul>
+      {field.productList && (
+        <p className="mt-1 text-[12px] text-[#616161]">Los productos de tu tienda funcionan con el carrito y el checkout.</p>
+      )}
+      {picking && (
+        <ProductPicker
+          selectedIds={list.map((it: any) => it?.id).filter(Boolean)}
+          onAdd={(products) => onChange([...list, ...products.map((p) => productToItem(p))])}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </div>
   );
 }

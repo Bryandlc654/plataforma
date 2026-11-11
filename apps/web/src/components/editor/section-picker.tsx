@@ -57,9 +57,14 @@ function Wireframe({ kind }: { kind: Wire }) {
   }
 }
 
-interface Props { onAdd: (type: string) => void; onClose: () => void; }
+interface Props {
+  onAdd: (type: string) => void;
+  onClose: () => void;
+  /** Tipos que dibuja la plantilla del sitio (sin esto se muestran todos). */
+  allowedTypes?: string[];
+}
 
-export function SectionPicker({ onAdd, onClose }: Props) {
+export function SectionPicker({ onAdd, onClose, allowedTypes }: Props) {
   const [search, setSearch] = useState("");
   const [cat, setCat] = useState<string>("Todas");
 
@@ -78,10 +83,11 @@ export function SectionPicker({ onAdd, onClose }: Props) {
       .filter(([c]) => cat === "Todas" || c === cat)
       .map(([c, types]) => ({
         cat: c,
-        types: types.filter((t) => BLOCK_META[t] && (!q || BLOCK_META[t].label.toLowerCase().includes(q) || BLOCK_META[t].description.toLowerCase().includes(q) || t.includes(q))),
+        // Con una plantilla de diseño propio, solo las secciones que esa plantilla sabe dibujar.
+        types: types.filter((t) => BLOCK_META[t] && (!allowedTypes || allowedTypes.includes(t)) && (!q || BLOCK_META[t].label.toLowerCase().includes(q) || BLOCK_META[t].description.toLowerCase().includes(q) || t.includes(q))),
       }))
       .filter((g) => g.types.length > 0);
-  }, [search, cat]);
+  }, [search, cat, allowedTypes]);
 
   const cats = ["Todas", ...Object.keys(BLOCK_CATEGORIES)];
 

@@ -15,6 +15,10 @@ export interface SectionConfig {
   visible?: (c: any) => string[] | null;
   labels?: Record<string, string>;
   itemLabels?: Record<string, Record<string, string>>;
+  /** Opciones con nombre dentro de los elementos de una lista (p. ej. el ícono de cada beneficio). */
+  itemSelects?: Record<string, Record<string, SelectOption[]>>;
+  /** Listas que se pueden llenar con productos de la tienda (módulo E-commerce). */
+  productLists?: string[];
 }
 
 const light: SelectOption = { label: "Claro", value: "" };
@@ -109,16 +113,64 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
 
   // ---------------------------------------------------------------- Urban Noir
   "urban-noir/hero": {
+    selects: {
+      imageColor: [{ label: "Blanco y negro (estilo de la marca)", value: "" }, { label: "A color", value: "color" }],
+      imageOpacity: [
+        { label: "Imagen tenue (40%)", value: "40" }, { label: "Normal (60%)", value: "" }, { label: "Intensa (80%)", value: "80" }, { label: "Completa (100%)", value: "100" },
+      ],
+    },
     labels: {
       backgroundImage: "Imagen de fondo", kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
       buttonText: "Texto del botón", buttonUrl: "Enlace del botón", slides: "Más diapositivas",
+      imageColor: "Color de la imagen", imageOpacity: "Intensidad de la imagen",
     },
   },
-  "urban-noir/footer": { labels: { columns: "Columnas de enlaces", links: "Enlaces" } },
-  "urban-noir/header": { labels: { links: "Menú" } },
-  "urban-noir/features": { labels: { items: "Categorías", linkText: "Texto del enlace «ver todo»", linkUrl: "Enlace «ver todo»" } },
-  "urban-noir/portfolio": { labels: { items: "Productos" } },
-  "urban-noir/benefits": { labels: { items: "Beneficios" } },
+  "urban-noir/header": { labels: { links: "Menú", logoImage: "Logo (imagen)", logoText: "Nombre de la tienda" } },
+  "urban-noir/features": {
+    selects: { layout: [{ label: "Automático", value: "" }, { label: "Categorías con foto", value: "catalog" }, { label: "Tarjetas de texto", value: "cards" }] },
+    visible: (c) => {
+      const catalog = c.layout ? c.layout === "catalog" : (c.items || []).some((it: any) => it && it.image);
+      return catalog ? ["layout", "title", "linkText", "linkUrl", "items"] : ["layout", "title", "subtitle", "items"];
+    },
+    labels: { layout: "Diseño", items: "Categorías", linkText: "Texto del enlace «ver todo»", linkUrl: "Enlace «ver todo»" },
+    itemLabels: { items: { link: "Enlace de la categoría" } },
+  },
+  "urban-noir/cta": {
+    selects: { newsletter: [{ label: "Promoción con botón", value: "" }, { label: "Formulario de suscripción", value: "true" }] },
+    visible: (c) => c.newsletter
+      ? ["newsletter", "title", "subtitle", "placeholder", "buttonText"]
+      : ["newsletter", "kicker", "title", "subtitle", "buttonText", "buttonUrl", "backgroundImage", "imageAlt", "watermark"],
+    labels: { newsletter: "Tipo de sección", placeholder: "Texto dentro del campo de correo", backgroundImage: "Imagen de la promoción" },
+  },
+  "urban-noir/portfolio": {
+    labels: { items: "Productos", currency: "Símbolo de moneda" },
+    itemLabels: { items: { link: "Página del producto", tag: "Etiqueta (ej. NUEVO, -20%)", image: "Foto" } },
+    productLists: ["items"],
+  },
+  "urban-noir/benefits": {
+    labels: { items: "Beneficios" },
+    itemSelects: {
+      items: {
+        icon: [
+          { label: "Envío", value: "envio" }, { label: "Calidad", value: "calidad" }, { label: "Pago seguro", value: "pago" },
+          { label: "Devoluciones", value: "devolucion" }, { label: "Soporte", value: "soporte" }, { label: "Regalo", value: "regalo" }, { label: "Estrella", value: "estrella" },
+        ],
+      },
+    },
+  },
+  "urban-noir/footer": {
+    labels: { columns: "Columnas de enlaces", links: "Enlaces", logoImage: "Logo (imagen)", companyName: "Nombre de la tienda" },
+    itemLabels: { social: { label: "Nombre visible", network: "Red social" } },
+    itemSelects: {
+      social: {
+        network: [
+          { label: "Según el nombre", value: "" }, { label: "Instagram", value: "instagram" }, { label: "Facebook", value: "facebook" },
+          { label: "TikTok", value: "tiktok" }, { label: "X (Twitter)", value: "x" }, { label: "YouTube", value: "youtube" },
+          { label: "WhatsApp", value: "whatsapp" }, { label: "LinkedIn", value: "linkedin" }, { label: "Pinterest", value: "pinterest" },
+        ],
+      },
+    },
+  },
 };
 
 export function sectionConfig(variant: string | undefined, type: string): SectionConfig {

@@ -19,18 +19,40 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
 
   const actionUrl = site?.tenantId ? `${apiBaseUrl || ""}/api/v1/leads/submit/${site.tenantId}` : "#";
 
+  /** Íconos de beneficios: se elige uno por nombre (o se escribe un emoji). */
+  const BENEFIT_ICONS: Record<string, string> = {
+    envio: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />',
+    calidad: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
+    pago: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />',
+    devolucion: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4" />',
+    soporte: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636a9 9 0 010 12.728M5.636 18.364a9 9 0 010-12.728M15 12a3 3 0 11-6 0 3 3 0 016 0z" />',
+    regalo: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v13M5 12h14v9H5zM3 8h18v4H3zM12 8S10.5 3 8 3.5 7 8 12 8zm0 0s1.5-5 4-4.5S17 8 12 8z" />',
+    estrella: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />',
+  };
   const benefitSvg = (icon: any): string => {
-    const n = String((icon && (icon.text !== undefined ? icon.text : icon.name)) || icon || "").toLowerCase();
-    if (/env|truck|entrega|shipping/.test(n)) return `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>`;
-    if (/calid|shield|check|calidad/.test(n)) return `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-    if (/pago|card|secure|lock|pago/.test(n)) return `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>`;
-    return icon ? String(icon) : "";
+    const raw = String((icon && (icon.text !== undefined ? icon.text : icon.name)) || icon || "");
+    const n = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const key = BENEFIT_ICONS[n] ? n
+      : /env|truck|entrega|shipping|🚚/.test(n) ? "envio"
+      : /calid|shield|check|🛡/.test(n) ? "calidad"
+      : /pago|card|secure|lock|💳/.test(n) ? "pago"
+      : "";
+    if (key) return `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">${BENEFIT_ICONS[key]}</svg>`;
+    return raw;
   };
 
-  const socialSvg = (label: string): string => {
-    const n = String(label || "").toLowerCase();
+  /** Ícono de la red social: por el campo "Red" o, si no, por la etiqueta. */
+  const socialSvg = (label: string, network?: string): string => {
+    const n = String(network || label || "").toLowerCase();
+    const svg = (d: string) => `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
     if (n.includes("instagram")) return `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd" /></svg>`;
-    if (n.includes("twitter") || n.includes("x ")) return `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>`;
+    if (n.includes("twitter") || n === "x" || n.includes("x ")) return `<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>`;
+    if (n.includes("facebook")) return svg("M22 12a10 10 0 10-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0022 12z");
+    if (n.includes("tiktok")) return svg("M16.6 5.82A4.28 4.28 0 0115.54 3h-3.09v12.4a2.59 2.59 0 11-2.59-2.59c.27 0 .53.04.77.12V9.77a5.7 5.7 0 00-.77-.05A5.68 5.68 0 1015.54 15.4V9.01a7.34 7.34 0 004.29 1.37V7.29a4.28 4.28 0 01-3.23-1.47z");
+    if (n.includes("youtube")) return svg("M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z");
+    if (n.includes("whatsapp")) return svg("M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.28-.2-.57-.35zM12.05 21.8h-.01a9.87 9.87 0 01-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37A9.86 9.86 0 012.16 12C2.16 6.54 6.6 2.1 12.06 2.1c2.64 0 5.12 1.03 6.98 2.9a9.82 9.82 0 012.9 6.99c-.01 5.45-4.44 9.88-9.89 9.88z");
+    if (n.includes("linkedin")) return svg("M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 013.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z");
+    if (n.includes("pinterest")) return svg("M12 0a12 12 0 00-4.37 23.17c-.1-.94-.2-2.4.04-3.43l1.4-5.95s-.36-.72-.36-1.78c0-1.67.97-2.91 2.17-2.91 1.02 0 1.52.77 1.52 1.69 0 1.03-.66 2.57-1 4-.28 1.19.6 2.17 1.78 2.17 2.13 0 3.77-2.25 3.77-5.5 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74a.36.36 0 01.08.35l-.33 1.36c-.05.22-.18.27-.41.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.92-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.13-2.6 7.46-6.22 7.46-1.21 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15A12 12 0 1012 0z");
     return `<span class="text-sm font-bold">${String(label || "").charAt(0).toUpperCase()}</span>`;
   };
 
@@ -216,13 +238,16 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
       }));
       const slides = [first, ...extra];
       const seconds = Number(c.autoplaySeconds ?? 6);
+      // La imagen en blanco y negro es el estilo de la marca; se puede desactivar.
+      const imageFilter = c.imageColor === "color" ? "none" : "grayscale(100%)";
+      const imageOpacity = Math.min(100, Math.max(10, Number(c.imageOpacity ?? 60))) / 100;
       const heroId = `un-hero-${Math.random().toString(36).slice(2, 8)}`;
       // Cambia de diapositiva (también funciona en el editor: es un atributo onclick).
       const go = "var r=this.closest('[data-un-hero]'),i=+this.dataset.i;r.querySelectorAll('[data-un-slide]').forEach(function(s,j){s.style.opacity=j===i?1:0;s.style.pointerEvents=j===i?'auto':'none'});r.querySelectorAll('[data-un-dot]').forEach(function(d,j){d.style.background=j===i?'#fff':'#4b5563'});r.dataset.cur=i";
       return `
       <header id="${c.anchor || 'inicio'}" data-un-hero data-hero-id="${heroId}" class="relative h-screen overflow-hidden bg-black text-white">
         ${slides.map((sl, i) => `<div data-un-slide class="absolute inset-0 flex items-center justify-center transition-opacity duration-700" style="opacity:${i === 0 ? 1 : 0};pointer-events:${i === 0 ? "auto" : "none"}">
-          <div class="absolute inset-0 z-0 opacity-60 bg-cover bg-center" style="background-image: url('${sl.backgroundImage}'); filter: grayscale(100%);"></div>
+          <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('${sl.backgroundImage}'); filter: ${imageFilter}; opacity: ${imageOpacity};"></div>
           <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
             ${sl.kicker ? `<span class="tracking-[0.3em] text-sm md:text-base mb-4 block uppercase border-b border-white pb-2">${sl.kicker}</span>` : ""}
             ${sl.title ? `<h1 class="text-5xl md:text-8xl font-bold mb-6 leading-none">${nl(sl.title)}</h1>` : ""}
@@ -238,7 +263,8 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
     }
 
     case "features": {
-      const isCatalog = (c.items || []).some((it: any) => it && it.image);
+      // "catalog": categorías con foto; "cards": tarjetas de texto; sin elegir: según haya fotos.
+      const isCatalog = c.layout ? c.layout === "catalog" : (c.items || []).some((it: any) => it && it.image);
       if (isCatalog) {
         const items = c.items || [];
         return `
@@ -403,7 +429,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             <div>
               <h4 class="font-bold uppercase tracking-widest mb-6 border-b border-gray-800 pb-2" data-ed="socialTitle">${c.socialTitle || "Síguenos"}</h4>
               <div class="flex space-x-4">
-                ${social.map((s: any) => `<a data-analytics-click data-analytics-type="click" data-analytics-label="social_${s.label || 'link'}" href="${siteHref(s.url)}" aria-label="${s.label}" class="w-10 h-10 border border-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-black transition">${socialSvg(s.label)}</a>`).join("")}
+                ${social.map((s: any) => `<a data-analytics-click data-analytics-type="click" data-analytics-label="social_${s.label || 'link'}" href="${siteHref(s.url)}" aria-label="${s.label}" class="w-10 h-10 border border-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-black transition">${socialSvg(s.label, s.network)}</a>`).join("")}
               </div>
             </div>
           </div>

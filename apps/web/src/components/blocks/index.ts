@@ -36,4 +36,16 @@ export const BLOCK_META: Record<string, { label: string; icon: string; descripti
   image: { label: "Imagen", icon: "Image", description: "Imagen con texto alternativo, enlace y caption" },
   video: { label: "Video", icon: "Play", description: "Video de YouTube o Vimeo embebido" },
   "review-form": { label: "Formulario Reseñas", icon: "Star", description: "Captador de reseñas para clientes reales" },
+  // Secciones propias de las plantillas de diseño
+  "page-hero": { label: "Portada de página", icon: "Layout", description: "Título grande para páginas interiores" },
+  marquee: { label: "Texto en movimiento", icon: "Megaphone", description: "Palabras que se desplazan en una franja" },
+  agency: { label: "Agencia", icon: "Info", description: "Presentación con imagen y cifras" },
+  awareness: { label: "Mensaje destacado", icon: "Megaphone", description: "Frase de impacto con texto resaltado" },
+  "portfolio-grid": { label: "Proyectos destacados", icon: "Briefcase", description: "Cuadrícula de proyectos con llamado a la acción" },
+  "contact-section": { label: "Contacto completo", icon: "Mail", description: "Datos de contacto y formulario" },
+  "hero-story": { label: "Historia", icon: "Info", description: "Historia del negocio con imágenes" },
+  "video-banner": { label: "Video de fondo", icon: "Play", description: "Franja con video o imagen de fondo" },
+  menu: { label: "Menú", icon: "ClipboardList", description: "Carta de platos con precios" },
+  "lunch-menu": { label: "Menú del día", icon: "ClipboardList", description: "Menú de almuerzo destacado" },
+  location: { label: "Ubicación", icon: "Info", description: "Dirección, horarios y mapa" },
 };
