@@ -38,18 +38,18 @@ export default function BookingsPage() {
 
   const updateBookingStatus = async (id: string, status: string) => { await api.put(`/bookings/${id}/status`, { status }); fetchData(); };
 
-  if (loading) return <div className="p-8 text-slate-500">Cargando...</div>;
+  if (loading) return <div className="p-8 text-[#616161]">Cargando...</div>;
 
   return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Reservas</h1>
+          <h1 className="text-xl font-bold text-[#303030]">Reservas</h1>
           <button onClick={() => setShowCreate(!showCreate)} className="btn-primary text-sm">+ {tab === "services" ? "Servicio" : "Reserva"}</button>
         </div>
 
         <div className="flex gap-2 mb-6">
           {(["bookings", "services"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); setShowCreate(false); }} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}>
+            <button key={t} onClick={() => { setTab(t); setShowCreate(false); }} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary-600 text-white" : "bg-white text-[#616161] border border-[#e3e3e3]"}`}>
               {t === "bookings" ? "Reservas" : "Servicios"}
             </button>
           ))}
@@ -78,21 +78,21 @@ export default function BookingsPage() {
         ))}
 
         {/* Services */}
-        {tab === "services" && services.length === 0 ? <div className="card text-center py-8"><p className="text-slate-500">Sin servicios</p></div> : tab === "services" && (
+        {tab === "services" && services.length === 0 ? <div className="card text-center py-8"><p className="text-[#616161]">Sin servicios</p></div> : tab === "services" && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map((s) => (
             <div key={s.id} className="card"><div className="flex items-center gap-2 mb-2"><div className="h-3 w-3 rounded-full" style={{ backgroundColor: s.color }} /><h3 className="font-semibold">{s.name}</h3></div>
               <p className="text-2xl font-bold text-primary-600">{Number(s.price) === 0 ? "Gratis" : formatCurrency(Number(s.price))}</p>
-              <p className="text-xs text-slate-400 mt-2">{s.duration} min</p></div>
+              <p className="text-xs text-[#8a8a8a] mt-2">{s.duration} min</p></div>
           ))}</div>
         )}
 
         {/* Bookings */}
-        {tab === "bookings" && bookings.length === 0 ? <div className="card text-center py-8"><p className="text-slate-500">Sin reservas</p></div> : tab === "bookings" && (
+        {tab === "bookings" && bookings.length === 0 ? <div className="card text-center py-8"><p className="text-[#616161]">Sin reservas</p></div> : tab === "bookings" && (
           <div className="space-y-3">{bookings.map((b) => (
             <div key={b.id} className="card flex items-center justify-between">
               <div><div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full" style={{ backgroundColor: b.service?.color || "#2563EB" }} /><span className="font-semibold text-sm">{b.customerName}</span>
-                <span className="text-xs bg-slate-100 rounded px-2 py-0.5">{b.service?.name}</span></div>
-                <p className="text-xs text-slate-500 mt-1">{formatDate(b.startTime)} - {new Date(b.endTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}</p></div>
+                <span className="text-xs bg-[#f1f1f1] rounded px-2 py-0.5">{b.service?.name}</span></div>
+                <p className="text-xs text-[#616161] mt-1">{formatDate(b.startTime)} - {new Date(b.endTime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}</p></div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-xs ${b.status === "confirmed" ? "bg-green-50 text-green-700" : b.status === "cancelled" ? "bg-red-50 text-red-700" : "bg-yellow-50 text-yellow-700"}`}>{b.status}</span>
                 {b.status === "confirmed" && <button onClick={() => updateBookingStatus(b.id, "cancelled")} className="text-xs text-red-500">Cancelar</button>}

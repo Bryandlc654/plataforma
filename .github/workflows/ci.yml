@@ -19,6 +19,10 @@ jobs:
       - run: npm ci
       - name: Plantillas del web sincronizadas con packages/shared
         run: node apps/web/scripts/sync-templates.js --check
+      - name: Esquema de campos de plantillas actualizado
+        run: node packages/shared/scripts/extract-template-schema.js --check
+      - name: Todas las plantillas son 100% editables
+        run: npm run build -w packages/shared && node packages/shared/scripts/audit-editability.js --strict
       - run: npm run lint
 
   typecheck:

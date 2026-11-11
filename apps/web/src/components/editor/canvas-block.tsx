@@ -2,11 +2,12 @@
 
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { HiOutlineAdjustments, HiOutlinePlus, HiOutlineX } from "react-icons/hi";
+import { HiOutlinePlus, HiOutlineX } from "react-icons/hi";
 import { BLOCK_META } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import type { SitePalette } from "@/lib/templates";
+import { materializeRoot, withDefaults } from "./template-fields";
 import { BR_RE, collectStrings, domText, isHtmlElement, isTextLeaf, matchImageLeaf, matchMarkedLeaf, matchTextLeaf, setIn, type Path } from "./inline-edit";
 
 interface Props {
@@ -19,17 +20,21 @@ interface Props {
   onSelect: (id: string) => void;
   onInsertAfter: (id: string) => void;
   onContentChange: (id: string, content: any) => void;
-  onOpenSettings: () => void;
   palette?: SitePalette;
 }
 
 /** Sección del lienzo: edición directa de textos e imágenes; sin tarjeta ni formularios. */
-export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, onInsertAfter, onContentChange, onOpenSettings, palette }: Props) {
+export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, onInsertAfter, onContentChange, palette }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [imagePath, setImagePath] = useState<Path | null>(null);
   /** Al editar texto el navegador reemplaza los nodos que React conoce; se vuelve a montar el bloque para mantenerlos sincronizados. */
   const [epoch, setEpoch] = useState(0);
-  const leaves = useMemo(() => collectStrings(sourceContent), [sourceContent]);
+  // Con los valores por defecto de la plantilla: el texto que se ve aunque no esté guardado
+  // también se puede editar con un clic.
+  const editable = useMemo(() => withDefaults(block.type, sourceContent), [block.type, sourceContent]);
+  const leaves = useMemo(() => collectStrings(editable), [editable]);
+  /** Guarda un valor en `path`; si su raíz aún era el valor por defecto, primero lo copia. */
+  const commit = (path: Path, value: any) => onContentChange(block.id, setIn(materializeRoot(block.type, sourceContent, path[0]), path, value));
 
   const startTextEdit = (el: HTMLElement, path: Path, original: string) => {
     // Valores con <br> (p. ej. "FLAVOURS<br/>THAT STAY"): Mayús+Enter agrega otro salto.
@@ -62,7 +67,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
       const next = withBr
         ? raw.split("\n").map((l) => l.trim()).filter(Boolean).join("<br/>")
         : multiline ? raw : raw.replace(/\s*\n\s*/g, " ");
-      if (!cancelled && next !== original) onContentChange(block.id, setIn(sourceContent, path, next));
+      if (!cancelled && next !== original) commit(path, next);
       setEpoch((n) => n + 1);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -101,26 +106,17 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
     onSelect(block.id);
   };
 
-  const imageValue = imagePath ? imagePath.reduce<any>((n, k) => n?.[k as any], sourceContent) : "";
+  const imageValue = imagePath ? imagePath.reduce<any>((n, k) => n?.[k as any], editable) : "";
 
   return (
     <div id={`block-${block.id}`} ref={rootRef} onClickCapture={onClickCapture} className="inline-edit-root group/block relative cursor-pointer">
       <div
         className={`pointer-events-none absolute inset-0 z-10 transition-colors ${active ? "ring-2 ring-inset ring-[color:var(--color-primary)]" : "ring-0 ring-inset ring-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] group-hover/block:ring-2"}`}
       />
-      <div data-editor-ui className={`absolute left-2 top-2 z-20 flex items-center gap-1 transition-opacity ${active || hidden ? "opacity-100" : "pointer-events-none opacity-0 group-hover/block:opacity-100"}`}>
+      <div data-editor-ui className={`pointer-events-none absolute left-2 top-2 z-20 flex items-center gap-1 transition-opacity ${active || hidden ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"}`}>
         <span className="rounded-md bg-[color:var(--color-primary)] px-2 py-0.5 text-[11px] font-medium text-white shadow">
           {BLOCK_META[block.type]?.label || block.type}{hidden ? " · Oculta" : ""}
         </span>
-        {active && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpenSettings(); }}
-            className="flex items-center gap-1 rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-[color:var(--color-primary)] shadow ring-1 ring-slate-200 hover:bg-slate-50"
-            title="Más opciones de esta sección"
-          >
-            <HiOutlineAdjustments className="h-3.5 w-3.5" />Ajustes
-          </button>
-        )}
       </div>
       <div key={epoch} className={hidden ? "opacity-40 grayscale" : ""}>
         <BlockRenderer type={block.type} content={block.content} palette={palette} />
@@ -144,7 +140,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
             <ImageField
               label="Imagen"
               value={imageValue}
-              onChange={(v) => { onContentChange(block.id, setIn(sourceContent, imagePath, v)); if (v) setImagePath(null); }}
+              onChange={(v) => { commit(imagePath, v); if (v) setImagePath(null); }}
             />
           </div>
         </div>,

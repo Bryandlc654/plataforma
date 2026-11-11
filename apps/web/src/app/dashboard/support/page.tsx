@@ -85,18 +85,18 @@ export default function SupportPage() {
 
   const statusLabel = (s: string) => ({ open: "Abierto", in_progress: "En progreso", closed: "Cerrado" }[s] || s);
   const priorityLabel = (p: string) => ({ low: "Baja", medium: "Media", high: "Alta", urgent: "Urgente" }[p] || p);
-  const priorityColor = (p: string) => ({ low: "bg-slate-50 text-slate-700", medium: "bg-blue-50 text-blue-700", high: "bg-amber-50 text-amber-700", urgent: "bg-red-50 text-red-700" }[p] || "");
+  const priorityColor = (p: string) => ({ low: "bg-[#f7f7f7] text-[#303030]", medium: "bg-blue-50 text-blue-700", high: "bg-amber-50 text-amber-700", urgent: "bg-red-50 text-red-700" }[p] || "");
   const statusColor = (s: string) => ({ open: "bg-blue-50 text-blue-700", in_progress: "bg-yellow-50 text-yellow-700", closed: "bg-green-50 text-green-700" }[s] || "");
 
   return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
         {activeTicket ? (
           <div>
             <button onClick={() => { setActiveTicket(null); fetchTickets(); }} className="text-sm text-primary-600 mb-4 block">← Volver</button>
             <div className="card mb-6">
               <div className="flex items-center justify-between mb-3">
-                <div><h2 className="font-semibold text-lg text-slate-900">{activeTicket.subject}</h2>
-                  <p className="text-xs text-slate-500 mt-1">
+                <div><h2 className="font-semibold text-lg text-[#303030]">{activeTicket.subject}</h2>
+                  <p className="text-xs text-[#616161] mt-1">
                     {activeTicket.user?.firstName} {activeTicket.user?.lastName}
                     {activeTicket.tenant && ` · ${activeTicket.tenant.name}`} · {formatDate(activeTicket.createdAt)}
                   </p>
@@ -115,11 +115,11 @@ export default function SupportPage() {
                   )}
                 </div>
               </div>
-              <p className="text-sm text-slate-700 whitespace-pre-wrap">{activeTicket.description}</p>
+              <p className="text-sm text-[#303030] whitespace-pre-wrap">{activeTicket.description}</p>
               {activeTicket.images && activeTicket.images.length > 0 && (
-                <div className="flex gap-3 flex-wrap mt-4 border-t pt-4 border-slate-100">
+                <div className="flex gap-3 flex-wrap mt-4 border-t pt-4 border-[#ebebeb]">
                   {activeTicket.images.map((img: string, i: number) => (
-                    <img key={i} src={img} alt="Adjunto" className="w-24 h-24 object-cover rounded-lg border border-slate-200" />
+                    <img key={i} src={img} alt="Adjunto" className="w-24 h-24 object-cover rounded-lg border border-[#e3e3e3]" />
                   ))}
                 </div>
               )}
@@ -128,9 +128,9 @@ export default function SupportPage() {
             {/* Replies */}
             <div className="space-y-3 mb-6">
               {activeTicket.replies.map((r) => (
-                <div key={r.id} className={`p-4 rounded-lg ${r.isStaff ? "bg-blue-50 border border-blue-100 ml-4" : "bg-slate-100 mr-4"}`}>
-                  <div className="flex items-center gap-2 mb-1"><span className="text-xs font-medium text-slate-700">{r.user.firstName} {r.user.lastName}</span>{r.isStaff && <span className="text-xs bg-blue-200 text-blue-700 rounded px-1.5 py-0.5">Staff</span>}<span className="text-xs text-slate-400">{formatDate(r.createdAt)}</span></div>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{r.message}</p>
+                <div key={r.id} className={`p-4 rounded-lg ${r.isStaff ? "bg-blue-50 border border-blue-100 ml-4" : "bg-[#f1f1f1] mr-4"}`}>
+                  <div className="flex items-center gap-2 mb-1"><span className="text-xs font-medium text-[#303030]">{r.user.firstName} {r.user.lastName}</span>{r.isStaff && <span className="text-xs bg-blue-200 text-blue-700 rounded px-1.5 py-0.5">Staff</span>}<span className="text-xs text-[#8a8a8a]">{formatDate(r.createdAt)}</span></div>
+                  <p className="text-sm text-[#303030] whitespace-pre-wrap">{r.message}</p>
                 </div>
               ))}
             </div>
@@ -146,14 +146,14 @@ export default function SupportPage() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-8">
-              <div><h1 className="text-2xl font-bold text-slate-900">Soporte</h1><p className="text-sm text-slate-600">{isStaff ? "Panel de soporte técnico" : "Tus tickets de soporte"}</p></div>
+              <div><h1 className="text-xl font-bold text-[#303030]">Soporte</h1><p className="text-sm text-[#616161]">{isStaff ? "Panel de soporte técnico" : "Tus tickets de soporte"}</p></div>
               <button onClick={() => setShowCreate(!showCreate)} className="btn-primary text-sm">+ Nuevo ticket</button>
             </div>
 
             {!isStaff && (
-              <div className="mb-6 flex w-fit gap-1 rounded-xl border border-slate-200 bg-white p-1">
+              <div className="mb-6 flex w-fit gap-1 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-1">
                 <span className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-[var(--color-on-primary)]">Tickets</span>
-                <Link href="/dashboard/help" className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                <Link href="/dashboard/help" className="rounded-lg px-4 py-2 text-sm font-medium text-[#616161] transition-colors hover:bg-[#f1f1f1] hover:text-[#303030]">
                   Base de Conocimientos
                 </Link>
               </div>
@@ -161,10 +161,10 @@ export default function SupportPage() {
 
             {stats && isStaff && (
               <div className="grid grid-cols-4 gap-3 mb-6">
-                <div className="card py-3"><p className="text-xs text-slate-600">Abiertos</p><p className="text-xl font-bold text-blue-600">{stats.open}</p></div>
-                <div className="card py-3"><p className="text-xs text-slate-600">En progreso</p><p className="text-xl font-bold text-amber-600">{stats.inProgress}</p></div>
-                <div className="card py-3"><p className="text-xs text-slate-600">Cerrados</p><p className="text-xl font-bold text-green-600">{stats.closed}</p></div>
-                <div className="card py-3"><p className="text-xs text-slate-600">Alta prioridad</p><p className="text-xl font-bold text-red-600">{stats.highPriority}</p></div>
+                <div className="card py-3"><p className="text-xs text-[#616161]">Abiertos</p><p className="text-xl font-bold text-blue-600">{stats.open}</p></div>
+                <div className="card py-3"><p className="text-xs text-[#616161]">En progreso</p><p className="text-xl font-bold text-amber-600">{stats.inProgress}</p></div>
+                <div className="card py-3"><p className="text-xs text-[#616161]">Cerrados</p><p className="text-xl font-bold text-green-600">{stats.closed}</p></div>
+                <div className="card py-3"><p className="text-xs text-[#616161]">Alta prioridad</p><p className="text-xl font-bold text-red-600">{stats.highPriority}</p></div>
               </div>
             )}
 
@@ -183,7 +183,7 @@ export default function SupportPage() {
                   {images.length > 0 && (
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {images.map((file, i) => (
-                        <div key={i} className="text-xs bg-slate-100 p-1.5 rounded text-slate-600">{file.name}</div>
+                        <div key={i} className="text-xs bg-[#f1f1f1] p-1.5 rounded text-[#616161]">{file.name}</div>
                       ))}
                     </div>
                   )}
@@ -194,15 +194,15 @@ export default function SupportPage() {
 
             <div className="flex gap-2 mb-4">
               {["", "open", "in_progress", "closed"].map((s) => (
-                <button key={s} onClick={() => setFilter(s)} className={`rounded-full px-3 py-1 text-xs font-medium ${filter === s ? "bg-primary-50 text-primary-700" : "bg-slate-100 text-slate-600"}`}>{s || "Todos"}</button>
+                <button key={s} onClick={() => setFilter(s)} className={`rounded-full px-3 py-1 text-xs font-medium ${filter === s ? "bg-primary-50 text-primary-700" : "bg-[#f1f1f1] text-[#616161]"}`}>{s || "Todos"}</button>
               ))}
             </div>
 
-            {tickets.length === 0 ? <div className="card text-center py-8"><p className="text-slate-500">Sin tickets</p></div> : (
+            {tickets.length === 0 ? <div className="card text-center py-8"><p className="text-[#616161]">Sin tickets</p></div> : (
               <div className="space-y-3">{tickets.map((t) => (
                 <div key={t.id} className="card cursor-pointer hover:shadow-md transition-shadow" onClick={() => fetchTicket(t.id)}>
                   <div className="flex items-center justify-between">
-                    <div className="flex-1"><h3 className="font-medium text-slate-900">{t.subject}</h3><p className="text-xs text-slate-500 mt-1">{t.user?.firstName} {t.user?.lastName}{t.tenant && ` · ${t.tenant.name}`} · {t._count.replies} respuestas</p></div>
+                    <div className="flex-1"><h3 className="font-medium text-[#303030]">{t.subject}</h3><p className="text-xs text-[#616161] mt-1">{t.user?.firstName} {t.user?.lastName}{t.tenant && ` · ${t.tenant.name}`} · {t._count.replies} respuestas</p></div>
                     <div className="flex items-center gap-2 ml-4"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priorityColor(t.priority)}`}>{priorityLabel(t.priority)}</span><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor(t.status)}`}>{statusLabel(t.status)}</span></div>
                   </div>
                 </div>

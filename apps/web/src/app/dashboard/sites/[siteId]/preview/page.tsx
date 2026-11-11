@@ -36,8 +36,8 @@ export default function SitePreviewPage() {
     [page],
   );
 
-  if (error) return <div className="flex min-h-screen items-center justify-center p-6 text-center text-sm text-slate-600">{error}</div>;
-  if (!site) return <div className="flex min-h-screen items-center justify-center text-sm text-slate-400">Cargando vista previa…</div>;
+  if (error) return <div className="flex min-h-screen items-center justify-center p-6 text-center text-sm text-[#616161]">{error}</div>;
+  if (!site) return <div className="flex min-h-screen items-center justify-center text-sm text-[#8a8a8a]">Cargando vista previa…</div>;
 
   const palette = hasExplicitPalette(site.settings) ? resolveSitePalette(site.settings, site.primaryColor, site.secondaryColor) : undefined;
   const pages = [...site.pages].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -56,7 +56,7 @@ export default function SitePreviewPage() {
         </div>
         {pages.length > 1 && (
           <select value={pageId || ""} onChange={(e) => setPageId(e.target.value)} className="rounded-lg border-0 bg-white/10 px-2 py-1.5 text-sm text-white focus:outline-none">
-            {pages.map((p) => <option key={p.id} value={p.id} className="text-slate-900">{p.name}</option>)}
+            {pages.map((p) => <option key={p.id} value={p.id} className="text-[#303030]">{p.name}</option>)}
           </select>
         )}
       </div>
@@ -64,7 +64,7 @@ export default function SitePreviewPage() {
       <div className={`pt-12 ${templateWrapperClass(site.settings?.globalStyles, page?.path)}`}>
         <TemplateGlobalStyles globalStyles={site.settings?.globalStyles} pagePath={page?.path} palette={palette} colors={palette ? undefined : { primary: site.primaryColor, secondary: site.secondaryColor || site.primaryColor }} />
         {blocks.length === 0
-          ? <div className="flex h-64 items-center justify-center text-slate-500">Esta página todavía no tiene secciones.</div>
+          ? <div className="flex h-64 items-center justify-center text-[#616161]">Esta página todavía no tiene secciones.</div>
           : blocks.map((b) => <BlockRenderer key={b.id} type={b.type} content={b.content} palette={palette} />)}
       </div>
     </div>

@@ -84,7 +84,7 @@ export default function AppDownloadPage() {
   if (loading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-        <p className="text-slate-500">Cargando...</p>
+        <p className="text-[#616161]">Cargando...</p>
       </div>
     );
   }
@@ -94,13 +94,13 @@ export default function AppDownloadPage() {
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
       {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">
           {toast}
         </div>
       )}
 
-      <h1 className="text-2xl font-bold text-slate-900 mb-2">App Movil</h1>
-      <p className="text-sm text-slate-500 mb-8">
+      <h1 className="text-xl font-bold text-[#303030] mb-2">App Movil</h1>
+      <p className="text-sm text-[#616161] mb-8">
         {isSuperAdmin
           ? "Sube y gestiona la APK de la plataforma para que todos los negocios puedan descargarla."
           : "Descarga la app movil de Build Iceberg para gestionar tu negocio desde el celular."}
@@ -138,24 +138,24 @@ export default function AppDownloadPage() {
       )}
 
       {!hasApk && !isSuperAdmin && (
-        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-[#f7f7f7] rounded-2xl border border-[#e3e3e3] p-8 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-[#f1f1f1] flex items-center justify-center mx-auto mb-4">
+            <svg className="h-8 w-8 text-[#8a8a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="text-sm text-slate-500">La app no esta disponible aun. Pronto podras descargarla.</p>
+          <p className="text-sm text-[#616161]">La app no esta disponible aun. Pronto podras descargarla.</p>
         </div>
       )}
 
       {/* Super admin: upload / manage */}
       {isSuperAdmin && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="p-5 border-b border-slate-100">
-            <h3 className="font-semibold text-sm text-slate-900">
+        <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] overflow-hidden">
+          <div className="p-5 border-b border-[#ebebeb]">
+            <h3 className="font-semibold text-sm text-[#303030]">
               {hasApk ? "Actualizar app" : "Subir primera version"}
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#616161] mt-1">
               Solo los super admin pueden gestionar la app de la plataforma.
             </p>
           </div>
@@ -163,18 +163,18 @@ export default function AppDownloadPage() {
           <div className="p-5 space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Nombre de la app</label>
+                <label className="block text-xs font-medium text-[#616161] mb-1">Nombre de la app</label>
                 <input
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                  className="w-full px-3.5 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   value={appName}
                   onChange={e => setAppName(e.target.value)}
                   placeholder="Build Iceberg"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Version</label>
+                <label className="block text-xs font-medium text-[#616161] mb-1">Version</label>
                 <input
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                  className="w-full px-3.5 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   value={version}
                   onChange={e => setVersion(e.target.value)}
                   placeholder="1.0.0"
@@ -183,12 +183,12 @@ export default function AppDownloadPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Archivo APK</label>
+              <label className="block text-xs font-medium text-[#616161] mb-1">Archivo APK</label>
               <input
                 ref={fileRef}
                 type="file"
                 accept=".apk,application/vnd.android.package-archive"
-                className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                className="block w-full text-sm text-[#616161] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
               />
             </div>
 

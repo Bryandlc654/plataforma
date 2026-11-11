@@ -46,7 +46,7 @@ function renderInline(source: string, keyBase: string): ReactNode[] {
       nodes.push(
         <code
           key={`${keyBase}-c${key}`}
-          className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.85em] text-rose-600"
+          className="rounded bg-[#f1f1f1] px-1.5 py-0.5 font-mono text-[0.85em] text-rose-600"
         >
           {escapeHtml(code)}
         </code>
@@ -82,12 +82,12 @@ function renderInline(source: string, keyBase: string): ReactNode[] {
 }
 
 const headingClass: Record<number, string> = {
-  1: "mt-6 mb-3 text-2xl font-bold text-slate-900",
-  2: "mt-6 mb-3 text-xl font-bold text-slate-900",
-  3: "mt-5 mb-2 text-lg font-semibold text-slate-900",
-  4: "mt-4 mb-2 text-base font-semibold text-slate-900",
-  5: "mt-4 mb-1 text-sm font-semibold text-slate-900",
-  6: "mt-3 mb-1 text-sm font-semibold text-slate-600",
+  1: "mt-6 mb-3 text-2xl font-bold text-[#303030]",
+  2: "mt-6 mb-3 text-xl font-bold text-[#303030]",
+  3: "mt-5 mb-2 text-lg font-semibold text-[#303030]",
+  4: "mt-4 mb-2 text-base font-semibold text-[#303030]",
+  5: "mt-4 mb-1 text-sm font-semibold text-[#303030]",
+  6: "mt-3 mb-1 text-sm font-semibold text-[#616161]",
 };
 
 const headingTag = (level: number): ElementType => {
@@ -104,7 +104,7 @@ export default function Markdown({ children }: { children: string }) {
     if (buffer.length === 0) return;
     const text = buffer.join(" ");
     blocks.push(
-      <p key={`${key++}-p`} className="my-3 leading-relaxed text-slate-700">
+      <p key={`${key++}-p`} className="my-3 leading-relaxed text-[#303030]">
         {renderInline(text, `${key}-p`)}
       </p>
     );
@@ -127,7 +127,7 @@ export default function Markdown({ children }: { children: string }) {
         i++;
       }
       blocks.push(
-        <pre key={`${key++}-code`} className="my-4 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100">
+        <pre key={`${key++}-code`} className="my-4 overflow-x-auto rounded-lg bg-[#1a1a1a] p-4 text-sm text-slate-100">
           <code className={lang ? `language-${lang}` : ""}>{escapeHtml(codeLines.join("\n"))}</code>
         </pre>
       );
@@ -157,7 +157,7 @@ export default function Markdown({ children }: { children: string }) {
     // Horizontal rule
     if (/^\s*([-*_])\1{2,}\s*$/.test(line)) {
       finishParagraph(buffer);
-      blocks.push(<hr key={`${key++}-hr`} className="my-6 border-slate-200" />);
+      blocks.push(<hr key={`${key++}-hr`} className="my-6 border-[#e3e3e3]" />);
       continue;
     }
 
@@ -171,7 +171,7 @@ export default function Markdown({ children }: { children: string }) {
       if (ulItem) {
         items.push(
           <li key={`${key++}-li`} className="my-1 flex gap-2">
-            <span className="mt-0.5 flex-shrink-0 text-slate-400">•</span>
+            <span className="mt-0.5 flex-shrink-0 text-[#8a8a8a]">•</span>
             <span>{renderInline(ulItem[1], `${key}-li`)}</span>
           </li>
         );
@@ -181,7 +181,7 @@ export default function Markdown({ children }: { children: string }) {
           i++;
           items.push(
             <li key={`${key++}-li`} className="my-1 flex gap-2">
-              <span className="mt-0.5 flex-shrink-0 text-slate-400">•</span>
+              <span className="mt-0.5 flex-shrink-0 text-[#8a8a8a]">•</span>
               <span>{renderInline(next[1], `${key}-li`)}</span>
             </li>
           );
@@ -195,7 +195,7 @@ export default function Markdown({ children }: { children: string }) {
         let counter = parseInt(olItem![1] ? (line.match(/^\s*(\d+)/)?.[1] || "1") : "1", 10);
         items.push(
           <li key={`${key++}-li`} className="my-1 flex gap-2">
-            <span className="mt-0.5 flex-shrink-0 font-medium text-slate-400">{counter}.</span>
+            <span className="mt-0.5 flex-shrink-0 font-medium text-[#8a8a8a]">{counter}.</span>
             <span>{renderInline(olItem![1], `${key}-li`)}</span>
           </li>
         );
@@ -206,7 +206,7 @@ export default function Markdown({ children }: { children: string }) {
           counter++;
           items.push(
             <li key={`${key++}-li`} className="my-1 flex gap-2">
-              <span className="mt-0.5 flex-shrink-0 font-medium text-slate-400">{counter}.</span>
+              <span className="mt-0.5 flex-shrink-0 font-medium text-[#8a8a8a]">{counter}.</span>
               <span>{renderInline(next[1], `${key}-li`)}</span>
             </li>
           );
@@ -230,7 +230,7 @@ export default function Markdown({ children }: { children: string }) {
       }
       i--;
       blocks.push(
-        <blockquote key={`${key++}-q`} className="my-4 border-l-4 border-primary-200 bg-primary-50/40 px-4 py-2 text-slate-600">
+        <blockquote key={`${key++}-q`} className="my-4 border-l-4 border-primary-200 bg-primary-50/40 px-4 py-2 text-[#616161]">
           <p>{renderInline(quoteLines.join(" "), `${key}-q`)}</p>
         </blockquote>
       );

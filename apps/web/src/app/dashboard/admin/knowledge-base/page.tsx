@@ -162,8 +162,8 @@ export default function KnowledgeBaseAdminPage() {
     <main className="mx-auto w-full max-w-5xl p-6 lg:p-10">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Base de Conocimientos</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-xl font-bold text-[#303030]">Base de Conocimientos</h1>
+          <p className="mt-1 text-sm text-[#616161]">
             Gestiona los artículos de ayuda que ven los owners de la plataforma.
           </p>
         </div>
@@ -218,12 +218,12 @@ export default function KnowledgeBaseAdminPage() {
               />
             </div>
             <div className="flex items-end pb-1">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <label className="flex items-center gap-2 text-sm font-medium text-[#303030]">
                 <input
                   type="checkbox"
                   checked={form.isPublished}
                   onChange={(e) => setForm({ ...form, isPublished: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                  className="h-4 w-4 rounded border-[#d4d4d4] text-primary-600 focus:ring-primary-500"
                 />
                 Publicado
               </label>
@@ -262,10 +262,10 @@ export default function KnowledgeBaseAdminPage() {
       </div>
 
       {loading ? (
-        <p className="py-10 text-center text-sm text-slate-400">Cargando artículos...</p>
+        <p className="py-10 text-center text-sm text-[#8a8a8a]">Cargando artículos...</p>
       ) : articles.length === 0 ? (
         <div className="card py-12 text-center">
-          <p className="text-slate-500">Aún no hay artículos. Crea el primero.</p>
+          <p className="text-[#616161]">Aún no hay artículos. Crea el primero.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -273,14 +273,14 @@ export default function KnowledgeBaseAdminPage() {
             <div key={a.id} className="card flex flex-wrap items-center gap-3 p-4">
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  a.isPublished ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500"
+                  a.isPublished ? "bg-green-50 text-green-700" : "bg-[#f1f1f1] text-[#616161]"
                 }`}
               >
                 {a.isPublished ? "Publicado" : "Borrador"}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-slate-900">{a.title}</p>
-                <p className="text-xs text-slate-400">
+                <p className="truncate font-semibold text-[#303030]">{a.title}</p>
+                <p className="text-xs text-[#8a8a8a]">
                   {a.category}
                   {a.excerpt ? ` · ${a.excerpt}` : ""}
                 </p>

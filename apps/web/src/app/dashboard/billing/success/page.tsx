@@ -61,39 +61,39 @@ function BillingSuccessContent() {
       <div className="card p-8">
         {status === "checking" ? (
           <>
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-50">
-              <svg className="h-6 w-6 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#f7f7f7]">
+              <svg className="h-6 w-6 animate-spin text-[#8a8a8a]" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-slate-900 mb-2">Confirmando pago</h1>
-            <p className="text-sm text-slate-500">Estamos verificando el pago con PayPal. No cierres esta ventana.</p>
+            <h1 className="text-lg font-bold text-[#303030] mb-2">Confirmando pago</h1>
+            <p className="text-sm text-[#616161]">Estamos verificando el pago con PayPal. No cierres esta ventana.</p>
           </>
         ) : status === "ok" ? (
           <>
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
-            <h1 className="text-lg font-bold text-slate-900 mb-2">Pago confirmado</h1>
-            <p className="text-sm text-slate-500 mb-6">
+            <h1 className="text-lg font-bold text-[#303030] mb-2">Pago confirmado</h1>
+            <p className="text-sm text-[#616161] mb-6">
               PayPal confirmó el pago y tu plan ya está activo. Los cobros de planes llegarán a la cuenta configurada por el administrador.
             </p>
             <div className="flex flex-col items-center gap-3">
               <button type="button" onClick={() => { window.location.href = "/dashboard"; }} className="btn-primary text-sm inline-flex">Ir al panel</button>
-              <button type="button" onClick={() => { window.location.href = "/dashboard/billing"; }} className="text-xs font-medium text-slate-500 hover:underline">Ver facturación</button>
+              <button type="button" onClick={() => { window.location.href = "/dashboard/billing"; }} className="text-xs font-medium text-[#616161] hover:underline">Ver facturación</button>
             </div>
           </>
         ) : status === "error" ? (
           <>
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl text-red-600">!</div>
-            <h1 className="text-lg font-bold text-slate-900 mb-2">No pudimos confirmar el pago</h1>
-            <p className="text-sm text-slate-500 mb-6">{message || "Inténtalo de nuevo desde facturación."}</p>
+            <h1 className="text-lg font-bold text-[#303030] mb-2">No pudimos confirmar el pago</h1>
+            <p className="text-sm text-[#616161] mb-6">{message || "Inténtalo de nuevo desde facturación."}</p>
             <Link href="/dashboard/billing" className="btn-primary text-sm inline-flex">Volver a facturación</Link>
           </>
         ) : (
           <>
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
-            <h1 className="text-lg font-bold text-slate-900 mb-2">Pago recibido</h1>
-            <p className="text-sm text-slate-500 mb-6">
+            <h1 className="text-lg font-bold text-[#303030] mb-2">Pago recibido</h1>
+            <p className="text-sm text-[#616161] mb-6">
               Estamos confirmando el pago con la pasarela. Tu plan se activará automáticamente en unos segundos. Si no se refleja, actualiza la página de facturación.
             </p>
             <Link href="/dashboard/billing" className="btn-primary text-sm inline-flex">Volver a facturación</Link>
@@ -106,7 +106,7 @@ function BillingSuccessContent() {
 
 export default function BillingSuccessPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-slate-500">Cargando...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm text-[#616161]">Cargando...</div>}>
       <BillingSuccessContent />
     </Suspense>
   );

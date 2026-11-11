@@ -84,11 +84,11 @@ export default function ReviewsPanel() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Opiniones de Clientes</h1>
-          <p className="text-slate-500 mt-1">Gestiona las reseñas y agrega valoraciones de tus clientes.</p>
+          <h1 className="text-xl font-bold text-[#303030]">Opiniones de Clientes</h1>
+          <p className="text-[#616161] mt-1">Gestiona las reseñas y agrega valoraciones de tus clientes.</p>
         </div>
         {canManage && (
-          <button onClick={openAddModal} className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <button onClick={openAddModal} className="flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#303030] text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
             <Plus className="w-4 h-4" /> Agregar reseña
           </button>
         )}
@@ -97,21 +97,21 @@ export default function ReviewsPanel() {
       {loading ? (
         <div className="animate-pulse flex space-x-4">
           <div className="flex-1 space-y-4 py-1">
-            <div className="h-32 bg-slate-200 rounded"></div>
-            <div className="h-32 bg-slate-200 rounded"></div>
+            <div className="h-32 bg-[#e3e3e3] rounded"></div>
+            <div className="h-32 bg-[#e3e3e3] rounded"></div>
           </div>
         </div>
       ) : reviews.length === 0 ? (
-        <div className="p-12 text-center border-dashed border-2 bg-slate-50 rounded-xl">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mb-4">
-            <Star className="h-8 w-8 text-slate-400" />
+        <div className="p-12 text-center border-dashed border-2 bg-[#f7f7f7] rounded-xl">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#f1f1f1] mb-4">
+            <Star className="h-8 w-8 text-[#8a8a8a]" />
           </div>
           <h3 className="text-lg font-semibold mb-2">Aún no hay opiniones</h3>
-          <p className="text-slate-500 max-w-sm mx-auto mb-6">
+          <p className="text-[#616161] max-w-sm mx-auto mb-6">
             Añade el bloque &apos;Formulario Reseñas&apos; en tu página para empezar a recibir valoraciones de clientes reales.
           </p>
           {canManage && (
-            <button onClick={openAddModal} className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            <button onClick={openAddModal} className="inline-flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#303030] text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
               <Plus className="w-4 h-4" /> Agregar primera reseña
             </button>
           )}
@@ -119,7 +119,7 @@ export default function ReviewsPanel() {
       ) : (
         <div className="grid gap-4">
           {reviews.map(review => (
-            <div key={review.id} className="p-5 flex flex-col md:flex-row gap-6 items-start bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div key={review.id} className="p-5 flex flex-col md:flex-row gap-6 items-start bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] shadow-sm">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex text-amber-400">
@@ -137,8 +137,8 @@ export default function ReviewsPanel() {
                     </span>
                   )}
                 </div>
-                <p className="text-slate-700 italic mb-4 text-sm">&quot;{review.content}&quot;</p>
-                <div className="flex items-center gap-4 text-sm text-slate-500">
+                <p className="text-[#303030] italic mb-4 text-sm">&quot;{review.content}&quot;</p>
+                <div className="flex items-center gap-4 text-sm text-[#616161]">
                   <div className="flex items-center gap-1.5">
                     <User className="w-4 h-4" /> {review.authorName} {review.authorEmail ? `(${review.authorEmail})` : ''}
                   </div>
@@ -146,19 +146,19 @@ export default function ReviewsPanel() {
                   <span>{new Date(review.createdAt).toLocaleDateString()}</span>
                 </div>
                 {(review.ipAddress || review.userAgent) && (
-                  <p className="text-xs text-slate-400 mt-2 truncate">
+                  <p className="text-xs text-[#8a8a8a] mt-2 truncate">
                     IP: {review.ipAddress || '—'} {review.userAgent ? `• ${review.userAgent}` : ''}
                   </p>
                 )}
               </div>
               {canManage && (
-                <div className="flex flex-row md:flex-col items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="flex flex-row md:flex-col items-center gap-4 bg-[#f7f7f7] p-4 rounded-xl border border-[#ebebeb]">
                   <div className="flex items-center gap-2">
-                    {review.isPublished ? <Eye className="w-4 h-4 text-slate-500" /> : <EyeOff className="w-4 h-4 text-slate-500" />}
+                    {review.isPublished ? <Eye className="w-4 h-4 text-[#616161]" /> : <EyeOff className="w-4 h-4 text-[#616161]" />}
                     <span className="text-sm font-medium">{review.isPublished ? 'Visible' : 'Oculto'}</span>
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                      className="h-4 w-4 rounded border-[#d4d4d4] text-primary-600 focus:ring-primary-500"
                       checked={review.isPublished}
                       onChange={() => togglePublish(review.id, review.isPublished)}
                       title={review.isPublished ? 'Ocultar opinión' : 'Mostrar opinión'}
@@ -176,60 +176,60 @@ export default function ReviewsPanel() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/50" onClick={() => !saving && setShowModal(false)} />
+          <div className="absolute inset-0 bg-[#1a1a1a]/50" onClick={() => !saving && setShowModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-slate-900">Agregar reseña</h2>
-              <button onClick={() => !saving && setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <h2 className="text-lg font-bold text-[#303030]">Agregar reseña</h2>
+              <button onClick={() => !saving && setShowModal(false)} className="text-[#8a8a8a] hover:text-[#616161] transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={submitReview} className="space-y-4">
               <div className="flex flex-col items-center gap-2">
-                <label className="text-sm font-semibold text-slate-700">Calificación</label>
+                <label className="text-sm font-semibold text-[#303030]">Calificación</label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
                       key={star}
                       type="button"
-                      className={`text-3xl transition-colors ${star <= form.rating ? 'text-yellow-400' : 'text-slate-300'}`}
+                      className={`text-3xl transition-colors ${star <= form.rating ? 'text-yellow-400' : 'text-[#b5b5b5]'}`}
                       onClick={() => setForm({ ...form, rating: star })}
                     >★</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Nombre <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-[#303030] mb-1.5">Nombre <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   required
                   maxLength={100}
                   value={form.authorName}
                   onChange={e => setForm({ ...form, authorName: e.target.value })}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                  className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   placeholder="Nombre del cliente"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Correo <span className="text-slate-400 text-xs">(opcional)</span></label>
+                <label className="block text-sm font-medium text-[#303030] mb-1.5">Correo <span className="text-[#8a8a8a] text-xs">(opcional)</span></label>
                 <input
                   type="email"
                   maxLength={150}
                   value={form.authorEmail}
                   onChange={e => setForm({ ...form, authorEmail: e.target.value })}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                  className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                   placeholder="cliente@correo.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Comentario <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-[#303030] mb-1.5">Comentario <span className="text-red-400">*</span></label>
                 <textarea
                   required
                   rows={4}
                   maxLength={2000}
                   value={form.content}
                   onChange={e => setForm({ ...form, content: e.target.value })}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"
+                  className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"
                   placeholder="Escribe la opinión del cliente..."
                 />
               </div>
@@ -239,14 +239,14 @@ export default function ReviewsPanel() {
                   type="button"
                   onClick={() => setShowModal(false)}
                   disabled={saving}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl border border-[#e3e3e3] text-sm font-medium text-[#616161] hover:bg-[#f7f7f7] transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#303030] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Guardando...' : 'Publicar reseña'}
                 </button>

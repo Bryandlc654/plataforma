@@ -159,8 +159,8 @@ export default function SorteosPanel() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Sorteos</h1>
-          <p className="text-sm text-slate-600">{sorteos.length} sorteos</p>
+          <h1 className="text-xl font-bold text-[#303030]">Sorteos</h1>
+          <p className="text-sm text-[#616161]">{sorteos.length} sorteos</p>
         </div>
         <button onClick={openCreate} className="btn-primary text-sm inline-flex items-center gap-2">
           <Plus className="h-4 w-4" /> Nuevo sorteo
@@ -173,21 +173,21 @@ export default function SorteosPanel() {
             <div className="flex items-center justify-between p-6 border-b">
               <div>
                 <h2 className="text-lg font-bold">Participantes</h2>
-                <p className="text-sm text-slate-500">{participantTotal} registros</p>
+                <p className="text-sm text-[#616161]">{participantTotal} registros</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => { const s = sorteos.find(s => s.id === showParticipants); if (s) exportCsv(s); }} className="btn-secondary text-xs">Exportar CSV</button>
-                <button onClick={() => setShowParticipants(null)} className="text-slate-400 hover:text-slate-600">
+                <button onClick={() => setShowParticipants(null)} className="text-[#8a8a8a] hover:text-[#616161]">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
               </div>
             </div>
             <div className="overflow-auto flex-1 p-6">
               {participants.length === 0 ? (
-                <p className="text-center text-slate-400 py-8">Sin participantes aún</p>
+                <p className="text-center text-[#8a8a8a] py-8">Sin participantes aún</p>
               ) : (
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b text-left text-slate-500">
+                  <thead><tr className="border-b text-left text-[#616161]">
                     <th className="pb-2 font-medium">#</th>
                     {sorteos.find(s => s.id === showParticipants)?.fields.map(f => (
                       <th key={f.name} className="pb-2 font-medium">{f.label}</th>
@@ -196,12 +196,12 @@ export default function SorteosPanel() {
                     <th className="pb-2 font-medium"></th>
                   </tr></thead>
                   <tbody>{participants.map((p, i) => (
-                    <tr key={p.id} className="border-b hover:bg-slate-50">
-                      <td className="py-2 text-slate-400">{(participantPage - 1) * 50 + i + 1}</td>
+                    <tr key={p.id} className="border-b hover:bg-[#f7f7f7]">
+                      <td className="py-2 text-[#8a8a8a]">{(participantPage - 1) * 50 + i + 1}</td>
                       {sorteos.find(s => s.id === showParticipants)?.fields.map(f => (
                         <td key={f.name} className="py-2">{String((p.data as any)?.[f.name] || "")}</td>
                       ))}
-                      <td className="py-2 text-slate-400 text-xs">{new Date(p.createdAt).toLocaleDateString()}</td>
+                      <td className="py-2 text-[#8a8a8a] text-xs">{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td className="py-2"><button onClick={() => removeParticipant(showParticipants!, p.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button></td>
                     </tr>
                   ))}</tbody>
@@ -211,7 +211,7 @@ export default function SorteosPanel() {
             {participantTotal > 50 && (
               <div className="flex justify-center gap-2 p-4 border-t">
                 <button disabled={participantPage <= 1} onClick={() => viewParticipants(showParticipants!, participantPage - 1)} className="btn-secondary text-xs">Anterior</button>
-                <span className="text-sm text-slate-500 self-center">Página {participantPage}</span>
+                <span className="text-sm text-[#616161] self-center">Página {participantPage}</span>
                 <button disabled={participants.length < 50} onClick={() => viewParticipants(showParticipants!, participantPage + 1)} className="btn-secondary text-xs">Siguiente</button>
               </div>
             )}
@@ -225,20 +225,20 @@ export default function SorteosPanel() {
             <div className="p-6 border-b"><h2 className="text-lg font-bold">{editId ? "Editar" : "Nuevo"} Sorteo</h2></div>
             <div className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-medium text-slate-600 mb-1">Título *</label><input className="input-field w-full" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Sorteo de Navidad" /></div>
-                <div><label className="block text-xs font-medium text-slate-600 mb-1">Slug (URL)</label><input className="input-field w-full" value={slug} onChange={e => setSlug(e.target.value)} placeholder="sorteo-navidad" /></div>
+                <div><label className="block text-xs font-medium text-[#616161] mb-1">Título *</label><input className="input-field w-full" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Sorteo de Navidad" /></div>
+                <div><label className="block text-xs font-medium text-[#616161] mb-1">Slug (URL)</label><input className="input-field w-full" value={slug} onChange={e => setSlug(e.target.value)} placeholder="sorteo-navidad" /></div>
               </div>
-              <div><label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label><textarea className="input-field w-full" rows={2} value={description} onChange={e => setDescription(e.target.value)} /></div>
+              <div><label className="block text-xs font-medium text-[#616161] mb-1">Descripción</label><textarea className="input-field w-full" rows={2} value={description} onChange={e => setDescription(e.target.value)} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-medium text-slate-600 mb-1">Inicio (opcional)</label><input type="datetime-local" className="input-field w-full" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-slate-600 mb-1">Fin (opcional)</label><input type="datetime-local" className="input-field w-full" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-[#616161] mb-1">Inicio (opcional)</label><input type="datetime-local" className="input-field w-full" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-[#616161] mb-1">Fin (opcional)</label><input type="datetime-local" className="input-field w-full" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-2">Fondo de la página</label>
+                <label className="block text-xs font-medium text-[#616161] mb-2">Fondo de la página</label>
                 <div className="flex gap-2 mb-3">
                   {(["none","color","gradient","image"] as const).map(t => (
                     <button key={t} onClick={() => setBg({ ...bg, type: t })}
-                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${bg.type === t ? "border-primary-500 bg-primary-50 text-primary-700 font-medium" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}>
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${bg.type === t ? "border-primary-500 bg-primary-50 text-primary-700 font-medium" : "border-[#e3e3e3] text-[#616161] hover:border-[#d4d4d4]"}`}>
                       {t === "none" ? "Sin fondo" : t === "color" ? "Color sólido" : t === "gradient" ? "Degradado" : "Imagen"}
                     </button>
                   ))}
@@ -253,20 +253,20 @@ export default function SorteosPanel() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="text-xs text-slate-500">Desde</span>
+                        <span className="text-xs text-[#616161]">Desde</span>
                         <input type="color" className="h-8 w-12 rounded border cursor-pointer" value={bg.gradientFrom || "#201b51"} onChange={e => setBg({ ...bg, gradientFrom: e.target.value })} />
                         <input className="input-field flex-1 text-sm" value={bg.gradientFrom || ""} onChange={e => setBg({ ...bg, gradientFrom: e.target.value })} placeholder="#201b51" />
                       </div>
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="text-xs text-slate-500">Hasta</span>
+                        <span className="text-xs text-[#616161]">Hasta</span>
                         <input type="color" className="h-8 w-12 rounded border cursor-pointer" value={bg.gradientTo || "#f29200"} onChange={e => setBg({ ...bg, gradientTo: e.target.value })} />
                         <input className="input-field flex-1 text-sm" value={bg.gradientTo || ""} onChange={e => setBg({ ...bg, gradientTo: e.target.value })} placeholder="#f29200" />
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <label className="text-xs text-slate-500">Ángulo</label>
+                      <label className="text-xs text-[#616161]">Ángulo</label>
                       <input type="range" min={0} max={360} value={bg.gradientAngle ?? 135} onChange={e => setBg({ ...bg, gradientAngle: Number(e.target.value) })} className="flex-1" />
-                      <span className="text-xs text-slate-500 w-8 text-right">{bg.gradientAngle ?? 135}°</span>
+                      <span className="text-xs text-[#616161] w-8 text-right">{bg.gradientAngle ?? 135}°</span>
                     </div>
                   </div>
                 )}
@@ -274,7 +274,7 @@ export default function SorteosPanel() {
                   <div className="space-y-2">
                     <input className="input-field w-full text-sm" placeholder="URL de la imagen (https://...)" value={bg.imageUrl || ""} onChange={e => setBg({ ...bg, imageUrl: e.target.value })} />
                     {bg.imageUrl && (
-                      <div className="relative h-32 rounded-lg overflow-hidden border bg-slate-100">
+                      <div className="relative h-32 rounded-lg overflow-hidden border bg-[#f1f1f1]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={bg.imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
                       </div>
@@ -284,21 +284,21 @@ export default function SorteosPanel() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-slate-600">Campos del formulario</label>
+                  <label className="text-xs font-medium text-[#616161]">Campos del formulario</label>
                   <button onClick={addField} className="text-xs text-primary-600 hover:text-primary-700">+ Agregar campo</button>
                 </div>
                 <div className="space-y-2">
                   {fields.map((f, i) => (
-                    <div key={i} className="flex gap-2 items-start bg-slate-50 rounded-lg p-2">
+                    <div key={i} className="flex gap-2 items-start bg-[#f7f7f7] rounded-lg p-2">
                       <input className="input-field flex-1 text-sm" placeholder="Nombre interno" value={f.name} onChange={e => updateField(i, "name", e.target.value.replace(/[^a-z0-9_]/g, "_"))} />
                       <input className="input-field flex-1 text-sm" placeholder="Etiqueta" value={f.label} onChange={e => updateField(i, "label", e.target.value)} />
                       <select className="input-field w-28 text-sm" value={f.type} onChange={e => updateField(i, "type", e.target.value)}>
                         {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                       </select>
-                      <label className="flex items-center gap-1 text-xs text-slate-500 mt-2">
+                      <label className="flex items-center gap-1 text-xs text-[#616161] mt-2">
                         <input type="checkbox" checked={f.required} onChange={e => updateField(i, "required", e.target.checked)} /> Req
                       </label>
-                      <button onClick={() => removeField(i)} className="text-slate-400 hover:text-red-500 mt-2"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => removeField(i)} className="text-[#8a8a8a] hover:text-red-500 mt-2"><Trash2 className="h-3.5 w-3.5" /></button>
                     </div>
                   ))}
                 </div>
@@ -315,10 +315,10 @@ export default function SorteosPanel() {
         </div>
       )}
 
-      {loading ? <div className="space-y-4 animate-pulse"><div className="h-40 rounded-xl bg-slate-200" /><div className="h-40 rounded-xl bg-slate-200" /></div> : sorteos.length === 0 ? (
+      {loading ? <div className="space-y-4 animate-pulse"><div className="h-40 rounded-xl bg-[#e3e3e3]" /><div className="h-40 rounded-xl bg-[#e3e3e3]" /></div> : sorteos.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-slate-500 mb-2">Sin sorteos</p>
-          <p className="text-sm text-slate-400 mb-4">Crea sorteos personalizados para captar participantes</p>
+          <p className="text-[#616161] mb-2">Sin sorteos</p>
+          <p className="text-sm text-[#8a8a8a] mb-4">Crea sorteos personalizados para captar participantes</p>
           <button onClick={openCreate} className="btn-primary text-sm">Crear primer sorteo</button>
         </div>
       ) : (
@@ -327,16 +327,16 @@ export default function SorteosPanel() {
             <div key={s.id} className="card p-5 flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-semibold text-slate-900">{s.title}</h3>
+                  <h3 className="font-semibold text-[#303030]">{s.title}</h3>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${availabilityOf(s).className}`}>
                     {availabilityOf(s).label}
                   </span>
                   {!s.isActive && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Inactivo</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#f1f1f1] text-[#616161]">Inactivo</span>
                   )}
                 </div>
-                <p className="text-sm text-slate-500 mt-1">/{s.slug} · {s.fields?.length || 0} campos</p>
-                <div className="flex gap-3 mt-2 text-xs text-slate-400">
+                <p className="text-sm text-[#616161] mt-1">/{s.slug} · {s.fields?.length || 0} campos</p>
+                <div className="flex gap-3 mt-2 text-xs text-[#8a8a8a]">
                   <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {s.participantCount} participantes</span>
                   <span>Creado: {new Date(s.createdAt).toLocaleDateString()}</span>
                   {s.startDate && <span>Inicio: {new Date(s.startDate).toLocaleDateString()}</span>}

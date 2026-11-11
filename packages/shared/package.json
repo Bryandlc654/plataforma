@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "node scripts/extract-template-schema.js && tsc",
+    "schema": "node scripts/extract-template-schema.js"
   },
   "dependencies": {
     "class-validator": "^0.14.1",

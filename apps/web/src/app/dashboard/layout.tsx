@@ -23,7 +23,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isSupport = hasRole(user, "support");
   const isPlatformAdmin = hasRole(user, "platform_admin");
   const isPlatformStaff = isSuperAdmin || isSupport || isPlatformAdmin;
-  const [collapsed, setCollapsed] = useState(false);
+  const [search, setSearch] = useState("");
+  const [userMenu, setUserMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false); // en pantallas pequeñas el menú es un cajón
   useEffect(() => { setMobileOpen(false); }, [pathname]);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
@@ -170,7 +171,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     {
       title: "Administración",
       links: [
-        { href: "/dashboard/users", label: "Administración", icon: "shield", perms: ["user.read", "role.manage", "billing.read", "config.tenant", "audit.view"] },
+        { href: "/dashboard/users", label: "Equipo y permisos", icon: "shield", perms: ["user.read", "role.manage", "billing.read", "config.tenant", "audit.view"] },
         { href: "/dashboard/support", label: "Soporte", icon: "support", roles: "*" },
       ]
     }
@@ -204,14 +205,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   if (!hasHydrated || !gateChecked) {
-    return <div className="flex h-screen items-center justify-center bg-[var(--color-primary)]"><p className="text-white/60">Cargando...</p></div>;
+    return <div className="flex h-screen items-center justify-center bg-[#f1f1f1]"><span className="h-8 w-8 animate-spin rounded-full border-2 border-black/10 border-t-[var(--color-primary)]" /></div>;
   }
 
   if (trialExpired && !isPlatformStaff && !pathname?.startsWith("/dashboard/billing")) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-[var(--color-primary)] px-4 text-center text-white">
-        <span className="h-9 w-9 animate-spin rounded-full border-2 border-white/20 border-t-[var(--color-secondary)]" />
-        <p className="text-sm text-white/70">Tu prueba terminó. Redirigiendo a facturación...</p>
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-[#f1f1f1] px-4 text-center">
+        <span className="h-9 w-9 animate-spin rounded-full border-2 border-black/10 border-t-[var(--color-primary)]" />
+        <p className="text-[13px] text-[#616161]">Tu prueba terminó. Redirigiendo a facturación...</p>
       </div>
     );
   }
@@ -233,122 +234,155 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname?.startsWith(href));
 
+  const allLinks = groups.flatMap((g) => g.links as any[]);
+  const results = search.trim()
+    ? allLinks.filter((l) => l.label.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(search.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""))).slice(0, 8)
+    : [];
+  const initials = (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase();
+
   return (
-    <div className="flex min-h-screen bg-[var(--color-primary)]">
-      {mobileOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-40 overflow-y-auto bg-[var(--color-primary)] transition-transform lg:relative lg:z-auto lg:translate-x-0 lg:overflow-visible lg:bg-transparent ${mobileOpen ? "translate-x-0" : "-translate-x-full"} ${collapsed ? "w-[68px]" : "w-[240px]"} flex flex-col text-[13px] text-white transition-all duration-200 ${collapsed ? "px-2" : "px-3"} py-3`}>
-        {/* Brand + toggle */}
-        <div className={`mb-3 flex items-center ${collapsed ? "justify-center" : "justify-between px-2"}`}>
-          {!collapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2">
-              {platformLogo ? (
-                <img src={platformLogo} alt="Logo de la plataforma" className="h-7 w-auto max-w-[150px] object-contain" />
-              ) : (
-                <>
-                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-secondary)] text-sm font-black text-[var(--color-on-secondary)]">P</span>
-                  <span className="font-semibold tracking-tight">Plataforma</span>
-                </>
-              )}
-            </Link>
+    <div className="flex min-h-screen flex-col bg-[#f1f1f1]">
+      {/* Barra superior (como el admin de Shopify) */}
+      <header className="sticky top-0 z-40 flex h-14 flex-shrink-0 items-center gap-3 bg-[#1a1a1a] px-3 text-white sm:px-4">
+        <button onClick={() => setMobileOpen(true)} aria-label="Abrir menú" className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 lg:hidden">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2 lg:w-[220px]">
+          {platformLogo ? (
+            <img src={platformLogo} alt="Logo de la plataforma" className="h-7 w-auto max-w-[150px] object-contain" />
+          ) : (
+            <>
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-secondary)] text-sm font-black text-[var(--color-on-secondary)]">P</span>
+              <span className="font-semibold tracking-tight">Plataforma</span>
+            </>
           )}
-          <button onClick={() => setCollapsed(!collapsed)} className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white" title={collapsed ? "Abrir menú" : "Cerrar menú"}>
-            <svg className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          </button>
+        </Link>
+
+        {/* Buscador: lleva a cualquier sección del panel */}
+        <div className="relative mx-auto hidden w-full max-w-[480px] sm:block">
+          <svg className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" /></svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && results[0]) { router.push(results[0].href); setSearch(""); }
+              if (e.key === "Escape") setSearch("");
+            }}
+            placeholder="Buscar"
+            className="h-8 w-full rounded-lg border border-white/15 bg-[#303030] pl-8 pr-3 text-[13px] text-white placeholder:text-white/50 focus:border-white/40 focus:bg-[#3a3a3a] focus:outline-none"
+          />
+          {results.length > 0 && (
+            <ul className="absolute left-0 right-0 top-10 z-50 overflow-hidden rounded-xl bg-white py-1 text-[#303030] shadow-[0_8px_24px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.08)]">
+              {results.map((r) => (
+                <li key={r.href}>
+                  <button onMouseDown={(e) => { e.preventDefault(); router.push(r.href); setSearch(""); }} className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] hover:bg-[#f1f1f1]">
+                    <AppIcon name={r.icon} className="h-4 w-4 text-[#616161]" />{r.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Tenant selector */}
-        {!isPlatformStaff && tenants.length > 1 && !collapsed && (
-          <select value={tenantId || ""} onChange={(e) => { const t = tenants.find(x => x.id === e.target.value); if (t) handleSelectTenant(t); }} className="mb-3 w-full rounded-lg border-0 bg-white/10 px-2 py-1.5 text-[13px] text-white focus:ring-1 focus:ring-white/40">
-            {tenants.map((t) => (<option key={t.id} value={t.id} className="text-black">{t.name}</option>))}
-          </select>
-        )}
-
-        {/* Navigation */}
-        <nav className="no-scrollbar flex-1 overflow-y-auto pb-4">
-          {groups.map((group, gIdx) => (
-            <div key={gIdx} className={gIdx > 0 ? "mt-5" : ""}>
-              {!collapsed && gIdx > 0 && (
-                <h3 className="mb-1 px-2 text-[11px] font-medium text-white/45">{group.title}</h3>
-              )}
-              {collapsed && gIdx > 0 && <div className="mx-2 my-2 border-t border-white/10" />}
-              <div className="space-y-0.5">
-                {group.links.map((link: any) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    title={collapsed ? link.label : undefined}
-                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 font-medium transition-colors ${collapsed ? "justify-center" : ""} ${isActive(link.href) ? "bg-white/15 text-white shadow-[inset_2px_0_0_var(--color-secondary)]" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
-                  >
-                    <AppIcon name={link.icon} className="h-[18px] w-[18px] flex-shrink-0" />
-                    {!collapsed && <span className="truncate">{link.label}</span>}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {!isPlatformStaff && !tenant && !collapsed && (
-            <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 font-medium text-white/80 hover:bg-white/10">+ Crear negocio</Link>
-          )}
-        </nav>
-
-        {/* Trial banner (estilo Shopify) */}
-        {!collapsed && trialDaysLeft !== null && !isPlatformStaff && (
-          <div className="mb-3 rounded-xl bg-gradient-to-b from-white/5 to-[rgba(var(--color-secondary-rgb),0.3)] p-3">
-            <p className="mb-2 text-[13px] font-semibold">
-              {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
-            </p>
-            <Link href="/dashboard/billing" className="block rounded-full bg-[var(--color-secondary)] py-2 text-center text-[13px] font-semibold text-[var(--color-on-secondary)] hover:bg-[var(--brand-secondary-hover)]">
-              Elegir un plan
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          {trialDaysLeft !== null && !isPlatformStaff && (
+            <Link href="/dashboard/billing" className="hidden rounded-lg bg-white/10 px-2.5 py-1 text-[12px] font-medium text-white hover:bg-white/15 md:block">
+              {trialDaysLeft > 0 ? `Prueba: ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Prueba terminada"}
             </Link>
-          </div>
-        )}
-
-        {/* User */}
-        <div className={`border-t border-white/10 pt-3 ${collapsed ? "flex flex-col items-center gap-3" : ""}`}>
-          <div className={`flex items-center gap-2.5 ${collapsed ? "" : "px-1"}`}>
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-xs font-bold text-[var(--color-on-secondary)]" title={user?.email}>
-              {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
-            </div>
-            {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{tenant?.name || user?.firstName || "Mi cuenta"}</p>
-                <p className="truncate text-[11px] text-white/50">{user?.email}</p>
-              </div>
+          )}
+          <div className="relative">
+            <button onClick={() => setUserMenu((v) => !v)} className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-white/10">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-[12px] font-bold text-[var(--color-on-secondary)]">{initials}</span>
+              <span className="hidden max-w-[160px] truncate text-[13px] font-medium md:block">{tenant?.name || user?.firstName || "Mi cuenta"}</span>
+            </button>
+            {userMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setUserMenu(false)} />
+                <div className="absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-xl bg-white py-1 text-[#303030] shadow-[0_8px_24px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.08)]">
+                  <div className="border-b border-[#ebebeb] px-3 py-2.5">
+                    <p className="truncate text-[13px] font-semibold">{user?.firstName ? `${user.firstName} ${user.lastName || ""}` : "Mi cuenta"}</p>
+                    <p className="truncate text-[12px] text-[#616161]">{user?.email}</p>
+                  </div>
+                  {!isPlatformStaff && tenants.length > 1 && (
+                    <div className="border-b border-[#ebebeb] py-1">
+                      <p className="px-3 pb-1 pt-1.5 text-[12px] font-medium text-[#616161]">Negocios</p>
+                      {tenants.map((t) => (
+                        <button key={t.id} onClick={() => { handleSelectTenant(t); setUserMenu(false); }} className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] hover:bg-[#f1f1f1] ${t.id === tenantId ? "font-semibold" : ""}`}>
+                          <span className="truncate">{t.name}</span>
+                          {t.id === tenantId && <span className="text-[color:var(--color-primary)]">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <Link href="/dashboard/profile" onClick={() => setUserMenu(false)} className="block px-3 py-1.5 text-[13px] hover:bg-[#f1f1f1]">Mi perfil</Link>
+                  {!isPlatformStaff && <Link href="/dashboard/billing" onClick={() => setUserMenu(false)} className="block px-3 py-1.5 text-[13px] hover:bg-[#f1f1f1]">Plan y facturación</Link>}
+                  <button onClick={handleLogout} className="block w-full px-3 py-1.5 text-left text-[13px] text-[#c70a24] hover:bg-[#fff1f0]">Cerrar sesión</button>
+                </div>
+              </>
             )}
           </div>
-          {!collapsed ? (
-            <div className="mt-2 flex gap-3 px-1 text-[12px] text-white/55">
-              <Link href="/dashboard/profile" className="hover:text-white">Mi perfil</Link>
-              <button onClick={handleLogout} className="hover:text-red-400">Cerrar sesión</button>
-            </div>
-          ) : (
-            <button onClick={handleLogout} title="Cerrar sesión" className="text-white/50 hover:text-red-400">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            </button>
-          )}
         </div>
-      </aside>
+      </header>
 
-      <div className="min-w-0 flex-1 p-0 lg:py-2 lg:pr-2">
-        <div className="flex items-center gap-3 px-4 py-3 text-white lg:hidden">
-          <button onClick={() => setMobileOpen(true)} aria-label="Abrir menú" className="rounded-md p-1.5 hover:bg-white/10">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-          </button>
-          <span className="text-sm font-semibold">Plataforma</span>
-        </div>
-        <div className="h-full min-h-screen overflow-auto bg-[#f1f1f1] lg:min-h-0 lg:rounded-xl lg:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">{children}</div>
+      <div className="flex min-h-0 flex-1">
+        {mobileOpen && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />}
+        {/* Barra lateral clara (como Shopify) */}
+        <aside className={`fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#ebebeb] transition-transform lg:sticky lg:top-14 lg:z-auto lg:h-[calc(100vh-3.5rem)] lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <nav className="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
+            {groups.map((group, gIdx) => (
+              <div key={gIdx} className={gIdx > 0 ? "mt-4" : ""}>
+                {gIdx > 0 && <h3 className="mb-1 flex items-center px-2 text-[12px] font-semibold text-[#616161]">{group.title}</h3>}
+                <div className="space-y-px">
+                  {group.links.map((link: any) => {
+                    const active = isActive(link.href);
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`flex items-center gap-2 rounded-lg px-2 py-[5px] text-[13px] font-semibold transition-colors ${active ? "bg-white text-[#303030] shadow-[0_1px_0_rgba(0,0,0,0.07),0_0_0_1px_rgba(0,0,0,0.04)]" : "text-[#303030] hover:bg-[#f1f1f1]"}`}
+                      >
+                        <AppIcon name={link.icon} className={`h-[18px] w-[18px] flex-shrink-0 ${active ? "text-[#303030]" : "text-[#4a4a4a]"}`} />
+                        <span className="truncate">{link.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {!isPlatformStaff && !tenant && (
+              <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-[#303030] hover:bg-[#f1f1f1]">+ Crear negocio</Link>
+            )}
+          </nav>
+
+          {/* Banner de prueba (estilo Shopify) */}
+          {trialDaysLeft !== null && !isPlatformStaff && (
+            <div className="m-2 rounded-xl bg-white p-3 shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]">
+              <p className="text-[13px] font-semibold text-[#303030]">
+                {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
+              </p>
+              <p className="mt-0.5 text-[12px] text-[#616161]">Elige un plan para seguir vendiendo.</p>
+              <Link href="/dashboard/billing" className="btn-primary mt-2 w-full">Elegir un plan</Link>
+            </div>
+          )}
+
+          {!isPlatformStaff && hasPermission(user, "config.tenant") && (
+            <div className="border-t border-[#d4d4d4] px-2 py-2">
+              <Link href="/dashboard/settings" className={`flex items-center gap-2 rounded-lg px-2 py-[5px] text-[13px] font-semibold text-[#303030] ${isActive("/dashboard/settings") ? "bg-white" : "hover:bg-[#f1f1f1]"}`}>
+                <AppIcon name="settings" className="h-[18px] w-[18px] text-[#4a4a4a]" />Configuración
+              </Link>
+            </div>
+          )}
+        </aside>
+
+        <main className="min-w-0 flex-1">{children}</main>
       </div>
 
       {loggingOut && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="logout-overlay fixed inset-0 z-[200] flex items-center justify-center bg-[var(--color-primary)]"
-        >
-          <div className="logout-card flex flex-col items-center gap-4 text-white">
-            <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-[var(--color-secondary)]" />
-            <p className="text-sm font-medium text-white/80">Cerrando sesión...</p>
+        <div role="status" aria-live="polite" className="logout-overlay fixed inset-0 z-[200] flex items-center justify-center bg-[#f1f1f1]">
+          <div className="logout-card flex flex-col items-center gap-4 text-[#303030]">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-black/10 border-t-[var(--color-primary)]" />
+            <p className="text-[13px] font-medium text-[#616161]">Cerrando sesión...</p>
           </div>
         </div>
       )}

@@ -81,7 +81,7 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-slate-700">Biblioteca de medios</span>
+        <span className="text-sm font-medium text-[#303030]">Biblioteca de medios</span>
         <label className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
           {uploading ? "Subiendo..." : "+ Subir archivo"}
           <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} accept="image/*,.pdf,application/pdf" />
@@ -89,9 +89,9 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
       </div>
 
       {loading && items.length === 0 ? (
-        <p className="text-xs text-slate-400">Cargando...</p>
+        <p className="text-xs text-[#8a8a8a]">Cargando...</p>
       ) : items.length === 0 ? (
-        <p className="text-xs text-slate-400">Sin archivos</p>
+        <p className="text-xs text-[#8a8a8a]">Sin archivos</p>
       ) : (
         <>
           <div className={`grid gap-2 ${compact ? "grid-cols-3" : "grid-cols-3 sm:grid-cols-4"} max-h-60 overflow-y-auto`}>
@@ -112,7 +112,7 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
                     <span className="text-[10px] font-medium">PDF</span>
                   </div>
                 ) : (
-                  <div className="w-full h-20 rounded-lg bg-slate-100 flex items-center justify-center text-xs text-slate-400">
+                  <div className="w-full h-20 rounded-lg bg-[#f1f1f1] flex items-center justify-center text-xs text-[#8a8a8a]">
                     Archivo
                   </div>
                 )}
@@ -132,7 +132,7 @@ export function MediaLibrary({ onSelect, compact }: { onSelect?: (url: string) =
             <button
               onClick={() => fetchMedia(page + 1, true)}
               disabled={loading}
-              className="w-full mt-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+              className="w-full mt-3 py-2 text-xs font-medium text-[#616161] hover:text-[#303030] hover:bg-[#f7f7f7] rounded-lg transition-colors"
             >
               {loading ? "Cargando..." : "Cargar más"}
             </button>

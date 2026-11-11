@@ -45,7 +45,7 @@ const DESC_MAX = 155;
 function charClass(len: number, max: number): string {
   if (len > max) return "text-red-500";
   if (len > max * 0.8) return "text-amber-500";
-  return "text-slate-400";
+  return "text-[#8a8a8a]";
 }
 
 function truncate(value: string, max: number): string {
@@ -92,18 +92,18 @@ function SerpPreview({
   const breadcrumb = urlObj ? `${urlObj.hostname}${urlObj.pathname.replace(/\/$/, "") || ""}` : url;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-      <div className="flex items-center gap-2 text-xs text-slate-600">
+    <div className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-4 space-y-2">
+      <div className="flex items-center gap-2 text-xs text-[#616161]">
         {favicon ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={favicon} alt="" className="h-4 w-4 rounded-full object-contain" />
         ) : (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[8px] font-bold text-slate-500">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#e3e3e3] text-[8px] font-bold text-[#616161]">
             {(siteName || "S")[0].toUpperCase()}
           </span>
         )}
         <span className="truncate font-medium">{siteName}</span>
-        <span className="truncate text-slate-400">› {breadcrumb}</span>
+        <span className="truncate text-[#8a8a8a]">› {breadcrumb}</span>
       </div>
       <div className="text-lg leading-snug text-[#1a0dab] hover:underline">{t || "Título pendiente"}</div>
       <div className="text-sm leading-snug text-[#4d5156]">{d || "Descripción pendiente"}</div>
@@ -123,24 +123,24 @@ function OgPreview({
   siteName: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div className="aspect-[1.91/1] w-full bg-slate-100">
+    <div className="overflow-hidden rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white">
+      <div className="aspect-[1.91/1] w-full bg-[#f1f1f1]">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={image} alt="Open Graph" className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-slate-300">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#b5b5b5]">
             <span className="material-symbols-outlined text-3xl">image</span>
             <span className="text-[11px]">Sin imagen</span>
           </div>
         )}
       </div>
       <div className="p-3">
-        <div className="text-xs uppercase tracking-wide text-slate-400">{siteName}</div>
-        <div className="mt-0.5 text-sm font-semibold text-slate-800">
+        <div className="text-xs uppercase tracking-wide text-[#8a8a8a]">{siteName}</div>
+        <div className="mt-0.5 text-sm font-semibold text-[#303030]">
           {truncate(title, TITLE_MAX) || "Título pendiente"}
         </div>
-        <div className="mt-0.5 text-xs leading-snug text-slate-500">
+        <div className="mt-0.5 text-xs leading-snug text-[#616161]">
           {truncate(description, DESC_MAX) || "Descripción pendiente"}
         </div>
       </div>
@@ -296,15 +296,15 @@ export default function SeoPage() {
 
   if (loading) {
     return (
-      <main className="flex-1 bg-slate-50">
+      <main className="flex-1 bg-[#f7f7f7]">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 animate-pulse">
-          <div className="h-8 w-40 rounded-lg bg-slate-200" />
+          <div className="h-8 w-40 rounded-lg bg-[#e3e3e3]" />
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
-              <div className="h-64 rounded-2xl bg-white border border-slate-200" />
-              <div className="h-72 rounded-2xl bg-white border border-slate-200" />
+              <div className="h-64 rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]" />
+              <div className="h-72 rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]" />
             </div>
-            <div className="h-96 rounded-2xl bg-white border border-slate-200" />
+            <div className="h-96 rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]" />
           </div>
         </div>
       </main>
@@ -312,12 +312,12 @@ export default function SeoPage() {
   }
 
   return (
-    <main className="flex-1 bg-slate-50 min-h-screen">
+    <main className="flex-1 bg-[#f7f7f7] min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">SEO</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-xl font-bold text-[#303030]">SEO</h1>
+            <p className="mt-1 text-sm text-[#616161]">
               Controla cómo tu sitio aparece en Google y en redes sociales.
             </p>
           </div>
@@ -325,7 +325,7 @@ export default function SeoPage() {
             <div className="flex items-center gap-2">
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                  meta.published ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                  meta.published ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f1f1] text-[#616161]"
                 }`}
               >
                 <span
@@ -337,7 +337,7 @@ export default function SeoPage() {
                 href={meta.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="inline-flex items-center gap-1 rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-3 py-1.5 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7]"
               >
                 <span className="material-symbols-outlined text-sm">open_in_new</span>
                 Ver sitio
@@ -347,8 +347,8 @@ export default function SeoPage() {
         </div>
 
         {sites.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-500">No tienes sitios. Crea uno primero.</p>
+          <div className="mt-8 rounded-2xl border border-dashed border-[#d4d4d4] bg-white p-12 text-center">
+            <p className="text-[#616161]">No tienes sitios. Crea uno primero.</p>
           </div>
         ) : (
           <>
@@ -369,8 +369,8 @@ export default function SeoPage() {
                 ))}
               </select>
               {meta && (
-                <p className="mt-1.5 text-xs text-slate-400">
-                  URL pública: <span className="font-mono text-slate-500">{meta.url}</span>
+                <p className="mt-1.5 text-xs text-[#8a8a8a]">
+                  URL pública: <span className="font-mono text-[#616161]">{meta.url}</span>
                 </p>
               )}
             </div>
@@ -386,12 +386,12 @@ export default function SeoPage() {
               <div className="mt-6 grid gap-6 lg:grid-cols-3">
                 <div className="space-y-6 lg:col-span-2">
                   {/* Global */}
-                  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <section className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-slate-400">public</span>
-                      <h2 className="font-semibold text-slate-900">Datos generales</h2>
+                      <span className="material-symbols-outlined text-[#8a8a8a]">public</span>
+                      <h2 className="font-semibold text-[#303030]">Datos generales</h2>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[#8a8a8a]">
                       Se usa cuando alguien busca tu marca y como base del Open Graph.
                     </p>
                     <div className="mt-4 space-y-4">
@@ -427,24 +427,24 @@ export default function SeoPage() {
                           />
                           <button
                             type="button"
-                            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 flex items-center gap-1.5"
+                            className="rounded-lg border border-[#e3e3e3] bg-[#f7f7f7] px-3 py-2 text-xs font-medium text-[#303030] transition-colors hover:bg-[#f1f1f1] flex items-center gap-1.5"
                             onClick={() => setMediaPickerOpen(true)}
                           >
                             <span className="material-symbols-outlined text-base">upload</span>
                             Subir
                           </button>
-                          <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                          <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-[#e3e3e3] bg-[#f7f7f7]">
                             {ogImage ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={ogImage} alt="" className="h-full w-full object-cover" />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-slate-300">
+                              <div className="flex h-full w-full items-center justify-center text-[#b5b5b5]">
                                 <span className="material-symbols-outlined text-base">image</span>
                               </div>
                             )}
                           </div>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-400">
+                        <p className="mt-1 text-[11px] text-[#8a8a8a]">
                           Recomendado 1200×630 px. Si la dejas vacía se usa el logo del sitio.
                         </p>
                       </div>
@@ -452,15 +452,15 @@ export default function SeoPage() {
                   </section>
 
                   {/* Pages */}
-                  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <section className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-slate-400">description</span>
-                      <h2 className="font-semibold text-slate-900">SEO por página</h2>
-                      <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                      <span className="material-symbols-outlined text-[#8a8a8a]">description</span>
+                      <h2 className="font-semibold text-[#303030]">SEO por página</h2>
+                      <span className="ml-1 rounded-full bg-[#f1f1f1] px-2 py-0.5 text-[11px] font-semibold text-[#616161]">
                         {pages.length}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[#8a8a8a]">
                       Personaliza el título y la descripción de cada página del sitio.
                     </p>
                     <div className="mt-4 space-y-3">
@@ -469,12 +469,12 @@ export default function SeoPage() {
                         return (
                           <div
                             key={p.id}
-                            className="overflow-hidden rounded-xl border border-slate-200"
+                            className="overflow-hidden rounded-xl border border-[#e3e3e3]"
                           >
                             <button
                               type="button"
                               onClick={() => setExpandedPage(open ? null : p.id)}
-                              className="flex w-full items-center gap-3 bg-slate-50/60 px-4 py-3 text-left hover:bg-slate-50"
+                              className="flex w-full items-center gap-3 bg-[#f7f7f7]/60 px-4 py-3 text-left hover:bg-[#f7f7f7]"
                             >
                               <span
                                 className={`material-symbols-outlined text-base transition-transform ${open ? "rotate-90" : ""}`}
@@ -482,8 +482,8 @@ export default function SeoPage() {
                                 chevron_right
                               </span>
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium text-slate-800">{p.name}</div>
-                                <div className="truncate text-[11px] text-slate-400 font-mono">{p.path}</div>
+                                <div className="truncate text-sm font-medium text-[#303030]">{p.name}</div>
+                                <div className="truncate text-[11px] text-[#8a8a8a] font-mono">{p.path}</div>
                               </div>
                               {p.isDefault && (
                                 <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-600">
@@ -497,7 +497,7 @@ export default function SeoPage() {
                               )}
                             </button>
                             {open && (
-                              <div className="space-y-4 border-t border-slate-100 p-4">
+                              <div className="space-y-4 border-t border-[#ebebeb] p-4">
                                 <div>
                                   <label className="label">Título SEO</label>
                                   <input
@@ -523,7 +523,7 @@ export default function SeoPage() {
                                   <button
                                     type="button"
                                     onClick={() => resetPage(p.id)}
-                                    className="text-xs font-medium text-slate-400 hover:text-red-600"
+                                    className="text-xs font-medium text-[#8a8a8a] hover:text-red-600"
                                   >
                                     Restablecer a predeterminado
                                   </button>
@@ -539,10 +539,10 @@ export default function SeoPage() {
 
                 {/* Preview panel */}
                 <div className="lg:sticky lg:top-24 h-fit space-y-4">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-5 shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-slate-400">search</span>
-                      <h3 className="font-semibold text-slate-900">Vista previa</h3>
+                      <span className="material-symbols-outlined text-[#8a8a8a]">search</span>
+                      <h3 className="font-semibold text-[#303030]">Vista previa</h3>
                     </div>
                     <select
                       value={previewTarget}
@@ -558,7 +558,7 @@ export default function SeoPage() {
                     </select>
 
                     <div className="mt-4">
-                      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#616161]">
                         <span className="h-2 w-2 rounded-full bg-blue-500" />
                         Resultado de Google
                       </div>
@@ -574,7 +574,7 @@ export default function SeoPage() {
                     </div>
 
                     <div className="mt-5">
-                      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#616161]">
                         <span className="h-2 w-2 rounded-full bg-slate-400" />
                         Al compartir en redes
                       </div>
@@ -589,11 +589,11 @@ export default function SeoPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 text-xs leading-relaxed text-slate-500 shadow-sm">
+                  <div className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-5 text-xs leading-relaxed text-[#616161] shadow-sm">
                     <span className="material-symbols-outlined align-middle text-base text-primary-600">info</span>{" "}
                     Los cambios se aplican al instante en el sitio publicado. Google puede tardar
                     unos días en indexarlos. Genera el sitemap en{" "}
-                    <span className="font-mono text-slate-600">{meta.url}/sitemap.xml</span>.
+                    <span className="font-mono text-[#616161]">{meta.url}/sitemap.xml</span>.
                   </div>
                 </div>
               </div>
@@ -602,15 +602,15 @@ export default function SeoPage() {
             {/* Save bar */}
             {meta && (
               <div className="sticky bottom-4 mt-6">
-                <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-3 shadow-lg">
+                <div className="flex items-center justify-between gap-4 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-5 py-3 shadow-lg">
                   <div className="flex items-center gap-2 text-sm">
                     <span
                       className={`h-2 w-2 rounded-full ${dirty ? "bg-amber-500" : "bg-emerald-500"}`}
                     />
                     {dirty ? (
-                      <span className="text-slate-600">Hay cambios sin guardar</span>
+                      <span className="text-[#616161]">Hay cambios sin guardar</span>
                     ) : (
-                      <span className="text-slate-400">Todo guardado</span>
+                      <span className="text-[#8a8a8a]">Todo guardado</span>
                     )}
                   </div>
                   <button

@@ -111,9 +111,9 @@ export default function LeadsPage() {
     const colors: Record<string, string> = {
       new: "bg-blue-50 text-blue-700", contacted: "bg-yellow-50 text-yellow-700",
       qualified: "bg-purple-50 text-purple-700", converted: "bg-green-50 text-green-700",
-      archived: "bg-slate-50 text-slate-700",
+      archived: "bg-[#f7f7f7] text-[#303030]",
     };
-    return colors[status] || "bg-slate-50 text-slate-700";
+    return colors[status] || "bg-[#f7f7f7] text-[#303030]";
   };
 
   const sourceLabel = (source: string) => SOURCE_LABELS[source] || source || "-";
@@ -153,9 +153,9 @@ export default function LeadsPage() {
   const safePage = Math.min(page, totalPages);
 
   return (
-    <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+    <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
+        <h1 className="text-xl font-bold text-[#303030]">Leads</h1>
         <div className="flex items-center gap-3">
           {canCreate && (
             <button onClick={openCreate} className="btn-primary text-sm">+ Agregar lead</button>
@@ -168,19 +168,19 @@ export default function LeadsPage() {
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="card">
-            <p className="text-sm text-slate-600">Total</p>
+            <p className="text-sm text-[#616161]">Total</p>
             <p className="text-2xl font-bold text-primary-600">{stats.total}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-slate-600">Últimos 30 días</p>
+            <p className="text-sm text-[#616161]">Últimos 30 días</p>
             <p className="text-2xl font-bold text-primary-600">{stats.last30Days}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-slate-600">Últimos 7 días</p>
+            <p className="text-sm text-[#616161]">Últimos 7 días</p>
             <p className="text-2xl font-bold text-green-600">{stats.last7Days}</p>
           </div>
           <div className="card">
-            <p className="text-sm text-slate-600">Convertidos</p>
+            <p className="text-sm text-[#616161]">Convertidos</p>
             <p className="text-2xl font-bold text-purple-600">{stats.byStatus?.find((s: any) => s.status === "converted")?.count || 0}</p>
           </div>
         </div>
@@ -221,11 +221,11 @@ export default function LeadsPage() {
 
       {/* Table */}
       {loading ? (
-        <p className="text-slate-500 text-sm">Cargando...</p>
+        <p className="text-[#616161] text-sm">Cargando...</p>
       ) : leads.length === 0 ? (
         <div className="card text-center py-12">
-          <h3 className="font-semibold text-slate-900 mb-2">Sin leads</h3>
-          <p className="text-sm text-slate-600">Los leads aparecerán cuando alguien envíe un formulario o cuando agregues uno manualmente</p>
+          <h3 className="font-semibold text-[#303030] mb-2">Sin leads</h3>
+          <p className="text-sm text-[#616161]">Los leads aparecerán cuando alguien envíe un formulario o cuando agregues uno manualmente</p>
         </div>
       ) : (
         <div className="card overflow-x-auto">
@@ -241,21 +241,21 @@ export default function LeadsPage() {
           )}
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-2 text-slate-600 font-medium w-8"><input type="checkbox" onChange={() => { const s = new Set(leads.map(l=>l.id)); setSelected(selected.size === leads.length ? new Set() : s); }} checked={selected.size === leads.length && leads.length > 0} className="rounded border-slate-300"/></th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Nombre</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Email</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Teléfono</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Estado</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Origen</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Fecha</th>
-                <th className="text-left py-3 px-4 text-slate-600 font-medium">Acción</th>
+              <tr className="border-b border-[#e3e3e3]">
+                <th className="text-left py-3 px-2 text-[#616161] font-medium w-8"><input type="checkbox" onChange={() => { const s = new Set(leads.map(l=>l.id)); setSelected(selected.size === leads.length ? new Set() : s); }} checked={selected.size === leads.length && leads.length > 0} className="rounded border-[#d4d4d4]"/></th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Nombre</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Email</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Teléfono</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Estado</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Origen</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Fecha</th>
+                <th className="text-left py-3 px-4 text-[#616161] font-medium">Acción</th>
               </tr>
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-3 px-2"><input type="checkbox" checked={selected.has(lead.id)} onChange={() => { const s = new Set(selected); s.has(lead.id) ? s.delete(lead.id) : s.add(lead.id); setSelected(s); }} className="rounded border-slate-300"/></td>
+                <tr key={lead.id} className="border-b border-[#ebebeb] hover:bg-[#f7f7f7]">
+                  <td className="py-3 px-2"><input type="checkbox" checked={selected.has(lead.id)} onChange={() => { const s = new Set(selected); s.has(lead.id) ? s.delete(lead.id) : s.add(lead.id); setSelected(s); }} className="rounded border-[#d4d4d4]"/></td>
                   <td className="py-3 px-4 font-medium">{lead.name || "-"}</td>
                   <td className="py-3 px-4">{lead.email || "-"}</td>
                   <td className="py-3 px-4">{lead.phone || "-"}</td>
@@ -263,7 +263,7 @@ export default function LeadsPage() {
                     <select
                       value={lead.status}
                       onChange={(e) => updateStatus(lead.id, e.target.value)}
-                      className={`text-xs rounded-full px-2 py-0.5 font-medium border border-slate-200 bg-white ${statusBadge(lead.status)}`}
+                      className={`text-xs rounded-full px-2 py-0.5 font-medium border border-[#e3e3e3] bg-white ${statusBadge(lead.status)}`}
                     >
                       <option value="new">Nuevo</option>
                       <option value="contacted">Contactado</option>
@@ -272,8 +272,8 @@ export default function LeadsPage() {
                       <option value="archived">Archivado</option>
                     </select>
                   </td>
-                  <td className="py-3 px-4 text-slate-500">{sourceLabel(lead.source)}</td>
-                  <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(lead.createdAt)}</td>
+                  <td className="py-3 px-4 text-[#616161]">{sourceLabel(lead.source)}</td>
+                  <td className="py-3 px-4 text-[#616161] text-xs">{formatDate(lead.createdAt)}</td>
                   <td className="py-3 px-4">
                     {lead.data && Object.keys(lead.data as object).length > 0 && (
                       <button
@@ -290,8 +290,8 @@ export default function LeadsPage() {
           </table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
-            <p className="text-xs text-slate-500">{total} resultado{total !== 1 ? "s" : ""} · Página {safePage} de {totalPages}</p>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#ebebeb]">
+            <p className="text-xs text-[#616161]">{total} resultado{total !== 1 ? "s" : ""} · Página {safePage} de {totalPages}</p>
             <div className="flex gap-2">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn-secondary text-xs disabled:opacity-40">← Anterior</button>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn-secondary text-xs disabled:opacity-40">Siguiente →</button>
@@ -304,39 +304,39 @@ export default function LeadsPage() {
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setDetail(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#ebebeb]">
               <div>
-                <h3 className="font-semibold text-slate-900">{detail.name || "Lead"}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">{detail.email || "-"} · {formatDate(detail.createdAt)}</p>
+                <h3 className="font-semibold text-[#303030]">{detail.name || "Lead"}</h3>
+                <p className="text-xs text-[#616161] mt-0.5">{detail.email || "-"} · {formatDate(detail.createdAt)}</p>
               </div>
-              <button onClick={() => setDetail(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+              <button onClick={() => setDetail(null)} className="p-1.5 rounded-lg text-[#8a8a8a] hover:text-[#616161] hover:bg-[#f1f1f1] transition-colors">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Datos del formulario</p>
-                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+                <p className="text-xs font-semibold text-[#616161] uppercase tracking-wider mb-2">Datos del formulario</p>
+                <div className="rounded-xl border border-[#e3e3e3] divide-y divide-[#ebebeb]">
                   {Object.entries(detail.data as Record<string, any>).map(([key, value]) => (
                     <div key={key} className="flex items-start justify-between gap-4 px-4 py-3">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide w-1/3">{key}</span>
-                      <span className="text-sm text-slate-800 flex-1 break-words">{String(value ?? "-")}</span>
+                      <span className="text-xs font-medium text-[#616161] uppercase tracking-wide w-1/3">{key}</span>
+                      <span className="text-sm text-[#303030] flex-1 break-words">{String(value ?? "-")}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Teléfono</p>
-                  <p className="text-sm text-slate-800">{detail.phone || "-"}</p>
+                  <p className="text-xs font-semibold text-[#616161] uppercase tracking-wider mb-1">Teléfono</p>
+                  <p className="text-sm text-[#303030]">{detail.phone || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Origen</p>
-                  <p className="text-sm text-slate-800">{detail.source || "-"}</p>
+                  <p className="text-xs font-semibold text-[#616161] uppercase tracking-wider mb-1">Origen</p>
+                  <p className="text-sm text-[#303030]">{detail.source || "-"}</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[#ebebeb]">
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge(detail.status)}`}>{detail.status}</span>
               <button
                 onClick={() => { setDetail(null); updateStatus(detail.id, "contacted"); }}
@@ -353,16 +353,16 @@ export default function LeadsPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !saving && setShowCreate(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-900">Agregar lead manual</h3>
-              <button onClick={() => !saving && setShowCreate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#ebebeb]">
+              <h3 className="font-semibold text-[#303030]">Agregar lead manual</h3>
+              <button onClick={() => !saving && setShowCreate(false)} className="p-1.5 rounded-lg text-[#8a8a8a] hover:text-[#616161] hover:bg-[#f1f1f1] transition-colors">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-xs text-slate-500 -mt-2">Se guardará como origen <span className="font-medium">Manual</span>, separado de los leads de la web.</p>
+              <p className="text-xs text-[#616161] -mt-2">Se guardará como origen <span className="font-medium">Manual</span>, separado de los leads de la web.</p>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre</label>
+                <label className="block text-xs font-semibold text-[#616161] mb-1">Nombre</label>
                 <input
                   type="text"
                   className="input-field w-full"
@@ -372,7 +372,7 @@ export default function LeadsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                <label className="block text-xs font-semibold text-[#616161] mb-1">Email</label>
                 <input
                   type="email"
                   className="input-field w-full"
@@ -382,7 +382,7 @@ export default function LeadsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
+                <label className="block text-xs font-semibold text-[#616161] mb-1">Teléfono</label>
                 <input
                   type="tel"
                   className="input-field w-full"
@@ -392,7 +392,7 @@ export default function LeadsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Notas <span className="font-normal text-slate-400">(opcional)</span></label>
+                <label className="block text-xs font-semibold text-[#616161] mb-1">Notas <span className="font-normal text-[#8a8a8a]">(opcional)</span></label>
                 <textarea
                   className="input-field w-full"
                   rows={3}
@@ -403,7 +403,7 @@ export default function LeadsPage() {
               </div>
               {formError && <p className="text-sm text-red-600">{formError}</p>}
             </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#ebebeb]">
               <button onClick={() => setShowCreate(false)} disabled={saving} className="btn-secondary text-sm disabled:opacity-50">Cancelar</button>
               <button onClick={handleCreate} disabled={saving} className="btn-primary text-sm disabled:opacity-50">
                 {saving ? "Guardando..." : "Guardar lead"}

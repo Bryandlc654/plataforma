@@ -51,8 +51,8 @@ const Spinner = ({ className = "h-3 w-3" }: { className?: string }) => (
 
 function saveLabel(saving: boolean, dirty: boolean, saveError: boolean, lastSaved: Date | null, onRetry: () => void) {
   if (saveError) return <button onClick={onRetry} className="text-xs font-medium text-red-600 hover:underline">No se pudo guardar · Reintentar</button>;
-  if (saving || dirty) return <span className="flex items-center justify-end gap-1 text-xs text-slate-500"><Spinner className="h-3 w-3" />Guardando…</span>;
-  if (lastSaved) return <span className="text-xs text-slate-400">Guardado</span>;
+  if (saving || dirty) return <span className="flex items-center justify-end gap-1 text-[12px] text-[#616161]"><Spinner className="h-3 w-3" />Guardando…</span>;
+  if (lastSaved) return <span className="text-[12px] text-[#8a8a8a]">Guardado</span>;
   return null;
 }
 
@@ -79,15 +79,15 @@ export function EditorTopBar(p: Props) {
     return () => document.removeEventListener("mousedown", close);
   }, [pagesOpen]);
 
-  const iconBtn = "flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-30";
+  const iconBtn = "flex h-8 w-8 items-center justify-center rounded-lg text-[#4a4a4a] hover:bg-[#f1f1f1] hover:text-[#303030] disabled:cursor-not-allowed disabled:opacity-30";
 
   return (
-    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3">
+    <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-[#e3e3e3] bg-white px-3">
       <div className="flex min-w-0 items-center gap-2">
         <Link href="/dashboard/sites" className={iconBtn} title="Volver a sitios"><HiOutlineArrowLeft className="h-4 w-4" /></Link>
-        <span className="max-w-[180px] truncate text-sm font-semibold text-slate-800">{p.siteName}</span>
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${p.isPublished ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
-          {p.isPublished ? "Publicado" : "Borrador"}
+        <span className="max-w-[180px] truncate text-[13px] font-semibold text-[#303030]">{p.siteName}</span>
+        <span className={`badge ${p.isPublished ? (p.hasChanges ? "badge-attention" : "badge-success") : ""}`}>
+          {p.isPublished ? (p.hasChanges ? "Cambios sin publicar" : "Publicado") : "Borrador"}
         </span>
       </div>
 
@@ -95,28 +95,28 @@ export function EditorTopBar(p: Props) {
         <div className="relative" ref={ref}>
           <button
             onClick={() => setPagesOpen((v) => !v)}
-            className="flex h-8 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            className="btn-secondary h-8 gap-2 !px-3"
           >
-            <HiOutlineDocumentText className="h-3.5 w-3.5 text-slate-400" />
+            <HiOutlineDocumentText className="h-4 w-4 text-[#616161]" />
             <span className="max-w-[140px] truncate">{activePage?.name || "Sin página"}</span>
-            <HiOutlineChevronDown className="h-3 w-3 text-slate-400" />
+            <HiOutlineChevronDown className="h-3.5 w-3.5 text-[#616161]" />
           </button>
           {pagesOpen && (
-            <div className="absolute left-1/2 top-10 z-50 w-56 -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+            <div className="absolute left-1/2 top-10 z-50 w-60 -translate-x-1/2 rounded-xl bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.16),0_0_0_1px_rgba(0,0,0,0.08)]">
               {[...p.pages].sort((a, b) => a.sortOrder - b.sortOrder).map((pg) => (
                 <button
                   key={pg.id}
                   onClick={() => { p.onSelectPage(pg.id); setPagesOpen(false); }}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs ${pg.id === p.activePageId ? "bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)] font-semibold text-[color:var(--color-primary)]" : "text-slate-700 hover:bg-slate-50"}`}
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[13px] text-[#303030] ${pg.id === p.activePageId ? "bg-[#f1f1f1] font-semibold" : "hover:bg-[#f7f7f7]"}`}
                 >
                   <span className="truncate">{pg.name}</span>
-                  {pg.isDefault && <span className="text-[10px] text-slate-400">Inicio</span>}
+                  {pg.isDefault && <span className="text-[12px] text-[#8a8a8a]">Inicio</span>}
                 </button>
               ))}
-              <div className="my-1 border-t border-slate-100" />
+              <div className="my-1 border-t border-[#ebebeb]" />
               <button
                 onClick={() => { setPagesOpen(false); p.onManagePages(); }}
-                className="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-[color:var(--color-primary)] hover:bg-slate-50"
+                className="w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] font-medium text-[color:var(--color-primary)] hover:bg-[#f7f7f7]"
               >
                 Administrar páginas…
               </button>
@@ -124,13 +124,13 @@ export function EditorTopBar(p: Props) {
           )}
         </div>
 
-        <div className="flex items-center rounded-lg border border-slate-200 p-0.5">
+        <div className="flex items-center rounded-lg bg-[#ebebeb] p-0.5">
           {([["desktop", HiOutlineDesktopComputer, "Escritorio"], ["mobile", HiOutlineDeviceMobile, "Móvil"]] as const).map(([key, Icon, label]) => (
             <button
               key={key}
               onClick={() => p.onDeviceChange(key)}
               title={label}
-              className={`flex h-7 w-8 items-center justify-center rounded-md ${p.device === key ? "bg-[color:var(--color-primary)] text-white" : "text-slate-500 hover:bg-slate-100"}`}
+              className={`flex h-7 w-8 items-center justify-center rounded-md ${p.device === key ? "bg-white text-[#303030] shadow-[0_1px_0_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.06)]" : "text-[#616161] hover:text-[#303030]"}`}
             >
               <Icon className="h-4 w-4" />
             </button>
@@ -181,7 +181,7 @@ export function EditorTopBar(p: Props) {
         <button onClick={p.onPreview} className={iconBtn} title="Vista previa"><HiOutlineEye className="h-4 w-4" /></button>
         <div className="mx-1 min-w-[96px] text-right">{saveLabel(p.saving, p.dirty, p.saveError, p.lastSaved, p.onRetry)}</div>
         {!p.hasChanges && p.isPublished ? (
-          <button data-tour="publish" onClick={p.onUnpublish} className="h-8 rounded-lg border border-amber-200 bg-amber-50 px-3 text-xs font-medium text-amber-700 hover:bg-amber-100">
+          <button data-tour="publish" onClick={p.onUnpublish} className="btn-secondary h-8">
             Despublicar
           </button>
         ) : (
@@ -190,7 +190,7 @@ export function EditorTopBar(p: Props) {
             onClick={p.onPublish}
             disabled={p.publishing}
             title={p.isPublished ? "Tus cambios se guardan como borrador: tus clientes los verán cuando publiques." : "Publica tu sitio para que tus clientes lo vean."}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-4 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
+            className="btn-primary h-8 !px-4"
           >
             {p.publishing ? <><Spinner />Publicando…</> : p.isPublished ? "Publicar cambios" : "Publicar"}
           </button>

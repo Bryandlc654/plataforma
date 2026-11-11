@@ -208,7 +208,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
             </div>
         </div>
         <div class="absolute left-1/2 -translate-x-1/2 bottom-8 text-white/70 text-xs uppercase tracking-[0.3em] flex flex-col items-center gap-2 animate-float">
-            Descubre más
+            <span data-ed="scrollText">${c.scrollText || "Descubre más"}</span>
             <span class="h-10 w-px bg-white/50"></span>
         </div>
       </section>

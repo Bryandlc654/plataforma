@@ -113,7 +113,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                     <p class="text-xs text-gray-500" data-ed="coCodDesc">${c.coCodDesc || "Abona en efectivo cuando recibas tu pedido en la dirección indicada."}</p>
                   </div>
                 </div>
-                <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido · $<span id="un-co-btn-amount">0.00</span></button>
+                <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors"><span data-ed="coConfirmText">${c.coConfirmText || "Confirmar pedido"}</span> · $<span id="un-co-btn-amount">0.00</span></button>
               </div>
               ${hasPaypal ? `<div id="un-paypal-box" class="hidden space-y-3">
                 <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
@@ -144,7 +144,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
             </div>
             <h3 class="font-display font-bold uppercase text-2xl mb-2" data-ed="coSuccessTitle">${c.coSuccessTitle || "Pedido recibido"}</h3>
-            <p class="text-gray-500 mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
+            <p class="text-gray-500 mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> <span data-ed="coRegisteredText">${c.coRegisteredText || "fue registrado con éxito."}</span></p>
             <p id="un-co-done-msg" class="text-gray-500 mb-8" data-ed="coCodSuccess">${c.coCodSuccess || "Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega."}</p>
             <a href="${baseHome}" class="inline-block bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors" data-ed="coContinueText">${c.coContinueText || "Seguir comprando"}</a>
           </div>
@@ -305,7 +305,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                   ${item.tag ? `<span class="absolute top-4 left-4 z-10 ${badgeDark ? 'bg-black text-white' : 'bg-white text-black border border-black'} text-xs font-bold px-2 py-1 uppercase">${item.tag}</span>` : ""}
                   <img src="${item.image}" alt="${item.title}" loading="lazy" class="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition duration-500">
                   <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <button type="button" data-add-cart data-id="${esc(item.id)}" data-title="${esc(item.title)}" data-price="${esc(item.price)}" data-image="${esc(item.image)}" class="bg-black text-white px-6 py-3 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition">Añadir al carrito</button>
+                    <button type="button" data-add-cart data-id="${esc(item.id)}" data-title="${esc(item.title)}" data-price="${esc(item.price)}" data-image="${esc(item.image)}" class="bg-black text-white px-6 py-3 uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition">${c.addToCartText || "Añadir al carrito"}</button>
                   </div>
                 </div>
                 <div class="flex justify-between items-start">

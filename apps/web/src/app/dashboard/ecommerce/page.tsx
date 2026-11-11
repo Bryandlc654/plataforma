@@ -82,7 +82,7 @@ function orderStatusColor(status: string) {
       cancelled: "bg-red-50 text-red-700",
       shipped: "bg-blue-50 text-blue-700",
     } as Record<string, string>
-  )[status] || "bg-slate-100 text-slate-600";
+  )[status] || "bg-[#f1f1f1] text-[#616161]";
 }
 
 const selectCls =
@@ -313,12 +313,12 @@ export default function EcommercePage() {
   if (loading) {
     return (
       <main className="flex-1 overflow-auto bg-[#f6f6f8] p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 h-10 w-56 animate-pulse rounded-xl bg-slate-200" />
+        <div className="mb-6 h-10 w-56 animate-pulse rounded-xl bg-[#e3e3e3]" />
         <div className="mb-6 flex gap-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-10 w-28 animate-pulse rounded-xl bg-slate-200" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-10 w-28 animate-pulse rounded-xl bg-[#e3e3e3]" />)}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-200" />)}
+          {[...Array(6)].map((_, i) => <div key={i} className="h-64 animate-pulse rounded-2xl bg-[#e3e3e3]" />)}
         </div>
       </main>
     );
@@ -342,7 +342,7 @@ export default function EcommercePage() {
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-secondary)]" />
             Tienda
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#1f1f1f] sm:text-[28px]">E-commerce</h1>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-[#1f1f1f] sm:text-[28px]">E-commerce</h1>
           <p className="mt-1 text-sm text-[#616161]">Gestiona productos, pedidos, cupones y pagos de tu tienda.</p>
         </div>
         {tab !== "orders" && tab !== "payments" && (
@@ -422,7 +422,7 @@ export default function EcommercePage() {
           </div>
           <div className="mt-5 flex gap-2 border-t border-[#efeff2] pt-5">
             <button type="button" onClick={saveProduct} className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--brand-primary-hover)]">{editingId ? "Guardar cambios" : "Crear producto"}</button>
-            <button type="button" onClick={resetForm} className="rounded-xl border border-[#e3e3e3] bg-white px-5 py-2.5 text-sm font-semibold text-[#616161] transition hover:bg-[#f7f7f9]">Cancelar</button>
+            <button type="button" onClick={resetForm} className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-5 py-2.5 text-sm font-semibold text-[#616161] transition hover:bg-[#f7f7f9]">Cancelar</button>
           </div>
         </div>
       )}
@@ -446,7 +446,7 @@ export default function EcommercePage() {
           </div>
           <div className="mt-5 flex gap-2 border-t border-[#efeff2] pt-5">
             <button type="button" onClick={createCoupon} className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--brand-primary-hover)]">Crear cupón</button>
-            <button type="button" onClick={resetForm} className="rounded-xl border border-[#e3e3e3] bg-white px-5 py-2.5 text-sm font-semibold text-[#616161] transition hover:bg-[#f7f7f9]">Cancelar</button>
+            <button type="button" onClick={resetForm} className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-5 py-2.5 text-sm font-semibold text-[#616161] transition hover:bg-[#f7f7f9]">Cancelar</button>
           </div>
         </div>
       )}
@@ -478,7 +478,7 @@ export default function EcommercePage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar por nombre, categoría o descripción..."
-                  className="h-10 w-full rounded-xl border border-[#e3e3e3] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]"
+                  className="h-10 w-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]"
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -550,7 +550,7 @@ export default function EcommercePage() {
                       )}
                       <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
                         <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)] backdrop-blur">{p.category?.name || "Sin categoría"}</span>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${p.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{p.isActive ? "Activo" : "Inactivo"}</span>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${p.isActive ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f1f1] text-[#616161]"}`}>{p.isActive ? "Activo" : "Inactivo"}</span>
                       </div>
                       {p.isFeatured && <span className="absolute bottom-3 left-3 rounded-full bg-[var(--color-secondary)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-on-secondary)]">Destacado</span>}
                     </div>
@@ -624,7 +624,7 @@ export default function EcommercePage() {
                             </span>
                           </td>
                           <td className="px-5 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{p.isActive ? "Activo" : "Inactivo"}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.isActive ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f1f1] text-[#616161]"}`}>{p.isActive ? "Activo" : "Inactivo"}</span>
                           </td>
                           <td className="px-5 py-3">
                             <div className="flex items-center justify-end gap-1">
@@ -655,7 +655,7 @@ export default function EcommercePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative flex-1">
                 <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9aa5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <input value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} placeholder="Buscar por cliente, correo o teléfono..." className="h-10 w-full rounded-xl border border-[#e3e3e3] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]" />
+                <input value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} placeholder="Buscar por cliente, correo o teléfono..." className="h-10 w-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]" />
               </div>
               <select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)} className={selectCls}>
                 <option value="all">Todos los estados</option>
@@ -722,7 +722,7 @@ export default function EcommercePage() {
           <div className="mb-5 rounded-2xl border border-[#e6e4ef] bg-white p-3 shadow-sm">
             <div className="relative">
               <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9a9aa5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input value={couponSearch} onChange={(e) => setCouponSearch(e.target.value)} placeholder="Buscar cupón por código..." className="h-10 w-full rounded-xl border border-[#e3e3e3] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]" />
+              <input value={couponSearch} onChange={(e) => setCouponSearch(e.target.value)} placeholder="Buscar cupón por código..." className="h-10 w-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white pl-10 pr-4 text-sm text-[#303030] placeholder:text-[#9a9aa5] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.12)]" />
             </div>
             <p className="mt-2 text-xs text-[#8a8a8a]">{filteredCoupons.length} de {coupons.length} cupones</p>
           </div>
@@ -740,7 +740,7 @@ export default function EcommercePage() {
                 <div key={c.id} className="rounded-2xl border border-[#e6e4ef] bg-white p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <span className="rounded-lg bg-[rgba(var(--color-primary-rgb),0.07)] px-2.5 py-1 font-mono text-sm font-bold text-[var(--color-primary)]">{c.code}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{c.isActive ? "Activo" : "Inactivo"}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.isActive ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f1f1] text-[#616161]"}`}>{c.isActive ? "Activo" : "Inactivo"}</span>
                   </div>
                   <p className="mt-4 text-2xl font-bold text-[#1f1f1f]">{c.type === "percentage" ? `${c.value}%` : formatCurrency(Number(c.value))}</p>
                   <p className="mt-1 text-xs text-[#8a8a8a]">{c.usedCount}/{c.maxUses || "∞"} usos{c.expiresAt && ` · Expira ${formatDate(c.expiresAt)}`}</p>

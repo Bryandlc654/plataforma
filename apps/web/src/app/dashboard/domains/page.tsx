@@ -15,7 +15,7 @@ const STATUS: Record<string, { label: string; tone: string }> = {
   pending_registration: { label: "En proceso", tone: "bg-amber-50 text-amber-700" },
   paid: { label: "En proceso", tone: "bg-amber-50 text-amber-700" },
   registering: { label: "En proceso", tone: "bg-amber-50 text-amber-700" },
-  refunded: { label: "Reembolsado", tone: "bg-slate-100 text-slate-600" },
+  refunded: { label: "Reembolsado", tone: "bg-[#f1f1f1] text-[#616161]" },
   failed: { label: "No se pudo registrar", tone: "bg-red-50 text-red-700" },
 };
 
@@ -51,12 +51,12 @@ export default function DomainsPage() {
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dominios</h1>
-          <p className="mt-1 text-sm text-slate-500">La dirección propia de tu sitio, como minegocio.com.</p>
+          <h1 className="text-xl font-bold text-[#303030]">Dominios</h1>
+          <p className="mt-1 text-sm text-[#616161]">La dirección propia de tu sitio, como minegocio.com.</p>
         </div>
         <div className="flex items-center gap-2">
           {sites.length > 1 && (
-            <select value={siteId} onChange={(e) => setSiteId(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+            <select value={siteId} onChange={(e) => setSiteId(e.target.value)} className="rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-3 py-2 text-sm">
               {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           )}
@@ -77,29 +77,29 @@ export default function DomainsPage() {
       )}
 
       {orders === null ? (
-        <div className="h-28 animate-pulse rounded-xl bg-slate-200/70" />
+        <div className="h-28 animate-pulse rounded-xl bg-[#e3e3e3]/70" />
       ) : orders.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
+        <div className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-12 text-center">
           <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[color:var(--color-primary)]"><HiOutlineGlobeAlt className="h-6 w-6" /></span>
-          <h2 className="font-semibold text-slate-900">Aún no tienes un dominio propio</h2>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">Busca el nombre de tu negocio y te lo registramos y conectamos a tu sitio automáticamente.</p>
+          <h2 className="font-semibold text-[#303030]">Aún no tienes un dominio propio</h2>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-[#616161]">Busca el nombre de tu negocio y te lo registramos y conectamos a tu sitio automáticamente.</p>
         </div>
       ) : (
         <ul className="space-y-3">
           {orders.map((o) => {
-            const st = STATUS[o.status] || { label: o.status, tone: "bg-slate-100 text-slate-600" };
+            const st = STATUS[o.status] || { label: o.status, tone: "bg-[#f1f1f1] text-[#616161]" };
             const step = steps[o.id];
             return (
-              <li key={o.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+              <li key={o.id} className="flex flex-col gap-3 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-900">{o.domain}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="truncate font-semibold text-[#303030]">{o.domain}</p>
+                  <p className="text-xs text-[#616161]">
                     {money(o.priceCents, o.currency)} · {new Date(o.registeredAt || o.createdAt).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" })}
                     {o.status === "registered" && step && (
                       <> · {step === "ready" ? "Funcionando" : step === "verifying" ? "Conectando… puede tardar unos minutos" : step === "attention" ? "Falta conectarlo" : ""}</>
                     )}
                   </p>
-                  {o.errorMessage && o.status !== "registered" && <p className="mt-1 text-xs text-slate-400">{o.errorMessage}</p>}
+                  {o.errorMessage && o.status !== "registered" && <p className="mt-1 text-xs text-[#8a8a8a]">{o.errorMessage}</p>}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${st.tone}`}>{st.label}</span>

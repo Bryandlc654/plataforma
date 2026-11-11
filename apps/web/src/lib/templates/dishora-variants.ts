@@ -518,7 +518,7 @@ export function getDishoraHtml(type: string, c: any, apiBaseUrl?: string, site?:
       </div>
       <div class="mt-8 max-w-[420px] mx-auto lg:mx-0 w-full">
         <form class="relative flex items-center" onsubmit="event.preventDefault();">
-          <label class="sr-only" for="dh-newsletter-email">Email address</label>
+          <label class="sr-only" for="dh-newsletter-email">${c.newsletterLabel || "Email address"}</label>
           <input class="w-full bg-[#40352c]/70 hover:bg-[#40352c]/90 focus:bg-[#483c32] text-white text-[14px] py-3.5 pl-5 pr-12 rounded-[4px] border-none outline-none ring-0 focus:ring-1 focus:ring-white/30 transition-all" id="dh-newsletter-email" placeholder="${C.newsletterPlaceholder}" required="" type="email"/>
           <button aria-label="Submit newsletter subscription" class="absolute right-3.5 text-[#d5cbc3] hover:text-white transition-colors p-1" type="submit">
             <svg class="w-4 h-4 stroke-current stroke-2 fill-none -rotate-12 transform" viewBox="0 0 24 24"><line x1="22" x2="11" y1="2" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>

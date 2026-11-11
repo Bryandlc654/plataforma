@@ -7,11 +7,11 @@ import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/bl
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 import { DEFAULT_SITE_PALETTE, PALETTE_LABELS, PALETTE_PRESETS, hasExplicitPalette, resolveSitePalette, type PaletteRole, type SitePalette } from "@/lib/templates";
-import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
+import { SectionSettings } from "@/components/editor/section-settings";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
 import { sitePublicUrl } from "@/lib/site-url";
@@ -30,7 +30,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showBlockPanel, setShowBlockPanel] = useState(false);
   const [device, setDevice] = useState<EditorDevice>("desktop");
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
@@ -102,11 +101,25 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   useEffect(() => { fetchSite(); }, [fetchSite]);
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t); } }, [toast]);
 
-  /** Historial con referencias: evita duplicados (StrictMode) y conserva el estado inicial. */
-  const pushHistory = useCallback((s: Site) => {
+  const coalesceRef = useRef<{ key: string; at: number } | null>(null);
+
+  /**
+   * Historial con referencias: evita duplicados (StrictMode) y conserva el estado inicial.
+   * Con `coalesceKey`, los cambios seguidos del mismo campo (escribir en el panel) se juntan
+   * en un solo paso de deshacer.
+   */
+  const pushHistory = useCallback((s: Site, coalesceKey?: string) => {
     const h = historyRef.current;
     const json = JSON.stringify(s);
     if (histPos.current >= 0 && JSON.stringify(h[histPos.current]) === json) return;
+    const last = coalesceRef.current;
+    const now = Date.now();
+    coalesceRef.current = coalesceKey ? { key: coalesceKey, at: now } : null;
+    if (coalesceKey && last && last.key === coalesceKey && now - last.at < 1500 && histPos.current === h.length - 1 && histPos.current > 0) {
+      h[histPos.current] = JSON.parse(json);
+      setHistory([...h]);
+      return;
+    }
     h.splice(histPos.current + 1);
     h.push(JSON.parse(json));
     if (h.length > 50) h.shift();
@@ -341,11 +354,11 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     } catch (err: any) { setToast(err.response?.data?.message || "Error al duplicar"); }
   };
 
-  const updateBlock = (blockId: string, content: any) => {
+  const updateBlock = (blockId: string, content: any, opts: { coalesce?: boolean } = {}) => {
     setSite(p => {
       if (!p) return p;
       const next = patchBlock(p, blockId, { content });
-      pushHistory(next);
+      pushHistory(next, opts.coalesce ? `block:${blockId}` : undefined);
       return next;
     });
     pendingBlocksRef.current[blockId] = content;
@@ -526,8 +539,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     finally { setCheckingDns(false); }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><svg className="animate-spin h-8 w-8 text-[color:var(--color-primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-slate-500">Cargando editor...</p></div></div>;
-  if (!site) return <div className="flex h-screen items-center justify-center bg-slate-50"><div className="text-center"><h2 className="text-xl font-semibold text-slate-900 mb-2">Sitio no encontrado</h2><Link href="/dashboard/sites" className="btn-primary inline-flex items-center gap-1.5"><HiOutlineArrowLeft className="h-4 w-4" /> Volver</Link></div></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-[#f7f7f7]"><div className="text-center"><svg className="animate-spin h-8 w-8 text-[color:var(--color-primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg><p className="text-sm text-[#616161]">Cargando editor...</p></div></div>;
+  if (!site) return <div className="flex h-screen items-center justify-center bg-[#f7f7f7]"><div className="text-center"><h2 className="text-xl font-semibold text-[#303030] mb-2">Sitio no encontrado</h2><Link href="/dashboard/sites" className="btn-primary inline-flex items-center gap-1.5"><HiOutlineArrowLeft className="h-4 w-4" /> Volver</Link></div></div>;
 
   // La vista previa muestra lo guardado hoy, también cuando el sitio aún es un borrador.
   const openPreview = () => window.open(`/dashboard/sites/${siteId}/preview`, "_blank");
@@ -542,7 +555,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-white">
-      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">{toast}</div>}
+      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-[#1a1a1a] text-white rounded-xl px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-in">{toast}</div>}
 
       <EditorTopBar
         siteName={site.name}
@@ -575,23 +588,39 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       <EditorTour ready={!loading && !!site} />
 
       <div className="flex min-h-0 flex-1">
-        <SectionsSidebar
-          pageName={activePage?.name}
-          blocks={sortedBlocks.map(b => ({ id: b.id, type: b.type, hidden: !!b.styles?.hidden }))}
-          activeBlockId={activeBlockId}
-          onSelect={(id) => { setActiveBlockId(id); scrollToBlock(id); }}
-          onReorder={reorderBlocks}
-          onDuplicate={duplicateBlock}
-          onToggleHidden={toggleHidden}
-          onDelete={deleteBlock}
-          onAdd={() => openPicker()}
-        />
+        {/* Barra izquierda (como Shopify): lista de secciones o ajustes de la sección elegida. */}
+        <aside data-tour="sections" className="flex w-[300px] flex-shrink-0 flex-col border-r border-[#e3e3e3] bg-white">
+          {activeBlock ? (
+            <SectionSettings
+              key={activeBlock.id}
+              block={activeBlock}
+              hidden={!!activeBlock.styles?.hidden}
+              onChange={(c) => updateBlock(activeBlock.id, c, { coalesce: true })}
+              onBack={() => setActiveBlockId(null)}
+              onToggleHidden={() => toggleHidden(activeBlock.id)}
+              onDuplicate={() => duplicateBlock(activeBlock.id)}
+              onDelete={() => deleteBlock(activeBlock.id)}
+            />
+          ) : (
+            <SectionsSidebar
+              pageName={activePage?.name}
+              blocks={sortedBlocks.map(b => ({ id: b.id, type: b.type, hidden: !!b.styles?.hidden }))}
+              activeBlockId={activeBlockId}
+              onSelect={(id) => { setActiveBlockId(id); scrollToBlock(id); }}
+              onReorder={reorderBlocks}
+              onDuplicate={duplicateBlock}
+              onToggleHidden={toggleHidden}
+              onDelete={deleteBlock}
+              onAdd={() => openPicker()}
+            />
+          )}
+        </aside>
 
         {/* CANVAS: iframe para que la vista móvil use los breakpoints reales */}
-        <main data-tour="canvas" className={`flex min-w-0 flex-1 justify-center overflow-hidden bg-slate-200/70 ${device === "mobile" ? "py-6" : ""}`} onClick={() => setActiveBlockId(null)}>
+        <main data-tour="canvas" className={`flex min-w-0 flex-1 justify-center overflow-hidden bg-[#f1f1f1] ${device === "mobile" ? "py-6" : "p-3"}`} onClick={() => setActiveBlockId(null)}>
           <CanvasFrame
             onDocument={(doc) => { canvasDocRef.current = doc; setCanvasDoc(doc); }}
-            className={`block h-full border-0 bg-white transition-all duration-200 ${device === "mobile" ? "w-[390px] max-w-full rounded-2xl shadow-xl ring-1 ring-slate-300" : "w-full"}`}
+            className={`block h-full border-0 bg-white transition-all duration-200 ${device === "mobile" ? "w-[390px] max-w-full rounded-[20px] shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_12px_32px_-8px_rgba(0,0,0,0.25)]" : "w-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_4px_12px_-4px_rgba(0,0,0,0.12)]"}`}
           >
           <div
             className={`min-h-screen bg-white ${templateWrapperClass(site?.settings?.globalStyles, activePage?.path)} ${templateCanvasClass(activePage?.blocks?.[0]?.content?.variant)}`}
@@ -613,17 +642,17 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             {activePage && sortedBlocks.length > 0 ? (
               <>
                 {sortedBlocks.map((block, idx) => (
-                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} onOpenSettings={() => setShowBlockPanel(true)} palette={variantPalette} />
+                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} palette={variantPalette} />
                 ))}
-                <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-slate-200 py-6 text-sm font-medium text-slate-400 transition-colors hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)] hover:text-[color:var(--color-primary)]">
+                <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-[#e3e3e3] py-6 text-sm font-medium text-[#8a8a8a] transition-colors hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)] hover:text-[color:var(--color-primary)]">
                   <HiOutlinePlus className="h-4 w-4" /> Agregar sección
                 </button>
               </>
             ) : (
               <div className="flex min-h-[60vh] items-center justify-center">
                 <div className="max-w-sm py-16 text-center">
-                  <h3 className="mb-2 text-lg font-bold text-slate-700">{hasPages ? "Esta página está vacía" : "Crea tu primera página"}</h3>
-                  <p className="mb-6 text-sm text-slate-500">{hasPages ? "Agrega una sección para empezar a diseñar." : "Necesitas al menos una página para editar tu sitio."}</p>
+                  <h3 className="mb-2 text-lg font-bold text-[#303030]">{hasPages ? "Esta página está vacía" : "Crea tu primera página"}</h3>
+                  <p className="mb-6 text-sm text-[#616161]">{hasPages ? "Agrega una sección para empezar a diseñar." : "Necesitas al menos una página para editar tu sitio."}</p>
                   {hasPages
                     ? <button onClick={() => openPicker()} className="inline-flex items-center gap-1.5 rounded-lg bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"><HiOutlinePlus className="h-4 w-4" /> Agregar sección</button>
                     : <button onClick={() => setShowPagesModal(true)} className="rounded-lg bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90">+ Crear página</button>}
@@ -655,21 +684,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           />
         )}
 
-        {/* AJUSTES AVANZADOS (opcional): la edición normal es directa sobre la página */}
-        {showBlockPanel && activeBlock && !showSettings && (
-          <aside className="flex w-80 flex-shrink-0 flex-col border-l border-slate-200 bg-white">
-            <div className="flex-shrink-0 border-b border-slate-200 px-4 py-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-900">Ajustes · {BLOCK_META[activeBlock.type]?.label || activeBlock.type}</h3>
-                <button onClick={() => setShowBlockPanel(false)} className="rounded-lg p-1 text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4" /></button>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-400">Opciones avanzadas: elementos, íconos, enlaces y estilos.</p>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <BlockEditor type={activeBlock.type} content={activeBlock.content} onChange={c => updateBlock(activeBlock.id, c)} />
-            </div>
-          </aside>
-        )}
       </div>
 
       {showDomainSearch && <DomainSearchModal siteId={siteId} initialQuery={site.name} onClose={() => setShowDomainSearch(false)} />}

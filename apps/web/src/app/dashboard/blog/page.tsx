@@ -177,8 +177,8 @@ export default function BlogPage() {
 
       <div className="flex items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Blog</h1>
-          <p className="text-sm text-slate-500">Gestiona artículos y su SEO. Al habilitarlo, el enlace aparece en el menú de tu web.</p>
+          <h1 className="text-xl font-bold text-[#303030]">Blog</h1>
+          <p className="text-sm text-[#616161]">Gestiona artículos y su SEO. Al habilitarlo, el enlace aparece en el menú de tu web.</p>
         </div>
         <div className="flex items-center gap-2">
           {sites.length > 1 && (
@@ -191,7 +191,7 @@ export default function BlogPage() {
       </div>
 
       {sites.length === 0 ? (
-        <div className="card p-8 text-center text-slate-500 text-sm">No tienes sitios todavía. Crea un sitio para usar el blog.</div>
+        <div className="card p-8 text-center text-[#616161] text-sm">No tienes sitios todavía. Crea un sitio para usar el blog.</div>
       ) : (
         <>
           <div className="card p-5 mb-6">
@@ -200,15 +200,15 @@ export default function BlogPage() {
                 <button
                   onClick={() => saveSettings({ enabled: !settings.enabled })}
                   disabled={savingSettings}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-primary-600" : "bg-slate-300"}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enabled ? "bg-primary-600" : "bg-[#d4d4d4]"}`}
                   aria-pressed={settings.enabled}
                   title={settings.enabled ? "Deshabilitar blog" : "Habilitar blog"}
                 >
                   <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${settings.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
                 </button>
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">Blog {settings.enabled ? "habilitado" : "deshabilitado"}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-sm font-semibold text-[#303030]">Blog {settings.enabled ? "habilitado" : "deshabilitado"}</p>
+                  <p className="text-xs text-[#616161]">
                     {settings.enabled
                       ? `Visible en ${selectedSite?.domain ? `https://${selectedSite.domain}` : `/${selectedSite?.subdomain || ""}`}/${settings.slug}`
                       : "Actívalo para publicar artículos y mostrarlos en el menú."}
@@ -217,11 +217,11 @@ export default function BlogPage() {
               </div>
               <div className="flex items-end gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Título del menú</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Título del menú</label>
                   <input className="input-field text-sm" value={settings.title} onChange={(e) => setSettings({ ...settings, title: e.target.value })} onBlur={() => saveSettings()} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Ruta</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Ruta</label>
                   <input className="input-field text-sm" value={settings.slug} onChange={(e) => setSettings({ ...settings, slug: e.target.value })} onBlur={() => saveSettings()} />
                 </div>
               </div>
@@ -229,9 +229,9 @@ export default function BlogPage() {
           </div>
 
           {loading ? (
-            <div className="text-center text-slate-500 text-sm py-12">Cargando...</div>
+            <div className="text-center text-[#616161] text-sm py-12">Cargando...</div>
           ) : articles.length === 0 ? (
-            <div className="card p-8 text-center text-slate-500 text-sm">Aún no hay artículos. Crea el primero.</div>
+            <div className="card p-8 text-center text-[#616161] text-sm">Aún no hay artículos. Crea el primero.</div>
           ) : (
             <div className="space-y-2">
               {articles.map((a) => (
@@ -240,16 +240,16 @@ export default function BlogPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={a.coverImage} alt="" className="h-14 w-20 rounded-lg object-cover flex-shrink-0" />
                   ) : (
-                    <div className="h-14 w-20 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300 flex-shrink-0">—</div>
+                    <div className="h-14 w-20 rounded-lg bg-[#f1f1f1] flex items-center justify-center text-[#b5b5b5] flex-shrink-0">—</div>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-slate-800 truncate">{a.title}</p>
+                      <p className="font-medium text-[#303030] truncate">{a.title}</p>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${a.isPublished ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
                         {a.isPublished ? "Publicado" : "Borrador"}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 truncate">/{settings.slug}/{a.slug}</p>
+                    <p className="text-xs text-[#8a8a8a] truncate">/{settings.slug}/{a.slug}</p>
                   </div>
                   <button onClick={() => openEdit(a)} className="text-xs font-medium text-primary-600 hover:text-primary-700 px-3 py-1.5">Editar</button>
                   <button onClick={() => removeArticle(a)} className="text-xs font-medium text-red-600 hover:text-red-700 px-3 py-1.5">Eliminar</button>
@@ -264,52 +264,52 @@ export default function BlogPage() {
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" onClick={() => setShowForm(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto m-4 z-10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 sticky top-0 bg-white">
-              <h3 className="font-semibold text-sm text-slate-900">{editId ? "Editar artículo" : "Nuevo artículo"}</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+            <div className="flex items-center justify-between p-4 border-b border-[#e3e3e3] sticky top-0 bg-white">
+              <h3 className="font-semibold text-sm text-[#303030]">{editId ? "Editar artículo" : "Nuevo artículo"}</h3>
+              <button onClick={() => setShowForm(false)} className="text-[#8a8a8a] hover:text-[#616161] text-lg leading-none">×</button>
             </div>
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Título *</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Título *</label>
                   <input className="input-field text-sm" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Slug</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Slug</label>
                   <input className="input-field text-sm" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="se-genera-del-titulo" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Autor</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Autor</label>
                   <input className="input-field text-sm" value={form.authorName} onChange={(e) => setForm({ ...form, authorName: e.target.value })} />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Resumen</label>
+                <label className="block text-xs font-medium text-[#616161] mb-1">Resumen</label>
                 <textarea className="input-field text-sm" rows={2} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Contenido (HTML permitido)</label>
+                <label className="block text-xs font-medium text-[#616161] mb-1">Contenido (HTML permitido)</label>
                 <textarea className="input-field text-sm font-mono" rows={10} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="<p>Escribe aquí el artículo…</p>" />
               </div>
 
               <ImageField label="Imagen de portada" value={form.coverImage} onChange={(v) => setForm({ ...form, coverImage: v })} />
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <p className="text-xs font-semibold text-slate-700">SEO del artículo</p>
+              <div className="p-3 rounded-xl bg-[#f7f7f7] border border-[#e3e3e3] space-y-3">
+                <p className="text-xs font-semibold text-[#303030]">SEO del artículo</p>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Título SEO</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Título SEO</label>
                   <input className="input-field text-sm" value={form.seoTitle} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} placeholder="Por defecto: el título del artículo" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Descripción SEO</label>
+                  <label className="block text-xs font-medium text-[#616161] mb-1">Descripción SEO</label>
                   <textarea className="input-field text-sm" rows={2} value={form.seoDesc} onChange={(e) => setForm({ ...form, seoDesc: e.target.value })} placeholder="Por defecto: el resumen" />
                 </div>
                 <ImageField label="Imagen SEO (OpenGraph)" value={form.seoImage} onChange={(v) => setForm({ ...form, seoImage: v })} />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-[#303030]">
                 <input type="checkbox" checked={form.isPublished} onChange={(e) => setForm({ ...form, isPublished: e.target.checked })} />
                 Publicar artículo
               </label>

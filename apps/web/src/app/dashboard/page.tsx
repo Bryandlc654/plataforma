@@ -136,73 +136,73 @@ export default function DashboardPage() {
 
   if (isLoading || loading) {
     return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto animate-pulse">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto animate-pulse">
         <div className="space-y-2 mb-8">
-          <div className="h-8 w-64 rounded-lg bg-slate-200" />
-          <div className="h-4 w-96 rounded-lg bg-slate-200" />
+          <div className="h-8 w-64 rounded-lg bg-[#e3e3e3]" />
+          <div className="h-4 w-96 rounded-lg bg-[#e3e3e3]" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 h-24" />
+            <div key={i} className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 h-24" />
           ))}
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 h-72 mb-8" />
+        <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] h-72 mb-8" />
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="bg-white rounded-xl border border-slate-200 h-48" />
-          <div className="bg-white rounded-xl border border-slate-200 h-48" />
+          <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] h-48" />
+          <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] h-48" />
         </div>
       </main>
     );
   }
 
   return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
         {/* SUPER ADMIN VIEW */}
         {isPlatformStaff && (
           <>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-              <div><h1 className="text-2xl font-bold text-slate-900">Dashboard Global</h1><p className="text-sm text-slate-500 mt-1">Administración de la plataforma SaaS</p></div>
+              <div><h1 className="text-xl font-bold text-[#303030]">Dashboard Global</h1><p className="text-sm text-[#616161] mt-1">Administración de la plataforma SaaS</p></div>
               <div className="flex gap-2">
                 <Link href="/dashboard/admin/tenants" className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg> Gestionar tenants</Link>
-                <Link href="/dashboard/admin/users" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Usuarios</Link>
-                <Link href="/dashboard/admin/billing" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Facturación</Link>
+                <Link href="/dashboard/admin/users" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7]"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Usuarios</Link>
+                <Link href="/dashboard/admin/billing" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7]"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Facturación</Link>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-              <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase">Tenants</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">Tenants</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
                 <p className="text-2xl font-bold text-primary-700">{adminData?.summary?.totalTenants ?? 0}<span className="text-xs font-normal text-green-600 ml-1">{adminData?.summary?.activeTenants ?? 0} activos</span></p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase">Usuarios</p><div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center"><svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">Usuarios</p><div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center"><svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div></div>
                 <p className="text-2xl font-bold text-blue-700">{adminData?.summary?.totalUsers ?? 0}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase">MRR</p><div className="h-8 w-8 rounded-lg bg-green-50 flex items-center justify-center"><svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">MRR</p><div className="h-8 w-8 rounded-lg bg-green-50 flex items-center justify-center"><svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div></div>
                 <p className="text-2xl font-bold text-green-700">{formatCurrency(adminData?.summary?.mrr ?? 0)}</p>
-                <p className="text-xs text-slate-400 mt-1">Churn: {adminData?.summary?.churnRate ?? 0}%</p>
+                <p className="text-xs text-[#8a8a8a] mt-1">Churn: {adminData?.summary?.churnRate ?? 0}%</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase">Revenue</p><div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center"><svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">Revenue</p><div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center"><svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div></div>
                 <p className="text-2xl font-bold text-purple-700">{formatCurrency(adminData?.summary?.totalRevenue ?? 0)}</p>
-                <p className="text-xs text-slate-400 mt-1">{formatCurrency(adminData?.summary?.monthRevenue ?? 0)} este mes</p>
+                <p className="text-xs text-[#8a8a8a] mt-1">{formatCurrency(adminData?.summary?.monthRevenue ?? 0)} este mes</p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-              <div className="bg-white rounded-xl border border-slate-200 p-4"><p className="text-xs text-slate-500">Suscripciones</p><p className="text-xl font-bold text-primary-700">{adminData?.summary?.activeSubscriptions ?? 0}</p></div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4"><p className="text-xs text-slate-500">Leads totales</p><p className="text-xl font-bold text-amber-700">{adminData?.summary?.totalLeads ?? 0}</p></div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4"><p className="text-xs text-slate-500">Sitios</p><p className="text-xl font-bold text-cyan-700">{adminData?.summary?.totalSites ?? 0}</p></div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4"><p className="text-xs text-slate-500">Suspendidos</p><p className="text-xl font-bold text-red-700">{adminData?.summary?.suspendedTenants ?? 0}</p></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-4"><p className="text-xs text-[#616161]">Suscripciones</p><p className="text-xl font-bold text-primary-700">{adminData?.summary?.activeSubscriptions ?? 0}</p></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-4"><p className="text-xs text-[#616161]">Leads totales</p><p className="text-xl font-bold text-amber-700">{adminData?.summary?.totalLeads ?? 0}</p></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-4"><p className="text-xs text-[#616161]">Sitios</p><p className="text-xl font-bold text-cyan-700">{adminData?.summary?.totalSites ?? 0}</p></div>
+              <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-4"><p className="text-xs text-[#616161]">Suspendidos</p><p className="text-xl font-bold text-red-700">{adminData?.summary?.suspendedTenants ?? 0}</p></div>
             </div>
 
             <div className="card">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-slate-900">Tenants recientes</h3><Link href="/dashboard/admin/tenants" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver todos →</Link></div>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-[#303030]">Tenants recientes</h3><Link href="/dashboard/admin/tenants" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver todos →</Link></div>
               {adminData?.recentTenants && adminData.recentTenants.length > 0 ? (
-                <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-200"><th className="text-left py-2 px-3 text-slate-600">Nombre</th><th className="text-left py-2 px-3 text-slate-600">Plan</th><th className="text-left py-2 px-3 text-slate-600">Usuarios</th><th className="text-left py-2 px-3 text-slate-600">Sitios</th><th className="text-left py-2 px-3 text-slate-600">Estado</th><th className="text-left py-2 px-3 text-slate-600">Fecha</th></tr></thead>
-                  <tbody>{adminData.recentTenants.map((t) => (<tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="py-2 px-3 font-medium">{t.name}</td><td className="py-2 px-3 text-xs text-slate-500">{t.plan?.name||"Free"}</td><td className="py-2 px-3">{t._count.userTenants}</td><td className="py-2 px-3">{t._count.sites}</td><td className="py-2 px-3"><span className={`rounded-full px-2 py-0.5 text-xs ${t.isActive?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}`}>{t.isActive?"Activo":"Inactivo"}</span></td><td className="py-2 px-3 text-slate-500 text-xs">{formatDate(t.createdAt)}</td></tr>))}</tbody></table></div>
-              ) : <p className="text-sm text-slate-500">No hay tenants</p>}
+                <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-[#e3e3e3]"><th className="text-left py-2 px-3 text-[#616161]">Nombre</th><th className="text-left py-2 px-3 text-[#616161]">Plan</th><th className="text-left py-2 px-3 text-[#616161]">Usuarios</th><th className="text-left py-2 px-3 text-[#616161]">Sitios</th><th className="text-left py-2 px-3 text-[#616161]">Estado</th><th className="text-left py-2 px-3 text-[#616161]">Fecha</th></tr></thead>
+                  <tbody>{adminData.recentTenants.map((t) => (<tr key={t.id} className="border-b border-[#ebebeb] hover:bg-[#f7f7f7]"><td className="py-2 px-3 font-medium">{t.name}</td><td className="py-2 px-3 text-xs text-[#616161]">{t.plan?.name||"Free"}</td><td className="py-2 px-3">{t._count.userTenants}</td><td className="py-2 px-3">{t._count.sites}</td><td className="py-2 px-3"><span className={`rounded-full px-2 py-0.5 text-xs ${t.isActive?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}`}>{t.isActive?"Activo":"Inactivo"}</span></td><td className="py-2 px-3 text-[#616161] text-xs">{formatDate(t.createdAt)}</td></tr>))}</tbody></table></div>
+              ) : <p className="text-sm text-[#616161]">No hay tenants</p>}
             </div>
           </>
         )}
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   <Link
                     href="/dashboard/sites/new"
-                    className="group flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="group flex flex-col rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-secondary)] text-sm font-bold text-[var(--color-primary)]">1</span>
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                     </span>
                   </Link>
 
-                  <div className="flex flex-col rounded-2xl border border-[#e3e3e3] bg-white p-6 shadow-sm">
+                  <div className="flex flex-col rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white">2</span>
                       <p className="text-[15px] font-semibold text-[#303030]">Publica y comparte</p>
@@ -316,7 +316,7 @@ export default function DashboardPage() {
                         <Link
                           key={t.id}
                           href="/dashboard/sites/new"
-                          className="group overflow-hidden rounded-2xl border border-[#e3e3e3] bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
+                          className="group overflow-hidden rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
                         >
                           <div className="relative aspect-[4/3] overflow-hidden bg-[#f6f6f7]">
                             {t.thumbnail ? (
@@ -347,8 +347,8 @@ export default function DashboardPage() {
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900">{tenant.name}</h1>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h1 className="text-xl font-bold text-[#303030]">{tenant.name}</h1>
+                    <p className="mt-1 text-sm text-[#616161]">
                       {tenant.isOwner ? "Propietario" : "Miembro"}
                       {tenantData?.subscription ? ` · Plan ${tenantData.subscription.plan.name}` : " · Plan Free"}
                     </p>
@@ -357,10 +357,10 @@ export default function DashboardPage() {
                     <Link href="/dashboard/sites/new" className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-colors shadow-sm">
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg> Nuevo sitio
                     </Link>
-                    <Link href="/dashboard/leads" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <Link href="/dashboard/leads" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7] transition-colors">
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Leads
                     </Link>
-                    <Link href="/dashboard/settings" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    <Link href="/dashboard/settings" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7] transition-colors">
                       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Ajustes
                     </Link>
                   </div>
@@ -369,38 +369,38 @@ export default function DashboardPage() {
                 <SetupGuideCard />
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/sites")}>
-                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sitios</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
+                  <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/sites")}>
+                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase tracking-wide">Sitios</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
                     <p className="text-3xl font-bold text-primary-700">{tenantData?.summary?.totalSites ?? 0}</p>
-                    <p className="text-xs text-slate-400 mt-1">sitios creados</p>
+                    <p className="text-xs text-[#8a8a8a] mt-1">sitios creados</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/leads")}>
-                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Leads totales</p><div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors"><svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div></div>
+                  <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/leads")}>
+                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase tracking-wide">Leads totales</p><div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors"><svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div></div>
                     <p className="text-3xl font-bold text-blue-700">{tenantData?.summary?.totalLeads ?? 0}</p>
-                    <p className="text-xs text-slate-400 mt-1"><span className="text-green-600 font-medium">+{tenantData?.summary?.leadsLast30Days ?? 0}</span> últimos 30 días</p>
+                    <p className="text-xs text-[#8a8a8a] mt-1"><span className="text-green-600 font-medium">+{tenantData?.summary?.leadsLast30Days ?? 0}</span> últimos 30 días</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/leads")}>
-                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Conversión</p><div className="h-8 w-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors"><svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div></div>
+                  <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/leads")}>
+                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase tracking-wide">Conversión</p><div className="h-8 w-8 rounded-lg bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors"><svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div></div>
                     <p className="text-3xl font-bold text-green-700">{tenantData?.summary ? Math.round((tenantData.summary.leadsLast30Days / Math.max(1, tenantData.summary.totalLeads)) * 100) : 0}%</p>
-                    <p className="text-xs text-slate-400 mt-1">tasa de conversión</p>
+                    <p className="text-xs text-[#8a8a8a] mt-1">tasa de conversión</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/users")}>
-                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Usuarios</p><div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors"><svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div></div>
+                  <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push("/dashboard/users")}>
+                    <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase tracking-wide">Usuarios</p><div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors"><svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div></div>
                     <p className="text-3xl font-bold text-purple-700">{tenantData?.summary?.totalUsers ?? 0}</p>
-                    <p className="text-xs text-slate-400 mt-1">miembros del equipo</p>
+                    <p className="text-xs text-[#8a8a8a] mt-1">miembros del equipo</p>
                   </div>
                 </div>
 
                 {tenantData?.recentLeads && tenantData.recentLeads.length > 0 && (
                   <div className="card mb-8">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-slate-900">Leads recientes</h3>
+                      <h3 className="font-semibold text-[#303030]">Leads recientes</h3>
                       <Link href="/dashboard/leads" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver todos →</Link>
                     </div>
                     <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead><tr className="border-b border-slate-200"><th className="text-left py-2 px-3 text-slate-600">Nombre</th><th className="text-left py-2 px-3 text-slate-600">Email</th><th className="text-left py-2 px-3 text-slate-600">Estado</th><th className="text-left py-2 px-3 text-slate-600">Fecha</th></tr></thead>
-                      <tbody>{tenantData.recentLeads.map((lead) => (<tr key={lead.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="py-2 px-3">{lead.name || "-"}</td><td className="py-2 px-3">{lead.email || "-"}</td><td className="py-2 px-3"><span className={`rounded-full px-2 py-0.5 text-xs ${lead.status==="new"?"bg-blue-50 text-blue-700":lead.status==="contacted"?"bg-yellow-50 text-yellow-700":lead.status==="converted"?"bg-green-50 text-green-700":"bg-slate-50 text-slate-700"}`}>{lead.status}</span></td><td className="py-2 px-3 text-slate-500 text-xs">{formatDate(lead.createdAt)}</td></tr>))}</tbody>
+                      <thead><tr className="border-b border-[#e3e3e3]"><th className="text-left py-2 px-3 text-[#616161]">Nombre</th><th className="text-left py-2 px-3 text-[#616161]">Email</th><th className="text-left py-2 px-3 text-[#616161]">Estado</th><th className="text-left py-2 px-3 text-[#616161]">Fecha</th></tr></thead>
+                      <tbody>{tenantData.recentLeads.map((lead) => (<tr key={lead.id} className="border-b border-[#ebebeb] hover:bg-[#f7f7f7]"><td className="py-2 px-3">{lead.name || "-"}</td><td className="py-2 px-3">{lead.email || "-"}</td><td className="py-2 px-3"><span className={`rounded-full px-2 py-0.5 text-xs ${lead.status==="new"?"bg-blue-50 text-blue-700":lead.status==="contacted"?"bg-yellow-50 text-yellow-700":lead.status==="converted"?"bg-green-50 text-green-700":"bg-[#f7f7f7] text-[#303030]"}`}>{lead.status}</span></td><td className="py-2 px-3 text-[#616161] text-xs">{formatDate(lead.createdAt)}</td></tr>))}</tbody>
                     </table>
                     </div>
                   </div>
@@ -409,7 +409,7 @@ export default function DashboardPage() {
                 {analyticsData && (
                   <div className="card">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-slate-900">Visitas (30 días)</h3>
+                      <h3 className="font-semibold text-[#303030]">Visitas (30 días)</h3>
                       <Link href="/dashboard/analytics" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver Analytics →</Link>
                     </div>
                     {analyticsData.dailyViews && analyticsData.dailyViews.length > 0 ? (
@@ -424,10 +424,10 @@ export default function DashboardPage() {
                         })()}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-500">Sin datos de visitas todavía</p>
+                      <p className="text-sm text-[#616161]">Sin datos de visitas todavía</p>
                     )}
-                    <div className="flex items-center justify-between text-sm mt-2 pt-3 border-t border-slate-100">
-                      <span className="text-slate-500">Total de visitas</span>
+                    <div className="flex items-center justify-between text-sm mt-2 pt-3 border-t border-[#ebebeb]">
+                      <span className="text-[#616161]">Total de visitas</span>
                       <span className="font-bold text-primary-700">{analyticsData.summary?.totalViews ?? 0}</span>
                     </div>
                   </div>
@@ -436,8 +436,8 @@ export default function DashboardPage() {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-2">Sin negocio</h2>
-                  <p className="text-sm text-slate-600 mb-6">Selecciona o crea un negocio</p>
+                  <h2 className="text-xl font-semibold text-[#303030] mb-2">Sin negocio</h2>
+                  <p className="text-sm text-[#616161] mb-6">Selecciona o crea un negocio</p>
                   <Link href="/dashboard/new-tenant" className="btn-primary">Crear negocio</Link>
                 </div>
               </div>

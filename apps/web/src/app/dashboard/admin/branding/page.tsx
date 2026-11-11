@@ -95,8 +95,8 @@ export default function PlatformBrandingPage() {
   return (
     <div className="mx-auto max-w-5xl p-6 sm:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Marca de la plataforma</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-xl font-bold text-[#303030]">Marca de la plataforma</h1>
+        <p className="mt-1 text-sm text-[#616161]">
           El logo y los colores se aplican en el login, el sidebar y todo el panel.
         </p>
       </div>
@@ -114,9 +114,9 @@ export default function PlatformBrandingPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="font-semibold text-slate-900">Logo</h2>
-            <p className="mt-1 text-sm text-slate-500">
+          <section className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
+            <h2 className="font-semibold text-[#303030]">Logo</h2>
+            <p className="mt-1 text-sm text-[#616161]">
               Sube una imagen con fondo transparente para que se vea bien sobre el sidebar morado.
             </p>
 
@@ -129,7 +129,7 @@ export default function PlatformBrandingPage() {
                     className="h-full w-auto max-w-full object-contain"
                   />
                 ) : (
-                  <span className="text-xs text-slate-400">Sin logo</span>
+                  <span className="text-xs text-[#8a8a8a]">Sin logo</span>
                 )}
               </div>
 
@@ -157,7 +157,7 @@ export default function PlatformBrandingPage() {
                     type="button"
                     onClick={removeLogo}
                     disabled={saving}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2.5 text-sm font-medium text-[#616161] transition hover:bg-[#f7f7f7] disabled:opacity-50"
                   >
                     Quitar logo
                   </button>
@@ -166,9 +166,9 @@ export default function PlatformBrandingPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="font-semibold text-slate-900">Colores de la plataforma</h2>
-            <p className="mt-1 text-sm text-slate-500">
+          <section className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
+            <h2 className="font-semibold text-[#303030]">Colores de la plataforma</h2>
+            <p className="mt-1 text-sm text-[#616161]">
               El color primario se usa en el sidebar y las superficies oscuras. El secundario en botones y acentos.
             </p>
 
@@ -188,9 +188,9 @@ export default function PlatformBrandingPage() {
           </section>
         </div>
 
-        <section className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="font-semibold text-slate-900">Vista previa</h2>
-          <p className="mt-1 text-sm text-slate-500">Así se verá la marca en el menú y en los accesos.</p>
+        <section className="h-fit rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
+          <h2 className="font-semibold text-[#303030]">Vista previa</h2>
+          <p className="mt-1 text-sm text-[#616161]">Así se verá la marca en el menú y en los accesos.</p>
 
           <div className="mt-5 overflow-hidden rounded-xl" style={{ background: primaryColor }}>
             <div className="flex items-center gap-2 px-4 py-3 text-white">
@@ -248,19 +248,19 @@ function ColorField({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-700">{label}</label>
+      <label className="mb-2 block text-sm font-medium text-[#303030]">{label}</label>
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={safeColor}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 w-12 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
+          className="h-11 w-12 cursor-pointer rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-1"
         />
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#201b51"
-          className="w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase text-slate-700 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
+          className="w-full rounded-xl border border-[#e3e3e3] px-3 py-2.5 font-mono text-sm uppercase text-[#303030] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
         />
       </div>
     </div>

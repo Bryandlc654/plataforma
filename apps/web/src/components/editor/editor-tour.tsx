@@ -64,12 +64,12 @@ export function EditorTour({ ready }: { ready: boolean }) {
         style={{ top: rect.top - 4, left: rect.left - 4, width: rect.width + 8, height: rect.height + 8, boxShadow: "0 0 0 9999px rgba(18,15,51,0.55)" }}
       />
       <div className="absolute rounded-xl bg-white p-4 shadow-2xl" style={{ top, left, width: CARD_W }}>
-        <p className="text-sm font-semibold text-slate-900">{s.title}</p>
-        <p className="mt-1 text-[13px] leading-snug text-slate-500">{s.text}</p>
+        <p className="text-sm font-semibold text-[#303030]">{s.title}</p>
+        <p className="mt-1 text-[13px] leading-snug text-[#616161]">{s.text}</p>
         <div className="mt-3 flex items-center justify-between">
-          <button onClick={done} className="text-xs font-medium text-slate-400 hover:text-slate-600">Omitir</button>
+          <button onClick={done} className="text-xs font-medium text-[#8a8a8a] hover:text-[#616161]">Omitir</button>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-400">{step + 1} de {STEPS.length}</span>
+            <span className="text-[11px] text-[#8a8a8a]">{step + 1} de {STEPS.length}</span>
             <button
               onClick={() => (step === STEPS.length - 1 ? done() : setStep(step + 1))}
               className="rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"

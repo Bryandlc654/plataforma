@@ -35,15 +35,15 @@ export default function WhatsAppPage() {
   };
 
   if (loading) {
-  if (loading) return <div className="p-8 animate-pulse space-y-6"><div className="h-9 w-64 rounded-lg bg-slate-200" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[...Array(6)].map((_,i)=><div key={i} className="h-32 rounded-xl bg-slate-200" />)}</div><div className="h-48 rounded-xl bg-slate-200" /></div>;
+  if (loading) return <div className="p-8 animate-pulse space-y-6"><div className="h-9 w-64 rounded-lg bg-[#e3e3e3]" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[...Array(6)].map((_,i)=><div key={i} className="h-32 rounded-xl bg-[#e3e3e3]" />)}</div><div className="h-48 rounded-xl bg-[#e3e3e3]" /></div>;
   }
 
   return (
-      <main className="flex-1 p-8 bg-slate-50">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6">
         {toast && <div className={`fixed top-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${toast.type === "success" ? "bg-green-50 border border-green-200 text-green-700" : "bg-red-50 border border-red-200 text-red-700"}`}>{toast.message}</div>}
         <div className="max-w-lg">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Integración WhatsApp</h1>
-          <p className="text-sm text-slate-600 mb-8">
+          <h1 className="text-xl font-bold text-[#303030] mb-2">Integración WhatsApp</h1>
+          <p className="text-sm text-[#616161] mb-8">
             Configura el botón flotante de WhatsApp que aparecerá en tus sitios web
           </p>
 
@@ -51,13 +51,13 @@ export default function WhatsAppPage() {
             {/* Toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-slate-900">Activar botón</p>
-                <p className="text-xs text-slate-500">Mostrar botón flotante de WhatsApp en tus sitios</p>
+                <p className="font-medium text-[#303030]">Activar botón</p>
+                <p className="text-xs text-[#616161]">Mostrar botón flotante de WhatsApp en tus sitios</p>
               </div>
               <button
                 onClick={() => setSettings({ ...settings, enabled: !settings.enabled })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.enabled ? "bg-primary-600" : "bg-slate-200"
+                  settings.enabled ? "bg-primary-600" : "bg-[#e3e3e3]"
                 }`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -66,7 +66,7 @@ export default function WhatsAppPage() {
               </button>
             </div>
 
-            <hr className="border-slate-200" />
+            <hr className="border-[#e3e3e3]" />
 
             {/* Phone */}
             <div>
@@ -125,11 +125,11 @@ export default function WhatsAppPage() {
 
             {/* Preview */}
             {settings.enabled && (
-              <div className="relative border border-slate-200 rounded-lg p-4 bg-white">
-                <p className="text-xs font-medium text-slate-500 mb-3">Vista previa</p>
-                <div className="bg-slate-100 rounded-lg h-32 relative overflow-hidden">
+              <div className="relative shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] rounded-lg p-4 bg-white">
+                <p className="text-xs font-medium text-[#616161] mb-3">Vista previa</p>
+                <div className="bg-[#f1f1f1] rounded-lg h-32 relative overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-slate-400 text-sm">Sitio web</span>
+                    <span className="text-[#8a8a8a] text-sm">Sitio web</span>
                   </div>
                   <div
                     className="absolute bottom-4 w-12 h-12 rounded-full shadow-lg flex items-center justify-center"
@@ -144,7 +144,7 @@ export default function WhatsAppPage() {
               </div>
             )}
 
-            <hr className="border-slate-200" />
+            <hr className="border-[#e3e3e3]" />
 
             <button onClick={handleSave} disabled={saving} className="btn-primary w-full">
               {saving ? "Guardando..." : "Guardar configuración"}

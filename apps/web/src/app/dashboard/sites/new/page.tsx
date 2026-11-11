@@ -98,14 +98,14 @@ export default function NewSitePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-16">
-      <div className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-[#f7f7f7] pb-16">
+      <div className="border-b border-[#e3e3e3] bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <Link href="/dashboard/sites" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[color:var(--color-primary)]">
+          <Link href="/dashboard/sites" className="mb-4 inline-flex items-center gap-1.5 text-sm text-[#616161] hover:text-[color:var(--color-primary)]">
             <HiOutlineArrowLeft className="h-4 w-4" /> Mis sitios
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Elige una plantilla</h1>
-          <p className="mt-1 text-sm text-slate-500 sm:text-base">Todo se puede cambiar después: textos, imágenes, colores y secciones.</p>
+          <h1 className="text-xl font-bold tracking-tight text-[#303030] sm:text-xl">Elige una plantilla</h1>
+          <p className="mt-1 text-sm text-[#616161] sm:text-base">Todo se puede cambiar después: textos, imágenes, colores y secciones.</p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
@@ -113,19 +113,19 @@ export default function NewSitePage() {
                 <button
                   key={c.id}
                   onClick={() => setActiveCategory(c.id)}
-                  className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${activeCategory === c.id ? "bg-[color:var(--color-primary)] text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)]"}`}
+                  className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${activeCategory === c.id ? "bg-[color:var(--color-primary)] text-white" : "border border-[#e3e3e3] bg-white text-[#616161] hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)]"}`}
                 >
                   {c.name}
                 </button>
               ))}
             </div>
             <div className="relative sm:w-72">
-              <HiOutlineSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <HiOutlineSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a8a8a]" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar plantilla…"
-                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"
+                className="w-full rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white py-2 pl-9 pr-3 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"
               />
             </div>
           </div>
@@ -134,8 +134,8 @@ export default function NewSitePage() {
 
       <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
         {goals.length > 0 && !search && (
-          <p className="mb-6 text-sm text-slate-500">
-            Ordenamos las plantillas para <strong className="text-slate-700">{goals.map((g) => GOAL_MATCH[g].label).join(" y ")}</strong>. Puedes elegir cualquiera.
+          <p className="mb-6 text-sm text-[#616161]">
+            Ordenamos las plantillas para <strong className="text-[#303030]">{goals.map((g) => GOAL_MATCH[g].label).join(" y ")}</strong>. Puedes elegir cualquiera.
           </p>
         )}
         {error && (
@@ -153,37 +153,37 @@ export default function NewSitePage() {
           {!search && activeCategory === "all" && (
             <button
               onClick={() => createSite(null)}
-              className="group flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6 text-center transition hover:border-[color:var(--color-primary)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)]"
+              className="group flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[#d4d4d4] bg-white p-6 text-center transition hover:border-[color:var(--color-primary)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)]"
             >
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[color:var(--color-primary)]"><HiOutlinePlus className="h-6 w-6" /></span>
-              <span className="font-semibold text-slate-800">Empezar desde cero</span>
-              <span className="text-sm text-slate-500">Una página en blanco para armar a tu manera.</span>
+              <span className="font-semibold text-[#303030]">Empezar desde cero</span>
+              <span className="text-sm text-[#616161]">Una página en blanco para armar a tu manera.</span>
             </button>
           )}
 
-          {loadingList && Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[300px] animate-pulse rounded-2xl bg-slate-200/70" />)}
+          {loadingList && Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-[300px] animate-pulse rounded-2xl bg-[#e3e3e3]/70" />)}
 
           {filtered.map((t) => (
-            <div key={t.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--color-primary)_30%,transparent)] hover:shadow-xl">
-              <div className="relative aspect-[4/3] overflow-hidden border-b border-slate-100 bg-slate-100">
+            <div key={t.id} className="group flex flex-col overflow-hidden rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white transition hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--color-primary)_30%,transparent)] hover:shadow-xl">
+              <div className="relative aspect-[4/3] overflow-hidden border-b border-[#ebebeb] bg-[#f1f1f1]">
                 {t.thumbnail ? (
                   <div className="absolute inset-0 bg-cover bg-top transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${t.thumbnail})` }} />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)] to-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"><HiOutlineTemplate className="h-12 w-12 text-[color:color-mix(in_srgb,var(--color-primary)_30%,transparent)]" /></div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-[color:color-mix(in_srgb,var(--color-primary)_55%,transparent)] opacity-0 transition-opacity group-hover:opacity-100 max-sm:items-end max-sm:bg-transparent max-sm:pb-3 max-sm:opacity-100">
-                  <button onClick={() => { setDevice("desktop"); setPreview(t); }} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow hover:bg-slate-50"><HiOutlineEye className="h-4 w-4" />Vista previa</button>
+                  <button onClick={() => { setDevice("desktop"); setPreview(t); }} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-[#303030] shadow hover:bg-[#f7f7f7]"><HiOutlineEye className="h-4 w-4" />Vista previa</button>
                   <button onClick={() => createSite(t)} className={btnPrimary}>Usar</button>
                 </div>
                 <div className="absolute left-3 top-3 flex gap-1.5">
                   {isRecommended(t) && <span className="rounded-full bg-[color:var(--color-secondary)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-on-secondary,#201b51)] shadow-sm">Recomendada</span>}
-                  {t.category && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm">{t.category.name}</span>}
+                  {t.category && <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-[#303030] shadow-sm">{t.category.name}</span>}
                 </div>
               </div>
               <div className="flex flex-1 flex-col p-4">
-                <h3 className="font-semibold text-slate-900">{t.name}</h3>
-                <p className="mt-1 line-clamp-2 flex-1 text-sm text-slate-500">{t.description || "Diseño profesional listo para usar."}</p>
-                <p className="mt-3 text-xs font-medium text-slate-400">{t._count?.pages || 0} página{(t._count?.pages || 0) === 1 ? "" : "s"}</p>
+                <h3 className="font-semibold text-[#303030]">{t.name}</h3>
+                <p className="mt-1 line-clamp-2 flex-1 text-sm text-[#616161]">{t.description || "Diseño profesional listo para usar."}</p>
+                <p className="mt-3 text-xs font-medium text-[#8a8a8a]">{t._count?.pages || 0} página{(t._count?.pages || 0) === 1 ? "" : "s"}</p>
               </div>
             </div>
           ))}
@@ -191,7 +191,7 @@ export default function NewSitePage() {
 
         {!loadingList && filtered.length === 0 && (
           <div className="py-16 text-center">
-            <p className="font-semibold text-slate-700">No encontramos plantillas con ese criterio</p>
+            <p className="font-semibold text-[#303030]">No encontramos plantillas con ese criterio</p>
             <button onClick={() => { setSearch(""); setActiveCategory("all"); }} className="mt-3 text-sm font-medium text-[color:var(--color-primary)] hover:underline">Ver todas</button>
           </div>
         )}
@@ -199,29 +199,29 @@ export default function NewSitePage() {
 
       {/* VISTA PREVIA */}
       {preview && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-slate-900/60 backdrop-blur-sm sm:p-6" onClick={() => setPreview(null)}>
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#1a1a1a]/60 backdrop-blur-sm sm:p-6" onClick={() => setPreview(null)}>
           <div className="mx-auto flex h-full w-full max-w-6xl flex-col overflow-hidden bg-white shadow-2xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e3e3e3] px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{preview.name}</p>
-                {preview.category && <p className="text-xs text-slate-400">{preview.category.name}</p>}
+                <p className="truncate text-sm font-semibold text-[#303030]">{preview.name}</p>
+                {preview.category && <p className="text-xs text-[#8a8a8a]">{preview.category.name}</p>}
               </div>
-              <div className="flex items-center rounded-lg border border-slate-200 p-0.5 max-sm:hidden">
+              <div className="flex items-center rounded-lg border border-[#e3e3e3] p-0.5 max-sm:hidden">
                 {([["desktop", HiOutlineDesktopComputer], ["mobile", HiOutlineDeviceMobile]] as const).map(([k, Icon]) => (
-                  <button key={k} onClick={() => setDevice(k)} className={`flex h-7 w-9 items-center justify-center rounded-md ${device === k ? "bg-[color:var(--color-primary)] text-white" : "text-slate-500 hover:bg-slate-100"}`} title={k === "desktop" ? "Escritorio" : "Móvil"}><Icon className="h-4 w-4" /></button>
+                  <button key={k} onClick={() => setDevice(k)} className={`flex h-7 w-9 items-center justify-center rounded-md ${device === k ? "bg-[color:var(--color-primary)] text-white" : "text-[#616161] hover:bg-[#f1f1f1]"}`} title={k === "desktop" ? "Escritorio" : "Móvil"}><Icon className="h-4 w-4" /></button>
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => createSite(preview)} disabled={!!creating} className={btnPrimary}>Usar esta plantilla</button>
-                <button onClick={() => setPreview(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600" aria-label="Cerrar"><HiOutlineX className="h-5 w-5" /></button>
+                <button onClick={() => setPreview(null)} className="rounded-lg p-2 text-[#8a8a8a] hover:bg-[#f1f1f1] hover:text-[#616161]" aria-label="Cerrar"><HiOutlineX className="h-5 w-5" /></button>
               </div>
             </div>
-            <div className="flex-1 overflow-hidden bg-slate-200/70 p-0 sm:p-4">
+            <div className="flex-1 overflow-hidden bg-[#e3e3e3]/70 p-0 sm:p-4">
               <iframe
                 key={`${preview.id}-${device}`}
                 src={`/templates/${preview.id}?embed=1`}
                 title={`Vista previa de ${preview.name}`}
-                className={`mx-auto h-full bg-white transition-all ${device === "mobile" ? "w-[390px] max-w-full rounded-2xl shadow-xl ring-1 ring-slate-300" : "w-full"}`}
+                className={`mx-auto h-full bg-white transition-all ${device === "mobile" ? "w-[390px] max-w-full rounded-2xl shadow-xl ring-1 ring-[#d4d4d4]" : "w-full"}`}
               />
             </div>
           </div>

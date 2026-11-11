@@ -98,7 +98,7 @@ ${c.buttonText ? `<a href="${c.buttonUrl || "#"}" data-analytics-click data-anal
           role: r.rating ? "★".repeat(r.rating) + "☆".repeat(5 - r.rating) : "",
         }));
       }
-      if (items.length === 0) items = [{name: "No hay testimonios", quote: "Aún no hay reseñas publicadas.", role: ""}];
+      if (items.length === 0) items = [{name: c.emptyTitle || "No hay testimonios", quote: c.emptyText || "Aún no hay reseñas publicadas.", role: ""}];
 
       const cols = c.columns || 3;
       const isCarousel = c.carousel === true;
@@ -155,7 +155,7 @@ ${items.map(cardHtml).join("")}
 <input type="hidden" name="siteId" value="${siteId}">
 <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;overflow:hidden" />
 <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center;margin-bottom:1rem">
-  <label style="font-weight:600;color:#334155;font-size:.95rem">Calificación</label>
+  <label style="font-weight:600;color:#334155;font-size:.95rem">${c.ratingLabel || "Calificación"}</label>
   <div style="display:flex;flex-direction:row-reverse;gap:0.25rem" class="star-rating">
     <input type="radio" id="star5" name="rating" value="5" style="display:none" checked><label for="star5" style="cursor:pointer;font-size:2rem;color:#fbbf24">★</label>
     <input type="radio" id="star4" name="rating" value="4" style="display:none"><label for="star4" style="cursor:pointer;font-size:2rem;color:#cbd5e1">★</label>
@@ -168,19 +168,19 @@ ${items.map(cardHtml).join("")}
   .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color: #fbbf24 !important; }
 </style>
 <div style="display:flex;flex-direction:column;gap:.5rem">
-  <label style="font-weight:600;color:#334155;font-size:.95rem">Tu nombre <span style="color:#ef4444">*</span></label>
+  <label style="font-weight:600;color:#334155;font-size:.95rem">${c.nameLabel || "Tu nombre"} <span style="color:#ef4444">*</span></label>
   <input type="text" name="authorName" required style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s">
 </div>
 <div style="display:flex;flex-direction:column;gap:.5rem">
-  <label style="font-weight:600;color:#334155;font-size:.95rem">Tu correo (Opcional)</label>
+  <label style="font-weight:600;color:#334155;font-size:.95rem">${c.emailLabel || "Tu correo (Opcional)"}</label>
   <input type="email" name="authorEmail" style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s">
 </div>
 <div style="display:flex;flex-direction:column;gap:.5rem">
-  <label style="font-weight:600;color:#334155;font-size:.95rem">Comentario <span style="color:#ef4444">*</span></label>
+  <label style="font-weight:600;color:#334155;font-size:.95rem">${c.commentLabel || "Comentario"} <span style="color:#ef4444">*</span></label>
   <textarea name="content" required rows="4" style="padding:.75rem;border-radius:8px;border:1px solid #cbd5e1;font-size:1rem;outline:none;transition:border-color .2s;resize:vertical"></textarea>
 </div>
 <div data-pub-form-status class="form-status" style="display:none;padding:.75rem;border-radius:8px;font-size:.95rem"></div>
-<button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">Enviar opinión</button>
+<button type="submit" style="background:#0f172a;color:#fff;padding:.875rem 1.5rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:background .2s;font-size:1rem;margin-top:.5rem">${c.submitText || "Enviar opinión"}</button>
 </form>
 </section>`;
     }
@@ -342,7 +342,7 @@ ${(c.columns || []).map((col: any) => `<div>
 ${(col.links || []).map((link: any) => `<div style="margin-bottom:.5rem"><a href="${link.url || "#"}" style="color:#94a3b8;text-decoration:none;font-size:clamp(.78rem,1.2vw,.85rem);transition:color .2s">${link.label || ""}</a></div>`).join("")}
 </div>`).join("")}
 </div>
-<div style="text-align:center;padding-top:clamp(1.5rem,3vw,2rem);margin-top:clamp(1.5rem,3vw,2rem);border-top:1px solid #334155;font-size:clamp(.7rem,1.1vw,.8rem);opacity:.7">${c.copyright || ""} <span style="display:inline-block;margin:0 .5rem">•</span> <a href="/dejar-opinion" data-analytics-click data-analytics-type="click" data-analytics-label="footer_reviews" style="color:#94a3b8;text-decoration:none;transition:color .2s">Dejar una reseña</a></div>
+<div style="text-align:center;padding-top:clamp(1.5rem,3vw,2rem);margin-top:clamp(1.5rem,3vw,2rem);border-top:1px solid #334155;font-size:clamp(.7rem,1.1vw,.8rem);opacity:.7">${c.copyright || ""} <span style="display:inline-block;margin:0 .5rem">•</span> <a href="/dejar-opinion" data-analytics-click data-analytics-type="click" data-analytics-label="footer_reviews" style="color:#94a3b8;text-decoration:none;transition:color .2s">${c.reviewLinkText || "Dejar una reseña"}</a></div>
 </footer>`;
 
     case "about":

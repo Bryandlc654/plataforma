@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [ensureSession, hasHydrated, mounted, isAuthenticated, isPlatformStaff, router]);
 
   if (!mounted || !hasHydrated || !isPlatformStaff) {
-    return <div className="flex h-screen items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
+    return <div className="flex h-screen items-center justify-center"><p className="text-[#616161]">Cargando...</p></div>;
   }
 
   return <>{children}</>;

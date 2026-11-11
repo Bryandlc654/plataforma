@@ -21,7 +21,7 @@ const WIRE: Record<string, Wire> = {
   contact: "form", form: "form", "review-form": "form", whatsapp: "dot", team: "grid", footer: "footer",
 };
 
-const bar = "rounded-sm bg-slate-300";
+const bar = "rounded-sm bg-[#d4d4d4]";
 const accent = "rounded-sm bg-[color:var(--color-primary)]";
 
 /** Boceto esquemático de la sección (ligero, sin renderizar el bloque real). */
@@ -33,25 +33,25 @@ function Wireframe({ kind }: { kind: Wire }) {
     case "hero":
       return <div className={`${box} items-center justify-center`}><div className={`${bar} h-2.5 w-3/4`} /><div className={`${bar} h-1.5 w-1/2 opacity-60`} /><div className={`${accent} mt-1 h-3 w-12`} /></div>;
     case "grid":
-      return <div className={box}><div className={`${bar} mx-auto h-2 w-1/3`} /><div className="mt-1 grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col gap-1 rounded bg-white p-1 ring-1 ring-slate-200"><div className={`${accent} h-2 w-2 opacity-70`} /><div className={`${bar} h-1 w-full`} /><div className={`${bar} h-1 w-2/3 opacity-60`} /></div>)}</div></div>;
+      return <div className={box}><div className={`${bar} mx-auto h-2 w-1/3`} /><div className="mt-1 grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col gap-1 rounded bg-white p-1 ring-1 ring-[#e3e3e3]"><div className={`${accent} h-2 w-2 opacity-70`} /><div className={`${bar} h-1 w-full`} /><div className={`${bar} h-1 w-2/3 opacity-60`} /></div>)}</div></div>;
     case "rows":
       return <div className={box}><div className={`${bar} h-2 w-1/3`} />{[0, 1, 2].map((i) => <div key={i} className="flex items-center gap-1.5"><div className={`${accent} h-2 w-2 rounded-full`} /><div className={`${bar} h-1.5 flex-1 opacity-70`} /></div>)}</div>;
     case "split":
-      return <div className={`${box} flex-row items-center`}><div className="h-full w-2/5 rounded bg-slate-200" /><div className="flex flex-1 flex-col gap-1.5"><div className={`${bar} h-2 w-3/4`} /><div className={`${bar} h-1 w-full opacity-60`} /><div className={`${bar} h-1 w-5/6 opacity-60`} /></div></div>;
+      return <div className={`${box} flex-row items-center`}><div className="h-full w-2/5 rounded bg-[#e3e3e3]" /><div className="flex flex-1 flex-col gap-1.5"><div className={`${bar} h-2 w-3/4`} /><div className={`${bar} h-1 w-full opacity-60`} /><div className={`${bar} h-1 w-5/6 opacity-60`} /></div></div>;
     case "cta":
       return <div className={`${box} items-center justify-center bg-[color:color-mix(in_srgb,var(--color-primary)_10%,transparent)]`}><div className={`${bar} h-2 w-2/3 bg-[color:color-mix(in_srgb,var(--color-primary)_60%,transparent)]`} /><div className="mt-1 h-3 w-12 rounded-sm bg-[color:var(--color-secondary)]" /></div>;
     case "form":
-      return <div className={`${box} items-center`}><div className={`${bar} h-2 w-1/3`} /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-slate-300" /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-slate-300" /><div className={`${accent} h-2.5 w-3/5`} /></div>;
+      return <div className={`${box} items-center`}><div className={`${bar} h-2 w-1/3`} /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-[#d4d4d4]" /><div className="h-2.5 w-3/5 rounded bg-white ring-1 ring-[#d4d4d4]" /><div className={`${accent} h-2.5 w-3/5`} /></div>;
     case "footer":
-      return <div className={`${box} justify-end bg-slate-200/70`}><div className="grid grid-cols-3 gap-2">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col gap-1"><div className={`${bar} h-1.5 w-full bg-slate-400`} /><div className={`${bar} h-1 w-2/3`} /></div>)}</div></div>;
+      return <div className={`${box} justify-end bg-[#e3e3e3]/70`}><div className="grid grid-cols-3 gap-2">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col gap-1"><div className={`${bar} h-1.5 w-full bg-slate-400`} /><div className={`${bar} h-1 w-2/3`} /></div>)}</div></div>;
     case "media":
-      return <div className={`${box} justify-center`}><div className="grid flex-1 grid-cols-3 gap-1">{[0, 1, 2].map((i) => <div key={i} className="rounded bg-slate-200" />)}</div></div>;
+      return <div className={`${box} justify-center`}><div className="grid flex-1 grid-cols-3 gap-1">{[0, 1, 2].map((i) => <div key={i} className="rounded bg-[#e3e3e3]" />)}</div></div>;
     case "stats":
       return <div className={`${box} justify-center`}><div className="flex justify-around">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col items-center gap-1"><div className={`${accent} h-3 w-6`} /><div className={`${bar} h-1 w-6`} /></div>)}</div></div>;
     case "quote":
       return <div className={`${box} items-center justify-center`}><div className="text-lg leading-none text-[color:var(--color-secondary)]">“</div><div className={`${bar} h-1.5 w-3/4`} /><div className={`${bar} h-1.5 w-1/2 opacity-60`} /></div>;
     case "pricing":
-      return <div className={box}><div className="grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className={`flex flex-col items-center gap-1 rounded bg-white p-1 ring-1 ${i === 1 ? "ring-[color:var(--color-primary)]" : "ring-slate-200"}`}><div className={`${bar} h-1 w-1/2`} /><div className={`${accent} h-2 w-2/3`} /></div>)}</div></div>;
+      return <div className={box}><div className="grid flex-1 grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className={`flex flex-col items-center gap-1 rounded bg-white p-1 ring-1 ${i === 1 ? "ring-[color:var(--color-primary)]" : "ring-[#e3e3e3]"}`}><div className={`${bar} h-1 w-1/2`} /><div className={`${accent} h-2 w-2/3`} /></div>)}</div></div>;
     default:
       return <div className={`${box} items-end justify-end`}><div className="h-5 w-5 rounded-full bg-green-500" /></div>;
   }
@@ -87,21 +87,21 @@ export function SectionPicker({ onAdd, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-[#1a1a1a]/40 backdrop-blur-[2px]" />
       <div className="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h3 className="text-base font-semibold text-slate-900">Agregar sección</h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:text-slate-600"><HiOutlineX className="h-5 w-5" /></button>
+        <div className="flex items-center justify-between border-b border-[#e3e3e3] px-5 py-4">
+          <h3 className="text-base font-semibold text-[#303030]">Agregar sección</h3>
+          <button onClick={onClose} className="rounded-lg p-1 text-[#8a8a8a] hover:text-[#616161]"><HiOutlineX className="h-5 w-5" /></button>
         </div>
-        <div className="space-y-3 border-b border-slate-100 px-5 py-3">
+        <div className="space-y-3 border-b border-[#ebebeb] px-5 py-3">
           <div className="relative">
-            <HiOutlineSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <HiOutlineSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a8a8a]" />
             <input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar sección…"
-              className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"
+              className="w-full rounded-lg border border-[#e3e3e3] py-2 pl-9 pr-3 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_15%,transparent)]"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -109,7 +109,7 @@ export function SectionPicker({ onAdd, onClose }: Props) {
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${cat === c ? "bg-[color:var(--color-primary)] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${cat === c ? "bg-[color:var(--color-primary)] text-white" : "bg-[#f1f1f1] text-[#616161] hover:bg-[#e3e3e3]"}`}
               >
                 {c}
               </button>
@@ -117,21 +117,21 @@ export function SectionPicker({ onAdd, onClose }: Props) {
           </div>
         </div>
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
-          {groups.length === 0 && <p className="py-10 text-center text-sm text-slate-400">No hay secciones que coincidan con tu búsqueda.</p>}
+          {groups.length === 0 && <p className="py-10 text-center text-sm text-[#8a8a8a]">No hay secciones que coincidan con tu búsqueda.</p>}
           {groups.map(({ cat: c, types }) => (
             <div key={c}>
-              <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">{c}</h4>
+              <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#8a8a8a]">{c}</h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {types.map((t) => (
                   <button
                     key={t}
                     onClick={() => { onAdd(t); onClose(); }}
-                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] hover:shadow-lg"
+                    className="group overflow-hidden rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white text-left transition-all hover:-translate-y-0.5 hover:border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] hover:shadow-lg"
                   >
-                    <div className="aspect-[16/10] border-b border-slate-100 bg-slate-50"><Wireframe kind={WIRE[t] || "dot"} /></div>
+                    <div className="aspect-[16/10] border-b border-[#ebebeb] bg-[#f7f7f7]"><Wireframe kind={WIRE[t] || "dot"} /></div>
                     <div className="p-2.5">
-                      <p className="truncate text-[13px] font-semibold text-slate-800 group-hover:text-[color:var(--color-primary)]">{BLOCK_META[t].label}</p>
-                      <p className="line-clamp-2 text-[11px] leading-snug text-slate-400">{BLOCK_META[t].description}</p>
+                      <p className="truncate text-[13px] font-semibold text-[#303030] group-hover:text-[color:var(--color-primary)]">{BLOCK_META[t].label}</p>
+                      <p className="line-clamp-2 text-[11px] leading-snug text-[#8a8a8a]">{BLOCK_META[t].description}</p>
                     </div>
                   </button>
                 ))}

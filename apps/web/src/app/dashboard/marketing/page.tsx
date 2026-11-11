@@ -25,7 +25,7 @@ function MarketingContent() {
 
 export default function MarketingPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-slate-500">Cargando...</div>}>
+    <Suspense fallback={<div className="p-6 text-[#616161]">Cargando...</div>}>
       <MarketingContent />
     </Suspense>
   );

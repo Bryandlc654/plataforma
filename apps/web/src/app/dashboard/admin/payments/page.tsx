@@ -78,14 +78,14 @@ export default function PlatformPaymentsPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-sm text-slate-500">Cargando configuración de PayPal...</div>;
+    return <div className="p-8 text-sm text-[#616161]">Cargando configuración de PayPal...</div>;
   }
 
   return (
     <div className="mx-auto max-w-5xl p-6 sm:p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Pagos de la plataforma</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-xl font-bold text-[#303030]">Pagos de la plataforma</h1>
+        <p className="mt-1 text-sm text-[#616161]">
           Configura la cuenta de PayPal que recibirá los pagos de los planes y suscripciones.
         </p>
       </div>
@@ -102,20 +102,20 @@ export default function PlatformPaymentsPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-semibold text-slate-900">PayPal</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="font-semibold text-[#303030]">PayPal</h2>
+              <p className="mt-1 text-sm text-[#616161]">
                 Usa las credenciales de una app REST de PayPal. El dinero entra directamente a esa cuenta.
               </p>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[#303030]">
               <input
                 type="checkbox"
                 checked={enabled}
                 onChange={(e) => setEnabled(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[rgba(var(--color-primary-rgb),0.2)]"
+                className="h-4 w-4 rounded border-[#d4d4d4] text-[var(--color-primary)] focus:ring-[rgba(var(--color-primary-rgb),0.2)]"
               />
               Activo
             </label>
@@ -123,11 +123,11 @@ export default function PlatformPaymentsPage() {
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Modo</label>
+              <label className="mb-2 block text-sm font-medium text-[#303030]">Modo</label>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value === "live" ? "live" : "sandbox")}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
+                className="w-full rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-3 py-2.5 text-sm text-[#303030] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
               >
                 <option value="sandbox">Pruebas (sandbox)</option>
                 <option value="live">Producción (live)</option>
@@ -135,25 +135,25 @@ export default function PlatformPaymentsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Client ID</label>
+              <label className="mb-2 block text-sm font-medium text-[#303030]">Client ID</label>
               <input
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
                 placeholder="AeA1Q..."
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm text-slate-700 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
+                className="w-full rounded-xl border border-[#e3e3e3] px-3 py-2.5 font-mono text-sm text-[#303030] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">Secret</label>
+              <label className="mb-2 block text-sm font-medium text-[#303030]">Secret</label>
               <input
                 type="password"
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
                 placeholder={hasSecret ? "•••••••• (ya guardado)" : "EGn1..."}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm text-slate-700 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
+                className="w-full rounded-xl border border-[#e3e3e3] px-3 py-2.5 font-mono text-sm text-[#303030] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--color-primary-rgb),0.15)]"
               />
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-[#616161]">
                 Déjalo vacío para conservar el secret actual.
               </p>
             </div>
@@ -169,24 +169,24 @@ export default function PlatformPaymentsPage() {
           </button>
         </section>
 
-        <section className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="font-semibold text-slate-900">Cómo funciona</h2>
-          <ol className="mt-4 space-y-3 text-sm text-slate-600">
+        <section className="h-fit rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white p-6 shadow-sm">
+          <h2 className="font-semibold text-[#303030]">Cómo funciona</h2>
+          <ol className="mt-4 space-y-3 text-sm text-[#616161]">
             <li className="flex gap-2"><span className="font-semibold text-[var(--color-primary)]">1.</span> Crea una app REST en el panel de desarrolladores de PayPal.</li>
             <li className="flex gap-2"><span className="font-semibold text-[var(--color-primary)]">2.</span> Copia el Client ID y el Secret de esa app.</li>
             <li className="flex gap-2"><span className="font-semibold text-[var(--color-primary)]">3.</span> Actívalos aquí y guarda. Los cobros de planes llegarán a esa cuenta.</li>
           </ol>
 
-          <div className="mt-5 rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
+          <div className="mt-5 rounded-xl bg-[#f7f7f7] p-4 text-xs leading-relaxed text-[#616161]">
             Usa el modo <strong>sandbox</strong> para probar con cuentas de prueba y cámbialo a <strong>live</strong> cuando estés listo para cobrar de verdad.
           </div>
 
-          <div className="mt-5 flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
+          <div className="mt-5 flex items-center justify-between rounded-xl border border-[#e3e3e3] px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-slate-800">Estado</p>
-              <p className="text-xs text-slate-500">{enabled ? "PayPal activo para planes" : "PayPal inactivo"}</p>
+              <p className="text-sm font-medium text-[#303030]">Estado</p>
+              <p className="text-xs text-[#616161]">{enabled ? "PayPal activo para planes" : "PayPal inactivo"}</p>
             </div>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#f1f1f1] text-[#616161]"}`}>
               {enabled ? "Activo" : "Inactivo"}
             </span>
           </div>

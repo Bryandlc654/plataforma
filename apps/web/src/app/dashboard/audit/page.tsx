@@ -56,30 +56,30 @@ export default function AuditPage() {
     return labels[action] || action;
   };
 
-  if (loading) return <div className="p-8 animate-pulse space-y-3"><div className="h-6 w-52 rounded-lg bg-slate-200" />{[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl bg-slate-200" />)}</div>;
+  if (loading) return <div className="p-8 animate-pulse space-y-3"><div className="h-6 w-52 rounded-lg bg-[#e3e3e3]" />{[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl bg-[#e3e3e3]" />)}</div>;
 
   return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
         <AdminModuleTabs />
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Auditoría</h1>
-        <p className="text-sm text-slate-600 mb-6">{logs.length} registros {isAdmin ? "(global)" : ""}</p>
+        <h1 className="text-xl font-bold text-[#303030] mb-2">Auditoría</h1>
+        <p className="text-sm text-[#616161] mb-6">{logs.length} registros {isAdmin ? "(global)" : ""}</p>
 
         <div className="flex flex-wrap gap-2 mb-4 items-center">
-          <span className="text-xs text-slate-500">Fechas:</span>
-          <input type="date" className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-          <span className="text-xs text-slate-400">a</span>
-          <input type="date" className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+          <span className="text-xs text-[#616161]">Fechas:</span>
+          <input type="date" className="text-xs border border-[#e3e3e3] rounded-lg px-2.5 py-1.5" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+          <span className="text-xs text-[#8a8a8a]">a</span>
+          <input type="date" className="text-xs border border-[#e3e3e3] rounded-lg px-2.5 py-1.5" value={dateTo} onChange={e => setDateTo(e.target.value)} />
           {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(""); setDateTo(""); }} className="text-xs text-red-500 hover:text-red-700">Limpiar</button>}
         </div>
 
         {/* Action filters */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          <button onClick={() => setFilter("")} className={`rounded-full px-3 py-1 text-xs font-medium ${!filter ? "bg-primary-50 text-primary-700" : "bg-slate-100 text-slate-600"}`}>
+          <button onClick={() => setFilter("")} className={`rounded-full px-3 py-1 text-xs font-medium ${!filter ? "bg-primary-50 text-primary-700" : "bg-[#f1f1f1] text-[#616161]"}`}>
             Todos
           </button>
           {actions.map((a) => (
             <button key={a.action} onClick={() => setFilter(a.action)}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${filter === a.action ? "bg-primary-50 text-primary-700" : "bg-slate-100 text-slate-600"}`}>
+              className={`rounded-full px-3 py-1 text-xs font-medium ${filter === a.action ? "bg-primary-50 text-primary-700" : "bg-[#f1f1f1] text-[#616161]"}`}>
               {actionLabel(a.action)} ({a.count})
             </button>
           ))}
@@ -88,28 +88,28 @@ export default function AuditPage() {
         {/* Log table */}
         <div className="card overflow-x-auto">
           {logs.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-8">Sin registros de auditoría</p>
+            <p className="text-sm text-[#616161] text-center py-8">Sin registros de auditoría</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 text-slate-600 font-medium">Acción</th>
-                  <th className="text-left py-2 px-3 text-slate-600 font-medium">Usuario</th>
-                  {isAdmin && <th className="text-left py-2 px-3 text-slate-600 font-medium">Tenant</th>}
-                  <th className="text-left py-2 px-3 text-slate-600 font-medium">Recurso</th>
-                  <th className="text-left py-2 px-3 text-slate-600 font-medium">Fecha</th>
+                <tr className="border-b border-[#e3e3e3]">
+                  <th className="text-left py-2 px-3 text-[#616161] font-medium">Acción</th>
+                  <th className="text-left py-2 px-3 text-[#616161] font-medium">Usuario</th>
+                  {isAdmin && <th className="text-left py-2 px-3 text-[#616161] font-medium">Tenant</th>}
+                  <th className="text-left py-2 px-3 text-[#616161] font-medium">Recurso</th>
+                  <th className="text-left py-2 px-3 text-[#616161] font-medium">Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <tr key={log.id} className="border-b border-[#ebebeb] hover:bg-[#f7f7f7]">
                     <td className="py-2 px-3">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{actionLabel(log.action)}</span>
+                      <span className="rounded-full bg-[#f1f1f1] px-2 py-0.5 text-xs text-[#303030]">{actionLabel(log.action)}</span>
                     </td>
                     <td className="py-2 px-3">{log.user ? `${log.user.firstName || ""} ${log.user.lastName || ""}`.trim() || log.user.email : "Sistema"}</td>
-                    {isAdmin && <td className="py-2 px-3 text-slate-500 text-xs">{log.tenant?.name || "-"}</td>}
-                    <td className="py-2 px-3 text-slate-500 text-xs">{log.resource}</td>
-                    <td className="py-2 px-3 text-slate-500 text-xs">{formatDate(log.createdAt)}</td>
+                    {isAdmin && <td className="py-2 px-3 text-[#616161] text-xs">{log.tenant?.name || "-"}</td>}
+                    <td className="py-2 px-3 text-[#616161] text-xs">{log.resource}</td>
+                    <td className="py-2 px-3 text-[#616161] text-xs">{formatDate(log.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

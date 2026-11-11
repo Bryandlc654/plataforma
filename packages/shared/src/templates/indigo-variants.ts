@@ -316,7 +316,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <div class="absolute inset-0 ${c.variant === 'indigo' ? 'translate-x-4 translate-y-4 group-hover:translate-x-8 group-hover:translate-y-8' : ''} transition-transform duration-500 z-0" style="background:${B}"></div>
             <img src="${img}" alt="Portafolio Indigo" class="relative z-10 w-full h-auto object-cover border-4" style="border-color:${D};filter:contrast(1.25)">
             <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none" style="background:rgba(5,5,5,0.8)">
-              <span class="text-4xl uppercase font-bold tracking-widest border-2 p-6 text-center" style="color:${B};border-color:${B};font-family:Poppins,sans-serif">Explorar<br>Galería</span>
+              <span class="text-4xl uppercase font-bold tracking-widest border-2 p-6 text-center" style="color:${B};border-color:${B};font-family:Poppins,sans-serif" data-ed="exploreText">${c.exploreText || "Explorar<br>Galería"}</span>
             </div>
           </div>
         </div>

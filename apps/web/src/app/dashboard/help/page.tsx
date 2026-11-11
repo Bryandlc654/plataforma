@@ -85,7 +85,7 @@ export default function HelpPage() {
         {!isPlatformStaff && (
           <Link
             href="/dashboard/support"
-            className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
+            className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#616161] transition-colors hover:text-primary-700"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Volver a Soporte
@@ -93,7 +93,7 @@ export default function HelpPage() {
         )}
         <button
           onClick={() => setSelected(null)}
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[#616161] transition-colors hover:text-primary-700"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Volver a la base de conocimientos
@@ -103,11 +103,11 @@ export default function HelpPage() {
           <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-[11px] font-semibold text-primary-700">
             {selected.category}
           </span>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-[#8a8a8a]">
             Actualizado {new Date(selected.updatedAt || selected.createdAt).toLocaleDateString("es-EC")}
           </span>
         </div>
-        <h1 className="mb-4 text-2xl font-bold text-slate-900 lg:text-3xl">{selected.title}</h1>
+        <h1 className="mb-4 text-xl font-bold text-[#303030] lg:text-xl">{selected.title}</h1>
 
         <div className="card">
           <Markdown>{selected.content}</Markdown>
@@ -121,15 +121,15 @@ export default function HelpPage() {
       {!isPlatformStaff && (
         <Link
           href="/dashboard/support"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-primary-700"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#616161] transition-colors hover:text-primary-700"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Volver a Soporte
         </Link>
       )}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Base de Conocimientos</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-xl font-bold text-[#303030]">Base de Conocimientos</h1>
+        <p className="mt-1 text-sm text-[#616161]">
           Guías y tutoriales para sacar el máximo provecho a tu plataforma: dominios, sitios web, blog, SEO y más.
         </p>
       </div>
@@ -140,7 +140,7 @@ export default function HelpPage() {
           className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
             activeCategory === "Todos"
               ? "bg-primary-600 text-white"
-              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              : "border border-[#e3e3e3] bg-white text-[#616161] hover:bg-[#f7f7f7]"
           }`}
         >
           Todos
@@ -152,11 +152,11 @@ export default function HelpPage() {
             className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
               activeCategory === c.name
                 ? "bg-primary-600 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                : "border border-[#e3e3e3] bg-white text-[#616161] hover:bg-[#f7f7f7]"
             }`}
           >
             {c.name}
-            <span className={`ml-1.5 text-xs ${activeCategory === c.name ? "text-primary-100" : "text-slate-400"}`}>
+            <span className={`ml-1.5 text-xs ${activeCategory === c.name ? "text-primary-100" : "text-[#8a8a8a]"}`}>
               {c.count}
             </span>
           </button>
@@ -164,16 +164,16 @@ export default function HelpPage() {
       </div>
 
       {loading ? (
-        <p className="py-10 text-center text-sm text-slate-400">Cargando artículos...</p>
+        <p className="py-10 text-center text-sm text-[#8a8a8a]">Cargando artículos...</p>
       ) : filtered.length === 0 ? (
         <div className="card py-12 text-center">
-          <p className="text-slate-500">No hay artículos en esta categoría todavía.</p>
+          <p className="text-[#616161]">No hay artículos en esta categoría todavía.</p>
         </div>
       ) : (
         <div className="space-y-8">
           {grouped.map(([category, items]) => (
             <section key={category}>
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-400">{category}</h2>
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-[#8a8a8a]">{category}</h2>
               <div className="grid gap-3 md:grid-cols-2">
                 {items.map((a) => (
                   <button
@@ -182,9 +182,9 @@ export default function HelpPage() {
                     className="card group flex flex-col gap-1 text-left transition-shadow hover:shadow-md"
                   >
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-slate-900 group-hover:text-primary-700">{a.title}</h3>
+                      <h3 className="font-semibold text-[#303030] group-hover:text-primary-700">{a.title}</h3>
                     </div>
-                    {a.excerpt && <p className="text-xs leading-relaxed text-slate-500">{a.excerpt}</p>}
+                    {a.excerpt && <p className="text-xs leading-relaxed text-[#616161]">{a.excerpt}</p>}
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary-700">
                       Leer artículo
                       <span className="material-symbols-outlined text-sm">chevron_right</span>

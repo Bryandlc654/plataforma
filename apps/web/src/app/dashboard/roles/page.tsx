@@ -137,7 +137,7 @@ export default function RolesPage() {
     }
   };
 
-  if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-slate-500">Cargando...</p></div>;
+  if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-[#616161]">Cargando...</p></div>;
 
   return (
     <div className="p-8">
@@ -146,8 +146,8 @@ export default function RolesPage() {
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Roles y permisos</h1>
-          <p className="text-sm text-slate-600 mt-1">Configura qué puede hacer cada miembro de tu negocio.</p>
+          <h1 className="text-xl font-bold text-[#303030]">Roles y permisos</h1>
+          <p className="text-sm text-[#616161] mt-1">Configura qué puede hacer cada miembro de tu negocio.</p>
         </div>
         {canManage && (
           <button onClick={openCreate} className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors">
@@ -161,24 +161,24 @@ export default function RolesPage() {
 
       {/* Roles del sistema */}
       <div className="mb-8">
-        <h3 className="font-semibold text-slate-900 mb-1">Roles del sistema</h3>
-        <p className="text-sm text-slate-500 mb-4">Predefinidos por la plataforma. No se pueden modificar.</p>
+        <h3 className="font-semibold text-[#303030] mb-1">Roles del sistema</h3>
+        <p className="text-sm text-[#616161] mb-4">Predefinidos por la plataforma. No se pueden modificar.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {systemRoles.map((role) => (
-            <div key={role.id} className="bg-white rounded-xl border border-slate-200 p-5">
+            <div key={role.id} className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <p className="font-semibold text-slate-900 capitalize">{role.name}</p>
-                  <p className="text-xs text-slate-500">{role.description}</p>
+                  <p className="font-semibold text-[#303030] capitalize">{role.name}</p>
+                  <p className="text-xs text-[#616161]">{role.description}</p>
                 </div>
-                <span className="text-[10px] rounded-full bg-slate-100 text-slate-500 px-2 py-0.5 font-medium">Sistema</span>
+                <span className="text-[10px] rounded-full bg-[#f1f1f1] text-[#616161] px-2 py-0.5 font-medium">Sistema</span>
               </div>
               <div className="flex flex-wrap gap-1 mt-3">
                 {permIds(role).slice(0, 6).map((id) => {
                   const name = role.permissions.find((rp) => rp.permission.id === id)?.permission.name;
-                  return <span key={id} className="text-[10px] font-mono rounded bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-slate-600">{name}</span>;
+                  return <span key={id} className="text-[10px] font-mono rounded bg-[#f7f7f7] border border-[#e3e3e3] px-1.5 py-0.5 text-[#616161]">{name}</span>;
                 })}
-                {permIds(role).length > 6 && <span className="text-[10px] rounded bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-slate-400">+{permIds(role).length - 6}</span>}
+                {permIds(role).length > 6 && <span className="text-[10px] rounded bg-[#f7f7f7] border border-[#e3e3e3] px-1.5 py-0.5 text-[#8a8a8a]">+{permIds(role).length - 6}</span>}
               </div>
             </div>
           ))}
@@ -187,34 +187,34 @@ export default function RolesPage() {
 
       {/* Roles personalizados */}
       <div>
-        <h3 className="font-semibold text-slate-900 mb-1">Roles personalizados</h3>
-        <p className="text-sm text-slate-500 mb-4">Creados por ti para tu negocio. Aparecen al invitar usuarios y asignar roles.</p>
+        <h3 className="font-semibold text-[#303030] mb-1">Roles personalizados</h3>
+        <p className="text-sm text-[#616161] mb-4">Creados por ti para tu negocio. Aparecen al invitar usuarios y asignar roles.</p>
         {customRoles.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center">
-            <p className="text-sm text-slate-500 mb-1">Aún no tienes roles personalizados.</p>
-            {canManage && <p className="text-sm text-slate-400">Crea un rol como Redactor y elige sus permisos.</p>}
+          <div className="bg-white rounded-xl border border-dashed border-[#d4d4d4] p-8 text-center">
+            <p className="text-sm text-[#616161] mb-1">Aún no tienes roles personalizados.</p>
+            {canManage && <p className="text-sm text-[#8a8a8a]">Crea un rol como Redactor y elige sus permisos.</p>}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {customRoles.map((role) => (
-              <div key={role.id} className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col">
+              <div key={role.id} className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="font-semibold text-slate-900">{role.name}</p>
-                    <p className="text-xs text-slate-500">{role.description || "Sin descripción"}</p>
+                    <p className="font-semibold text-[#303030]">{role.name}</p>
+                    <p className="text-xs text-[#616161]">{role.description || "Sin descripción"}</p>
                   </div>
                   <span className="text-[10px] rounded-full bg-primary-50 text-primary-700 px-2 py-0.5 font-medium">{permIds(role).length} permisos</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-3 flex-1">
                   {permIds(role).slice(0, 6).map((id) => {
                     const name = role.permissions.find((rp) => rp.permission.id === id)?.permission.name;
-                    return <span key={id} className="text-[10px] font-mono rounded bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-slate-600">{name}</span>;
+                    return <span key={id} className="text-[10px] font-mono rounded bg-[#f7f7f7] border border-[#e3e3e3] px-1.5 py-0.5 text-[#616161]">{name}</span>;
                   })}
-                  {permIds(role).length > 6 && <span className="text-[10px] rounded bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-slate-400">+{permIds(role).length - 6}</span>}
+                  {permIds(role).length > 6 && <span className="text-[10px] rounded bg-[#f7f7f7] border border-[#e3e3e3] px-1.5 py-0.5 text-[#8a8a8a]">+{permIds(role).length - 6}</span>}
                 </div>
                 {canManage && (
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
-                    <button onClick={() => openEdit(role)} className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Editar</button>
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-[#ebebeb]">
+                    <button onClick={() => openEdit(role)} className="flex-1 rounded-lg border border-[#e3e3e3] px-3 py-2 text-xs font-semibold text-[#303030] hover:bg-[#f7f7f7] transition-colors">Editar</button>
                     <button onClick={() => removeRole(role)} className="flex-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors">Eliminar</button>
                   </div>
                 )}
@@ -226,11 +226,11 @@ export default function RolesPage() {
 
       {/* Modal crear/editar */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#1a1a1a]/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">{editing ? `Editar rol "${editing.name}"` : "Crear rol personalizado"}</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+            <div className="px-6 py-4 border-b border-[#e3e3e3] flex items-center justify-between">
+              <h3 className="font-semibold text-[#303030]">{editing ? `Editar rol "${editing.name}"` : "Crear rol personalizado"}</h3>
+              <button onClick={() => setShowModal(false)} className="text-[#8a8a8a] hover:text-[#616161]">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
@@ -238,23 +238,23 @@ export default function RolesPage() {
             <div className="px-6 py-4 overflow-y-auto">
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Nombre del rol</label>
+                  <label className="block text-sm font-medium text-[#303030] mb-1.5">Nombre del rol</label>
                   <input className="input-field" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="p. ej. Redactor" maxLength={50} />
                 </div>
                 <div className="flex-[2]">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Descripción</label>
+                  <label className="block text-sm font-medium text-[#303030] mb-1.5">Descripción</label>
                   <input className="input-field" value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Breve descripción" maxLength={200} />
                 </div>
               </div>
 
-              <label className="block text-sm font-medium text-slate-700 mb-2">Permisos</label>
+              <label className="block text-sm font-medium text-[#303030] mb-2">Permisos</label>
               {groupedPermissions.length === 0 ? (
-                <p className="text-sm text-slate-500">No hay permisos disponibles.</p>
+                <p className="text-sm text-[#616161]">No hay permisos disponibles.</p>
               ) : (
                 <div className="space-y-3">
                   {groupedPermissions.map(({ resource, perms }) => (
                     <div key={resource}>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{resource}</p>
+                      <p className="text-xs font-bold text-[#616161] uppercase tracking-wider mb-1.5">{resource}</p>
                       <div className="flex flex-wrap gap-2">
                         {perms.map((p) => {
                           const active = selectedPerms.includes(p.id);
@@ -263,7 +263,7 @@ export default function RolesPage() {
                               key={p.id}
                               type="button"
                               onClick={() => togglePerm(p.id)}
-                              className={`rounded-lg px-2.5 py-1.5 text-xs font-mono border transition-all ${active ? "bg-primary-50 text-primary-700 border-primary-300" : "bg-white text-slate-500 border-slate-200 hover:border-primary-200"}`}
+                              className={`rounded-lg px-2.5 py-1.5 text-xs font-mono border transition-all ${active ? "bg-primary-50 text-primary-700 border-primary-300" : "bg-white text-[#616161] border-[#e3e3e3] hover:border-primary-200"}`}
                             >
                               {p.name}
                             </button>
@@ -276,7 +276,7 @@ export default function RolesPage() {
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between gap-3">
+            <div className="px-6 py-4 border-t border-[#e3e3e3] flex items-center justify-between gap-3">
               {error && <p className="text-xs text-red-600 flex-1">{error}</p>}
               <button onClick={() => setShowModal(false)} className="btn-ghost text-sm whitespace-nowrap">Cancelar</button>
               <button onClick={save} disabled={saving} className="btn-primary text-sm whitespace-nowrap">{saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear rol"}</button>

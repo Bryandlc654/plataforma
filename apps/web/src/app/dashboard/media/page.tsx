@@ -96,9 +96,9 @@ export default function MediaPage() {
   };
 
   return (
-      <main className="flex-1 p-8 bg-slate-50 overflow-auto">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 p-4 sm:p-6 overflow-auto">
         <div className="flex items-center justify-between mb-8">
-          <div><h1 className="text-2xl font-bold text-slate-900">Biblioteca de Medios</h1><p className="text-sm text-slate-600">{total} archivos</p></div>
+          <div><h1 className="text-xl font-bold text-[#303030]">Biblioteca de Medios</h1><p className="text-sm text-[#616161]">{total} archivos</p></div>
           <label className="btn-primary text-sm cursor-pointer inline-flex items-center gap-2">
             {uploading ? (
               <span className="flex items-center gap-2">
@@ -118,8 +118,8 @@ export default function MediaPage() {
           </select>
         </div>
 
-        {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">{[...Array(8)].map((_, i) => <div key={i} className="aspect-square rounded-xl bg-slate-200" />)}</div> : items.length === 0 ? (
-          <div className="card text-center py-16"><p className="text-slate-500 mb-2">Sin archivos</p><p className="text-sm text-slate-400">Sube imágenes o documentos (PDF) para usar en tus sitios web</p></div>
+        {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">{[...Array(8)].map((_, i) => <div key={i} className="aspect-square rounded-xl bg-[#e3e3e3]" />)}</div> : items.length === 0 ? (
+          <div className="card text-center py-16"><p className="text-[#616161] mb-2">Sin archivos</p><p className="text-sm text-[#8a8a8a]">Sube imágenes o documentos (PDF) para usar en tus sitios web</p></div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -135,16 +135,16 @@ export default function MediaPage() {
                       className="w-full h-36 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-full h-36 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                    <div className="w-full h-36 rounded-lg bg-[#f1f1f1] flex items-center justify-center text-[#8a8a8a]">
                       <FileText className="h-8 w-8" />
                     </div>
                   )}
                   <div className="mt-2">
-                    <p className="text-xs text-slate-700 truncate">{item.originalName}</p>
-                    <p className="text-xs text-slate-400">{formatSize(item.size)}{item.width && ` · ${item.width}×${item.height}`}</p>
+                    <p className="text-xs text-[#303030] truncate">{item.originalName}</p>
+                    <p className="text-xs text-[#8a8a8a]">{formatSize(item.size)}{item.width && ` · ${item.width}×${item.height}`}</p>
                   </div>
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => { navigator.clipboard.writeText(item.url); alert("URL copiada"); }} className="bg-white rounded p-1.5 text-slate-500 hover:text-slate-700 shadow" title="Copiar URL"><Clipboard className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => { navigator.clipboard.writeText(item.url); alert("URL copiada"); }} className="bg-white rounded p-1.5 text-[#616161] hover:text-[#303030] shadow" title="Copiar URL"><Clipboard className="h-3.5 w-3.5" /></button>
                     <button onClick={() => handleDelete(item.id)} className="bg-white rounded p-1.5 text-red-500 shadow hover:bg-red-50" title="Eliminar"><X className="h-3.5 w-3.5" /></button>
                   </div>
                 </div>
@@ -156,7 +156,7 @@ export default function MediaPage() {
                   <button
                     key={i}
                     onClick={() => fetchMedia(i + 1)}
-                    className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${page === i + 1 ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                    className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${page === i + 1 ? "bg-[#1a1a1a] text-white" : "bg-white text-[#616161] border border-[#e3e3e3] hover:bg-[#f7f7f7]"}`}
                   >
                     {i + 1}
                   </button>

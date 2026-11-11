@@ -168,12 +168,12 @@ export default function PopupsPage() {
   };
 
   return (
-    <main className="flex-1 bg-slate-50">
+    <main className="flex-1 bg-[#f7f7f7]">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Popups</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="text-xl font-bold text-[#303030]">Popups</h1>
+            <p className="mt-1 text-sm text-[#616161]">
               Crea ventanas emergentes para tu web pública: tiempo, scroll, tamaño, imagen o texto.
             </p>
           </div>
@@ -197,38 +197,38 @@ export default function PopupsPage() {
         )}
 
         <div className="mt-8 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Popups ({popups.length})</h2>
+          <h2 className="font-semibold text-[#303030]">Popups ({popups.length})</h2>
           <button onClick={() => startEdit()} className="btn-primary">+ Nuevo popup</button>
         </div>
 
         {loading ? (
           <div className="mt-4 animate-pulse space-y-3">
             {[...Array(2)].map((_, i) => (
-              <div key={i} className="h-20 rounded-2xl border border-slate-200 bg-white" />
+              <div key={i} className="h-20 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white" />
             ))}
           </div>
         ) : popups.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-500">Aún no tienes popups en este sitio.</p>
+          <div className="mt-8 rounded-2xl border border-dashed border-[#d4d4d4] bg-white p-12 text-center">
+            <p className="text-[#616161]">Aún no tienes popups en este sitio.</p>
           </div>
         ) : (
           <div className="mt-4 space-y-2">
             {popups.map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div key={p.id} className="flex items-center gap-3 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-3">
                 <button
                   onClick={() => toggle(p)}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${p.enabled ? "bg-emerald-500" : "bg-slate-300"}`}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${p.enabled ? "bg-emerald-500" : "bg-[#d4d4d4]"}`}
                 >
                   <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${p.enabled ? "left-[22px]" : "left-0.5"}`} />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-slate-800">
+                  <div className="truncate text-sm font-medium text-[#303030]">
                     {p.name || "Sin nombre"}
-                    <span className={`ml-2 text-[10px] font-semibold uppercase ${p.enabled ? "text-emerald-600" : "text-slate-400"}`}>
+                    <span className={`ml-2 text-[10px] font-semibold uppercase ${p.enabled ? "text-emerald-600" : "text-[#8a8a8a]"}`}>
                       {p.enabled ? "Activo" : "Inactivo"}
                     </span>
                   </div>
-                  <div className="truncate text-[11px] text-slate-400">
+                  <div className="truncate text-[11px] text-[#8a8a8a]">
                     {TEMPLATES.find((t) => t.value === p.template)?.label} ·{" "}
                     {TRIGGERS.find((t) => t.value === p.trigger?.type)?.label}{" "}
                     {p.trigger?.type === "time" && p.trigger.delaySeconds ? `(${p.trigger.delaySeconds}s)` : ""} · {" "}
@@ -243,13 +243,13 @@ export default function PopupsPage() {
         )}
 
         {editing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a]/60 p-4">
             <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-[#303030]">
                   {editing.id ? "Editar popup" : "Nuevo popup"}
                 </h3>
-                <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+                <button onClick={() => setEditing(null)} className="text-[#8a8a8a] hover:text-[#616161]">✕</button>
               </div>
 
               <div className="mt-5 space-y-4">
@@ -347,7 +347,7 @@ export default function PopupsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                <div className="flex items-center gap-2 rounded-xl border border-[#e3e3e3] bg-[#f7f7f7] p-3 text-sm">
                   <label className="flex items-center gap-2">
                     <input type="checkbox" checked={draft.enabled} onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })} className="h-4 w-4" />
                     Activar este popup
