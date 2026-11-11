@@ -1,4 +1,5 @@
 import { escapeHtmlText } from "./sanitize";
+import { backgroundVideoHtml } from "./media";
 
 export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
   if (c.variant !== "urban-noir") return null;
@@ -201,7 +202,16 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
       const logoText = c.logoSize === "sm" ? "text-xl" : c.logoSize === "lg" ? "text-3xl" : "text-2xl";
       const showCart = c.showCart !== "hide";
       const searchHref = c.showSearch === "show" ? (c.searchUrl || "#catalogo") : c.searchUrl;
-      const closeMobile = "var m=this.closest('[data-un-header]').querySelector('[data-un-mobile]');if(m)m.classList.add('hidden')";
+      // Menú lateral (sidebar): se abre con la hamburguesa y se desliza desde un costado.
+      const fromRight = c.menuSide === "right";
+      const hiddenX = fromRight ? "translateX(100%)" : "translateX(-100%)";
+      const drawerState = (open: boolean) =>
+        `d.style.pointerEvents='${open ? "auto" : "none"}';d.setAttribute('aria-hidden','${open ? "false" : "true"}');` +
+        `d.querySelector('[data-un-backdrop]').style.opacity='${open ? 1 : 0}';` +
+        `d.querySelector('[data-un-panel]').style.transform='${open ? "translateX(0)" : hiddenX}';` +
+        `document.documentElement.style.overflow='${open ? "hidden" : ""}'`;
+      const openDrawer = `var d=this.closest('[data-un-header]').querySelector('[data-un-drawer]');if(d){${drawerState(true)}}`;
+      const closeMobile = `var d=this.closest('[data-un-drawer]');if(d){${drawerState(false)}}`;
 
       const logo = `<a data-analytics-click data-analytics-type="click" data-analytics-label="logo" href="${homeUrl}" class="flex items-center gap-3 font-display font-bold ${logoText} tracking-tighter">${c.logoImage ? `<img src="${c.logoImage}" alt="${c.logoText || "URBAN NOIR"}" class="${logoH} w-auto object-contain">` : ""}${c.logoImage && c.hideLogoText ? "" : `<span>${c.logoText || "URBAN NOIR"}</span>`}</a>`;
 
@@ -219,9 +229,23 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
           </div>
         </div>`;
       };
+      // En el panel, un enlace con submenú se despliega (acordeón) en lugar de navegar.
+      const line = isDark ? "border-white/10" : "border-gray-100";
       const mobileLink = (l: any) => {
         const kids = Array.isArray(l.children) ? l.children.filter((k: any) => k && k.label) : [];
-        return `<a href="${siteHref(l.url)}" onclick="${closeMobile}" class="py-3 border-b ${isDark ? "border-white/10" : "border-gray-100"} font-bold uppercase tracking-widest text-sm ${l.highlight ? "text-red-600" : ""}">${l.label}</a>${kids.map((k: any) => `<a href="${siteHref(k.url)}" onclick="${closeMobile}" class="py-2 pl-4 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}">${k.label}</a>`).join("")}`;
+        const cls = `font-bold uppercase tracking-widest text-sm ${l.highlight ? "text-red-600" : ""}`;
+        if (!kids.length) return `<a href="${siteHref(l.url)}" onclick="${closeMobile}" class="block py-4 border-b ${line} ${cls}">${l.label}</a>`;
+        const hasOwnPage = l.url && l.url !== "#";
+        return `<details class="group border-b ${line}">
+          <summary class="flex cursor-pointer list-none items-center justify-between py-4 ${cls} [&::-webkit-details-marker]:hidden">
+            <span>${l.label}</span>
+            <svg class="h-4 w-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+          </summary>
+          <div class="flex flex-col pb-3 pl-3">
+            ${hasOwnPage ? `<a href="${siteHref(l.url)}" onclick="${closeMobile}" class="py-2 text-sm font-semibold">${c.viewAllText || "Ver todo"}</a>` : ""}
+            ${kids.map((k: any) => `<a href="${siteHref(k.url)}" onclick="${closeMobile}" class="py-2 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}">${k.label}</a>`).join("")}
+          </div>
+        </details>`;
       };
       const menu = (cls: string) => `<div class="${cls}">${links.map(desktopLink).join("")}</div>`;
 
@@ -233,7 +257,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
           <span data-count class="absolute -top-1 -right-2 ${isDark ? "bg-white text-black" : "bg-black text-white"} text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="display:none">0</span>
         </button>` : ""}
-        <button type="button" aria-label="Menú" onclick="this.closest('[data-un-header]').querySelector('[data-un-mobile]').classList.toggle('hidden')" class="${layout === "minimal" ? "" : "md:hidden"} ${muted} transition">
+        <button type="button" aria-label="Menú" aria-haspopup="dialog" onclick="${openDrawer}" class="${layout === "minimal" ? "" : "md:hidden"} ${muted} transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
       </div>`;
@@ -278,15 +302,40 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             ${row}
           </div>
-          <div data-un-mobile class="hidden ${layout === "minimal" ? "" : "md:hidden"} border-t ${isDark ? "border-white/20 bg-black text-white" : "border-black bg-white text-black"} px-4 py-4 flex flex-col">
-            ${links.map(mobileLink).join("")}
-          </div>
         </nav>
+        <div data-un-drawer role="dialog" aria-modal="true" aria-label="Menú" aria-hidden="true" class="fixed inset-0 z-[60] ${layout === "minimal" ? "" : "md:hidden"}" style="pointer-events:none">
+          <div data-un-backdrop onclick="${closeMobile}" class="absolute inset-0 bg-black/50 transition-opacity duration-300" style="opacity:0"></div>
+          <aside data-un-panel class="absolute inset-y-0 ${fromRight ? "right-0 border-l" : "left-0 border-r"} flex w-[85%] max-w-sm flex-col ${isDark ? "bg-black text-white border-white/20" : "bg-white text-black border-black"} shadow-2xl transition-transform duration-300 ease-out" style="transform:${hiddenX}">
+            <div class="flex h-20 flex-shrink-0 items-center justify-between border-b ${isDark ? "border-white/20" : "border-black"} px-6">
+              ${logo}
+              <button type="button" aria-label="Cerrar menú" onclick="${closeMobile}" class="${muted} transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <nav class="flex-1 overflow-y-auto px-6 py-2">
+              ${links.map(mobileLink).join("")}
+            </nav>
+            ${c.drawerNote || searchHref ? `<div class="flex-shrink-0 border-t ${isDark ? "border-white/20" : "border-black"} px-6 py-5 space-y-3">
+              ${searchHref ? `<a href="${siteHref(searchHref)}" onclick="${closeMobile}" class="flex items-center gap-2 text-sm font-bold uppercase tracking-widest"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>${c.searchText || "Buscar"}</a>` : ""}
+              ${c.drawerNote ? `<p class="text-xs ${isDark ? "text-gray-400" : "text-gray-500"}">${c.drawerNote}</p>` : ""}
+            </div>` : ""}
+          </aside>
+        </div>
       </header>`;
     }
 
     case "hero": {
-      // Primera diapositiva: los campos de la sección. "slides": diapositivas adicionales.
+      /*
+       * Versiones del hero (las mismas que el hero de las webs):
+       *   ""        Imagen de fondo, con diapositivas
+       *   "split"   Texto e imagen lado a lado
+       *   "video"   Video de fondo (YouTube, Vimeo o .mp4)
+       *   "minimal" Solo texto
+       * La primera diapositiva son los campos de la sección; "slides" agrega las demás.
+       */
+      const layout = String(c.layout || "");
+      const left = c.align === "left";
+      const heightCls = c.height === "large" ? "min-h-[80vh]" : c.height === "medium" ? "min-h-[60vh]" : c.height === "small" ? "min-h-[45vh]" : "min-h-screen";
       const first = {
         backgroundImage: c.backgroundImage || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2048&auto=format&fit=crop",
         kicker: c.kicker,
@@ -294,6 +343,8 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
         subtitle: c.subtitle,
         buttonText: c.buttonText,
         buttonUrl: c.buttonUrl || "#catalogo",
+        secondaryButtonText: c.secondaryButtonText,
+        secondaryButtonUrl: c.secondaryButtonUrl || "#promociones",
       };
       const extra = (Array.isArray(c.slides) ? c.slides : []).map((sl: any) => ({
         backgroundImage: sl.backgroundImage || first.backgroundImage,
@@ -302,25 +353,61 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
         subtitle: sl.subtitle,
         buttonText: sl.buttonText,
         buttonUrl: sl.buttonUrl || "#catalogo",
+        secondaryButtonText: sl.secondaryButtonText,
+        secondaryButtonUrl: sl.secondaryButtonUrl || "#promociones",
       }));
-      const slides = [first, ...extra];
+      const slides = layout === "" ? [first, ...extra] : [first];
       const seconds = Number(c.autoplaySeconds ?? 6);
       // La imagen en blanco y negro es el estilo de la marca; se puede desactivar.
       const imageFilter = c.imageColor === "color" ? "none" : "grayscale(100%)";
       const imageOpacity = Math.min(100, Math.max(10, Number(c.imageOpacity ?? 60))) / 100;
+
+      // Textos y botones (dark = sobre imagen o video).
+      const text = (sl: any, dark: boolean, big = false) => `<div class="relative z-10 flex flex-col ${left ? "items-start text-left" : "items-center text-center mx-auto"} max-w-4xl">
+          ${sl.kicker ? `<span class="tracking-[0.3em] text-sm md:text-base mb-4 block uppercase border-b ${dark ? "border-white" : "border-black"} pb-2">${sl.kicker}</span>` : ""}
+          ${sl.title ? `<h1 class="${big ? "text-6xl md:text-9xl" : "text-5xl md:text-8xl"} font-bold mb-6 leading-none">${nl(sl.title)}</h1>` : ""}
+          ${sl.subtitle ? `<p class="text-lg md:text-xl ${dark ? "text-gray-300" : "text-gray-600"} mb-10 max-w-2xl">${sl.subtitle}</p>` : ""}
+          ${sl.buttonText || sl.secondaryButtonText ? `<div class="flex flex-wrap gap-4 ${left ? "" : "justify-center"}">
+            ${sl.buttonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" href="${siteHref(sl.buttonUrl)}" class="${dark ? "bg-white text-black hover:bg-gray-300" : "bg-black text-white hover:bg-gray-800"} font-bold py-4 px-10 transition-colors uppercase tracking-widest text-sm">${sl.buttonText}</a>` : ""}
+            ${sl.secondaryButtonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" href="${siteHref(sl.secondaryButtonUrl)}" class="border-2 ${dark ? "border-white text-white hover:bg-white hover:text-black" : "border-black text-black hover:bg-black hover:text-white"} font-bold py-[14px] px-10 transition-colors uppercase tracking-widest text-sm">${sl.secondaryButtonText}</a>` : ""}
+          </div>` : ""}
+        </div>`;
+      const wrap = (inner: string) => `<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex ${left ? "justify-start" : "justify-center"}">${inner}</div>`;
+
+      if (layout === "split") {
+        const img = `<div class="relative min-h-[360px] md:min-h-0 bg-gray-100 overflow-hidden ${c.imageSide === "left" ? "md:order-first" : ""}"><img src="${first.backgroundImage}" alt="${c.imageAlt || first.title || ""}" class="absolute inset-0 w-full h-full object-cover" style="filter:${imageFilter}"></div>`;
+        return `
+      <header id="${c.anchor || 'inicio'}" class="bg-white text-black border-b border-black">
+        <div class="grid md:grid-cols-2 ${heightCls}">
+          <div class="flex items-center px-6 sm:px-10 lg:px-16 py-16">${text(first, false)}</div>
+          ${img}
+        </div>
+      </header>`;
+      }
+
+      if (layout === "video") {
+        return `
+      <header id="${c.anchor || 'inicio'}" class="relative ${heightCls} flex items-center overflow-hidden bg-black text-white">
+        <div class="absolute inset-0 z-0">${backgroundVideoHtml(c.videoUrl, first.backgroundImage, `filter:${imageFilter};opacity:${imageOpacity}`)}</div>
+        ${wrap(text(first, true))}
+      </header>`;
+      }
+
+      if (layout === "minimal") {
+        return `
+      <header id="${c.anchor || 'inicio'}" class="${heightCls} flex items-center bg-white text-black border-b border-black py-24">
+        ${wrap(text(first, false, true))}
+      </header>`;
+      }
+
       const heroId = `un-hero-${Math.random().toString(36).slice(2, 8)}`;
       // Cambia de diapositiva (también funciona en el editor: es un atributo onclick).
       const go = "var r=this.closest('[data-un-hero]'),i=+this.dataset.i;r.querySelectorAll('[data-un-slide]').forEach(function(s,j){s.style.opacity=j===i?1:0;s.style.pointerEvents=j===i?'auto':'none'});r.querySelectorAll('[data-un-dot]').forEach(function(d,j){d.style.background=j===i?'#fff':'#4b5563'});r.dataset.cur=i";
       return `
-      <header id="${c.anchor || 'inicio'}" data-un-hero data-hero-id="${heroId}" class="relative h-screen overflow-hidden bg-black text-white">
-        ${slides.map((sl, i) => `<div data-un-slide class="absolute inset-0 flex items-center justify-center transition-opacity duration-700" style="opacity:${i === 0 ? 1 : 0};pointer-events:${i === 0 ? "auto" : "none"}">
+      <header id="${c.anchor || 'inicio'}" data-un-hero data-hero-id="${heroId}" class="relative ${heightCls} overflow-hidden bg-black text-white">
+        ${slides.map((sl, i) => `<div data-un-slide class="absolute inset-0 flex items-center transition-opacity duration-700" style="opacity:${i === 0 ? 1 : 0};pointer-events:${i === 0 ? "auto" : "none"}">
           <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('${sl.backgroundImage}'); filter: ${imageFilter}; opacity: ${imageOpacity};"></div>
-          <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
-            ${sl.kicker ? `<span class="tracking-[0.3em] text-sm md:text-base mb-4 block uppercase border-b border-white pb-2">${sl.kicker}</span>` : ""}
-            ${sl.title ? `<h1 class="text-5xl md:text-8xl font-bold mb-6 leading-none">${nl(sl.title)}</h1>` : ""}
-            ${sl.subtitle ? `<p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">${sl.subtitle}</p>` : ""}
-            ${sl.buttonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" href="${siteHref(sl.buttonUrl)}" class="bg-white text-black font-bold py-4 px-10 hover:bg-gray-300 transition-colors uppercase tracking-widest text-sm">${sl.buttonText}</a>` : ""}
-          </div>
+          ${wrap(text(sl, true))}
         </div>`).join("")}
         ${slides.length > 1 ? `<div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
           ${slides.map((_, i) => `<button type="button" data-un-dot data-i="${i}" onclick="${go}" aria-label="Diapositiva ${i + 1}" class="w-3 h-3 rounded-full" style="background:${i === 0 ? "#fff" : "#4b5563"}"></button>`).join("")}

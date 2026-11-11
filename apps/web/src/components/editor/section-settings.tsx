@@ -256,6 +256,30 @@ function LayoutArt({ art }: { art: string }) {
   const icons = <span className="flex gap-0.5">{[0, 1].map((i) => <span key={i} className="h-1.5 w-1.5 rounded-full bg-[#8a8a8a]" />)}</span>;
   const burger = <span className="flex flex-col gap-[2px]">{[0, 1, 2].map((i) => <span key={i} className="h-[2px] w-2.5 bg-[#8a8a8a]" />)}</span>;
   const bar = "flex h-7 items-center justify-between rounded-sm border border-[#d4d4d4] bg-white px-1.5";
+  // Versiones del hero: título ▬, texto ▭, botón ▢, imagen ▨
+  const heading = (light: boolean) => <span className={`h-1.5 w-10 rounded-sm ${light ? "bg-white" : "bg-[#303030]"}`} />;
+  const line = (light: boolean) => <span className={`h-1 w-7 rounded-sm ${light ? "bg-white/70" : "bg-[#b5b5b5]"}`} />;
+  const btn = (light: boolean) => <span className={`mt-0.5 h-1.5 w-4 rounded-sm ${light ? "bg-white" : "bg-[color:var(--color-primary)]"}`} />;
+  const stack = (light: boolean) => <span className="flex flex-col items-center gap-1">{heading(light)}{line(light)}{btn(light)}</span>;
+  const heroBox = "flex h-14 items-center justify-center overflow-hidden rounded-sm border border-[#d4d4d4]";
+  if (art === "hero-full") return <div className={`${heroBox} bg-gradient-to-br from-[#4a4a4a] to-[#8a8a8a]`}>{stack(true)}</div>;
+  if (art === "hero-split") {
+    return (
+      <div className={`${heroBox} justify-between bg-white`}>
+        <span className="flex flex-col items-start gap-1 pl-2">{heading(false)}{line(false)}{btn(false)}</span>
+        <span className="h-full w-1/2 bg-[repeating-linear-gradient(45deg,#d4d4d4_0_3px,#ebebeb_3px_6px)]" />
+      </div>
+    );
+  }
+  if (art === "hero-video") {
+    return (
+      <div className={`${heroBox} relative bg-[#303030]`}>
+        <span className="absolute right-1.5 top-1.5 h-0 w-0 border-y-[4px] border-l-[6px] border-y-transparent border-l-white/80" />
+        {stack(true)}
+      </div>
+    );
+  }
+  if (art === "hero-minimal") return <div className={`${heroBox} bg-[#fafafa]`}>{stack(false)}</div>;
   if (art === "centered") {
     return (
       <div className="rounded-sm border border-[#d4d4d4] bg-white">

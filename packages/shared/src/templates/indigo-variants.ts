@@ -1,3 +1,4 @@
+import { videoEmbed } from "./media";
 /* eslint-disable */
 
 const PLACEHOLDER_LOGO = "https://placehold.co/200x60/050505/fdcb0c?text=INDIGO";
@@ -22,16 +23,6 @@ function marqueeScript() {
       requestAnimationFrame(scroll);
     })();
   </script>`;
-}
-
-/** URL de inserción para YouTube / Vimeo (acepta el enlace normal del video). */
-function videoEmbed(url: string): string {
-  const u = String(url || "").trim();
-  const yt = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,})/i.exec(u);
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
-  const vm = /vimeo\.com\/(?:video\/)?(\d+)/i.exec(u);
-  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
-  return u;
 }
 
 export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {

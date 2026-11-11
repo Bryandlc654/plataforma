@@ -3688,16 +3688,29 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "searchUrl": {
         "default": "#catalogo"
       },
+      "menuSide": {},
       "logoImage": {},
       "logoText": {
         "default": "URBAN NOIR"
       },
       "hideLogoText": {},
+      "viewAllText": {
+        "default": "Ver todo"
+      },
       "announcement": {},
       "announcementStyle": {},
-      "announcementUrl": {}
+      "announcementUrl": {},
+      "drawerNote": {},
+      "searchText": {
+        "default": "Buscar"
+      }
     },
     "hero": {
+      "layout": {
+        "default": ""
+      },
+      "align": {},
+      "height": {},
       "backgroundImage": {
         "default": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2048&auto=format&fit=crop"
       },
@@ -3709,6 +3722,10 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "buttonText": {},
       "buttonUrl": {
         "default": "#catalogo"
+      },
+      "secondaryButtonText": {},
+      "secondaryButtonUrl": {
+        "default": "#promociones"
       },
       "slides": {
         "list": true,
@@ -3723,6 +3740,10 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           "buttonText": {},
           "buttonUrl": {
             "default": "#catalogo"
+          },
+          "secondaryButtonText": {},
+          "secondaryButtonUrl": {
+            "default": "#promociones"
           }
         }
       },
@@ -3732,7 +3753,12 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "imageColor": {},
       "imageOpacity": {
         "default": 60
-      }
+      },
+      "imageSide": {},
+      "imageAlt": {
+        "default": ""
+      },
+      "videoUrl": {}
     },
     "features": {
       "items": {
@@ -3994,6 +4020,12 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
   },
   "generic": {
     "hero": {
+      "layout": {
+        "default": ""
+      },
+      "align": {},
+      "height": {},
+      "overlay": {},
       "backgroundImage": {},
       "kicker": {},
       "title": {
@@ -4001,13 +4033,33 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "subtitle": {},
       "buttonText": {},
-      "buttonUrl": {
-        "default": "#"
-      },
+      "buttonUrl": {},
       "secondaryButtonText": {},
-      "secondaryButtonUrl": {
-        "default": "#"
-      }
+      "secondaryButtonUrl": {},
+      "slides": {
+        "list": true,
+        "default": [],
+        "items": {
+          "backgroundImage": {},
+          "kicker": {},
+          "title": {
+            "default": ""
+          },
+          "subtitle": {},
+          "buttonText": {},
+          "buttonUrl": {},
+          "secondaryButtonText": {},
+          "secondaryButtonUrl": {}
+        }
+      },
+      "autoplaySeconds": {
+        "default": 6
+      },
+      "imageAlt": {
+        "default": ""
+      },
+      "imageSide": {},
+      "videoUrl": {}
     },
     "services": {
       "title": {

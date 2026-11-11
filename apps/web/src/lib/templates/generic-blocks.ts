@@ -2,6 +2,7 @@
 // Ejecuta `npm run sync:templates -w apps/web` tras cambiar la fuente.
 
 import { escapeHtmlText } from "./sanitize";
+import { backgroundVideoHtml } from "./media";
 
 /**
  * HTML de los bloques genéricos (los que no usan una variante de plantilla).
@@ -50,19 +51,77 @@ export function renderGenericBlockHtml(type: string, c: any, ctx: GenericBlockCo
 
   switch (type) {
     case "hero": {
-      const bgImg = c.backgroundImage ? `<div style="position:absolute;inset:0;background-image:url(${absoluteUrl(c.backgroundImage)});background-size:cover;background-position:center;z-index:0"></div><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:1"></div>` : "";
-      return `<section style="position:relative;overflow:hidden;text-align:center;padding:clamp(4rem,12vw,8rem) clamp(1rem,5vw,2rem);color:white;min-height:clamp(400px,70vh,600px);display:flex;align-items:center;justify-content:center;${c.backgroundImage ? "" : "background:linear-gradient(135deg,var(--primary),#1e40af)"}">
-${bgImg}
-${!c.backgroundImage ? `<div style="position:absolute;inset:0;background:radial-gradient(circle at top,rgba(255,255,255,0.12),transparent 60%);z-index:0"></div>` : ""}
-<div style="position:relative;z-index:2;max-width:800px;margin:0 auto;padding:0 clamp(1rem,5vw,2rem)">
-${c.kicker ? `<p style="display:inline-block;background:rgba(255,255,255,0.15);padding:clamp(4px,1vw,8px) clamp(12px,2vw,20px);border-radius:100px;font-size:clamp(.65rem,1.1vw,.75rem);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1.5rem;border:1px solid rgba(255,255,255,0.2)">${c.kicker}</p>` : ""}
-<h1 style="font-size:clamp(2rem,6vw,4rem);font-weight:800;margin-bottom:1.25rem;line-height:1.15">${c.title || ""}</h1>
-${c.subtitle ? `<p style="font-size:clamp(1rem,2.5vw,1.3rem);opacity:.85;max-width:650px;margin:0 auto 2rem;line-height:1.6">${c.subtitle}</p>` : ""}
-<div style="display:flex;flex-wrap:wrap;gap:clamp(.75rem,1.5vw,1rem);justify-content:center">
-${c.buttonText ? `<a href="${c.buttonUrl || "#"}" data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" style="display:inline-block;background:white;color:var(--primary);padding:clamp(12px,2vw,16px) clamp(28px,4vw,40px);border-radius:14px;text-decoration:none;font-weight:600;font-size:clamp(.9rem,1.5vw,1rem);box-shadow:0 4px 16px rgba(0,0,0,.1);transition:transform .2s,box-shadow .2s">${c.buttonText}</a>` : ""}
-${c.secondaryButtonText ? `<a href="${c.secondaryButtonUrl || "#"}" data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" style="display:inline-block;background:rgba(255,255,255,0.1);color:white;padding:clamp(12px,2vw,16px) clamp(28px,4vw,40px);border-radius:14px;text-decoration:none;font-weight:600;font-size:clamp(.9rem,1.5vw,1rem);border:1px solid rgba(255,255,255,0.25);transition:background .2s">${c.secondaryButtonText}</a>` : ""}
+      /*
+       * Versiones del hero (las mismas que en la tienda Urban Noir):
+       *   ""        Imagen de fondo (o degradado de la marca), con diapositivas
+       *   "split"   Texto e imagen lado a lado
+       *   "video"   Video de fondo (YouTube, Vimeo o .mp4)
+       *   "minimal" Solo texto
+       */
+      const layout = String(c.layout || "");
+      const left = c.align === "left";
+      const minH = c.height === "full" ? "100vh" : c.height === "large" ? "80vh" : c.height === "small" ? "45vh" : "clamp(400px,70vh,600px)";
+      const shade = c.overlay === "none" ? 0 : c.overlay === "light" ? 0.3 : c.overlay === "dark" ? 0.7 : 0.5;
+      const base = site && !site.domain && site.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
+      const href = (u: any) => {
+        const v = String(u || "").trim();
+        if (!v) return "#";
+        return v.startsWith("/") && !v.startsWith("//") ? `${base}${v}` : v;
+      };
+      const first = {
+        backgroundImage: c.backgroundImage, kicker: c.kicker, title: c.title || "", subtitle: c.subtitle,
+        buttonText: c.buttonText, buttonUrl: c.buttonUrl, secondaryButtonText: c.secondaryButtonText, secondaryButtonUrl: c.secondaryButtonUrl,
+      };
+      const extra = (Array.isArray(c.slides) ? c.slides : []).map((sl: any) => ({
+        backgroundImage: sl.backgroundImage || first.backgroundImage, kicker: sl.kicker, title: sl.title || "", subtitle: sl.subtitle,
+        buttonText: sl.buttonText, buttonUrl: sl.buttonUrl, secondaryButtonText: sl.secondaryButtonText, secondaryButtonUrl: sl.secondaryButtonUrl,
+      }));
+      const slides = layout === "" ? [first, ...extra] : [first];
+      const seconds = Number(c.autoplaySeconds ?? 6);
+
+      // Textos y botones (dark = texto blanco sobre imagen, video o degradado).
+      const text = (sl: any, dark: boolean) => `<div style="position:relative;z-index:2;max-width:760px;${left ? "text-align:left;margin:0" : "text-align:center;margin:0 auto"}">
+${sl.kicker ? `<p style="display:inline-block;background:${dark ? "rgba(255,255,255,0.15)" : "color-mix(in srgb,var(--primary) 10%,transparent)"};color:${dark ? "#fff" : "var(--primary)"};padding:6px 16px;border-radius:100px;font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:1.5rem;border:1px solid ${dark ? "rgba(255,255,255,0.2)" : "transparent"}">${sl.kicker}</p>` : ""}
+${sl.title ? `<h1 style="font-size:clamp(2rem,6vw,${layout === "minimal" ? "5rem" : "4rem"});font-weight:800;margin-bottom:1.25rem;line-height:1.1;color:${dark ? "#fff" : "#0f172a"}">${sl.title}</h1>` : ""}
+${sl.subtitle ? `<p style="font-size:clamp(1rem,2.5vw,1.3rem);color:${dark ? "rgba(255,255,255,.85)" : "#475569"};max-width:650px;${left ? "" : "margin-left:auto;margin-right:auto;"}margin-bottom:2rem;line-height:1.6">${sl.subtitle}</p>` : ""}
+<div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:${left ? "flex-start" : "center"}">
+${sl.buttonText ? `<a href="${href(sl.buttonUrl)}" data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" style="display:inline-block;background:${dark ? "#fff" : "var(--primary)"};color:${dark ? "var(--primary)" : "#fff"};padding:14px 36px;border-radius:14px;text-decoration:none;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.1)">${sl.buttonText}</a>` : ""}
+${sl.secondaryButtonText ? `<a href="${href(sl.secondaryButtonUrl)}" data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" style="display:inline-block;background:transparent;color:${dark ? "#fff" : "var(--primary)"};padding:13px 36px;border-radius:14px;text-decoration:none;font-weight:600;border:1px solid ${dark ? "rgba(255,255,255,0.4)" : "var(--primary)"}">${sl.secondaryButtonText}</a>` : ""}
 </div>
-</div>
+</div>`;
+      const shell = (inner: string, bg: string, dark: boolean) => `<section id="${c.anchor || "inicio"}" style="position:relative;overflow:hidden;min-height:${minH};display:flex;align-items:center;padding:clamp(4rem,10vw,7rem) clamp(1rem,5vw,4rem);color:${dark ? "#fff" : "#0f172a"};${bg}">${inner}</section>`;
+      const inner = (content: string) => `<div style="position:relative;z-index:2;width:100%;max-width:1200px;margin:0 auto">${content}</div>`;
+
+      if (layout === "split") {
+        const img = first.backgroundImage
+          ? `<img src="${absoluteUrl(first.backgroundImage)}" alt="${c.imageAlt || first.title || ""}" style="width:100%;height:100%;min-height:320px;object-fit:cover;border-radius:24px;box-shadow:0 24px 48px -16px rgba(15,23,42,.25)">`
+          : `<div style="width:100%;min-height:320px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--secondary,#1e40af))"></div>`;
+        const cols = c.imageSide === "left" ? `<div>${img}</div><div>${text(first, false)}</div>` : `<div>${text(first, false)}</div><div>${img}</div>`;
+        return shell(inner(`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:clamp(2rem,5vw,4rem);align-items:center">${cols}</div>`), "background:#fff", false);
+      }
+
+      if (layout === "video") {
+        const media = `<div style="position:absolute;inset:0;z-index:0">${backgroundVideoHtml(c.videoUrl, first.backgroundImage ? absoluteUrl(first.backgroundImage) : "")}</div><div style="position:absolute;inset:0;z-index:1;background:rgba(0,0,0,${shade})"></div>`;
+        return shell(media + inner(text(first, true)), "background:#0f172a", true);
+      }
+
+      if (layout === "minimal") {
+        return shell(inner(text(first, false)), "background:#f8fafc", false);
+      }
+
+      // Imagen de fondo (o degradado) con diapositivas.
+      const heroId = `hero-${Math.random().toString(36).slice(2, 8)}`;
+      const go = "var r=this.closest('[data-hero]'),i=+this.dataset.i;r.querySelectorAll('[data-hero-slide]').forEach(function(s,j){s.style.opacity=j===i?1:0;s.style.pointerEvents=j===i?'auto':'none'});r.querySelectorAll('[data-hero-dot]').forEach(function(d,j){d.style.width=j===i?'24px':'8px';d.style.background=j===i?'#fff':'rgba(255,255,255,.5)'});r.dataset.cur=i";
+      const slideHtml = (sl: any, i: number) => {
+        const bg = sl.backgroundImage
+          ? `<div style="position:absolute;inset:0;background:url('${absoluteUrl(sl.backgroundImage)}') center/cover no-repeat"></div><div style="position:absolute;inset:0;background:rgba(0,0,0,${shade})"></div>`
+          : `<div style="position:absolute;inset:0;background:linear-gradient(135deg,var(--primary),var(--secondary,#1e40af))"></div><div style="position:absolute;inset:0;background:radial-gradient(circle at top,rgba(255,255,255,0.12),transparent 60%)"></div>`;
+        return `<div data-hero-slide style="position:${i === 0 ? "relative" : "absolute"};inset:0;display:flex;align-items:center;min-height:${minH};padding:clamp(4rem,10vw,7rem) clamp(1rem,5vw,4rem);transition:opacity .7s;opacity:${i === 0 ? 1 : 0};pointer-events:${i === 0 ? "auto" : "none"}">${bg}${inner(text(sl, true))}</div>`;
+      };
+      return `<section id="${c.anchor || "inicio"}" data-hero data-hero-id="${heroId}" style="position:relative;overflow:hidden;color:#fff">
+${slides.map(slideHtml).join("")}
+${slides.length > 1 ? `<div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3">${slides.map((_, i) => `<button type="button" data-hero-dot data-i="${i}" onclick="${go}" aria-label="Diapositiva ${i + 1}" style="height:8px;width:${i === 0 ? "24px" : "8px"};border-radius:999px;border:0;cursor:pointer;background:${i === 0 ? "#fff" : "rgba(255,255,255,.5)"};transition:all .3s"></button>`).join("")}</div>
+${seconds > 0 ? `<script>(function(){var r=document.querySelector('[data-hero-id="${heroId}"]');if(!r)return;setInterval(function(){var n=r.querySelectorAll('[data-hero-dot]');var i=((+r.dataset.cur||0)+1)%n.length;n[i].click()},${Math.max(2, seconds) * 1000});})();</script>` : ""}` : ""}
 </section>`;
     }
 

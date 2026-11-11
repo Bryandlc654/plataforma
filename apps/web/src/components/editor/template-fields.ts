@@ -190,7 +190,9 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     const s = schema[key];
     const value = c[key] ?? s?.default;
     const options = cfg.selects?.[key] || SELECTS[key];
-    const kind: FieldKind = cfg.pickers?.[key]
+    const kind: FieldKind = cfg.kinds?.[key]
+      ? cfg.kinds[key]
+      : cfg.pickers?.[key]
       ? "picker"
       : cfg.dynamicFields?.[key]
       ? cfg.dynamicFields[key]

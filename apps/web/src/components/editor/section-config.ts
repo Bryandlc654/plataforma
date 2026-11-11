@@ -27,6 +27,8 @@ export interface SectionConfig {
   groups?: { title: string; keys: string[] }[];
   /** Opciones elegidas con tarjetas visuales (un dibujo de cada diseño). */
   pickers?: Record<string, PickerOption[]>;
+  /** Tipo de control forzado (p. ej. el enlace de un video es texto, no una página). */
+  kinds?: Record<string, "text" | "textarea" | "image">;
 }
 
 /** Opción de un selector visual: `art` es el dibujo esquemático del diseño. */
@@ -58,7 +60,81 @@ const indigoCta: SectionConfig = {
   labels: { style: "Diseño", kicker: "Primera línea del título", email: "Correo (si el botón no tiene enlace)", fields: "Campos del formulario", submitText: "Texto del botón enviar" },
 };
 
+/**
+ * Hero con 4 versiones, el mismo formulario en las tiendas (Urban Noir) y en las webs
+ * (hero genérico). Solo cambia cómo se oscurece la imagen.
+ */
+function heroConfig(store: boolean): SectionConfig {
+  const imageKeys = store ? ["imageColor", "imageOpacity"] : ["overlay"];
+  return {
+    pickers: {
+      layout: [
+        { value: "", label: "Imagen de fondo", art: "hero-full" },
+        { value: "split", label: "Texto e imagen", art: "hero-split" },
+        { value: "video", label: "Video de fondo", art: "hero-video" },
+        { value: "minimal", label: "Solo texto", art: "hero-minimal" },
+      ],
+    },
+    selects: {
+      align: [{ label: "Centrado", value: "" }, { label: "A la izquierda", value: "left" }],
+      height: store
+        ? [{ label: "Pantalla completa", value: "" }, { label: "Grande", value: "large" }, { label: "Mediana", value: "medium" }, { label: "Pequeña", value: "small" }]
+        : [{ label: "Pantalla completa", value: "full" }, { label: "Grande", value: "large" }, { label: "Mediana", value: "" }, { label: "Pequeña", value: "small" }],
+      imageSide: [{ label: "Imagen a la derecha", value: "" }, { label: "Imagen a la izquierda", value: "left" }],
+      ...(store
+        ? {
+            imageColor: [{ label: "Blanco y negro (estilo de la marca)", value: "" }, { label: "A color", value: "color" }],
+            imageOpacity: [{ label: "Tenue (40%)", value: "40" }, { label: "Normal (60%)", value: "" }, { label: "Intensa (80%)", value: "80" }, { label: "Completa (100%)", value: "100" }],
+          }
+        : { overlay: [{ label: "Oscurecer: normal", value: "" }, { label: "Oscurecer: poco", value: "light" }, { label: "Oscurecer: mucho", value: "dark" }, { label: "Sin oscurecer", value: "none" }] }),
+    },
+    groups: [
+      { title: "Diseño", keys: ["layout", "align", "height", "imageSide"] },
+      { title: "Textos", keys: ["kicker", "title", "subtitle"] },
+      { title: "Botones", keys: ["buttonText", "buttonUrl", "secondaryButtonText", "secondaryButtonUrl"] },
+      { title: "Imagen o video", keys: ["backgroundImage", "imageAlt", "videoUrl", ...imageKeys] },
+      { title: "Diapositivas", keys: ["slides", "autoplaySeconds"] },
+    ],
+    visible: (c) => {
+      const layout = c.layout || "";
+      return [
+        "layout", ...(layout === "split" ? [] : ["align"]), "height", ...(layout === "split" ? ["imageSide"] : []),
+        "kicker", "title", "subtitle",
+        "buttonText", "buttonUrl", "secondaryButtonText", "secondaryButtonUrl",
+        ...(layout === "minimal" ? [] : ["backgroundImage"]),
+        ...(layout === "split" ? ["imageAlt"] : []),
+        ...(layout === "video" ? ["videoUrl"] : []),
+        ...(layout === "minimal" || (layout === "split" && !store) ? [] : layout === "split" ? ["imageColor"] : imageKeys),
+        ...(layout === "" ? ["slides", "autoplaySeconds"] : []),
+      ];
+    },
+    labels: {
+      layout: "Versión del hero", align: "Alineación del texto", height: "Altura", imageSide: "Posición de la imagen",
+      kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
+      buttonText: "Texto del botón principal", buttonUrl: "Enlace del botón principal",
+      secondaryButtonText: "Texto del botón secundario", secondaryButtonUrl: "Enlace del botón secundario",
+      backgroundImage: "Imagen", imageAlt: "Texto alternativo de la imagen", videoUrl: "Video (YouTube, Vimeo o .mp4)",
+      imageColor: "Color de la imagen", imageOpacity: "Intensidad de la imagen", overlay: "Oscurecer la imagen",
+      slides: "Más diapositivas", autoplaySeconds: "Cambiar de diapositiva cada (segundos)",
+    },
+    kinds: { videoUrl: "text" },
+    hints: {
+      videoUrl: "Pega el enlace normal del video. Se reproduce sin sonido y en bucle; la imagen se muestra mientras carga.",
+      secondaryButtonText: "Déjalo vacío para mostrar un solo botón.",
+      slides: "La primera diapositiva son los textos y la imagen de arriba.",
+    },
+    itemLabels: {
+      slides: {
+        backgroundImage: "Imagen", kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
+        buttonText: "Texto del botón principal", buttonUrl: "Enlace del botón principal",
+        secondaryButtonText: "Texto del botón secundario", secondaryButtonUrl: "Enlace del botón secundario",
+      },
+    },
+  };
+}
+
 export const SECTION_CONFIG: Record<string, SectionConfig> = {
+  "generic/hero": heroConfig(false),
   // ---------------------------------------------------------------- Indigo
   "indigo/header": {
     hidden: ["companyName"],
@@ -123,19 +199,7 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
   },
 
   // ---------------------------------------------------------------- Urban Noir
-  "urban-noir/hero": {
-    selects: {
-      imageColor: [{ label: "Blanco y negro (estilo de la marca)", value: "" }, { label: "A color", value: "color" }],
-      imageOpacity: [
-        { label: "Imagen tenue (40%)", value: "40" }, { label: "Normal (60%)", value: "" }, { label: "Intensa (80%)", value: "80" }, { label: "Completa (100%)", value: "100" },
-      ],
-    },
-    labels: {
-      backgroundImage: "Imagen de fondo", kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
-      buttonText: "Texto del botón", buttonUrl: "Enlace del botón", slides: "Más diapositivas",
-      imageColor: "Color de la imagen", imageOpacity: "Intensidad de la imagen",
-    },
-  },
+  "urban-noir/hero": heroConfig(true),
   "urban-noir/header": {
     pickers: {
       layout: [
@@ -153,11 +217,13 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
       showSearch: [{ label: "Ocultar", value: "" }, { label: "Mostrar", value: "show" }],
       showCart: [{ label: "Mostrar", value: "" }, { label: "Ocultar", value: "hide" }],
       hideLogoText: [{ label: "Imagen y nombre", value: "" }, { label: "Solo la imagen", value: "true" }],
+      menuSide: [{ label: "Desde la izquierda", value: "" }, { label: "Desde la derecha", value: "right" }],
     },
     groups: [
       { title: "Diseño", keys: ["layout", "headerStyle", "sticky"] },
       { title: "Logo", keys: ["logoImage", "logoText", "hideLogoText", "logoSize"] },
       { title: "Menú", keys: ["links"] },
+      { title: "Menú lateral (hamburguesa)", keys: ["menuSide", "viewAllText", "searchText", "drawerNote"] },
       { title: "Barra de anuncios", keys: ["announcement", "announcementUrl", "announcementStyle"] },
       { title: "Iconos", keys: ["showSearch", "searchUrl", "showCart"] },
     ],
@@ -165,6 +231,8 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
       "layout", "headerStyle", "sticky",
       "logoImage", "logoText", ...(c.logoImage ? ["hideLogoText"] : []), "logoSize",
       "links",
+      "menuSide", ...((c.links || []).some((l: any) => Array.isArray(l?.children) && l.children.length) ? ["viewAllText"] : []),
+      ...(c.showSearch === "show" || c.searchUrl ? ["searchText"] : []), "drawerNote",
       "announcement", ...(c.announcement ? ["announcementUrl", "announcementStyle"] : []),
       "showSearch", ...(c.showSearch === "show" || c.searchUrl ? ["searchUrl"] : []), "showCart",
     ],
@@ -173,12 +241,16 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
       logoImage: "Logo (imagen)", logoText: "Nombre de la tienda", hideLogoText: "Mostrar en el logo", logoSize: "Tamaño del logo",
       links: "Enlaces del menú", announcement: "Texto del anuncio", announcementUrl: "Enlace del anuncio", announcementStyle: "Estilo del anuncio",
       showSearch: "Lupa de búsqueda", searchUrl: "La lupa lleva a", showCart: "Carrito",
+      menuSide: "El menú se abre", viewAllText: "Texto para ver la página del enlace", searchText: "Texto de búsqueda en el menú", drawerNote: "Nota al pie del menú",
     },
     hints: {
       headerStyle: "«Sobre la imagen» va encima de la portada; úsalo si la primera sección tiene imagen.",
       announcement: "Ej.: Envío gratis desde $50. Déjalo vacío para no mostrar la barra.",
       searchUrl: "Por ejemplo, la sección del catálogo.",
       links: "Agrega un submenú dentro de un enlace para mostrar categorías.",
+      menuSide: "En el móvil (y en el diseño Minimalista) la hamburguesa abre un panel lateral.",
+      viewAllText: "En el panel, un enlace con submenú se despliega; este texto lleva a su propia página.",
+      drawerNote: "Ej.: Atención al cliente: 0999 999 999. Vacío para no mostrarla.",
     },
     itemLabels: {
       links: { label: "Texto", url: "Enlace", children: "Submenú", highlight: "Destacar" },
