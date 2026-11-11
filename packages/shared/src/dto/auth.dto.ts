@@ -4,27 +4,27 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
-  IsBoolean,
+  Matches,
 } from "class-validator";
 
 export class RegisterUserDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(8)
   @MaxLength(64)
-  password: string;
+  password!: string;
 
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  firstName: string;
+  firstName!: string;
 
   @IsString()
   @MinLength(1)
   @MaxLength(50)
-  lastName: string;
+  lastName!: string;
 
   @IsOptional()
   @IsString()
@@ -32,39 +32,65 @@ export class RegisterUserDto {
   phone?: string;
 }
 
+export class StartAuthDto {
+  @IsEmail()
+  email!: string;
+}
+
+export class SetPasswordDto {
+  @IsString()
+  @MinLength(8)
+  @MaxLength(64)
+  password!: string;
+}
+
 export class LoginDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  password: string;
+  password!: string;
 }
 
 export class RefreshTokenDto {
   @IsString()
-  refreshToken: string;
+  refreshToken!: string;
 }
 
 export class ForgotPasswordDto {
   @IsEmail()
-  email: string;
+  email!: string;
+}
+
+export class VerifyEmailDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @Matches(/^\d{6}$/, { message: "El código debe tener 6 dígitos" })
+  code!: string;
+}
+
+export class ResendVerificationDto {
+  @IsEmail()
+  email!: string;
 }
 
 export class ResetPasswordDto {
   @IsString()
-  token: string;
+  token!: string;
 
   @IsString()
   @MinLength(8)
   @MaxLength(64)
-  newPassword: string;
+  newPassword!: string;
 }
 
 export class CreateTenantDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
@@ -113,10 +139,10 @@ export class UpdateUserDto {
 
 export class ChangePasswordDto {
   @IsString()
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsString()
   @MinLength(8)
   @MaxLength(64)
-  newPassword: string;
+  newPassword!: string;
 }

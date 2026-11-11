@@ -5,7 +5,7 @@ import {
   buildCapturedThemeOverrides,
   paletteCssVariables,
   type SitePalette,
-} from "@/lib/site-palette";
+} from "@/lib/templates";
 import { API_ORIGIN } from "@/lib/api-config";
 
 const ASSET_RE = /\{\{__ED::asset:([^{}]+)\}\}/g;

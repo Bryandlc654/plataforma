@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   USER_DELETE: "user.delete",
   USER_INVITE: "user.invite",
   ROLE_MANAGE: "role.manage",
+  REVIEW_MANAGE: "reviews.manage",
   BILLING_MANAGE: "billing.manage",
   BILLING_READ: "billing.read",
   SUBSCRIPTION_MANAGE: "subscription.manage",
@@ -64,6 +65,7 @@ export const ROLE_PERMISSIONS: Record<RoleSlug, string[]> = {
     PERMISSIONS.USER_DELETE,
     PERMISSIONS.USER_INVITE,
     PERMISSIONS.ROLE_MANAGE,
+    PERMISSIONS.REVIEW_MANAGE,
     PERMISSIONS.BILLING_MANAGE,
     PERMISSIONS.BILLING_READ,
     PERMISSIONS.SUBSCRIPTION_MANAGE,
@@ -85,6 +87,7 @@ export const ROLE_PERMISSIONS: Record<RoleSlug, string[]> = {
     PERMISSIONS.SITE_PUBLISH,
     PERMISSIONS.USER_READ,
     PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.REVIEW_MANAGE,
     PERMISSIONS.LEAD_CREATE,
     PERMISSIONS.LEAD_READ,
     PERMISSIONS.LEAD_UPDATE,
@@ -107,12 +110,16 @@ export const ROLE_PERMISSIONS: Record<RoleSlug, string[]> = {
     PERMISSIONS.INTEGRATION_MANAGE,
   ],
   billing: [
+    // Lectura de sitios: Inicio y Dominios listan los sitios del negocio.
+    PERMISSIONS.SITE_READ,
     PERMISSIONS.BILLING_MANAGE,
     PERMISSIONS.BILLING_READ,
     PERMISSIONS.SUBSCRIPTION_MANAGE,
     PERMISSIONS.SUBSCRIPTION_READ,
   ],
   viewer: [
+    // Lectura de sitios: Inicio y Analítica listan los sitios del negocio.
+    PERMISSIONS.SITE_READ,
     PERMISSIONS.ANALYTICS_VIEW,
     PERMISSIONS.LEAD_READ,
   ],
@@ -146,4 +153,4 @@ export const DEFAULT_PLANS = [
     maxStorage: 5 * 1024 * 1024 * 1024,
     features: ["10 sitios web", "Dominio personalizado", "SEO avanzado", "Roles avanzados", "API pública", "Webhooks", "Soporte prioritario", "White-label"],
   },
-];
+] as const;

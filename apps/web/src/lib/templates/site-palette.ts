@@ -1,3 +1,11 @@
+// ARCHIVO GENERADO desde packages/shared/src/templates — no editar aquí.
+// Ejecuta `npm run sync:templates -w apps/web` tras cambiar la fuente.
+
+/**
+ * Paleta global del sitio: tipos, presets del selector y cómo se aplica a las plantillas.
+ * Fuente única para el editor (web) y el sitio publicado (API).
+ */
+
 export interface SitePalette {
   background: string;
   text: string;
@@ -18,6 +26,12 @@ export const DEFAULT_SITE_PALETTE: SitePalette = {
   accent: "#f59e0b",
 };
 
+const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+function isHex(value: unknown): value is string {
+  return typeof value === "string" && HEX_RE.test(value.trim());
+}
+
 export const PALETTE_LABELS: Record<PaletteRole, string> = {
   primary: "Primario",
   secondary: "Secundario",
@@ -36,12 +50,7 @@ export const PALETTE_PRESETS: Array<{ name: string; palette: SitePalette }> = [
   { name: "Bosque", palette: { primary: "#4fad33", secondary: "#3d8f29", accent: "#84cc16", background: "#ffffff", surface: "#f1f5f9", text: "#0f172a" } },
 ];
 
-const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
-
-function isHex(value: unknown): value is string {
-  return typeof value === "string" && HEX_RE.test(value.trim());
-}
-
+/** Normaliza una paleta guardada en `site.settings.palette` con fallbacks. */
 export function resolveSitePalette(
   settings: any,
   fallbackPrimary?: string,
@@ -60,10 +69,12 @@ export function resolveSitePalette(
   return palette;
 }
 
+/** Indica si el sitio tiene una paleta configurada explícitamente. */
 export function hasExplicitPalette(settings: any): boolean {
   return explicitPaletteRoles(settings).length > 0;
 }
 
+/** Roles de la paleta que el usuario definió explícitamente. */
 export function explicitPaletteRoles(settings: any): PaletteRole[] {
   const raw = settings && typeof settings === "object" ? settings.palette : null;
   if (!raw || typeof raw !== "object") return [];
@@ -83,6 +94,7 @@ function parseHex(hex: string): { r: number; g: number; b: number } | null {
   return { r, g, b };
 }
 
+/** Devuelve un color de texto legible sobre el color dado. */
 export function contrastColor(hex: string, dark = "#0f172a", light = "#ffffff"): string {
   const rgb = parseHex(hex);
   if (!rgb) return light;
@@ -101,6 +113,7 @@ export function paletteCssVariables(palette: SitePalette): string {
   ].join(";");
 }
 
+/** Clasifica el nombre de una variable CSS capturada de una plantilla. */
 function classifyVarName(name: string): PaletteRole | null {
   const n = name.toLowerCase();
   if (/(foreground|on-[a-z]+|contrast|inverse)/.test(n)) return null;
@@ -113,6 +126,10 @@ function classifyVarName(name: string): PaletteRole | null {
   return null;
 }
 
+/**
+ * Variables de tema capturadas al importar una plantilla (`page.theme.vars`),
+ * reclasificadas por rol de la paleta global.
+ */
 export function buildCapturedThemeOverrides(
   theme: any,
   palette: SitePalette,
@@ -154,6 +171,83 @@ export function buildCapturedThemeOverrides(
   return unique.length ? `:root{${unique.join(";")}}` : "";
 }
 
+type VariantKeyRoles = Partial<Record<PaletteRole, string[]>>;
+
+const MATERIAL_KEY_ROLES: VariantKeyRoles = {
+  primary: ["primary"],
+  secondary: ["secondary"],
+  accent: ["tertiary"],
+  background: ["background"],
+  surface: ["surface"],
+  text: ["on-background", "on-surface", "foreground"],
+};
+
+const VARIANT_KEY_ROLES: Record<string, VariantKeyRoles> = {
+  rodriplast: {
+    primary: ["rodri-primary", "rodri-primary-glow"],
+    accent: ["rodri-accent"],
+    background: ["rodri-background"],
+    surface: ["rodri-card", "rodri-secondary"],
+    text: ["rodri-foreground"],
+  },
+  indigo: MATERIAL_KEY_ROLES,
+  "art-culinaire": MATERIAL_KEY_ROLES,
+  dishora: MATERIAL_KEY_ROLES,
+  graduate: MATERIAL_KEY_ROLES,
+  prestige: MATERIAL_KEY_ROLES,
+  "urban-noir": MATERIAL_KEY_ROLES,
+  default: MATERIAL_KEY_ROLES,
+};
+
+/** Mapea el color semilla de marca (`rodri-charcoal`) al rol elegido por el usuario. */
+const VARIANT_SECONDARY_ALIASES: Record<string, string> = {
+  rodriplast: "rodri-charcoal",
+};
+
+/**
+ * Reasigna los tokens de color del objeto `themeColors` (tailwind.config) según
+ * la paleta global del sitio. Solo se sobrescriben los roles definidos
+ * explícitamente por el usuario, de modo que las plantillas conservan su
+ * identidad original salvo los colores que se hayan personalizado.
+ */
+export function applyPaletteToThemeColors(
+  base: Record<string, string | undefined> | null | undefined,
+  variant: string | undefined,
+  palette: SitePalette,
+  explicitRoles: PaletteRole[] = [],
+): Record<string, string | undefined> | null {
+  if (!base || typeof base !== "object") return base || null;
+  const roles = VARIANT_KEY_ROLES[variant || "default"] || MATERIAL_KEY_ROLES;
+  const next: Record<string, string | undefined> = { ...base };
+  const allowed = new Set<PaletteRole>(explicitRoles);
+
+  if (allowed.size === 0) return next;
+
+  allowed.forEach((role) => {
+    const keys = roles[role] || [];
+    keys.forEach((key) => {
+      if (key in next) next[key] = palette[role];
+    });
+    const alias = VARIANT_SECONDARY_ALIASES[variant || ""];
+    if (role === "secondary" && alias && alias in next) {
+      next[alias] = palette.secondary;
+    }
+  });
+
+  // Contraste para texto sobre fondos de marca (variantes material).
+  if (allowed.has("primary") && "on-primary" in next) {
+    next["on-primary"] = contrastColor(palette.primary);
+  }
+  if (allowed.has("secondary") && "on-secondary" in next) {
+    next["on-secondary"] = contrastColor(palette.secondary);
+  }
+  if (allowed.has("accent") && "on-tertiary" in next) {
+    next["on-tertiary"] = contrastColor(palette.accent);
+  }
+
+  return next;
+}
+
 const VARIANT_COLOR_SEEDS: Record<string, Record<string, PaletteRole>> = {
   indigo: { "#fdcb0c": "primary" },
   graduate: {
@@ -185,6 +279,10 @@ const VARIANT_COLOR_SEEDS: Record<string, Record<string, PaletteRole>> = {
   },
 };
 
+/**
+ * Reemplaza los colores de marca incrustados en el HTML de una variante por las
+ * variables globales de la paleta del sitio (con fallback al color original).
+ */
 export function applyPaletteToVariantHtml(
   html: string,
   variant: string | undefined,
@@ -197,6 +295,7 @@ export function applyPaletteToVariantHtml(
   for (const [hex, role] of Object.entries(seeds)) {
     // Sin espacios: el valor puede ir dentro de clases arbitrarias de Tailwind.
     const replacement = `var(--site-${role},${hex})`;
+    // No reemplazar dentro de URLs (p. ej. placehold.co/...#hex)
     out = out.replace(new RegExp(`(?<![/\\w])${hex}`, "gi"), replacement);
   }
   return out;

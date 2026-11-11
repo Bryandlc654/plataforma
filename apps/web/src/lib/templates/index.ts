@@ -12,3 +12,5 @@ export * from "./raw-html-variants";
 export * from "./sanitize";
 export * from "./render";
 export * from "./themes";
+export * from "./site-palette";
+export * from "./generic-blocks";

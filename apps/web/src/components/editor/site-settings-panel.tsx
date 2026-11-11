@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { HiOutlineX } from "react-icons/hi";
 import { ImageField } from "@/components/blocks/editors/image-field";
-import { PALETTE_LABELS, PALETTE_PRESETS, type PaletteRole, type SitePalette } from "@/lib/site-palette";
+import { PALETTE_LABELS, PALETTE_PRESETS, type PaletteRole, type SitePalette } from "@/lib/templates";
 
 export type SettingsTab = "theme" | "config";
 

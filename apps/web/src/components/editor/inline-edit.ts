@@ -43,11 +43,44 @@ export function isTextLeaf(el: Element): boolean {
   return !!norm(el.textContent || "");
 }
 
+export const BR_RE = /<br\s*\/?>/gi;
+const ENTITIES: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&nbsp;": " " };
+
+/** Texto visible de un valor guardado: sin <br> (no aportan texto) y con entidades decodificadas. */
+function visibleText(value: string): string {
+  return norm(value.replace(BR_RE, "").replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (m) => ENTITIES[m] ?? m));
+}
+
+/** Solo se editan en línea textos planos o con saltos de línea (<br>); otro marcado no. */
+function isPlainOrBr(value: string): boolean {
+  return !/[<>]/.test(value.replace(BR_RE, ""));
+}
+
+/**
+ * Texto de un elemento tal como está en el DOM: <br> y bloques como salto de línea.
+ * No usa innerText porque devuelve el texto con text-transform aplicado (p. ej. MAYÚSCULAS).
+ */
+export function domText(el: Node): string {
+  let out = "";
+  el.childNodes.forEach((n) => {
+    if (n.nodeType === 3) out += n.nodeValue || "";
+    else if (n.nodeType === 1) {
+      const tag = (n as Element).tagName;
+      if (tag === "BR") out += "\n";
+      else {
+        if ((tag === "DIV" || tag === "P") && out && !out.endsWith("\n")) out += "\n";
+        out += domText(n);
+      }
+    }
+  });
+  return out;
+}
+
 /** Hoja de texto que corresponde al elemento (resuelve valores repetidos por orden de aparición). */
 export function matchTextLeaf(root: HTMLElement, el: HTMLElement, leaves: Leaf[]): Leaf | null {
   const text = norm(el.textContent || "");
   if (!text) return null;
-  const candidates = leaves.filter((l) => !/[<>]/.test(l.value) && norm(l.value) === text);
+  const candidates = leaves.filter((l) => isPlainOrBr(l.value) && visibleText(l.value) === text);
   if (candidates.length === 0) return null;
   const sameText = Array.from(root.querySelectorAll<HTMLElement>("*")).filter((n) => isTextLeaf(n) && norm(n.textContent || "") === text);
   const k = Math.max(0, sameText.indexOf(el));
@@ -82,6 +115,6 @@ export function matchMarkedLeaf(el: HTMLElement, root: HTMLElement): Leaf | null
   const key = marked.getAttribute("data-ed") || "";
   if (!key) return null;
   const path: Path = key.split("::").map((k) => (/^\d+$/.test(k) ? Number(k) : k));
-  return { path, value: marked.innerText ?? marked.textContent ?? "" };
+  return { path, value: domText(marked) };
 }
 

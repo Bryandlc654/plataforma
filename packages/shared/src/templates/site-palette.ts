@@ -1,3 +1,8 @@
+/**
+ * Paleta global del sitio: tipos, presets del selector y cómo se aplica a las plantillas.
+ * Fuente única para el editor (web) y el sitio publicado (API).
+ */
+
 export interface SitePalette {
   background: string;
   text: string;
@@ -23,6 +28,24 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 function isHex(value: unknown): value is string {
   return typeof value === "string" && HEX_RE.test(value.trim());
 }
+
+export const PALETTE_LABELS: Record<PaletteRole, string> = {
+  primary: "Primario",
+  secondary: "Secundario",
+  accent: "Acento",
+  background: "Fondo",
+  surface: "Superficie",
+  text: "Texto",
+};
+
+export const PALETTE_PRESETS: Array<{ name: string; palette: SitePalette }> = [
+  { name: "Océano", palette: { primary: "#2563eb", secondary: "#1e40af", accent: "#f59e0b", background: "#ffffff", surface: "#f8fafc", text: "#1e293b" } },
+  { name: "Esmeralda", palette: { primary: "#10b981", secondary: "#047857", accent: "#f59e0b", background: "#ffffff", surface: "#f0fdf4", text: "#0f172a" } },
+  { name: "Coral", palette: { primary: "#f43f5e", secondary: "#be123c", accent: "#fbbf24", background: "#ffffff", surface: "#fff1f2", text: "#1f2937" } },
+  { name: "Violeta", palette: { primary: "#7c3aed", secondary: "#5b21b6", accent: "#f472b6", background: "#ffffff", surface: "#f5f3ff", text: "#1e1b4b" } },
+  { name: "Nocturno", palette: { primary: "#fbbf24", secondary: "#f59e0b", accent: "#38bdf8", background: "#0f172a", surface: "#1e293b", text: "#f8fafc" } },
+  { name: "Bosque", palette: { primary: "#4fad33", secondary: "#3d8f29", accent: "#84cc16", background: "#ffffff", surface: "#f1f5f9", text: "#0f172a" } },
+];
 
 /** Normaliza una paleta guardada en `site.settings.palette` con fallbacks. */
 export function resolveSitePalette(
@@ -260,9 +283,9 @@ const VARIANT_COLOR_SEEDS: Record<string, Record<string, PaletteRole>> = {
 export function applyPaletteToVariantHtml(
   html: string,
   variant: string | undefined,
-  palette: SitePalette,
+  palette?: SitePalette,
 ): string {
-  if (!html || !variant) return html;
+  if (!html || !variant || !palette) return html;
   const seeds = VARIANT_COLOR_SEEDS[variant];
   if (!seeds) return html;
   let out = html;

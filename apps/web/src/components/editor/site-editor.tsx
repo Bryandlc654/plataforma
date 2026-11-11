@@ -6,7 +6,7 @@ import api from "@/lib/api";
 import { BLOCK_TYPES, BLOCK_META, getBlockDefaultContent } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
-import { DEFAULT_SITE_PALETTE, PALETTE_LABELS, PALETTE_PRESETS, hasExplicitPalette, resolveSitePalette, type PaletteRole, type SitePalette } from "@/lib/site-palette";
+import { DEFAULT_SITE_PALETTE, PALETTE_LABELS, PALETTE_PRESETS, hasExplicitPalette, resolveSitePalette, type PaletteRole, type SitePalette } from "@/lib/templates";
 import { BlockEditor } from "@/components/blocks/editors/block-editor";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLeft, HiOutlineCheck, HiOutlineDocumentText, HiOutlineDuplicate, HiOutlineTrash } from "react-icons/hi";
@@ -19,48 +19,11 @@ import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { CanvasFrame } from "@/components/editor/canvas-frame";
-import { templateCanvasClass } from "@/lib/templates";
+import { genericPageBaseCss, isTemplateVariant, paletteCssVariables, templateCanvasClass } from "@/lib/templates";
 import { useConfirm } from "@/components/providers/confirm-provider";
-
-interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
-interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; }
-
-const SHARED_BLOCK_TYPES = new Set(["header", "footer"]);
-const byOrder = (a: Block, b: Block) => a.sortOrder - b.sortOrder;
-const sameJson = (a: any, b: any) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-
-/**
- * Aplica un cambio a un bloque. El header y el footer son compartidos: el API copia sus
- * cambios a todas las páginas, así que aquí se reflejan también en las demás páginas.
- */
-function patchBlock(site: Site, blockId: string, patch: Partial<Block>): Site {
-  let type: string | undefined;
-  for (const pg of site.pages) for (const b of pg.blocks) if (b.id === blockId) type = b.type;
-  const shared = !!type && SHARED_BLOCK_TYPES.has(type);
-  return {
-    ...site,
-    pages: site.pages.map((pg) => ({
-      ...pg,
-      blocks: pg.blocks.map((b) => (b.id === blockId || (shared && b.type === type) ? { ...b, ...patch } : b)),
-    })),
-  };
-}
-
-/** Restaura los bloques de una instantánea del historial sin tocar páginas ni ajustes actuales. */
-function withSnapshotBlocks(current: Site, snapshot: Site): Site {
-  return {
-    ...current,
-    pages: current.pages.map((pg) => {
-      const snap = snapshot.pages.find((p) => p.id === pg.id);
-      return snap ? { ...pg, blocks: JSON.parse(JSON.stringify(snap.blocks)) } : pg;
-    }),
-  };
-}
-
-function remapBlockIds(site: Site, ids: Map<string, string>): Site {
-  return { ...site, pages: site.pages.map((pg) => ({ ...pg, blocks: pg.blocks.map((b) => (ids.has(b.id) ? { ...b, id: ids.get(b.id)! } : b)) })) };
-}
+import { SHARED_BLOCK_TYPES, byOrder, patchBlock, remapBlockIds, sameJson, slugify, uniqueSlug, withSnapshotBlocks, type Block, type Site } from "@/components/editor/editor-model";
+import { PagesModal } from "@/components/editor/pages-modal";
+import { PublishedModal } from "@/components/editor/published-modal";
 
 export function SiteEditor({ siteId }: { siteId: string }) {
   const [site, setSite] = useState<Site | null>(null);
@@ -71,15 +34,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const [device, setDevice] = useState<EditorDevice>("desktop");
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | null>(null);
-  const [showAddPage, setShowAddPage] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showDomainSearch, setShowDomainSearch] = useState(false);
   const [publishedModal, setPublishedModal] = useState(false);
-  const [copied, setCopied] = useState(false);
   const customizedRef = useRef(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("theme");
   const [showPagesModal, setShowPagesModal] = useState(false);
-  const [newPageName, setNewPageName] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -323,28 +283,16 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     return () => { document.removeEventListener("visibilitychange", flush); if (saveTimerRef.current) clearTimeout(saveTimerRef.current); if (retryRef.current) clearTimeout(retryRef.current); };
   }, []);
 
-  /** Slug libre dentro del sitio: base, base-2, base-3… */
-  const uniqueSlug = (base: string) => {
-    const taken = new Set((site?.pages || []).map((p) => p.slug));
-    const clean = base || "pagina";
-    if (!taken.has(clean)) return clean;
-    let i = 2;
-    while (taken.has(`${clean}-${i}`)) i++;
-    return `${clean}-${i}`;
-  };
-
-  const addPage = async () => {
-    if (!newPageName.trim()) return;
-    const name = newPageName.trim();
-    const slug = uniqueSlug(name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+  const addPage = async (rawName: string) => {
+    const name = rawName.trim();
+    if (!name) return;
+    const slug = uniqueSlug(site?.pages || [], slugify(name));
     try {
       const res: any = await api.post(`/sites/${siteId}/pages`, { name, slug });
       const page = res.data || res;
       setSite(p => p ? { ...p, pages: [...p.pages, { ...page, blocks: [] }] } : p);
       setActivePageId(page.id);
       setActiveBlockId(null);
-      setShowAddPage(false);
-      setNewPageName("");
       setToast("Página creada");
 
       // Enlace en el menú: el header es compartido, el API lo copia a todas las páginas.
@@ -377,7 +325,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     if (!page) return;
     try {
       // Sin `path`: el API lo arma con el slug; con el del original habría dos páginas en la misma ruta.
-      const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: uniqueSlug(`${page.slug}-copia`) });
+      const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: uniqueSlug(site?.pages || [], `${page.slug}-copia`) });
       const newP = res.data || res;
       // En orden y de a uno: el API calcula la posición con los bloques que ya existen.
       for (const b of [...page.blocks].sort(byOrder)) {
@@ -464,6 +412,11 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     if (!block) return;
     const styles = { ...(block.styles || {}), hidden: !block.styles?.hidden };
     if (!styles.hidden) delete styles.hidden;
+    if (styles.hidden && SHARED_BLOCK_TYPES.has(block.type) && (site?.pages.length || 0) > 1) {
+      const label = block.type === "header" ? "el encabezado" : "el pie de página";
+      const ok = await confirm({ title: `Ocultar ${label}`, message: `${label[0].toUpperCase()}${label.slice(1)} es el mismo en todas las páginas: se ocultará en todo el sitio. ¿Continuar?` });
+      if (!ok) return;
+    }
     try {
       await api.put(`/blocks/${blockId}`, { styles });
       setSite(p => {
@@ -581,9 +534,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     { id: "domain", label: "Conecta tu dominio", hint: "Busca y compra tu dirección propia, ej. minegocio.com.", done: !!site.domain, actionLabel: "Buscar dominio", onAction: () => setShowDomainSearch(true) },
     { id: "publish", label: "Publica tu sitio", hint: "Así tus clientes podrán verlo en internet.", done: site.isPublished, actionLabel: "Publicar", onAction: () => publish() },
   ];
-  const copyUrl = async () => {
-    try { await navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* sin portapapeles */ }
-  };
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col overflow-hidden bg-white">
@@ -648,6 +598,13 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               palette={paletteActive ? palette : undefined}
               colors={paletteActive ? undefined : { primary: siteSettings.primaryColor, secondary: siteSettings.secondaryColor }}
             />
+            {/* Sitios sin plantilla de diseño propio: el mismo CSS base que la página publicada. */}
+            {!isTemplateVariant(activePage?.blocks?.[0]?.content?.variant) && (
+              <style>{genericPageBaseCss(
+                { primary: paletteActive ? palette.primary : siteSettings.primaryColor, secondary: paletteActive ? palette.secondary : siteSettings.secondaryColor, accent: palette.accent },
+                paletteActive ? paletteCssVariables(palette) : "",
+              )}</style>
+            )}
             {activePage && sortedBlocks.length > 0 ? (
               <>
                 {sortedBlocks.map((block, idx) => (
@@ -713,23 +670,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       {showDomainSearch && <DomainSearchModal siteId={siteId} initialQuery={site.name} onClose={() => setShowDomainSearch(false)} />}
 
       {publishedModal && (
-        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setPublishedModal(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl text-green-600">✓</div>
-            <h3 className="text-lg font-bold text-slate-900">¡Tu sitio ya está en internet!</h3>
-            <p className="mt-1 text-sm text-slate-500">Comparte esta dirección con tus clientes:</p>
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5 pl-3">
-              <a href={publicUrl} target="_blank" rel="noopener" className="min-w-0 flex-1 truncate text-left text-sm font-medium text-[color:var(--color-primary)] hover:underline">{publicUrl.replace(/^https?:\/\//, "")}</a>
-              <button onClick={copyUrl} className="flex-shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50">{copied ? "¡Copiado!" : "Copiar"}</button>
-            </div>
-            {!site.domain && (
-              <button onClick={() => { setPublishedModal(false); setShowDomainSearch(true); }} className="mt-4 w-full rounded-lg border border-dashed border-[color:color-mix(in_srgb,var(--color-primary)_40%,transparent)] px-3 py-2 text-sm font-semibold text-[color:var(--color-primary)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)]">
-                Dale una dirección propia a tu sitio
-              </button>
-            )}
-            <button onClick={() => setPublishedModal(false)} className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700">Seguir editando</button>
-          </div>
-        </div>
+        <PublishedModal
+          publicUrl={publicUrl}
+          hasDomain={!!site.domain}
+          onClose={() => setPublishedModal(false)}
+          onBuyDomain={() => { setPublishedModal(false); setShowDomainSearch(true); }}
+        />
       )}
 
       {/* BLOCK PALETTE MODAL */}
@@ -737,22 +683,17 @@ export function SiteEditor({ siteId }: { siteId: string }) {
 
       {/* PAGES MODAL */}
       {showPagesModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20" onClick={()=>setShowPagesModal(false)}>
-          <div className="absolute inset-0 bg-black/30"/>
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[70vh] flex flex-col m-4 z-10" onClick={e=>e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200"><h3 className="font-semibold text-sm text-slate-900">Páginas ({site.pages.length})</h3><button onClick={()=>setShowPagesModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600"><HiOutlineX className="h-4 w-4"/></button></div>
-            <div className="flex-1 overflow-y-auto p-3">
-              {showAddPage?(
-                <div className="mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200"><input className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)]0/20 mb-2" placeholder="Ej: Servicios, Contacto..." value={newPageName} onChange={e=>setNewPageName(e.target.value)} autoFocus onKeyDown={e=>e.key==="Enter"&&addPage()}/><div className="flex gap-1.5"><button onClick={addPage} className="flex-1 rounded-lg bg-[color:var(--color-primary)] text-white text-xs py-1.5 font-medium">Crear</button><button onClick={()=>{setShowAddPage(false);setNewPageName("")}} className="rounded-lg border border-slate-200 text-xs py-1.5 px-3 text-slate-500">Cancelar</button></div></div>
-              ):<button onClick={()=>setShowAddPage(true)} className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-xs font-medium text-slate-400 hover:text-[color:var(--color-primary)] hover:border-[color:color-mix(in_srgb,var(--color-primary)_22%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--color-primary)_2%,transparent)] transition-all mb-3">+ Nueva página</button>}
-              <div className="space-y-0.5">{[...site.pages].sort((a,b)=>a.sortOrder-b.sortOrder).map(page=>(<div key={page.id} className="group relative"><button onClick={()=>{setActivePageId(page.id);setActiveBlockId(null);setShowPagesModal(false)}} className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${page.id===activePageId?"bg-[color:color-mix(in_srgb,var(--color-primary)_6%,transparent)] border border-[color:color-mix(in_srgb,var(--color-primary)_22%,transparent)] text-[color:var(--color-primary)] font-medium":"text-slate-600 hover:bg-slate-50 border border-transparent"}`}><div className="flex items-center justify-between"><span className="truncate">{page.name}{page.isDefault&&<span className="text-[10px] bg-[color:color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[color:var(--color-primary)] rounded px-1 ml-1 font-medium">Home</span>}</span><span className="text-xs text-slate-400">{page.blocks.length}</span></div></button><div className="absolute right-1 top-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={e=>{e.stopPropagation();duplicatePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-blue-200 flex items-center justify-center text-blue-400 hover:text-blue-600"><HiOutlineDuplicate className="h-3 w-3"/></button>{!page.isDefault&&<button onClick={e=>{e.stopPropagation();deletePage(page.id)}} className="h-6 w-6 rounded-lg bg-white border border-red-200 flex items-center justify-center text-red-400 hover:text-red-600"><HiOutlineX className="h-3 w-3"/></button>}</div></div>))}</div>
-            </div>
-            <div className="border-t border-slate-200 p-3 flex gap-2">
-              <button onClick={()=>{setSettingsTab("config");setShowSettings(true);setShowPagesModal(false)}} className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineCog className="h-3.5 w-3.5"/>Configuración</button>
-              {site.isPublished&&<a href={publicUrl} target="_blank" rel="noopener" className="flex-1 rounded-lg border border-slate-200 text-xs font-medium py-2 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-1.5"><HiOutlineEye className="h-3.5 w-3.5"/>Ver sitio</a>}
-            </div>
-          </div>
-        </div>
+        <PagesModal
+          pages={site.pages}
+          activePageId={activePageId}
+          publicUrl={site.isPublished ? publicUrl : null}
+          onClose={() => setShowPagesModal(false)}
+          onSelect={(id) => { setActivePageId(id); setActiveBlockId(null); setShowPagesModal(false); }}
+          onAddPage={addPage}
+          onDuplicate={duplicatePage}
+          onDelete={deletePage}
+          onOpenSettings={() => { setSettingsTab("config"); setShowSettings(true); setShowPagesModal(false); }}
+        />
       )}
 
       <style jsx global>{`

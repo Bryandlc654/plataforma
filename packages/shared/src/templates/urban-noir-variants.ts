@@ -59,46 +59,46 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Volver a la tienda
           </a>
-          <h1 class="font-display font-bold text-4xl mb-2 uppercase tracking-tight">Checkout</h1>
-          <p class="text-gray-500 mb-10">Revisa tu pedido, completa tus datos y elige cómo pagar.</p>
+          <h1 class="font-display font-bold text-4xl mb-2 uppercase tracking-tight" data-ed="coTitle">${c.coTitle || "Checkout"}</h1>
+          <p class="text-gray-500 mb-10" data-ed="coSubtitle">${c.coSubtitle || "Revisa tu pedido, completa tus datos y elige cómo pagar."}</p>
           <div id="un-co-empty" class="hidden text-center py-16 border border-black bg-gray-50">
-            <p class="uppercase tracking-widest text-sm font-bold mb-4">Tu carrito está vacío</p>
-            <a href="${baseHome}" class="inline-block bg-black text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors">Volver a la tienda</a>
+            <p class="uppercase tracking-widest text-sm font-bold mb-4" data-ed="coEmptyText">${c.coEmptyText || "Tu carrito está vacío"}</p>
+            <a href="${baseHome}" class="inline-block bg-black text-white px-8 py-3 uppercase tracking-widest text-xs font-bold hover:bg-gray-800 transition-colors" data-ed="coBackText">${c.coBackText || "Volver a la tienda"}</a>
           </div>
           <div id="un-co-wrap">
             <div id="un-co-items" class="border border-black divide-y divide-gray-100 mb-6"></div>
             <div class="flex justify-between items-baseline border-t-2 border-black pt-4 mb-8">
-              <span class="uppercase tracking-widest font-bold">Total a pagar</span>
+              <span class="uppercase tracking-widest font-bold" data-ed="coTotalLabel">${c.coTotalLabel || "Total a pagar"}</span>
               <span id="un-co-total" class="font-display font-bold text-3xl">$0.00</span>
             </div>
             <form id="un-checkout-form" class="space-y-4">
-              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2">Datos de entrega</h2>
+              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2" data-ed="coDeliveryTitle">${c.coDeliveryTitle || "Datos de entrega"}</h2>
               <input name="customerName" required maxlength="120" placeholder="Nombre completo" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
               <input name="customerPhone" required maxlength="40" placeholder="Teléfono / WhatsApp" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
               <input name="customerEmail" type="email" maxlength="120" placeholder="Correo electrónico (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50">
               <textarea name="address" required maxlength="300" rows="2" placeholder="Dirección de entrega" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
               <textarea name="notes" maxlength="300" rows="2" placeholder="Notas (opcional)" class="w-full border border-black px-4 py-3 text-sm uppercase tracking-wider outline-none focus:bg-gray-50 resize-none"></textarea>
-              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2">Método de pago</h2>
+              <h2 class="font-display font-bold uppercase tracking-widest text-lg pt-4 pb-2" data-ed="coPaymentTitle">${c.coPaymentTitle || "Método de pago"}</h2>
               <div id="un-payment-box" class="space-y-3" data-paypal-enabled="${hasPaypal ? "1" : "0"}" data-paypal-client-id="${hasPaypal ? esc(pmPaypal.clientId) : ""}" data-paypal-mode="${pmPaypal.mode || "sandbox"}" data-paypal-currency="${esc(currency)}" data-payphone-enabled="${hasPayphone ? "1" : "0"}">
                 <label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
                   <input type="radio" name="payment" value="cod" ${defaultMethod === "cod" ? "checked" : ""} class="mt-1">
                   <span>
-                    <span class="block font-bold uppercase tracking-widest text-sm">Pago contra entrega</span>
-                    <span class="block text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</span>
+                    <span class="block font-bold uppercase tracking-widest text-sm" data-ed="coCodTitle">${c.coCodTitle || "Pago contra entrega"}</span>
+                    <span class="block text-xs text-gray-500" data-ed="coCodDesc">${c.coCodDesc || "Abona en efectivo cuando recibas tu pedido en la dirección indicada."}</span>
                   </span>
                 </label>
                 ${hasPaypal ? `<label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
                   <input type="radio" name="payment" value="paypal" ${defaultMethod === "paypal" ? "checked" : ""} class="mt-1">
                   <span>
                     <span class="block font-bold uppercase tracking-widest text-sm">PayPal</span>
-                    <span class="block text-xs text-gray-500">Pago seguro con tu cuenta de PayPal.</span>
+                    <span class="block text-xs text-gray-500" data-ed="coPaypalDesc">${c.coPaypalDesc || "Pago seguro con tu cuenta de PayPal."}</span>
                   </span>
                 </label>` : ""}
                 ${hasPayphone ? `<label class="flex items-start gap-3 border border-black p-4 cursor-pointer">
                   <input type="radio" name="payment" value="payphone" ${defaultMethod === "payphone" ? "checked" : ""} class="mt-1">
                   <span>
                     <span class="block font-bold uppercase tracking-widest text-sm">Tarjeta / Payphone</span>
-                    <span class="block text-xs text-gray-500">Paga con tarjeta (Visa, Mastercard, Diners, Discover) o Saldo Payphone sin salir de la página.</span>
+                    <span class="block text-xs text-gray-500" data-ed="coPayphoneDesc">${c.coPayphoneDesc || "Paga con tarjeta (Visa, Mastercard, Diners, Discover) o Saldo Payphone sin salir de la página."}</span>
                   </span>
                 </label>` : ""}
               </div>
@@ -106,8 +106,8 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                 <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0l3-3m-3 3l-3-3m3 9a9 9 0 110-18 9 9 0 010 18z" /></svg>
                   <div>
-                    <p class="font-bold uppercase tracking-widest text-sm">Pago contra entrega</p>
-                    <p class="text-xs text-gray-500">Abona en efectivo cuando recibas tu pedido en la dirección indicada.</p>
+                    <p class="font-bold uppercase tracking-widest text-sm" data-ed="coCodTitle">${c.coCodTitle || "Pago contra entrega"}</p>
+                    <p class="text-xs text-gray-500" data-ed="coCodDesc">${c.coCodDesc || "Abona en efectivo cuando recibas tu pedido en la dirección indicada."}</p>
                   </div>
                 </div>
                 <button type="submit" class="w-full bg-black text-white font-bold py-4 uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors">Confirmar pedido · $<span id="un-co-btn-amount">0.00</span></button>
@@ -116,8 +116,8 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                 <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c0 3.5-1.5 6-3 6s-3-2.5-3-6M12 11c3.5 0 5-1.5 5-3s-2-2-5-2m0 8c3.5 0 5 1.5 5 3s-2 2-5 2m0-8V5m0 6V3" /></svg>
                   <div>
-                    <p class="font-bold uppercase tracking-widest text-sm">Pago con PayPal</p>
-                    <p class="text-xs text-gray-500">Se abrirá PayPal para completar el pago de forma segura.</p>
+                    <p class="font-bold uppercase tracking-widest text-sm" data-ed="coPaypalTitle">${c.coPaypalTitle || "Pago con PayPal"}</p>
+                    <p class="text-xs text-gray-500" data-ed="coPaypalNote">${c.coPaypalNote || "Se abrirá PayPal para completar el pago de forma segura."}</p>
                   </div>
                 </div>
                 <div id="paypal-button-container" class="mt-1"></div>
@@ -127,8 +127,8 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                 <div class="bg-gray-50 border border-black p-4 flex items-start gap-3">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                   <div>
-                    <p class="font-bold uppercase tracking-widest text-sm">Pago con Payphone</p>
-                    <p class="text-xs text-gray-500">Paga con tarjeta de crédito, débito o Saldo Payphone. No saldrás de la página.</p>
+                    <p class="font-bold uppercase tracking-widest text-sm" data-ed="coPayphoneTitle">${c.coPayphoneTitle || "Pago con Payphone"}</p>
+                    <p class="text-xs text-gray-500" data-ed="coPayphoneNote">${c.coPayphoneNote || "Paga con tarjeta de crédito, débito o Saldo Payphone. No saldrás de la página."}</p>
                   </div>
                 </div>
                 <div id="pp-button" class="mt-1"></div>
@@ -140,10 +140,10 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-green-50 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
             </div>
-            <h3 class="font-display font-bold uppercase text-2xl mb-2">Pedido recibido</h3>
+            <h3 class="font-display font-bold uppercase text-2xl mb-2" data-ed="coSuccessTitle">${c.coSuccessTitle || "Pedido recibido"}</h3>
             <p class="text-gray-500 mb-1">Tu pedido <span id="un-order-id" class="font-bold text-black"></span> fue registrado con éxito.</p>
-            <p id="un-co-done-msg" class="text-gray-500 mb-8">Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega.</p>
-            <a href="${baseHome}" class="inline-block bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors">Seguir comprando</a>
+            <p id="un-co-done-msg" class="text-gray-500 mb-8" data-ed="coCodSuccess">${c.coCodSuccess || "Pagarás en efectivo al recibirlo. Te contactaremos en breve para coordinar la entrega."}</p>
+            <a href="${baseHome}" class="inline-block bg-black text-white font-bold py-3 px-8 uppercase tracking-widest text-xs hover:bg-gray-800 transition-colors" data-ed="coContinueText">${c.coContinueText || "Seguir comprando"}</a>
           </div>
         </div>
       </div>

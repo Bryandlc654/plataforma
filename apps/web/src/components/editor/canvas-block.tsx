@@ -6,8 +6,8 @@ import { HiOutlineAdjustments, HiOutlinePlus, HiOutlineX } from "react-icons/hi"
 import { BLOCK_META } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { ImageField } from "@/components/blocks/editors/image-field";
-import type { SitePalette } from "@/lib/site-palette";
-import { collectStrings, isHtmlElement, isTextLeaf, matchImageLeaf, matchMarkedLeaf, matchTextLeaf, setIn, type Path } from "./inline-edit";
+import type { SitePalette } from "@/lib/templates";
+import { BR_RE, collectStrings, domText, isHtmlElement, isTextLeaf, matchImageLeaf, matchMarkedLeaf, matchTextLeaf, setIn, type Path } from "./inline-edit";
 
 interface Props {
   /** Bloque tal como se dibuja (puede incluir enlaces inyectados). */
@@ -32,7 +32,9 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
   const leaves = useMemo(() => collectStrings(sourceContent), [sourceContent]);
 
   const startTextEdit = (el: HTMLElement, path: Path, original: string) => {
-    const multiline = original.includes("\n");
+    // Valores con <br> (p. ej. "FLAVOURS<br/>THAT STAY"): Mayús+Enter agrega otro salto.
+    const withBr = new RegExp(BR_RE.source, "i").test(original);
+    const multiline = original.includes("\n") || withBr;
     const prev = { outline: el.style.outline, offset: el.style.outlineOffset, cursor: el.style.cursor };
     el.contentEditable = "true";
     el.style.outline = "2px solid var(--color-secondary, #f29200)";
@@ -55,7 +57,11 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
       el.style.outline = prev.outline;
       el.style.outlineOffset = prev.offset;
       el.style.cursor = prev.cursor;
-      const next = multiline ? el.innerText : (el.textContent || "").replace(/\s*\n\s*/g, " ");
+      // domText y no innerText: innerText devuelve el texto con text-transform (MAYÚSCULAS).
+      const raw = domText(el).replace(/ /g, " ");
+      const next = withBr
+        ? raw.split("\n").map((l) => l.trim()).filter(Boolean).join("<br/>")
+        : multiline ? raw : raw.replace(/\s*\n\s*/g, " ");
       if (!cancelled && next !== original) onContentChange(block.id, setIn(sourceContent, path, next));
       setEpoch((n) => n + 1);
     };

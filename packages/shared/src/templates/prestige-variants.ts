@@ -119,7 +119,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
         ${(c.fields || []).map((f: any) => `
         <div>
           <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">${f.label}</label>
-          ${f.type === "textarea" ? `<textarea name="${f.name}" required="${f.required ? 'required' : ''}" class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:outline-none focus:border-primary transition-colors" placeholder="" rows="4"></textarea>` : `<input name="${f.name}" required="${f.required ? 'required' : ''}" class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:outline-none focus:border-primary transition-colors" type="${f.type || "text"}"/>`}
+          ${f.type === "textarea" ? `<textarea name="${f.name}" ${f.required ? 'required' : ''} class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:outline-none focus:border-primary transition-colors" placeholder="" rows="4"></textarea>` : `<input name="${f.name}" ${f.required ? 'required' : ''} class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest focus:outline-none focus:border-primary transition-colors" type="${f.type || "text"}"/>`}
         </div>`).join("")}
         <button class="w-full bg-primary text-on-primary hover:bg-primary/90 transition-colors px-8 py-4 rounded-lg font-label-sm text-label-sm uppercase tracking-wider flex items-center justify-center gap-2" type="submit">
           ${c.buttonText || "Enviar"}

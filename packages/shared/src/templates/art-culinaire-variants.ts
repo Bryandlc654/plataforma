@@ -162,16 +162,16 @@ ${(c.categories || []).map((cat: any) => `
   ${(c.fields || []).slice(0, 2).map((f: any) => `
   <div class="flex flex-col">
   <label class="font-label-sm text-label-sm uppercase tracking-widest text-primary mb-2" for="${f.name}">${f.label}</label>
-  <input name="${f.name}" required="${f.required ? 'required' : ''}" class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors" id="${f.name}" placeholder="${f.label}" type="${f.type || "text"}"/>
+  <input name="${f.name}" ${f.required ? 'required' : ''} class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors" id="${f.name}" placeholder="${f.label}" type="${f.type || "text"}"/>
   </div>`).join("")}
 </div>
 ${(c.fields || []).slice(2).map((f: any) => `
 <div class="flex flex-col">
 <label class="font-label-sm text-label-sm uppercase tracking-widest text-primary mb-2" for="${f.name}">${f.label}</label>
 ${f.type === "textarea" ? `
-<textarea name="${f.name}" required="${f.required ? 'required' : ''}" class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors resize-none" id="${f.name}" placeholder="${f.label}" rows="4"></textarea>
+<textarea name="${f.name}" ${f.required ? 'required' : ''} class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors resize-none" id="${f.name}" placeholder="${f.label}" rows="4"></textarea>
 ` : `
-<input name="${f.name}" required="${f.required ? 'required' : ''}" class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors" id="${f.name}" placeholder="${f.label}" type="${f.type || "text"}"/>
+<input name="${f.name}" ${f.required ? 'required' : ''} class="bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 px-0 py-3 font-body-md text-primary transition-colors" id="${f.name}" placeholder="${f.label}" type="${f.type || "text"}"/>
 `}
 </div>`).join("")}
 <button class="self-center bg-primary text-on-primary px-12 py-4 font-label-sm text-label-sm uppercase tracking-widest hover:bg-on-surface-variant transition-colors rounded-none mt-4" type="submit">

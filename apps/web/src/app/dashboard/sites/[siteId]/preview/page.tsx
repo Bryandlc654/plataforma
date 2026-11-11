@@ -7,7 +7,7 @@ import { HiOutlineArrowLeft } from "react-icons/hi";
 import api from "@/lib/api";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
-import { hasExplicitPalette, resolveSitePalette } from "@/lib/site-palette";
+import { hasExplicitPalette, resolveSitePalette } from "@/lib/templates";
 
 interface Block { id: string; type: string; content: any; styles?: any; sortOrder: number; }
 interface Page { id: string; name: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
