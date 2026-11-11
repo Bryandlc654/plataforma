@@ -11,6 +11,7 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcryptjs";
+import { randomInt, timingSafeEqual } from "crypto";
 import { v4 as uuid } from "uuid";
 import { PrismaService } from "../../prisma/prisma.service";
 import { EmailService } from "../email/email.service";
@@ -26,14 +27,16 @@ import {
 } from "../../shared/index";
 
 const TRIAL_DAYS = 3;
+/** Intentos fallidos por código; al llegar, hay que pedir uno nuevo (contador en la base). */
 const MAX_CODE_ATTEMPTS = 5;
-const CODE_LOCK_MS = 15 * 60 * 1000;
+/** Bloqueo de login: N contraseñas incorrectas de una cuenta dentro de la ventana. */
+const MAX_LOGIN_FAILURES = 10;
+const LOGIN_FAILURE_WINDOW_MS = 15 * 60 * 1000;
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private cleanupInterval: ReturnType<typeof setInterval> | null = null;
-  private codeAttempts = new Map<string, { count: number; lockedUntil: number }>();
 
   constructor(
     private prisma: PrismaService,
@@ -271,27 +274,15 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return { message: "Contraseña creada correctamente." };
   }
 
-  private assertCodeNotLocked(email: string) {
-    const entry = this.codeAttempts.get(email);
-    if (entry && entry.lockedUntil > Date.now()) {
-      throw new BadRequestException(
-        "Demasiados intentos fallidos. Solicita un código nuevo o inténtalo en unos minutos."
-      );
-    }
-  }
-
-  private registerCodeFailure(email: string) {
-    const entry = this.codeAttempts.get(email);
-    const count = (entry && entry.lockedUntil === 0 ? entry.count : 0) + 1;
-    this.codeAttempts.set(email, {
-      count,
-      lockedUntil: count >= MAX_CODE_ATTEMPTS ? Date.now() + CODE_LOCK_MS : 0,
-    });
+  /** Compara en tiempo constante (no revela cuántos dígitos coinciden). */
+  private sameCode(a: string, b: string): boolean {
+    const x = Buffer.from(String(a || ""));
+    const y = Buffer.from(String(b || ""));
+    return x.length === y.length && timingSafeEqual(x, y);
   }
 
   async verifyEmail(dto: VerifyEmailDto) {
     dto.email = dto.email.trim().toLowerCase();
-    this.assertCodeNotLocked(dto.email);
 
     const verification = await this.prisma.emailVerification.findFirst({
       where: { email: dto.email, usedAt: null },
@@ -306,11 +297,17 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException("El código ha expirado. Solicita uno nuevo.");
     }
 
-    if (verification.code !== dto.code) {
-      this.registerCodeFailure(dto.email);
+    // El contador vive en la base: vale igual con varias instancias del API.
+    if (verification.attempts >= MAX_CODE_ATTEMPTS) {
+      throw new BadRequestException("Demasiados intentos fallidos. Solicita un código nuevo.");
+    }
+    if (!this.sameCode(verification.code, dto.code)) {
+      await this.prisma.emailVerification.updateMany({
+        where: { id: verification.id, attempts: { lt: MAX_CODE_ATTEMPTS } },
+        data: { attempts: { increment: 1 } },
+      });
       throw new BadRequestException("El código es incorrecto. Revisa el correo enviado.");
     }
-    this.codeAttempts.delete(dto.email);
 
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -369,6 +366,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       await this.logFailedAttempt(dto.email, ipAddress, userAgent, "user_not_found");
       throw new UnauthorizedException("Credenciales incorrectas");
     }
+
+    await this.assertLoginNotLocked(user);
 
     const isValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isValid) {
@@ -643,11 +642,11 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   private generateVerificationCode(): string {
-    return String(Math.floor(100000 + Math.random() * 900000));
+    // Aleatorio criptográfico (Math.random es predecible).
+    return String(randomInt(100000, 1000000));
   }
 
   private async createVerificationCode(userId: string, email: string) {
-    this.codeAttempts.delete(email);
     const code = this.generateVerificationCode();
 
     // Secuencial (sin transacción): en MySQL/MariaDB el updateMany + create en una
@@ -787,6 +786,27 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const permissions = rolePermissions.map((rp) => rp.permission.name);
 
     return { roles, permissions };
+  }
+
+  /**
+   * Bloquea temporalmente una cuenta tras demasiadas contraseñas incorrectas. Se cuenta en
+   * la base (auditLog) para que valga con varias instancias y aunque el atacante cambie de IP.
+   */
+  private async assertLoginNotLocked(user: { id: string; lastLoginAt?: Date | null }) {
+    const windowStart = new Date(Date.now() - LOGIN_FAILURE_WINDOW_MS);
+    // Un login correcto reinicia el contador.
+    const since = user.lastLoginAt && user.lastLoginAt > windowStart ? user.lastLoginAt : windowStart;
+    const failures = await this.prisma.auditLog.count({
+      where: {
+        userId: user.id,
+        action: "auth.failed_login",
+        createdAt: { gt: since },
+        metadata: { path: "$.reason", equals: "invalid_password" },
+      },
+    });
+    if (failures >= MAX_LOGIN_FAILURES) {
+      throw new UnauthorizedException("Demasiados intentos fallidos. Espera 15 minutos o restablece tu contraseña.");
+    }
   }
 
   private async logFailedAttempt(email: string, ipAddress?: string, userAgent?: string, reason?: string) {

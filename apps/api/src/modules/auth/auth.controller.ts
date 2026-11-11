@@ -24,6 +24,7 @@ import {
   SetPasswordDto,
 } from "../../shared/index";
 import { Throttle } from "@nestjs/throttler";
+import { clientIpOf } from "../../common/throttler/client-ip";
 import { Public } from "../../common/decorators/public.decorator";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
@@ -134,7 +135,7 @@ export class AuthController {
   ) {
     const result: any = await this.authService.login(
       dto,
-      req.ip,
+      clientIpOf(req),
       req.headers["user-agent"]
     );
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
@@ -162,7 +163,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Request password reset" })
   async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: any) {
-    return this.authService.forgotPassword(dto, req.ip, req.headers["user-agent"]);
+    return this.authService.forgotPassword(dto, clientIpOf(req), req.headers["user-agent"]);
   }
 
   @Public()

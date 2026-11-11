@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { sessionRequest } from "@/lib/session";
 import api from "@/lib/api";
 
 interface User {
@@ -92,14 +93,15 @@ const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
-          const response: any = await api.post("/auth/login", { email, password });
+          // Proxy del mismo dominio: el refresh token queda en una cookie httpOnly.
+          const response: any = await sessionRequest("login", { email, password });
           const payload = response.data || response;
 
           set({
             user: payload.user,
             tenants: payload.tenants || [],
             accessToken: payload.accessToken || null,
-            refreshToken: payload.refreshToken || null,
+            refreshToken: null,
             isAuthenticated: true,
           });
 
@@ -149,14 +151,14 @@ const useAuthStore = create<AuthState>()(
       verifyEmail: async (email: string, code: string) => {
         set({ isLoading: true });
         try {
-          const response: any = await api.post("/auth/verify-email", { email, code });
+          const response: any = await sessionRequest("verify-email", { email, code });
           const payload = response.data || response;
 
           set({
             user: payload.user,
             tenants: payload.tenants || [],
             accessToken: payload.accessToken || null,
-            refreshToken: payload.refreshToken || null,
+            refreshToken: null,
             isAuthenticated: true,
           });
 
@@ -184,8 +186,8 @@ const useAuthStore = create<AuthState>()(
 
       logout: () => {
         const state = get();
-        const refreshToken = state.refreshToken;
-        api.post("/auth/logout", { refreshToken }).catch(() => {});
+        // Revoca la sesión en el API y borra la cookie httpOnly del refresh token.
+        sessionRequest("logout", state.refreshToken ? { refreshToken: state.refreshToken } : {}).catch(() => {});
         if (typeof document !== "undefined") {
           document.cookie = "auth_session=; path=/; max-age=0";
         }
@@ -205,12 +207,10 @@ const useAuthStore = create<AuthState>()(
 
       refreshAuth: async () => {
         try {
-          const response: any = await api.post("/auth/refresh", { refreshToken: get().refreshToken });
+          const legacy = get().refreshToken;
+          const response: any = await sessionRequest("refresh", legacy ? { refreshToken: legacy } : {});
           const payload = response.data || response;
-          set({
-            accessToken: payload.accessToken || get().accessToken,
-            refreshToken: payload.refreshToken || get().refreshToken,
-          });
+          set({ accessToken: payload.accessToken || get().accessToken, refreshToken: null });
         } catch {
           get().logout();
         }
@@ -233,8 +233,8 @@ const useAuthStore = create<AuthState>()(
         tenant: state.tenant,
         tenants: state.tenants,
         tenantId: state.tenantId,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
+        // Los tokens NO se guardan en localStorage (un XSS podría leerlos): el access token
+        // vive en memoria y el refresh token en una cookie httpOnly del proxy de sesión.
         isAuthenticated: state.isAuthenticated,
       }),
       skipHydration: true,

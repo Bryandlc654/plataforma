@@ -5,6 +5,7 @@ import { PublishingService } from "../publishing/publishing.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("payments")
 @Controller()
@@ -31,6 +32,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post("p/:subdomain/paypal/create-order")
   @ApiOperation({ summary: "Public PayPal create order - creates local order + PayPal order" })
   async createPaypalOrder(@Param("subdomain") subdomain: string, @Body() body: any) {
@@ -40,6 +42,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 15, ttl: 60000 } })
   @Post("p/:subdomain/paypal/capture-order")
   @ApiOperation({ summary: "Public PayPal capture - confirms payment and marks order paid" })
   async capturePaypalOrder(
@@ -55,6 +58,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post("p/:subdomain/payphone/create-order")
   @ApiOperation({ summary: "Public Payphone create order - creates local order + transaction id" })
   async createPayphoneOrder(@Param("subdomain") subdomain: string, @Body() body: any) {
@@ -64,6 +68,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 15, ttl: 60000 } })
   @Post("p/:subdomain/payphone/confirm")
   @ApiOperation({ summary: "Public Payphone confirm - verifies payment with Payphone and marks order paid" })
   async confirmPayphone(

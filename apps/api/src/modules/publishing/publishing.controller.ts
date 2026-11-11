@@ -7,6 +7,7 @@ import { PublishingService } from "./publishing.service";
 import { OrdersService } from "../orders/orders.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
+import { Throttle } from "@nestjs/throttler";
 import { RequirePermissions } from "../../common/decorators/permissions.decorator";
 import { PERMISSIONS } from "../../shared/index";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
@@ -89,6 +90,7 @@ export class PublishingController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post("p/:subdomain/orders")
   @ApiOperation({ summary: "Public checkout - creates order (cash on delivery)" })
   async checkout(

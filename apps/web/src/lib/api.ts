@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth-store";
 import { API_BASE_URL } from "@/lib/api-config";
+import { sessionRequest } from "@/lib/session";
 
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -63,23 +64,15 @@ async function attemptRefresh(): Promise<string | null> {
 
   refreshPromise = (async () => {
     try {
-      const { refreshToken } = useAuthStore.getState();
-      if (!refreshToken) return null;
-
-      const { data }: any = await axios.post(
-        `${api.defaults.baseURL}/auth/refresh`,
-        { refreshToken },
-        { withCredentials: true, timeout: 15000 }
-      );
-
+      // La cookie httpOnly viaja sola al proxy del mismo dominio. Un refreshToken en memoria
+      // solo existe en sesiones antiguas (guardado en localStorage) y se migra una vez.
+      const legacy = useAuthStore.getState().refreshToken;
+      const data: any = await sessionRequest("refresh", legacy ? { refreshToken: legacy } : {});
       const payload = data?.data || data;
       const accessToken = payload?.accessToken;
       if (!accessToken) return null;
 
-      useAuthStore.setState({
-        accessToken,
-        refreshToken: payload?.refreshToken || refreshToken,
-      });
+      useAuthStore.setState({ accessToken, refreshToken: null });
       return accessToken;
     } catch {
       return null;
@@ -127,7 +120,8 @@ api.interceptors.response.use(
       const isAuthEndpoint =
         url.includes("/auth/login") ||
         url.includes("/auth/register") ||
-        url.includes("/auth/refresh");
+        url.includes("/auth/refresh") ||
+        url.includes("/auth/verify-email");
       // For login/register/refresh, a 401 is just a failed credential (or
       // invalid refresh), not an expired session — don't force a reload,
       // so the form can show its own error message.

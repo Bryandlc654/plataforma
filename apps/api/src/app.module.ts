@@ -1,6 +1,6 @@
 import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { ThrottlerModule, ThrottlerGuard, seconds } from "@nestjs/throttler";
+import { ThrottlerModule, seconds } from "@nestjs/throttler";
 import { APP_GUARD } from "@nestjs/core";
 import configuration from "./config/configuration";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -45,6 +45,16 @@ import { KnowledgeBaseModule } from "./modules/knowledge-base/knowledge-base.mod
 import { PlatformModule } from "./modules/platform/platform.module";
 import { DomainsModule } from "./modules/domains/domains.module";
 
+import { RedisThrottlerStorage, createRedisFromEnv } from "./common/throttler/redis-throttler.storage";
+import { ClientIpThrottlerGuard } from "./common/throttler/client-ip";
+
+/** Redis para el rate limit (REDIS_URL o REDIS_HOST). Sin él, el conteo es por instancia. */
+const throttlerRedis = createRedisFromEnv();
+if (!throttlerRedis && process.env.NODE_ENV === "production") {
+  // eslint-disable-next-line no-console
+  console.warn("[throttler] Sin REDIS_URL: el rate limit se cuenta por instancia (no se comparte entre instancias de Cloud Run).");
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,12 +70,16 @@ import { DomainsModule } from "./modules/domains/domains.module";
         "../../.env.local",
       ],
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: seconds(parseInt(process.env.RATE_LIMIT_TTL || "60", 10)),
-        limit: parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: seconds(parseInt(process.env.RATE_LIMIT_TTL || "60", 10)),
+          limit: parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
+        },
+      ],
+      // Con varias instancias, el conteo en memoria se multiplica: con Redis es compartido.
+      ...(throttlerRedis ? { storage: new RedisThrottlerStorage(throttlerRedis) } : {}),
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -108,7 +122,7 @@ import { DomainsModule } from "./modules/domains/domains.module";
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: ClientIpThrottlerGuard,
     },
     {
       provide: APP_GUARD,

@@ -68,6 +68,8 @@ model EmailVerification {
   userId    String?   @map("user_id")
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
+  /// Intentos fallidos con este código (compartido entre instancias del API).
+  attempts  Int       @default(0)
   createdAt DateTime  @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -728,6 +730,7 @@ model Order {
   items  OrderItem[]
 
   @@index([tenantId, status])
+  @@index([status, createdAt])
   @@map("orders")
 }
 

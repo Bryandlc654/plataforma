@@ -268,6 +268,10 @@ export class PaymentsService {
     if (order.status === "paid") {
       return { orderId, status: "paid", paypalOrderId, captureId: null, alreadyPaid: true };
     }
+    // Vencido o cancelado: no se captura (con PayPal aún no se movió dinero).
+    if (order.status !== "pending") {
+      throw new BadRequestException("Este pedido venció o fue cancelado; vuelve a hacer el pedido");
+    }
 
     const accessToken = await this.getAccessToken(paypal);
     const base = this.paypalApiBase(paypal.mode);
@@ -440,10 +444,21 @@ export class PaymentsService {
       throw new BadRequestException("El monto confirmado por Payphone no coincide con el pedido");
     }
 
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: { status: "paid", paidAt: new Date(), paymentReference: String(json?.transactionId ?? txId) },
-    });
+    const paidData = { status: "paid", paidAt: new Date(), paymentReference: String(json?.transactionId ?? txId) };
+    // Condicional: si el barrido de vencidos lo canceló en paralelo, no se pisa sin más.
+    const marked = await this.prisma.order.updateMany({ where: { id: order.id, status: "pending" }, data: paidData });
+    if (marked.count === 0) {
+      // Payphone ya cobró: el pedido vencido se recupera. Si ya no hay stock, queda pagado
+      // con una nota para que el comercio lo resuelva (reembolso o reposición).
+      const reserved = await this.ordersService.reReserveStock(order.id);
+      const note = reserved
+        ? "Pago recibido después del vencimiento; stock reservado de nuevo."
+        : "ATENCIÓN: pago recibido después del vencimiento y ya no hay stock suficiente. Contacta al cliente.";
+      await this.prisma.order.updateMany({
+        where: { id: order.id, status: "cancelled" },
+        data: { ...paidData, notes: order.notes ? `${order.notes}\n${note}` : note },
+      });
+    }
 
     return {
       orderId: order.id,

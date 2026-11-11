@@ -12,15 +12,17 @@ function setup(order: any) {
     order: {
       findFirst: jest.fn().mockResolvedValue(order),
       update: jest.fn().mockResolvedValue({}),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
   };
-  const service = new PaymentsService(prisma, {} as any);
+  const ordersService: any = { reReserveStock: jest.fn().mockResolvedValue(true) };
+  const service = new PaymentsService(prisma, ordersService);
   const s = service as any;
   s.loadPaymentGateway = jest.fn().mockResolvedValue({ providers: { paypal, payphone } });
   s.paypalCredentials = jest.fn().mockResolvedValue(undefined);
   s.payphoneCredentials = jest.fn().mockResolvedValue(undefined);
   s.getAccessToken = jest.fn().mockResolvedValue("token");
-  return { service, prisma };
+  return { service, prisma, ordersService };
 }
 
 const capture = (value: string, opts: { reference?: string; currency?: string; status?: string } = {}) => ({
@@ -115,6 +117,26 @@ describe("PaymentsService.confirmPayphone", () => {
     (global as any).fetch.mockResolvedValueOnce(res(true, { statusCode: 3, transactionStatus: "Approved", amount: 2000, clientTransactionId: "order-2", transactionId: 99 }));
     const out: any = await service.confirmPayphone("t1", 99, "order-2");
     expect(out.status).toBe("paid");
-    expect(prisma.order.update).toHaveBeenCalled();
+    expect(prisma.order.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "order-2", status: "pending" } }));
+  });
+
+  it("si el pedido venció mientras se pagaba, vuelve a reservar stock y lo marca pagado", async () => {
+    const { service, prisma, ordersService } = setup(order);
+    prisma.order.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    (global as any).fetch.mockResolvedValueOnce(res(true, { statusCode: 3, transactionStatus: "Approved", amount: 2000, clientTransactionId: "order-2", transactionId: 99 }));
+    await service.confirmPayphone("t1", 99, "order-2");
+    expect(ordersService.reReserveStock).toHaveBeenCalledWith("order-2");
+    expect(prisma.order.updateMany).toHaveBeenLastCalledWith(expect.objectContaining({ where: { id: "order-2", status: "cancelled" }, data: expect.objectContaining({ status: "paid" }) }));
+  });
+});
+
+describe("PaymentsService.capturePaypalOrder con pedido vencido", () => {
+  it("no captura un pedido cancelado por vencimiento", async () => {
+    const fetchMock = jest.fn();
+    (global as any).fetch = fetchMock;
+    const { service, prisma } = setup({ id: "order-1", tenantId: "t1", status: "cancelled", paymentMethod: "paypal", paymentReference: "PP-1", totalAmount: "5.00", currency: "USD" });
+    await expect(service.capturePaypalOrder("t1", "PP-1", "order-1")).rejects.toBeInstanceOf(BadRequestException);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(prisma.order.update).not.toHaveBeenCalled();
   });
 });
