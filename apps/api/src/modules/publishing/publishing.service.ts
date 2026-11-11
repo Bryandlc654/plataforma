@@ -17,6 +17,8 @@ import {
   type SitePalette,
 } from "@plataforma/shared";
 import { resolveBlogSettings } from "../blog/blog.util";
+import { buildSnapshot, isSnapshot, snapshotPages } from "./published-snapshot";
+import { Prisma } from "@prisma/client";
 
 /** Ruta reservada de la página de error 404 del sitio/plantilla. */
 const ERROR_PAGE_PATH = "/404";
@@ -54,7 +56,7 @@ function decodeUnicodeEscapes(val: any): any {
 
 @Injectable()
 export class PublishingService {
-  private readonly htmlCache = new Map<string, { value: string; expiry: number }>();
+  private readonly htmlCache = new Map<string, { value: string; expiry: number; version?: string }>();
   private readonly staticCache = new Map<string, { value: string; expiry: number }>();
   private readonly inFlightRequests = new Map<string, Promise<any>>();
   private static readonly CACHE_MAX = 200;
@@ -71,12 +73,30 @@ export class PublishingService {
     return null;
   }
 
-  private setCached(cache: Map<string, { value: string; expiry: number }>, key: string, value: string, ttlMs: number) {
+  private setCached(cache: Map<string, { value: string; expiry: number; version?: string }>, key: string, value: string, ttlMs: number, version?: string) {
     if (cache.size >= PublishingService.CACHE_MAX) {
       const oldest = cache.keys().next().value;
       if (oldest) cache.delete(oldest);
     }
-    cache.set(key, { value, expiry: Date.now() + ttlMs });
+    cache.set(key, { value, expiry: Date.now() + ttlMs, version });
+  }
+
+  /**
+   * Versión del sitio para validar la caché. invalidateCache solo limpia la instancia que
+   * publicó; con varias instancias de Cloud Run las demás servían la versión vieja hasta
+   * 60 s. Comparar esta versión (una consulta mínima por índice único) lo evita.
+   */
+  private siteVersionOf(site: { id?: string; updatedAt?: Date | null; publishedAt?: Date | null; isPublished?: boolean } | null): string {
+    if (!site) return "missing";
+    return `${site.id}:${site.updatedAt?.getTime() ?? 0}:${site.publishedAt?.getTime() ?? 0}:${site.isPublished ? 1 : 0}`;
+  }
+
+  private async currentSiteVersion(subdomain: string): Promise<string> {
+    const site = await this.prisma.site.findFirst({
+      where: { OR: [{ subdomain }, { domain: subdomain }], deletedAt: null },
+      select: { id: true, updatedAt: true, publishedAt: true, isPublished: true },
+    });
+    return this.siteVersionOf(site);
   }
 
   private invalidateCache(subdomain: string) {
@@ -88,31 +108,50 @@ export class PublishingService {
     }
   }
 
+  /**
+   * Páginas que ve el público: la copia guardada al publicar, no el borrador del editor.
+   * Un sitio publicado antes de existir la copia la recibe la primera vez que se visita,
+   * con lo que el público ya estaba viendo (no cambia nada para sus visitantes).
+   */
+  private async publicPagesOf(site: { id: string; isPublished?: boolean; publishedSnapshot?: any }, withBlocks = true): Promise<any[]> {
+    if (isSnapshot(site.publishedSnapshot)) {
+      const pages = snapshotPages(site.publishedSnapshot);
+      return withBlocks ? pages : pages.map(({ blocks: _b, ...page }) => page);
+    }
+    const live = await this.prisma.sitePage.findMany({
+      where: { siteId: site.id },
+      include: { blocks: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (site.isPublished) {
+      await this.prisma.site
+        .updateMany({ where: { id: site.id, publishedSnapshot: { equals: Prisma.AnyNull } }, data: { publishedSnapshot: buildSnapshot(live) as any } })
+        .catch((err: any) => console.warn(`[publishing] No se pudo guardar la copia publicada de ${site.id}: ${err?.message}`));
+    }
+    return withBlocks ? live : live.map(({ blocks: _b, ...page }: any) => page);
+  }
+
   async publish(id: string, tenantId: string) {
     const site = await this.prisma.site.findFirst({
       where: { id, tenantId, deletedAt: null },
       include: {
         tenant: { select: { subdomain: true, customDomain: true } },
-        pages: {
-          include: { blocks: { orderBy: { sortOrder: "asc" } } },
-          orderBy: { sortOrder: "asc" },
-        },
       },
     });
 
     if (!site) throw new NotFoundException("Site not found");
-    for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
-    for (const page of site.pages) {
-      if (page.blocks) {
-        page.blocks = await this.resolveLinktreeBlocks(page.blocks, site.tenantId);
-      }
-    }
-    const html = this.renderSite(site);
+    // La copia publicada es el borrador tal cual (con las secciones ocultas: se filtran al dibujar).
+    const draftPages = await this.prisma.sitePage.findMany({
+      where: { siteId: id },
+      include: { blocks: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { sortOrder: "asc" },
+    });
+    const publishedAt = new Date();
 
     await this.prisma.site.update({
       where: { id },
-      data: { isPublished: true, publishedAt: new Date() },
+      data: { isPublished: true, publishedAt, publishedSnapshot: buildSnapshot(draftPages, publishedAt) as any },
     });
 
     const cacheKeys = [site.tenant?.subdomain, site.subdomain, site.domain].filter(
@@ -122,8 +161,8 @@ export class PublishingService {
 
     return {
       url: resolvePublicSiteUrl(site),
-      publishedAt: new Date(),
-      pages: site.pages.length,
+      publishedAt,
+      pages: draftPages.length,
     };
   }
 
@@ -192,16 +231,11 @@ export class PublishingService {
         isPublished: true,
         deletedAt: null,
       },
-      include: {
-        pages: {
-          include: { blocks: { orderBy: { sortOrder: "asc" } } },
-          orderBy: { sortOrder: "asc" },
-        },
-      },
     });
 
     if (!site) throw new NotFoundException("Site not found");
-    for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
+    const pages = await this.publicPagesOf(site);
+    for (const pg of pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
     return {
       site: {
@@ -212,7 +246,7 @@ export class PublishingService {
         seoTitle: site.seoTitle,
         seoDesc: site.seoDesc,
       },
-      pages: site.pages.map((p) => ({
+      pages: pages.map((p: any) => ({
         name: p.name,
         slug: p.slug,
         path: p.path,
@@ -227,8 +261,16 @@ export class PublishingService {
 
   async getPublicHtml(subdomain: string, path?: string): Promise<{ html: string; status: number }> {
     const cacheKey = `${subdomain}:${path || "/"}`;
-    const cached = this.getCached(this.htmlCache, cacheKey);
-    if (cached) return { html: cached, status: 200 };
+    const entry = this.htmlCache.get(cacheKey);
+    if (entry && entry.expiry > Date.now()) {
+      // Otra instancia pudo publicar, despublicar o cambiar el sitio: se valida la versión.
+      if (entry.version && entry.version === (await this.currentSiteVersion(subdomain))) {
+        return { html: entry.value, status: 200 };
+      }
+      this.htmlCache.delete(cacheKey);
+    } else if (entry) {
+      this.htmlCache.delete(cacheKey);
+    }
 
     if (this.inFlightRequests.has(cacheKey)) {
       return this.inFlightRequests.get(cacheKey);
@@ -241,15 +283,13 @@ export class PublishingService {
           deletedAt: null,
         },
         include: {
-          pages: {
-            include: { blocks: { orderBy: { sortOrder: "asc" } } },
-            orderBy: { sortOrder: "asc" },
-          },
           tenant: { select: { settings: true } },
         },
-      });
+      }) as any;
 
       if (!site) throw new NotFoundException("Site not found");
+      // Lo publicado, no el borrador del editor.
+      site.pages = await this.publicPagesOf(site);
       for (const pg of site.pages) pg.blocks = (pg.blocks || []).filter((b: any) => !b.styles?.hidden); // secciones ocultas desde el editor
 
       // Sitio despublicado: mostrar página de mantenimiento (503) o 404 según la config.
@@ -418,7 +458,7 @@ export class PublishingService {
       });
 
       const html = await this.renderFullSite(site, path, approvedReviews);
-      this.setCached(this.htmlCache, cacheKey, html, 60_000);
+      this.setCached(this.htmlCache, cacheKey, html, 60_000, this.siteVersionOf(site));
       return { html, status: 200 };
     })(), 10000, "Timeout rendering site").finally(() => {
       this.inFlightRequests.delete(cacheKey);
@@ -444,10 +484,10 @@ export class PublishingService {
           isPublished: true,
           deletedAt: null,
         },
-        include: { pages: { orderBy: { sortOrder: "asc" } } },
-      });
+      }) as any;
 
       if (!site) throw new NotFoundException("Site not found");
+      site.pages = await this.publicPagesOf(site, false);
 
       const urlBase = resolvePublicSiteUrl(site);
       const lastmod =
@@ -455,7 +495,7 @@ export class PublishingService {
         new Date().toISOString().split("T")[0];
 
       const sitemapPages = site.pages.filter(
-        (page) =>
+        (page: any) =>
           normalizePublicPath(page.path || "/") !== ERROR_PAGE_PATH && page.slug !== "404"
       );
       const entry = (loc: string, priority: string) =>

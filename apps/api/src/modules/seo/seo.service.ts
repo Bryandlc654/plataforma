@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { isSnapshot } from "../publishing/published-snapshot";
 import { PrismaService } from "../../prisma/prisma.service";
 import { resolvePublicSiteUrl, normalizePublicPath } from "../publishing/seo-helpers";
 
@@ -75,14 +76,16 @@ export class SeoService {
 
     const site = await this.prisma.site.findUnique({
       where: { id: siteId },
-      select: { domain: true, subdomain: true, publishedAt: true, pages: { select: { path: true, isDefault: true }, orderBy: { sortOrder: "asc" } } },
+      select: { domain: true, subdomain: true, publishedAt: true, publishedSnapshot: true, pages: { select: { path: true, isDefault: true }, orderBy: { sortOrder: "asc" } } },
     });
     if (!site) throw new NotFoundException("Site not found");
+    // Solo las páginas publicadas (la copia), no las del borrador del editor.
+    const pages: { path: string; isDefault: boolean }[] = isSnapshot(site.publishedSnapshot) ? site.publishedSnapshot.pages : site.pages;
 
     const urlBase = resolvePublicSiteUrl(site);
     const lastmod = site.publishedAt?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0];
 
-    const urls = site.pages.map((page) => {
+    const urls = pages.map((page) => {
       const loc = page.path === "/" ? urlBase : `${urlBase}${normalizePublicPath(page.path)}`;
       const priority = page.isDefault ? "1.0" : "0.8";
       return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;

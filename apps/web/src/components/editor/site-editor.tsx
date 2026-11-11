@@ -84,6 +84,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const res: any = await api.get(`/sites/${siteId}`);
       const s = (res.data || res) as Site;
       setSite(s);
+      // El borrador difiere de lo publicado (el público ve la copia del último "Publicar").
+      setHasChanges(!!(s as any).hasUnpublishedChanges);
       historyRef.current = [JSON.parse(JSON.stringify(s))];
       histPos.current = 0;
       setHistory([...historyRef.current]);
@@ -293,6 +295,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       setSite(p => p ? { ...p, pages: [...p.pages, { ...page, blocks: [] }] } : p);
       setActivePageId(page.id);
       setActiveBlockId(null);
+      setHasChanges(true);
       setToast("Página creada");
 
       // Enlace en el menú: el header es compartido, el API lo copia a todas las páginas.
@@ -316,6 +319,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         if (activePageId === pageId) setActivePageId(pages[0]?.id || null);
         return { ...p, pages };
       });
+      setHasChanges(true);
       setToast("Página eliminada");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al eliminar"); }
   };
@@ -332,6 +336,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         await api.post(`/pages/${newP.id}/blocks`, { type: b.type, content: JSON.parse(JSON.stringify(b.content)), ...(b.styles ? { styles: b.styles } : {}) });
       }
       await fetchSite(newP.id);
+      setHasChanges(true);
       setToast("Página duplicada");
     } catch (err: any) { setToast(err.response?.data?.message || "Error al duplicar"); }
   };

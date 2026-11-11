@@ -189,6 +189,7 @@ export function EditorTopBar(p: Props) {
             data-tour="publish"
             onClick={p.onPublish}
             disabled={p.publishing}
+            title={p.isPublished ? "Tus cambios se guardan como borrador: tus clientes los verán cuando publiques." : "Publica tu sitio para que tus clientes lo vean."}
             className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-b from-[color:color-mix(in_srgb,var(--color-primary)_88%,white)] to-[color:var(--color-primary)] px-4 text-xs font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60"
           >
             {p.publishing ? <><Spinner />Publicando…</> : p.isPublished ? "Publicar cambios" : "Publicar"}

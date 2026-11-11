@@ -313,6 +313,8 @@ model Site {
   seoDesc      String?  @map("seo_desc")
   settings     Json?
   publishedAt  DateTime? @map("published_at")
+  /// Copia de páginas y bloques guardada al publicar: es lo que ve el público (el editor guarda el borrador).
+  publishedSnapshot Json? @map("published_snapshot")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")

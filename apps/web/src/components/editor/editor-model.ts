@@ -2,7 +2,7 @@
 
 export interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 export interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
-export interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; }
+export interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; hasUnpublishedChanges?: boolean; }
 
 export const SHARED_BLOCK_TYPES = new Set(["header", "footer"]);
 export const byOrder = (a: Block, b: Block) => a.sortOrder - b.sortOrder;

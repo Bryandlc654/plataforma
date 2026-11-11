@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import * as sharp from "sharp";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { createR2Client, r2Bucket, r2UrlFor, r2ConfigProblems, describeR2Error } from "../../common/storage/r2";
+import { ALLOWED_UPLOADS_MESSAGE, detectUploadKind, rasterizeSvg } from "./upload-type";
 
 @Injectable()
 export class MediaService {
@@ -60,13 +61,32 @@ export class MediaService {
       fileBuffer = file.buffer;
     }
 
+    // El tipo se decide por el contenido real, no por el mimetype/extensión del cliente.
+    const kind = await detectUploadKind(fileBuffer);
+    if (!kind) {
+      if (file.path) fs.promises.unlink(file.path).catch(() => {});
+      throw new BadRequestException(ALLOWED_UPLOADS_MESSAGE);
+    }
+
     let finalBuffer = fileBuffer;
-    let mimeType = file.mimetype;
-    let storedExt = ext;
+    let mimeType = "application/pdf";
+    let storedExt = ".pdf";
     let width: number | null = null;
     let height: number | null = null;
 
-    if (file.mimetype.startsWith("image/") && !file.mimetype.includes("svg")) {
+    if (kind === "svg") {
+      // Un SVG puede ejecutar scripts si se abre directamente: se guarda como PNG.
+      try {
+        const png = await rasterizeSvg(fileBuffer);
+        finalBuffer = png.buffer;
+        width = png.width;
+        height = png.height;
+        mimeType = "image/png";
+        storedExt = ".png";
+      } catch {
+        throw new BadRequestException("No se pudo procesar el SVG. Súbelo como PNG o JPG.");
+      }
+    } else if (kind === "raster") {
       try {
         const image = sharp(fileBuffer);
         const metadata = await image.metadata();
@@ -83,7 +103,7 @@ export class MediaService {
           storedExt = ".jpg";
         }
       } catch {
-        finalBuffer = fileBuffer;
+        throw new BadRequestException("No se pudo procesar la imagen.");
       }
     }
 

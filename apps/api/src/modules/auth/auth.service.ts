@@ -11,7 +11,7 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcryptjs";
-import { randomInt, timingSafeEqual } from "crypto";
+import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { v4 as uuid } from "uuid";
 import { PrismaService } from "../../prisma/prisma.service";
 import { EmailService } from "../email/email.service";
@@ -32,6 +32,18 @@ const MAX_CODE_ATTEMPTS = 5;
 /** Bloqueo de login: N contraseñas incorrectas de una cuenta dentro de la ventana. */
 const MAX_LOGIN_FAILURES = 10;
 const LOGIN_FAILURE_WINDOW_MS = 15 * 60 * 1000;
+/** Un refresh token revocado que se vuelve a usar después de este margen indica robo. */
+const REFRESH_REUSE_GRACE_MS = 60 * 1000;
+
+/**
+ * Los tokens (refresh y reseteo de contraseña) se guardan como SHA-256: si se filtra la
+ * base, no sirven para entrar. Se aceptan también en claro solo para los creados antes
+ * de este cambio (vencen solos: 7 días el refresh, 1 hora el reseteo).
+ */
+export function hashToken(token: string): string {
+  return createHash("sha256").update(String(token || "")).digest("hex");
+}
+const tokenLookup = (token: string) => ({ in: [hashToken(token), token] });
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
@@ -416,18 +428,34 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         secret: this.configService.get<string>("jwt.refreshSecret"),
       });
 
-      const stored = await this.prisma.refreshToken.findUnique({
-        where: { token: dto.refreshToken },
+      const stored = await this.prisma.refreshToken.findFirst({
+        where: { token: tokenLookup(dto.refreshToken) },
       });
 
-      if (!stored || stored.revokedAt) {
+      if (!stored) {
+        throw new UnauthorizedException("Invalid refresh token");
+      }
+      if (stored.revokedAt) {
+        // Reutilizar un token ya rotado es señal de robo: se cierran todas las sesiones del
+        // usuario. Se deja un margen por si dos pestañas refrescaron casi a la vez.
+        if (Date.now() - stored.revokedAt.getTime() > REFRESH_REUSE_GRACE_MS) {
+          await this.prisma.refreshToken.updateMany({
+            where: { userId: stored.userId, revokedAt: null },
+            data: { revokedAt: new Date() },
+          });
+          this.logger.warn(`Refresh token reutilizado (usuario ${stored.userId}): sesiones revocadas`);
+        }
         throw new UnauthorizedException("Invalid refresh token");
       }
 
-      await this.prisma.refreshToken.update({
-        where: { id: stored.id },
+      // Revocación condicional: dos peticiones con el mismo token no rotan las dos.
+      const revoked = await this.prisma.refreshToken.updateMany({
+        where: { id: stored.id, revokedAt: null },
         data: { revokedAt: new Date() },
       });
+      if (revoked.count === 0) {
+        throw new UnauthorizedException("Invalid refresh token");
+      }
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
@@ -482,7 +510,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         data: { usedAt: new Date() },
       }),
       this.prisma.passwordResetToken.create({
-        data: { token: resetToken, userId: user.id, expiresAt },
+        data: { token: hashToken(resetToken), userId: user.id, expiresAt },
       }),
     ]);
 
@@ -509,8 +537,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const resetRecord = await this.prisma.passwordResetToken.findUnique({
-      where: { token: dto.token },
+    const resetRecord = await this.prisma.passwordResetToken.findFirst({
+      where: { token: tokenLookup(dto.token) },
     });
 
     if (!resetRecord || resetRecord.usedAt) {
@@ -627,7 +655,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   async logout(refreshToken: string, userId?: string) {
     if (refreshToken) {
       await this.prisma.refreshToken.updateMany({
-        where: { token: refreshToken },
+        where: { token: tokenLookup(refreshToken) },
         data: { revokedAt: new Date() },
       });
     }
@@ -752,7 +780,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     await this.prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        token: hashToken(refreshToken),
         userId: user.id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },

@@ -1,3 +1,4 @@
+import { hasUnpublishedChanges } from "../publishing/published-snapshot";
 import {
   Injectable,
   NotFoundException,
@@ -253,9 +254,10 @@ export class SitesService {
         id: true, tenantId: true, name: true, subdomain: true, domain: true,
         templateId: true, isPublished: true, primaryColor: true, seoTitle: true, seoDesc: true,
         logoUrl: true, faviconUrl: true, settings: true, publishedAt: true, createdAt: true, updatedAt: true,
+        publishedSnapshot: true,
         pages: {
           select: {
-            id: true, name: true, slug: true, path: true, isDefault: true, sortOrder: true, seoTitle: true, seoDesc: true,
+            id: true, name: true, slug: true, path: true, isDefault: true, sortOrder: true, seoTitle: true, seoDesc: true, isPublished: true,
             blocks: {
               select: { id: true, type: true, content: true, styles: true, sortOrder: true },
               orderBy: { sortOrder: "asc" },
@@ -267,7 +269,9 @@ export class SitesService {
       },
     });
     if (!site) throw new NotFoundException("Sitio no encontrado.");
-    return site;
+    // La copia publicada no se envía al editor: solo si el borrador difiere de ella.
+    const { publishedSnapshot, ...rest } = site as any;
+    return { ...rest, hasUnpublishedChanges: rest.isPublished ? hasUnpublishedChanges(publishedSnapshot, rest.pages) : false };
   }
 
   async update(id: string, tenantId: string, data: {
