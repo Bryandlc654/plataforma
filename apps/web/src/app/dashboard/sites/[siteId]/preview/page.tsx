@@ -6,6 +6,8 @@ import Link from "next/link";
 import { HiOutlineArrowLeft } from "react-icons/hi";
 import api from "@/lib/api";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
+import { useCatalog, usesCatalog } from "@/components/editor/catalog";
+import { applyCatalogToContent } from "@/lib/templates";
 import { TemplateGlobalStyles, templateWrapperClass } from "@/components/templates/template-global-styles";
 import { hasExplicitPalette, resolveSitePalette } from "@/lib/templates";
 
@@ -18,6 +20,8 @@ export default function SitePreviewPage() {
   const { siteId } = useParams() as { siteId: string };
   const [site, setSite] = useState<Site | null>(null);
   const [pageId, setPageId] = useState<string | null>(null);
+  // Productos en vivo: los mismos que mostrará el sitio publicado.
+  const catalog = useCatalog(usesCatalog(site?.pages as any));
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export default function SitePreviewPage() {
         <TemplateGlobalStyles globalStyles={site.settings?.globalStyles} pagePath={page?.path} palette={palette} colors={palette ? undefined : { primary: site.primaryColor, secondary: site.secondaryColor || site.primaryColor }} />
         {blocks.length === 0
           ? <div className="flex h-64 items-center justify-center text-[#616161]">Esta página todavía no tiene secciones.</div>
-          : blocks.map((b) => <BlockRenderer key={b.id} type={b.type} content={b.content} palette={palette} />)}
+          : blocks.map((b) => <BlockRenderer key={b.id} type={b.type} content={applyCatalogToContent(b.type, b.content, catalog.products)} palette={palette} />)}
       </div>
     </div>
   );

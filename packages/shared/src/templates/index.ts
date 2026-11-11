@@ -12,3 +12,4 @@ export * from "./themes";
 export * from "./site-palette";
 export * from "./generic-blocks";
 export * from "./template-schema.generated";
+export * from "./catalog";

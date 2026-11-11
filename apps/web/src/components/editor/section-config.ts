@@ -19,6 +19,10 @@ export interface SectionConfig {
   itemSelects?: Record<string, Record<string, SelectOption[]>>;
   /** Listas que se pueden llenar con productos de la tienda (módulo E-commerce). */
   productLists?: string[];
+  /** Selectores cuyas opciones vienen de la tienda (p. ej. sus categorías). */
+  dynamicFields?: Record<string, "productCategory">;
+  /** Ayudas propias de la sección. */
+  hints?: Record<string, string>;
 }
 
 const light: SelectOption = { label: "Claro", value: "" };
@@ -143,7 +147,27 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     labels: { newsletter: "Tipo de sección", placeholder: "Texto dentro del campo de correo", backgroundImage: "Imagen de la promoción" },
   },
   "urban-noir/portfolio": {
-    labels: { items: "Productos", currency: "Símbolo de moneda" },
+    selects: {
+      source: [{ label: "Productos de mi tienda (en vivo)", value: "" }, { label: "Elegidos a mano", value: "manual" }],
+      catalogSort: [
+        { label: "Destacados primero", value: "" }, { label: "Más nuevos", value: "newest" },
+        { label: "Precio: menor a mayor", value: "price-asc" }, { label: "Precio: mayor a menor", value: "price-desc" }, { label: "Nombre (A–Z)", value: "name" },
+      ],
+      catalogLimit: [{ label: "4 productos", value: "4" }, { label: "8 productos", value: "8" }, { label: "12 productos", value: "" }, { label: "16 productos", value: "16" }, { label: "24 productos", value: "24" }],
+      hideSoldOut: [{ label: "Mostrar también los agotados", value: "" }, { label: "Ocultar los agotados", value: "true" }],
+    },
+    dynamicFields: { catalogCategory: "productCategory" },
+    visible: (c) => c.source === "manual"
+      ? ["source", "items", "title", "subtitle", "currency", "addToCartText", "buttonText", "buttonUrl"]
+      : ["source", "catalogCategory", "catalogSort", "catalogLimit", "hideSoldOut", "title", "subtitle", "currency", "addToCartText", "buttonText", "buttonUrl"],
+    hints: {
+      source: "En vivo: los productos, precios y fotos se toman de tu tienda y se actualizan solos.",
+      catalogCategory: "Si la tienda no tiene productos todavía, se muestra la lista elegida a mano.",
+    },
+    labels: {
+      items: "Productos", currency: "Símbolo de moneda", source: "Origen de los productos", catalogCategory: "Categoría",
+      catalogSort: "Orden", catalogLimit: "Cantidad", hideSoldOut: "Productos agotados",
+    },
     itemLabels: { items: { link: "Página del producto", tag: "Etiqueta (ej. NUEVO, -20%)", image: "Foto" } },
     productLists: ["items"],
   },

@@ -7,7 +7,7 @@ import { sectionConfig, type SectionConfig } from "./section-config";
  * plantilla muestra se puede editar, aunque el contenido guardado aún no lo tenga.
  */
 
-export type FieldKind = "text" | "textarea" | "image" | "url" | "color" | "icon" | "boolean" | "number" | "select" | "list" | "stringList" | "group";
+export type FieldKind = "text" | "textarea" | "image" | "url" | "color" | "icon" | "boolean" | "number" | "select" | "list" | "stringList" | "group" | "productCategory";
 
 export interface FieldDef {
   key: string;
@@ -169,6 +169,7 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
   };
   // Las opciones de diseño van primero: cambian qué campos se muestran.
   Object.keys(cfg.selects || {}).forEach(add);
+  Object.keys(cfg.dynamicFields || {}).forEach(add);
   Object.keys(schema).forEach((k) => {
     if (schema[k].aliasOf && (c[k] == null || c[k] === "")) return;
     add(k);
@@ -187,10 +188,12 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     const s = schema[key];
     const value = c[key] ?? s?.default;
     const options = cfg.selects?.[key] || SELECTS[key];
-    const kind: FieldKind = cfg.selects?.[key]
+    const kind: FieldKind = cfg.dynamicFields?.[key]
+      ? cfg.dynamicFields[key]
+      : cfg.selects?.[key]
       ? "select"
       : s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
-    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: HINTS[key], kind, default: s?.default, options: kind === "select" ? options : undefined };
+    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: cfg.hints?.[key] || HINTS[key], kind, default: s?.default, options: kind === "select" ? options : undefined };
     if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : [], cfg);
     if (kind === "list" && cfg.productLists?.includes(key)) def.productList = true;
     // Objetos anidados (plantillas importadas): sus campos se editan agrupados.

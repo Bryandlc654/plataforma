@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../prisma/prisma.service";
-import { renderTemplateVariantHtml, renderGenericBlockHtml, genericPageBaseCss, sanitizeTemplateContent, THEMED_TEMPLATE_VARIANTS, getTemplateThemeColors, getTemplateThemeFonts } from "@plataforma/shared";
+import { applyCatalogToContent, isCatalogSection, renderTemplateVariantHtml, renderGenericBlockHtml, genericPageBaseCss, sanitizeTemplateContent, THEMED_TEMPLATE_VARIANTS, getTemplateThemeColors, getTemplateThemeFonts } from "@plataforma/shared";
 import {
   resolvePublicSiteUrl,
   normalizePublicPath,
@@ -709,66 +709,25 @@ ${blocksHtml}
     return resolved;
   }
 
+  /**
+   * Secciones de productos "en vivo": se llenan con los productos de la tienda según sus
+   * opciones (categoría, orden, cantidad, agotados). La selección es la misma que ve el editor
+   * (applyCatalogToContent en @plataforma/shared).
+   */
   private async hydrateCatalogProducts(blocks: any[], site: any): Promise<any[]> {
-    const portfolioBlocks = (blocks || []).filter(
-      (b: any) => b.type === "portfolio" && b.content && b.content.variant === "urban-noir"
-    );
-    if (portfolioBlocks.length === 0) return blocks;
+    const catalogBlocks = (blocks || []).filter((b: any) => isCatalogSection(b.type, b.content));
+    if (catalogBlocks.length === 0) return blocks;
 
     const products = await this.prisma.product.findMany({
       where: { tenantId: site.tenantId, isActive: true },
       orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
-      take: 12,
+      take: 500,
+      select: { id: true, name: true, price: true, comparePrice: true, images: true, description: true, isActive: true, isFeatured: true, stock: true, categoryId: true, createdAt: true },
     });
-    if (!products || products.length === 0) return blocks;
-
-    const items = products.map((p: any) => {
-      const priceNum = Number(p.price);
-      const compareNum = p.comparePrice != null ? Number(p.comparePrice) : null;
-      let tag: string | undefined;
-      if (compareNum != null && compareNum > priceNum) {
-        tag = `-${Math.max(1, Math.round((1 - priceNum / compareNum) * 100))}%`;
-      } else if (p.isFeatured) {
-        tag = "Nuevo";
-      }
-      return {
-        id: p.id,
-        title: p.name,
-        desc: p.description
-          ? (p.description.length > 60 ? `${p.description.slice(0, 60)}…` : p.description)
-          : undefined,
-        image: this.productGridImage(p.images, p.name),
-        price: this.fmtMoney(priceNum),
-        compareAt: compareNum != null ? this.fmtMoney(compareNum) : undefined,
-        tag,
-        link: "#",
-      };
-    });
-
-    for (const block of portfolioBlocks) {
-      block.content = { ...(block.content || {}), items };
+    for (const block of catalogBlocks) {
+      block.content = applyCatalogToContent(block.type, block.content, products as any, (url) => this.absoluteUrl(url));
     }
     return blocks;
-  }
-
-  private fmtMoney(v: number): string {
-    if (Number.isNaN(v)) return "";
-    return v.toFixed(2);
-  }
-
-  private productGridImage(images: any, name: string): string {
-    let url = "";
-    if (typeof images === "string") url = images;
-    else if (Array.isArray(images) && images.length) {
-      const first = images[0];
-      if (typeof first === "string") url = first;
-      else if (first && typeof first === "object") url = first.url || first.src || "";
-    } else if (images && typeof images === "object") {
-      url = images.url || images.src || "";
-    }
-    if (url) return this.absoluteUrl(url);
-    const label = encodeURIComponent(String(name || "Producto").replace(/\s+/g, "+"));
-    return `https://placehold.co/600x800/111827/FFFFFF?text=${label || "Producto"}`;
   }
 
   private urbanNoirCartHtml(subdomain: string, sitePublicUrl: string): string {

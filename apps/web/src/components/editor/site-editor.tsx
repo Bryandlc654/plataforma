@@ -13,6 +13,7 @@ import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SectionSettings } from "@/components/editor/section-settings";
 import { withDefaults } from "@/components/editor/template-fields";
+import { CatalogContext, useCatalog, usesCatalog } from "@/components/editor/catalog";
 import { LinkOptionsContext, type LinkOptions } from "@/components/editor/link-field";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
@@ -21,7 +22,7 @@ import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
 import { CanvasFrame } from "@/components/editor/canvas-frame";
-import { genericPageBaseCss, isTemplateVariant, paletteCssVariables, renderGenericBlockHtml, renderTemplateVariantHtml, sanitizeTemplateContent, templateCanvasClass, TEMPLATE_SCHEMA } from "@/lib/templates";
+import { genericPageBaseCss, isTemplateVariant, paletteCssVariables, renderGenericBlockHtml, renderTemplateVariantHtml, sanitizeTemplateContent, templateCanvasClass, TEMPLATE_SCHEMA, applyCatalogToContent } from "@/lib/templates";
 import { useConfirm } from "@/components/providers/confirm-provider";
 import { SHARED_BLOCK_TYPES, byOrder, patchBlock, remapBlockIds, sameJson, slugify, uniqueSlug, withSnapshotBlocks, type Block, type Site } from "@/components/editor/editor-model";
 import { PagesModal } from "@/components/editor/pages-modal";
@@ -263,6 +264,13 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       }),
     };
   }, [site?.pages, activePageId]);
+
+  // Productos en vivo: el lienzo muestra los mismos productos que el sitio publicado.
+  const catalog = useCatalog(usesCatalog(site?.pages));
+  const injectCatalog = (block: Block): Block => {
+    const content = applyCatalogToContent(block.type, block.content, catalog.products);
+    return content === block.content ? block : { ...block, content };
+  };
 
   /** Plantilla de diseño del sitio (la de sus secciones) y los tipos de sección que sabe dibujar. */
   const siteVariant: string | undefined = (site?.pages || []).flatMap((pg) => pg.blocks).map((b) => b.content?.variant).find((v) => v && TEMPLATE_SCHEMA[v]);
@@ -639,6 +647,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         <aside data-tour="sections" className="flex w-[300px] flex-shrink-0 flex-col border-r border-[#e3e3e3] bg-white">
           {activeBlock ? (
             <LinkOptionsContext.Provider value={linkOptions}>
+            <CatalogContext.Provider value={catalog}>
             <SectionSettings
               key={activeBlock.id}
               block={activeBlock}
@@ -649,6 +658,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               onDuplicate={() => duplicateBlock(activeBlock.id)}
               onDelete={() => deleteBlock(activeBlock.id)}
             />
+            </CatalogContext.Provider>
             </LinkOptionsContext.Provider>
           ) : (
             <SectionsSidebar
@@ -691,7 +701,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
             {activePage && sortedBlocks.length > 0 ? (
               <>
                 {sortedBlocks.map((block, idx) => (
-                  <CanvasBlock key={block.id} block={injectBlogNav(block)} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} palette={variantPalette} />
+                  <CanvasBlock key={block.id} block={injectBlogNav(injectCatalog(block))} active={activeBlockId === block.id} hidden={!!block.styles?.hidden} sourceContent={block.content} onSelect={setActiveBlockId} onInsertAfter={() => openPicker(idx)} onContentChange={updateBlock} palette={variantPalette} />
                 ))}
                 <button onClick={() => openPicker()} className="flex w-full items-center justify-center gap-2 border-t-2 border-dashed border-[#e3e3e3] py-6 text-sm font-medium text-[#8a8a8a] transition-colors hover:bg-[color:color-mix(in_srgb,var(--color-primary)_5%,transparent)] hover:text-[color:var(--color-primary)]">
                   <HiOutlinePlus className="h-4 w-4" /> Agregar sección

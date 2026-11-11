@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import {
   HiOutlineChevronDown, HiOutlineChevronLeft, HiOutlineChevronRight, HiOutlineDuplicate, HiOutlineEye, HiOutlineEyeOff,
   HiOutlineArrowDown, HiOutlineArrowUp, HiOutlinePlus, HiOutlineTrash, HiOutlineX,
@@ -10,6 +10,7 @@ import { ImageField } from "@/components/blocks/editors/image-field";
 import { IconPicker } from "./icon-picker";
 import { LinkField } from "./link-field";
 import { ProductPicker, productToItem } from "./product-picker";
+import { CatalogContext } from "./catalog";
 import { blankItem, fieldsFor, type FieldDef } from "./template-fields";
 
 interface Props {
@@ -64,6 +65,8 @@ function FieldInput({ field, value, onChange }: { field: FieldDef; value: any; o
         </div>
       );
     }
+    case "productCategory":
+      return <ProductCategorySelect label={field.label} value={String(value || "")} onChange={onChange} />;
     case "group":
       return (
         <fieldset className="rounded-lg border border-[#e3e3e3] p-3">
@@ -131,6 +134,25 @@ function FieldInput({ field, value, onChange }: { field: FieldDef; value: any; o
         </label>
       );
   }
+}
+
+/** Categorías reales de la tienda (más "Todas" y "Destacados"). */
+function ProductCategorySelect({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const { categories, products, loaded } = useContext(CatalogContext);
+  return (
+    <label className="block">
+      <Label>{label}</Label>
+      <select className={inputCls} value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Todos los productos</option>
+        <option value="featured">Productos destacados</option>
+        {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        {value && value !== "featured" && loaded && !categories.some((cat) => cat.id === value) && <option value={value}>Categoría eliminada</option>}
+      </select>
+      {loaded && products.length === 0 && (
+        <p className="mt-1 text-[12px] text-[#8e4b00]">Tu tienda aún no tiene productos. <a href="/dashboard/ecommerce" target="_blank" className="font-medium underline">Crear productos</a></p>
+      )}
+    </label>
+  );
 }
 
 function itemTitle(item: any, field: FieldDef, index: number): string {
