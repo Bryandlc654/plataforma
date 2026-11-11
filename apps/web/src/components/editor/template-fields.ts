@@ -7,7 +7,7 @@ import { sectionConfig, type SectionConfig } from "./section-config";
  * plantilla muestra se puede editar, aunque el contenido guardado aún no lo tenga.
  */
 
-export type FieldKind = "text" | "textarea" | "image" | "url" | "color" | "icon" | "boolean" | "number" | "select" | "list" | "stringList" | "group" | "productCategory";
+export type FieldKind = "text" | "textarea" | "image" | "url" | "color" | "icon" | "boolean" | "number" | "select" | "list" | "stringList" | "group" | "productCategory" | "picker";
 
 export interface FieldDef {
   key: string;
@@ -16,7 +16,7 @@ export interface FieldDef {
   hint?: string;
   kind: FieldKind;
   default?: unknown;
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string; art?: string }[];
   /** Lista que se puede llenar con productos de la tienda. */
   productList?: boolean;
   /** Para listas: campos de cada elemento. Para grupos (objetos): sus campos. */
@@ -112,7 +112,7 @@ export function schemaFor(type: string, content: any): SchemaFields {
   return (variant && TEMPLATE_SCHEMA[variant]?.[type]) || {};
 }
 
-function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: unknown; aliasOf?: string }> | undefined, values: any[], cfg: SectionConfig = {}): FieldDef[] {
+function itemFieldDefs(listKey: string, schemaItems: Record<string, TemplateFieldSchema> | undefined, values: any[], cfg: SectionConfig = {}): FieldDef[] {
   const keys: string[] = [];
   const hidden = new Set(cfg.itemHidden?.[listKey] || []);
   const labels = cfg.itemLabels?.[listKey] || {};
@@ -135,7 +135,8 @@ function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: 
       default: schemaItems?.[k]?.default,
       options: kind === "select" ? (itemSelect || (listKey === "fields" && k === "type" ? FORM_FIELD_TYPES : SELECTS[k])) : undefined,
     };
-    if (kind === "list") def.itemFields = itemFieldDefs(k, undefined, Array.isArray(sample) ? sample : []);
+    // Lista dentro de cada elemento (p. ej. el submenú de un enlace): sus campos salen del esquema.
+    if (kind === "list") def.itemFields = itemFieldDefs(`${listKey}.${k}`, schemaItems?.[k]?.items, Array.isArray(sample) ? sample : [], cfg);
     if (kind === "group") def.itemFields = groupFieldDefs(sample);
     return def;
   });
@@ -168,6 +169,7 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     keys.push(k);
   };
   // Las opciones de diseño van primero: cambian qué campos se muestran.
+  Object.keys(cfg.pickers || {}).forEach(add);
   Object.keys(cfg.selects || {}).forEach(add);
   Object.keys(cfg.dynamicFields || {}).forEach(add);
   Object.keys(schema).forEach((k) => {
@@ -188,12 +190,14 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     const s = schema[key];
     const value = c[key] ?? s?.default;
     const options = cfg.selects?.[key] || SELECTS[key];
-    const kind: FieldKind = cfg.dynamicFields?.[key]
+    const kind: FieldKind = cfg.pickers?.[key]
+      ? "picker"
+      : cfg.dynamicFields?.[key]
       ? cfg.dynamicFields[key]
       : cfg.selects?.[key]
       ? "select"
       : s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
-    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: cfg.hints?.[key] || HINTS[key], kind, default: s?.default, options: kind === "select" ? options : undefined };
+    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: cfg.hints?.[key] || HINTS[key], kind, default: s?.default, options: kind === "select" ? options : kind === "picker" ? cfg.pickers![key] : undefined };
     if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : [], cfg);
     if (kind === "list" && cfg.productLists?.includes(key)) def.productList = true;
     // Objetos anidados (plantillas importadas): sus campos se editan agrupados.

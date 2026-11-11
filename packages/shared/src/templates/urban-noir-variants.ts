@@ -174,12 +174,95 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
     }
 
     case "header": {
+      /*
+       * Encabezado de tienda con 4 diseños (solo en plantillas de e-commerce):
+       *   ""         Clásico: logo a la izquierda, menú al centro, iconos a la derecha
+       *   "centered" Logo centrado arriba y menú debajo
+       *   "split"    Menú a la izquierda, logo al centro, iconos a la derecha
+       *   "minimal"  Logo e iconos; el menú se abre en un panel (también en escritorio)
+       */
       const links = c.links && c.links.length ? c.links : [
         { label: "Inicio", url: "/" },
         { label: "Catálogo", url: "#catalogo" },
         { label: "Promos", url: "#promociones" },
         { label: "Nosotros", url: "#beneficios" },
       ];
+      const layout = String(c.layout || "");
+      const tone = String(c.headerStyle || ""); // "" claro · "dark" oscuro · "overlay" sobre la imagen
+      const isDark = tone === "dark" || tone === "overlay";
+      // Fijo al bajar: "sticky" no tapa el contenido de las páginas. Sobre la imagen va "fixed".
+      const stick = c.sticky === "static" ? "relative" : tone === "overlay" ? "fixed" : "sticky top-0";
+      const bar = tone === "dark" ? "bg-black text-white border-b border-white/20"
+        : tone === "overlay" ? "bg-black/30 backdrop-blur-md text-white border-b border-white/20"
+        : "bg-white/95 backdrop-blur-md text-black border-b border-black";
+      const muted = isDark ? "hover:text-gray-300" : "hover:text-gray-500";
+      const panel = isDark ? "bg-black text-white border border-white/20" : "bg-white text-black border border-black";
+      const logoH = c.logoSize === "sm" ? "h-8" : c.logoSize === "lg" ? "h-14" : "h-10";
+      const logoText = c.logoSize === "sm" ? "text-xl" : c.logoSize === "lg" ? "text-3xl" : "text-2xl";
+      const showCart = c.showCart !== "hide";
+      const searchHref = c.showSearch === "show" ? (c.searchUrl || "#catalogo") : c.searchUrl;
+      const closeMobile = "var m=this.closest('[data-un-header]').querySelector('[data-un-mobile]');if(m)m.classList.add('hidden')";
+
+      const logo = `<a data-analytics-click data-analytics-type="click" data-analytics-label="logo" href="${homeUrl}" class="flex items-center gap-3 font-display font-bold ${logoText} tracking-tighter">${c.logoImage ? `<img src="${c.logoImage}" alt="${c.logoText || "URBAN NOIR"}" class="${logoH} w-auto object-contain">` : ""}${c.logoImage && c.hideLogoText ? "" : `<span>${c.logoText || "URBAN NOIR"}</span>`}</a>`;
+
+      // Enlace del menú, con submenú desplegable si tiene "children".
+      const desktopLink = (l: any) => {
+        const kids = Array.isArray(l.children) ? l.children.filter((k: any) => k && k.label) : [];
+        const cls = `${l.highlight ? "text-red-600 hover:text-red-700" : muted} transition font-medium`;
+        if (!kids.length) return `<a href="${siteHref(l.url)}" class="${cls}">${l.label}</a>`;
+        return `<div class="relative group">
+          <a href="${siteHref(l.url)}" class="${cls} inline-flex items-center gap-1">${l.label}<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg></a>
+          <div class="absolute left-0 top-full z-50 hidden pt-3 group-hover:block">
+            <div class="${panel} min-w-[200px] py-2 shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+              ${kids.map((k: any) => `<a href="${siteHref(k.url)}" class="block px-4 py-2 text-sm ${muted} transition">${k.label}</a>`).join("")}
+            </div>
+          </div>
+        </div>`;
+      };
+      const mobileLink = (l: any) => {
+        const kids = Array.isArray(l.children) ? l.children.filter((k: any) => k && k.label) : [];
+        return `<a href="${siteHref(l.url)}" onclick="${closeMobile}" class="py-3 border-b ${isDark ? "border-white/10" : "border-gray-100"} font-bold uppercase tracking-widest text-sm ${l.highlight ? "text-red-600" : ""}">${l.label}</a>${kids.map((k: any) => `<a href="${siteHref(k.url)}" onclick="${closeMobile}" class="py-2 pl-4 text-sm ${isDark ? "text-gray-300" : "text-gray-600"}">${k.label}</a>`).join("")}`;
+      };
+      const menu = (cls: string) => `<div class="${cls}">${links.map(desktopLink).join("")}</div>`;
+
+      const icons = `<div class="flex items-center gap-4">
+        ${searchHref ? `<a href="${siteHref(searchHref)}" aria-label="Buscar" class="${muted} transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </a>` : ""}
+        ${showCart ? `<button type="button" id="un-cart-btn" aria-label="Carrito" class="${muted} transition relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+          <span data-count class="absolute -top-1 -right-2 ${isDark ? "bg-white text-black" : "bg-black text-white"} text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="display:none">0</span>
+        </button>` : ""}
+        <button type="button" aria-label="Menú" onclick="this.closest('[data-un-header]').querySelector('[data-un-mobile]').classList.toggle('hidden')" class="${layout === "minimal" ? "" : "md:hidden"} ${muted} transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+      </div>`;
+
+      const row = layout === "centered"
+        ? `<div class="grid grid-cols-3 items-center h-20">
+            <div></div>
+            <div class="flex justify-center">${logo}</div>
+            <div class="flex justify-end">${icons}</div>
+          </div>
+          ${menu(`hidden md:flex justify-center gap-8 border-t ${isDark ? "border-white/10" : "border-gray-200"} py-3`)}`
+        : layout === "split"
+        ? `<div class="grid grid-cols-3 items-center h-20">
+            ${menu("hidden md:flex items-center gap-6")}
+            <div class="flex justify-center col-start-2">${logo}</div>
+            <div class="flex justify-end col-start-3">${icons}</div>
+          </div>`
+        : layout === "minimal"
+        ? `<div class="flex justify-between items-center h-20">${logo}${icons}</div>`
+        : `<div class="flex justify-between items-center h-20">
+            <div class="flex-shrink-0 flex items-center">${logo}</div>
+            ${menu("hidden md:flex items-center gap-8")}
+            ${icons}
+          </div>`;
+
+      const announcement = c.announcement
+        ? `<div class="${c.announcementStyle === "light" ? "bg-white text-black border-b border-black" : "bg-black text-white"} text-center text-xs font-bold uppercase tracking-widest py-2 px-4">${c.announcementUrl ? `<a href="${siteHref(c.announcementUrl)}" class="hover:underline">${c.announcement}</a>` : c.announcement}</div>`
+        : "";
+
       return `
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@400;500;700&display=swap');
@@ -189,33 +272,17 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
         ::-webkit-scrollbar-track{background:#f1f1f1}
         ::-webkit-scrollbar-thumb{background:#000}
       </style>
-      <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-black">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center h-20">
-            <div class="flex-shrink-0 flex items-center">
-              <a data-analytics-click data-analytics-type="click" data-analytics-label="logo" href="${homeUrl}" class="flex items-center gap-3 font-display font-bold text-2xl tracking-tighter">${c.logoImage ? `<img src="${c.logoImage}" alt="${c.logoText || "URBAN NOIR"}" class="h-10 w-auto object-contain">` : ""}${c.logoImage && c.hideLogoText ? "" : `<span>${c.logoText || "URBAN NOIR"}</span>`}</a>
-            </div>
-            <div class="hidden md:flex space-x-8">
-              ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-black hover:text-gray-500 transition font-medium">${l.label}</a>`).join("")}
-            </div>
-            <div class="flex items-center space-x-4">
-              ${c.searchUrl ? `<a href="${siteHref(c.searchUrl)}" aria-label="Buscar" class="hover:text-gray-500 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </a>` : ""}
-              <button type="button" id="un-cart-btn" aria-label="Carrito" class="hover:text-gray-500 transition relative">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                <span data-count class="absolute -top-1 -right-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="display:none">0</span>
-              </button>
-              <button type="button" aria-label="Menú" onclick="this.closest('nav').querySelector('[data-un-mobile]').classList.toggle('hidden')" class="md:hidden hover:text-gray-500 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-              </button>
-            </div>
+      <header data-un-header class="${stick} w-full z-50">
+        ${announcement}
+        <nav class="${bar}">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            ${row}
           </div>
-        </div>
-        <div data-un-mobile class="hidden md:hidden border-t border-black bg-white px-4 py-4 flex flex-col">
-          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="py-3 border-b border-gray-100 font-bold uppercase tracking-widest text-sm">${l.label}</a>`).join("")}
-        </div>
-      </nav>`;
+          <div data-un-mobile class="hidden ${layout === "minimal" ? "" : "md:hidden"} border-t ${isDark ? "border-white/20 bg-black text-white" : "border-black bg-white text-black"} px-4 py-4 flex flex-col">
+            ${links.map(mobileLink).join("")}
+          </div>
+        </nav>
+      </header>`;
     }
 
     case "hero": {

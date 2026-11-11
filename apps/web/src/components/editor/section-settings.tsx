@@ -12,6 +12,7 @@ import { LinkField } from "./link-field";
 import { ProductPicker, productToItem } from "./product-picker";
 import { CatalogContext } from "./catalog";
 import { blankItem, fieldsFor, type FieldDef } from "./template-fields";
+import { sectionConfig } from "./section-config";
 
 interface Props {
   block: { id: string; type: string; content: any };
@@ -65,6 +66,8 @@ function FieldInput({ field, value, onChange }: { field: FieldDef; value: any; o
         </div>
       );
     }
+    case "picker":
+      return <PickerInput field={field} value={value} onChange={onChange} />;
     case "productCategory":
       return <ProductCategorySelect label={field.label} value={String(value || "")} onChange={onChange} />;
     case "group":
@@ -246,6 +249,73 @@ function ListControl({ field, value, onChange }: { field: FieldDef; value: any[]
   );
 }
 
+/** Dibujo esquemático de cada diseño de encabezado (logo ■, menú ▬, iconos ●). */
+function LayoutArt({ art }: { art: string }) {
+  const logo = <span className="h-2 w-5 rounded-sm bg-[#303030]" />;
+  const menu = <span className="flex gap-0.5">{[0, 1, 2].map((i) => <span key={i} className="h-1 w-2.5 rounded-sm bg-[#b5b5b5]" />)}</span>;
+  const icons = <span className="flex gap-0.5">{[0, 1].map((i) => <span key={i} className="h-1.5 w-1.5 rounded-full bg-[#8a8a8a]" />)}</span>;
+  const burger = <span className="flex flex-col gap-[2px]">{[0, 1, 2].map((i) => <span key={i} className="h-[2px] w-2.5 bg-[#8a8a8a]" />)}</span>;
+  const bar = "flex h-7 items-center justify-between rounded-sm border border-[#d4d4d4] bg-white px-1.5";
+  if (art === "centered") {
+    return (
+      <div className="rounded-sm border border-[#d4d4d4] bg-white">
+        <div className="flex h-5 items-center justify-between px-1.5"><span className="w-4" />{logo}{icons}</div>
+        <div className="flex h-3 items-center justify-center border-t border-[#ebebeb]">{menu}</div>
+      </div>
+    );
+  }
+  if (art === "split") return <div className={bar}>{menu}{logo}{icons}</div>;
+  if (art === "minimal") return <div className={bar}>{logo}<span className="flex items-center gap-1">{icons}{burger}</span></div>;
+  return <div className={bar}>{logo}{menu}{icons}</div>;
+}
+
+/** Selector con tarjetas: cada opción muestra un dibujo de cómo se verá. */
+function PickerInput({ field, value, onChange }: { field: FieldDef; value: any; onChange: (v: any) => void }) {
+  const current = String(value ?? "");
+  return (
+    <div>
+      <Label>{field.label}</Label>
+      <div className="grid grid-cols-2 gap-2">
+        {(field.options || []).map((o) => {
+          const active = o.value === current;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => onChange(o.value)}
+              className={`rounded-lg border p-2 text-left transition ${active ? "border-[color:var(--color-primary)] bg-[color:color-mix(in_srgb,var(--color-primary)_6%,white)] ring-1 ring-[color:var(--color-primary)]" : "border-[#e3e3e3] bg-[#fafafa] hover:border-[#b5b5b5]"}`}
+              aria-pressed={active}
+            >
+              <LayoutArt art={o.art || ""} />
+              <span className="mt-1.5 block text-[12px] font-medium text-[#303030]">{o.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Marco de los ajustes: título de la sección, contenido con desplazamiento y acciones. */
+function SettingsShell({ block, hidden, onBack, onToggleHidden, onDuplicate, onDelete, children }: Omit<Props, "onChange"> & { children: React.ReactNode }) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-1 border-b border-[#ebebeb] px-2 py-2.5">
+        <button onClick={onBack} className="rounded-md p-1.5 text-[#616161] hover:bg-[#f1f1f1]" title="Volver a las secciones"><HiOutlineChevronLeft className="h-4 w-4" /></button>
+        <h2 className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#303030]">{BLOCK_META[block.type]?.label || block.type}</h2>
+        <button onClick={onToggleHidden} className="rounded-md p-1.5 text-[#616161] hover:bg-[#f1f1f1]" title={hidden ? "Mostrar sección" : "Ocultar sección"}>
+          {hidden ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto">{children}</div>
+      <div className="flex gap-2 border-t border-[#ebebeb] p-3">
+        <button onClick={onDuplicate} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#e3e3e3] bg-white py-1.5 text-[13px] font-medium text-[#303030] shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-[#f7f7f7]"><HiOutlineDuplicate className="h-4 w-4" />Duplicar</button>
+        <button onClick={onDelete} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#e3e3e3] bg-white py-1.5 text-[13px] font-medium text-[#c70a24] shadow-[0_1px_0_rgba(0,0,0,0.05)] hover:bg-[#fff1f0]"><HiOutlineTrash className="h-4 w-4" />Eliminar sección</button>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Ajustes de una sección en la barra izquierda (como el personalizador de temas de Shopify).
  * El formulario sale del esquema de la plantilla: todo lo que la sección muestra es editable.
@@ -255,12 +325,39 @@ export function SectionSettings({ block, hidden, onChange, onBack, onToggleHidde
   const content = block.content || {};
   const set = (key: string, v: any) => onChange({ ...content, [key]: v });
   const [showAll, setShowAll] = useState(false);
+  const cfg = sectionConfig(content.variant, block.type);
 
   // Primero lo esencial (textos e imágenes); las listas y el resto, debajo.
   const simple = fields.filter((f) => f.kind !== "list" && f.kind !== "stringList");
   const lists = fields.filter((f) => f.kind === "list" || f.kind === "stringList");
   const LIMIT = 14;
   const visibleSimple = showAll ? simple : simple.slice(0, LIMIT);
+
+  const renderField = (f: FieldDef) =>
+    f.kind === "list" || f.kind === "stringList"
+      ? <ListControl key={f.key} field={f} value={(content[f.key] ?? f.default ?? []) as any[]} onChange={(v) => set(f.key, v)} />
+      : <FieldControl key={f.key} field={f} value={content[f.key] ?? f.default ?? ""} onChange={(v) => set(f.key, v)} />;
+
+  // Secciones con grupos (Diseño, Logo, Menú…): cada grupo con su título, en su orden.
+  if (cfg.groups) {
+    const byKey = new Map(fields.map((f) => [f.key, f]));
+    const grouped = new Set(cfg.groups.flatMap((g) => g.keys));
+    const rest = fields.filter((f) => !grouped.has(f.key));
+    const groups = [...cfg.groups.map((g) => ({ title: g.title, fields: g.keys.map((k) => byKey.get(k)).filter(Boolean) as FieldDef[] })), { title: "Más opciones", fields: rest }]
+      .filter((g) => g.fields.length > 0);
+    return (
+      <SettingsShell block={block} hidden={hidden} onBack={onBack} onToggleHidden={onToggleHidden} onDuplicate={onDuplicate} onDelete={onDelete}>
+        <div className="divide-y divide-[#ebebeb]">
+          {groups.map((g) => (
+            <section key={g.title} className="space-y-3 px-4 py-4">
+              <h3 className="text-[12px] font-semibold uppercase tracking-wide text-[#616161]">{g.title}</h3>
+              {g.fields.map(renderField)}
+            </section>
+          ))}
+        </div>
+      </SettingsShell>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -283,9 +380,7 @@ export function SectionSettings({ block, hidden, onChange, onBack, onToggleHidde
             {showAll ? "Mostrar menos" : `Mostrar ${simple.length - LIMIT} campos más`}
           </button>
         )}
-        {lists.map((f) => (
-          <ListControl key={f.key} field={f} value={(content[f.key] ?? f.default ?? []) as any[]} onChange={(v) => set(f.key, v)} />
-        ))}
+        {lists.map(renderField)}
       </div>
 
       <div className="flex gap-2 border-t border-[#ebebeb] p-3">

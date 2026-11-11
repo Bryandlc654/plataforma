@@ -6,7 +6,8 @@ export interface TemplateFieldSchema {
   list?: boolean;
   /** Nombre alternativo de otro campo (p. ej. description → desc): se oculta salvo que tenga valor. */
   aliasOf?: string;
-  items?: Record<string, { default?: unknown; aliasOf?: string }>;
+  /** Campos de cada elemento (si es una lista). Pueden ser a su vez listas (submenús). */
+  items?: Record<string, TemplateFieldSchema>;
 }
 
 export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, TemplateFieldSchema>>> = {
@@ -193,7 +194,13 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         "items": {
           "title": {},
           "items": {
-            "default": []
+            "list": true,
+            "default": [],
+            "items": {
+              "title": {},
+              "description": {},
+              "price": {}
+            }
           }
         }
       }
@@ -2932,7 +2939,16 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
                 "icon": "fa-brands fa-instagram",
                 "url": "#"
               }
-            ]
+            ],
+            "list": true,
+            "items": {
+              "icon": {
+                "default": "fa-brands fa-twitter"
+              },
+              "url": {
+                "default": "#"
+              }
+            }
           }
         }
       },
@@ -3123,7 +3139,8 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
               "Optimización de presupuesto",
               "Retargeting estratégico",
               "Reportes de rendimiento"
-            ]
+            ],
+            "list": true
           },
           "linkColor": {
             "default": "text-[#fa7202]"
@@ -3643,15 +3660,39 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           },
           "url": {
             "default": "/"
-          }
+          },
+          "children": {
+            "list": true,
+            "default": [],
+            "items": {
+              "label": {},
+              "url": {}
+            }
+          },
+          "highlight": {}
         }
+      },
+      "layout": {
+        "default": ""
+      },
+      "headerStyle": {
+        "default": ""
+      },
+      "sticky": {},
+      "logoSize": {},
+      "showCart": {},
+      "showSearch": {},
+      "searchUrl": {
+        "default": "#catalogo"
       },
       "logoImage": {},
       "logoText": {
         "default": "URBAN NOIR"
       },
       "hideLogoText": {},
-      "searchUrl": {}
+      "announcement": {},
+      "announcementStyle": {},
+      "announcementUrl": {}
     },
     "hero": {
       "backgroundImage": {
@@ -3886,7 +3927,12 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
                 "label": "Ofertas",
                 "url": "#"
               }
-            ]
+            ],
+            "list": true,
+            "items": {
+              "url": {},
+              "label": {}
+            }
           }
         }
       },
@@ -4009,7 +4055,18 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
     "testimonials": {
       "items": {
         "list": true,
-        "default": []
+        "default": [],
+        "items": {
+          "role": {
+            "default": ""
+          },
+          "quote": {
+            "default": ""
+          },
+          "name": {
+            "default": ""
+          }
+        }
       },
       "source": {},
       "emptyTitle": {
@@ -4107,7 +4164,16 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
             "default": ""
           },
           "links": {
-            "default": []
+            "list": true,
+            "default": [],
+            "items": {
+              "url": {
+                "default": "#"
+              },
+              "label": {
+                "default": ""
+              }
+            }
           }
         }
       },
@@ -4200,6 +4266,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         "default": [],
         "items": {
           "features": {
+            "list": true,
             "default": []
           },
           "highlighted": {},

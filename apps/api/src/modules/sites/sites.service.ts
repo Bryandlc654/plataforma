@@ -1,4 +1,5 @@
 import { hasUnpublishedChanges } from "../publishing/published-snapshot";
+import { CATALOG_SECTIONS } from "@plataforma/shared";
 import {
   Injectable,
   NotFoundException,
@@ -192,6 +193,22 @@ export class SitesService {
     return { items: slim, total, page, limit };
   }
 
+  /** ¿Algún sitio del negocio tiene un checkout o una sección de productos de tienda? */
+  private async hasStoreSections(tenantId: string): Promise<boolean> {
+    const productSections = [...CATALOG_SECTIONS].map((key) => {
+      const [variant, type] = key.split("/");
+      return { type, content: { path: "$.variant", equals: variant } };
+    });
+    const block = await this.prisma.pageBlock.findFirst({
+      where: {
+        page: { site: { tenantId, deletedAt: null } },
+        OR: [{ type: "checkout" }, ...productSections],
+      },
+      select: { id: true },
+    });
+    return !!block;
+  }
+
   async getCapabilities(tenantId: string) {
     const sites = await this.prisma.site.findMany({
       where: { tenantId, deletedAt: null },
@@ -232,6 +249,10 @@ export class SitesService {
 
       if (bookings && ecommerce) break;
     }
+
+    // Por las secciones del sitio: un checkout o una sección de productos con carrito hacen
+    // de un sitio una tienda, aunque se cambie el nombre, categoría o etiquetas de la plantilla.
+    if (!ecommerce) ecommerce = await this.hasStoreSections(tenantId);
 
     if (!ecommerce) {
       const [productCount, orderCount] = await Promise.all([

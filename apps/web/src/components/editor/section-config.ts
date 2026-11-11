@@ -23,7 +23,14 @@ export interface SectionConfig {
   dynamicFields?: Record<string, "productCategory">;
   /** Ayudas propias de la sección. */
   hints?: Record<string, string>;
+  /** Campos agrupados con un título (Diseño, Logo, Menú…), en ese orden. */
+  groups?: { title: string; keys: string[] }[];
+  /** Opciones elegidas con tarjetas visuales (un dibujo de cada diseño). */
+  pickers?: Record<string, PickerOption[]>;
 }
+
+/** Opción de un selector visual: `art` es el dibujo esquemático del diseño. */
+export interface PickerOption extends SelectOption { art: string; }
 
 const light: SelectOption = { label: "Claro", value: "" };
 
@@ -129,7 +136,56 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
       imageColor: "Color de la imagen", imageOpacity: "Intensidad de la imagen",
     },
   },
-  "urban-noir/header": { labels: { links: "Menú", logoImage: "Logo (imagen)", logoText: "Nombre de la tienda" } },
+  "urban-noir/header": {
+    pickers: {
+      layout: [
+        { value: "", label: "Clásico", art: "classic" },
+        { value: "centered", label: "Logo centrado", art: "centered" },
+        { value: "split", label: "Dividido", art: "split" },
+        { value: "minimal", label: "Minimalista", art: "minimal" },
+      ],
+    },
+    selects: {
+      headerStyle: [{ label: "Claro", value: "" }, { label: "Oscuro", value: "dark" }, { label: "Sobre la imagen de portada", value: "overlay" }],
+      sticky: [{ label: "Fijo arriba al bajar", value: "" }, { label: "Se desplaza con la página", value: "static" }],
+      logoSize: [{ label: "Pequeño", value: "sm" }, { label: "Mediano", value: "" }, { label: "Grande", value: "lg" }],
+      announcementStyle: [{ label: "Fondo negro", value: "" }, { label: "Fondo blanco", value: "light" }],
+      showSearch: [{ label: "Ocultar", value: "" }, { label: "Mostrar", value: "show" }],
+      showCart: [{ label: "Mostrar", value: "" }, { label: "Ocultar", value: "hide" }],
+      hideLogoText: [{ label: "Imagen y nombre", value: "" }, { label: "Solo la imagen", value: "true" }],
+    },
+    groups: [
+      { title: "Diseño", keys: ["layout", "headerStyle", "sticky"] },
+      { title: "Logo", keys: ["logoImage", "logoText", "hideLogoText", "logoSize"] },
+      { title: "Menú", keys: ["links"] },
+      { title: "Barra de anuncios", keys: ["announcement", "announcementUrl", "announcementStyle"] },
+      { title: "Iconos", keys: ["showSearch", "searchUrl", "showCart"] },
+    ],
+    visible: (c) => [
+      "layout", "headerStyle", "sticky",
+      "logoImage", "logoText", ...(c.logoImage ? ["hideLogoText"] : []), "logoSize",
+      "links",
+      "announcement", ...(c.announcement ? ["announcementUrl", "announcementStyle"] : []),
+      "showSearch", ...(c.showSearch === "show" || c.searchUrl ? ["searchUrl"] : []), "showCart",
+    ],
+    labels: {
+      layout: "Diseño del encabezado", headerStyle: "Estilo", sticky: "Al bajar por la página",
+      logoImage: "Logo (imagen)", logoText: "Nombre de la tienda", hideLogoText: "Mostrar en el logo", logoSize: "Tamaño del logo",
+      links: "Enlaces del menú", announcement: "Texto del anuncio", announcementUrl: "Enlace del anuncio", announcementStyle: "Estilo del anuncio",
+      showSearch: "Lupa de búsqueda", searchUrl: "La lupa lleva a", showCart: "Carrito",
+    },
+    hints: {
+      headerStyle: "«Sobre la imagen» va encima de la portada; úsalo si la primera sección tiene imagen.",
+      announcement: "Ej.: Envío gratis desde $50. Déjalo vacío para no mostrar la barra.",
+      searchUrl: "Por ejemplo, la sección del catálogo.",
+      links: "Agrega un submenú dentro de un enlace para mostrar categorías.",
+    },
+    itemLabels: {
+      links: { label: "Texto", url: "Enlace", children: "Submenú", highlight: "Destacar" },
+      "links.children": { label: "Texto", url: "Enlace" },
+    },
+    itemSelects: { links: { highlight: [{ label: "No", value: "" }, { label: "Sí, en rojo (ej. Ofertas)", value: "true" }] } },
+  } as SectionConfig,
   "urban-noir/features": {
     selects: { layout: [{ label: "Automático", value: "" }, { label: "Categorías con foto", value: "catalog" }, { label: "Tarjetas de texto", value: "cards" }] },
     visible: (c) => {

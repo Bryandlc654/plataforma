@@ -165,14 +165,42 @@ function analyzeFile(variant, file) {
   };
 
   const collectCase = (labels, statements) => {
-    const listVars = new Map(); // variable local → clave de lista
+    const listVars = new Map(); // variable local → clave de lista ("links" o "links.children")
 
-    const listKeyOf = (expr) => {
+    // Funciones flecha con nombre (const desktopLink = (l) => …) usadas como links.map(desktopLink).
+    const arrowFns = new Map();
+    const findArrows = (node) => {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) {
+        arrowFns.set(node.name.text, node.initializer);
+      }
+      ts.forEachChild(node, findArrows);
+    };
+    statements.forEach(findArrows);
+
+    /** Esquema de una lista: "links" (de la sección) o "links.children" (lista dentro de cada enlace). */
+    const listTarget = (t, listKey) => {
+      const [top, ...nested] = String(listKey).split(".");
+      let f = fieldOf(t, top);
+      for (const part of nested) {
+        f.items = f.items || {};
+        f = f.items[part] = f.items[part] || {};
+        f.list = true;
+        f.used = true;
+      }
+      return f;
+    };
+
+    const listKeyOf = (expr, itemParams = new Map()) => {
       expr = unwrap(expr);
       if (!expr) return null;
       const [left, right] = splitDefault(expr);
       const direct = contentKey(left);
       if (direct) return { key: direct, def: right ? lastLiteral(right) : NO_DEFAULT };
+      // l.children dentro de links.map((l) => …) → lista anidada "links.children"
+      for (const [param, parentKey] of itemParams) {
+        const nk = contentKey(left, param);
+        if (nk) return { key: `${parentKey}.${nk}`, def: right ? lastLiteral(right) : NO_DEFAULT };
+      }
       if (ts.isPropertyAccessExpression(left) && alias.has(left.name.text) && ts.isIdentifier(left.expression) && alias.get(left.name.text).owners.has(left.expression.text)) {
         const a = alias.get(left.name.text);
         return { key: a.key, def: a.def };
@@ -180,12 +208,12 @@ function analyzeFile(variant, file) {
       if (ts.isIdentifier(left) && listVars.has(left.text)) return { key: listVars.get(left.text), def: NO_DEFAULT };
       // c.links && c.links.length ? c.links : [ …por defecto… ]
       if (ts.isConditionalExpression(left)) {
-        const t = listKeyOf(left.whenTrue);
+        const t = listKeyOf(left.whenTrue, itemParams);
         if (t) return { key: t.key, def: t.def !== NO_DEFAULT ? t.def : literal(left.whenFalse) };
-        return listKeyOf(left.whenFalse);
+        return listKeyOf(left.whenFalse, itemParams);
       }
-      // c.items.slice(0, 3) → items
-      if (ts.isCallExpression(left) && ts.isPropertyAccessExpression(left.expression) && LIST_METHODS.has(left.expression.name.text)) return listKeyOf(left.expression.expression);
+      // c.items.slice(0, 3) / l.children.filter(…) → la lista original
+      if (ts.isCallExpression(left) && ts.isPropertyAccessExpression(left.expression) && LIST_METHODS.has(left.expression.name.text)) return listKeyOf(left.expression.expression, itemParams);
       if (ts.isPropertyAccessExpression(left) && left.name.text === "length") return null;
       return null;
     };
@@ -203,7 +231,7 @@ function analyzeFile(variant, file) {
     const addItemField = (listKey, itemKey, def) => {
       if (IGNORED_KEYS.has(itemKey)) return;
       for (const t of labels) {
-        const f = fieldOf(t, listKey);
+        const f = listTarget(t, listKey);
         f.items = f.items || {};
         f.items[itemKey] = f.items[itemKey] || {};
         f.items[itemKey].used = true;
@@ -212,7 +240,7 @@ function analyzeFile(variant, file) {
     };
     const addListDefault = (listKey, def) => {
       for (const t of labels) {
-        const f = fieldOf(t, listKey);
+        const f = listTarget(t, listKey);
         f.used = true;
         f.list = true;
         mergeDefault(f, def);
@@ -233,7 +261,7 @@ function analyzeFile(variant, file) {
     const visit = (node, itemParams) => {
       // const navLinks = C.links.length ? C.links : [...]
       if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-        const lk = listKeyOf(node.initializer);
+        const lk = listKeyOf(node.initializer, itemParams);
         if (lk) {
           listVars.set(node.name.text, lk.key);
           if (Array.isArray(lk.def)) addListDefault(lk.key, lk.def);
@@ -241,8 +269,9 @@ function analyzeFile(variant, file) {
       }
       // X.map((item) => …) sobre una lista del contenido
       if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && LIST_METHODS.has(node.expression.name.text)) {
-        const lk = listKeyOf(node.expression.expression);
-        const cb = node.arguments[0];
+        const lk = listKeyOf(node.expression.expression, itemParams);
+        let cb = node.arguments[0];
+        if (cb && ts.isIdentifier(cb) && arrowFns.has(cb.text)) cb = arrowFns.get(cb.text);
         if (lk && cb && (ts.isArrowFunction(cb) || ts.isFunctionExpression(cb)) && cb.parameters[0] && ts.isIdentifier(cb.parameters[0].name)) {
           addListDefault(lk.key, lk.def);
           const next = new Map(itemParams);
@@ -255,7 +284,7 @@ function analyzeFile(variant, file) {
       }
       // cond ? c.K : [ …por defecto… ] fuera de un .map
       if (ts.isConditionalExpression(node)) {
-        const t = listKeyOf(node.whenTrue);
+        const t = listKeyOf(node.whenTrue, itemParams);
         const def = literal(node.whenFalse);
         if (t && Array.isArray(def)) addListDefault(t.key, def);
       }
@@ -277,7 +306,7 @@ function analyzeFile(variant, file) {
             for (const t of labels) {
               let target;
               if (listKey) {
-                const f = fieldOf(t, listKey);
+                const f = listTarget(t, listKey);
                 target = f.items = f.items || {};
               } else {
                 types[t] = types[t] || {};
@@ -339,10 +368,17 @@ function analyzeFile(variant, file) {
     if (f.used && f.aliasOf) delete f.aliasOf;
     delete f.used;
   };
+  const tidyItems = (items) => {
+    for (const it of Object.values(items)) {
+      tidy(it);
+      if (it.default === undefined) delete it.default;
+      if (it.items) tidyItems(it.items);
+    }
+  };
   for (const type of Object.keys(types)) {
     for (const f of Object.values(types[type])) {
       tidy(f);
-      if (f.items) for (const it of Object.values(f.items)) { tidy(it); if (it.default === undefined) delete it.default; }
+      if (f.items) tidyItems(f.items);
     }
   }
   return types;
@@ -353,7 +389,7 @@ for (const [variant, file] of Object.entries(SOURCES)) schema[variant] = analyze
 
 const body = `// ARCHIVO GENERADO por scripts/extract-template-schema.js — no editar a mano.\n` +
   `// Campos de contenido y valores por defecto de cada plantilla y tipo de sección.\n\n` +
-  `export interface TemplateFieldSchema {\n  default?: unknown;\n  list?: boolean;\n  /** Nombre alternativo de otro campo (p. ej. description → desc): se oculta salvo que tenga valor. */\n  aliasOf?: string;\n  items?: Record<string, { default?: unknown; aliasOf?: string }>;\n}\n\n` +
+  `export interface TemplateFieldSchema {\n  default?: unknown;\n  list?: boolean;\n  /** Nombre alternativo de otro campo (p. ej. description → desc): se oculta salvo que tenga valor. */\n  aliasOf?: string;\n  /** Campos de cada elemento (si es una lista). Pueden ser a su vez listas (submenús). */\n  items?: Record<string, TemplateFieldSchema>;\n}\n\n` +
   `export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, TemplateFieldSchema>>> = ${JSON.stringify(schema, null, 2)};\n`;
 
 if (process.argv.includes("--check")) {
