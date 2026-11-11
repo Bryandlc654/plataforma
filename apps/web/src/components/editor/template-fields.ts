@@ -11,6 +11,8 @@ export type FieldKind = "text" | "textarea" | "image" | "url" | "color" | "icon"
 export interface FieldDef {
   key: string;
   label: string;
+  /** Ayuda corta bajo el campo. */
+  hint?: string;
   kind: FieldKind;
   default?: unknown;
   options?: { label: string; value: string }[];
@@ -27,13 +29,52 @@ const LABELS: Record<string, string> = {
   buttonText: "Texto del botón", buttonUrl: "Enlace del botón", secondaryButtonText: "Texto del botón secundario", secondaryButtonUrl: "Enlace del botón secundario",
   ctaText: "Texto del botón", ctaUrl: "Enlace del botón", linkText: "Texto del enlace", linkUrl: "Enlace", url: "Enlace", link: "Enlace", href: "Enlace",
   image: "Imagen", imageUrl: "Imagen", backgroundImage: "Imagen de fondo", logoImage: "Logo", logoText: "Texto del logo", logoType: "Tipo de logo", logo: "Logo",
-  icon: "Ícono", items: "Elementos", links: "Enlaces del menú", columns: "Columnas", fields: "Campos del formulario", images: "Imágenes", slides: "Diapositivas",
+  icon: "Ícono", items: "Elementos", links: "Enlaces", columns: "Columnas", fields: "Campos del formulario", images: "Imágenes", slides: "Diapositivas",
   phone: "Teléfono", email: "Correo", address: "Dirección", hours: "Horario", companyName: "Nombre de la empresa", copyright: "Derechos reservados",
   price: "Precio", period: "Periodo", features: "Características", stats: "Estadísticas", alt: "Texto alternativo", caption: "Pie de foto",
   question: "Pregunta", answer: "Respuesta", category: "Categoría", tag: "Etiqueta", tags: "Etiquetas", year: "Año", suffix: "Sufijo",
   placeholder: "Texto de ayuda", required: "Obligatorio", type: "Tipo", options: "Opciones", message: "Mensaje", number: "Número",
   reviewLinkText: "Texto del enlace de reseñas", privacyText: "Texto de privacidad", termsText: "Texto de términos", mapUrl: "Enlace del mapa",
   carousel: "Mostrar como carrusel", autoplay: "Reproducción automática", aspectRatio: "Proporción", alignment: "Alineación",
+  // Comunes en las plantillas de diseño
+  hideLogoText: "Ocultar el texto junto al logo", searchUrl: "Enlace del botón Buscar",
+  autoplaySeconds: "Cambiar de diapositiva cada (segundos)", watermark: "Texto de fondo", newsletter: "Mostrar como formulario de suscripción",
+  imageAlt: "Texto alternativo de la imagen", currency: "Símbolo de moneda", addToCartText: "Texto del botón «Añadir al carrito»",
+  compareAt: "Precio anterior (tachado)", social: "Redes sociales", legalLinks: "Enlaces legales", socialTitle: "Título de redes sociales",
+  id: "Código del producto", newsletterLabel: "Etiqueta del correo", scrollText: "Texto «Desplázate»", exploreText: "Texto del botón explorar",
+  emptyText: "Texto cuando no hay reseñas", emptyTitle: "Título cuando no hay reseñas", ratingLabel: "Etiqueta de calificación",
+  nameLabel: "Etiqueta del nombre", emailLabel: "Etiqueta del correo", commentLabel: "Etiqueta del comentario", submitText: "Texto del botón enviar",
+  // Checkout (Urban Noir)
+  coTitle: "Título", coSubtitle: "Subtítulo", coEmptyText: "Texto de carrito vacío", coBackText: "Texto «Volver a la tienda»",
+  coTotalLabel: "Etiqueta del total", coDeliveryTitle: "Título de datos de entrega", coPaymentTitle: "Título de método de pago",
+  coCodTitle: "Nombre del pago contra entrega", coCodDesc: "Descripción del pago contra entrega", coPaypalTitle: "Título del pago con PayPal",
+  coPaypalDesc: "Descripción de PayPal", coPaypalNote: "Nota de PayPal", coPayphoneTitle: "Título del pago con Payphone",
+  coPayphoneDesc: "Descripción de Payphone", coPayphoneNote: "Nota de Payphone", coConfirmText: "Texto del botón confirmar",
+  coSuccessTitle: "Título de pedido recibido", coRegisteredText: "Texto de pedido registrado", coCodSuccess: "Mensaje de pago contra entrega",
+  coContinueText: "Texto «Seguir comprando»",
+};
+
+const HINTS: Record<string, string> = {
+  autoplaySeconds: "0 = las diapositivas no cambian solas.",
+  slides: "Cada diapositiva tiene su imagen, textos y botón.",
+  searchUrl: "Déjalo vacío para ocultar el botón de búsqueda.",
+  hideLogoText: "Solo si subiste una imagen de logo.",
+  id: "Debe coincidir con el producto de tu tienda para el carrito.",
+  watermark: "Texto grande y tenue detrás del contenido.",
+  newsletter: "Cambia la sección a un campo de correo con botón de suscribirse.",
+};
+
+/** Etiquetas propias de una sección (cuando el nombre genérico confunde). */
+const SECTION_LABELS: Record<string, Record<string, string>> = {
+  "urban-noir/hero": {
+    backgroundImage: "Imagen de fondo", kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
+    buttonText: "Texto del botón", buttonUrl: "Enlace del botón", slides: "Más diapositivas",
+  },
+  "urban-noir/footer": { columns: "Columnas de enlaces", links: "Enlaces" },
+  "urban-noir/header": { links: "Menú" },
+  "urban-noir/features": { items: "Categorías", linkText: "Texto del enlace «ver todo»", linkUrl: "Enlace «ver todo»" },
+  "urban-noir/portfolio": { items: "Productos" },
+  "urban-noir/benefits": { items: "Beneficios" },
 };
 
 const SELECTS: Record<string, { label: string; value: string }[]> = {
@@ -133,11 +174,12 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     add(k);
   });
 
+  const sectionLabels = SECTION_LABELS[`${c.variant || "generic"}/${type}`] || {};
   return keys.map((key) => {
     const s = schema[key];
     const value = c[key] ?? s?.default;
     const kind = s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
-    const def: FieldDef = { key, label: labelFor(key), kind, default: s?.default, options: kind === "select" ? SELECTS[key] : undefined };
+    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: HINTS[key], kind, default: s?.default, options: kind === "select" ? SELECTS[key] : undefined };
     if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : []);
     // Objetos anidados (plantillas importadas): sus campos se editan agrupados.
     if (kind === "group") def.itemFields = groupFieldDefs(value);

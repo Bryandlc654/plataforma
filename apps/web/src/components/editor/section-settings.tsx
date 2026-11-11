@@ -8,6 +8,7 @@ import {
 import { BLOCK_META } from "@/components/blocks";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import { IconPicker } from "./icon-picker";
+import { LinkField } from "./link-field";
 import { blankItem, fieldsFor, type FieldDef } from "./template-fields";
 
 interface Props {
@@ -33,7 +34,18 @@ function Label({ children }: { children: React.ReactNode }) {
   return <span className="mb-1 block text-[13px] font-medium text-[#303030]">{children}</span>;
 }
 
-function FieldControl({ field, value, onChange }: { field: FieldDef; value: any; onChange: (v: any) => void }) {
+function FieldControl(props: { field: FieldDef; value: any; onChange: (v: any) => void }) {
+  const { field } = props;
+  if (!field.hint || field.kind === "url") return <FieldInput {...props} />;
+  return (
+    <div>
+      <FieldInput {...props} />
+      <p className="mt-1 text-[12px] text-[#616161]">{field.hint}</p>
+    </div>
+  );
+}
+
+function FieldInput({ field, value, onChange }: { field: FieldDef; value: any; onChange: (v: any) => void }) {
   switch (field.kind) {
     case "image":
       return <ImageField label={field.label} value={value || ""} onChange={onChange} />;
@@ -98,12 +110,7 @@ function FieldControl({ field, value, onChange }: { field: FieldDef; value: any;
         </label>
       );
     case "url":
-      return (
-        <label className="block">
-          <Label>{field.label}</Label>
-          <input className={inputCls} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="/contacto, #seccion o https://…" inputMode="url" />
-        </label>
-      );
+      return <LinkField label={field.label} hint={field.hint} value={value || ""} onChange={onChange} />;
     case "textarea":
       return (
         <label className="block">
@@ -149,6 +156,7 @@ function ListControl({ field, value, onChange }: { field: FieldDef; value: any[]
   return (
     <div>
       <Label>{field.label}</Label>
+      {field.hint && <p className="-mt-0.5 mb-1.5 text-[12px] text-[#616161]">{field.hint}</p>}
       <ul className="overflow-hidden rounded-lg border border-[#e3e3e3] bg-white">
         {list.map((item, i) => (
           <li key={i} className="border-b border-[#ebebeb] last:border-b-0">
@@ -185,7 +193,7 @@ function ListControl({ field, value, onChange }: { field: FieldDef; value: any[]
         ))}
         <li>
           <button onClick={add} className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-medium text-[color:var(--color-primary)] hover:bg-[#f7f7f7]">
-            <HiOutlinePlus className="h-3.5 w-3.5" /> Agregar {field.label.toLowerCase().replace(/s$/, "")}
+            <HiOutlinePlus className="h-3.5 w-3.5" /> Agregar {field.label.toLowerCase().replace(/^más /, "").replace(/«.*»/, "").replace(/s$/, "").replace(/(ione)$/, "ión")}
           </button>
         </li>
       </ul>

@@ -12,6 +12,7 @@ import { HiOutlineEye, HiOutlinePlus, HiOutlineX, HiOutlineCog, HiOutlineArrowLe
 import { EditorTopBar, type EditorDevice } from "@/components/editor/editor-top-bar";
 import { SectionsSidebar } from "@/components/editor/sections-sidebar";
 import { SectionSettings } from "@/components/editor/section-settings";
+import { LinkOptionsContext, type LinkOptions } from "@/components/editor/link-field";
 import { SiteSettingsPanel, type SettingsTab } from "@/components/editor/site-settings-panel";
 import { EditorTour } from "@/components/editor/editor-tour";
 import { sitePublicUrl } from "@/lib/site-url";
@@ -221,6 +222,26 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const activePage = site?.pages.find(p => p.id === activePageId);
   const sortedBlocks = activePage ? [...activePage.blocks].sort((a, b) => a.sortOrder - b.sortOrder) : [];
   const activeBlock = sortedBlocks.find(b => b.id === activeBlockId);
+
+  /**
+   * Destinos para los enlaces y botones: las páginas del sitio y las secciones de la página
+   * abierta (cada sección tiene su id en el lienzo: #catalogo, #promociones…).
+   */
+  const linkOptions: LinkOptions = (() => {
+    const pages = [...(site?.pages || [])]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((pg) => ({ label: pg.isDefault ? `${pg.name} (inicio)` : pg.name, value: pg.isDefault ? "/" : pg.path }));
+    const sections: { label: string; value: string }[] = [];
+    const seen = new Set<string>();
+    for (const b of sortedBlocks) {
+      const el = canvasDoc?.getElementById(`block-${b.id}`)?.querySelector<HTMLElement>("[id]");
+      const id = el?.id;
+      if (!id || id.startsWith("block-") || seen.has(id)) continue;
+      seen.add(id);
+      sections.push({ label: `${BLOCK_META[b.type]?.label || b.type} (#${id})`, value: `#${id}` });
+    }
+    return { pages, sections };
+  })();
 
   const paletteActive = hasExplicitPalette(site?.settings) || paletteDirty;
   const variantPalette = paletteActive ? palette : undefined;
@@ -591,6 +612,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         {/* Barra izquierda (como Shopify): lista de secciones o ajustes de la sección elegida. */}
         <aside data-tour="sections" className="flex w-[300px] flex-shrink-0 flex-col border-r border-[#e3e3e3] bg-white">
           {activeBlock ? (
+            <LinkOptionsContext.Provider value={linkOptions}>
             <SectionSettings
               key={activeBlock.id}
               block={activeBlock}
@@ -601,6 +623,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               onDuplicate={() => duplicateBlock(activeBlock.id)}
               onDelete={() => deleteBlock(activeBlock.id)}
             />
+            </LinkOptionsContext.Provider>
           ) : (
             <SectionsSidebar
               pageName={activePage?.name}

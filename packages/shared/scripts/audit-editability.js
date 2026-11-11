@@ -51,8 +51,41 @@ function visibleTexts(html) {
   return texts;
 }
 
+/**
+ * Enlaces: cada <a href> visible debe salir de un campo de contenido (o ser el inicio del
+ * sitio / una ruta del sistema). Un href fijo no se puede cambiar desde el editor.
+ */
+function fixedLinks(html, content) {
+  const values = new Set();
+  const walk = (n) => {
+    if (typeof n === "string") values.add(n.trim());
+    else if (Array.isArray(n)) n.forEach(walk);
+    else if (n && typeof n === "object") Object.values(n).forEach(walk);
+  };
+  walk(content);
+  const out = [];
+  const re = /<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    const href = decode(m[1]).trim();
+    const label = norm(m[2]).slice(0, 30) || "(ícono)";
+    if (/^(mailto:|tel:|https:\/\/wa\.me)/i.test(href)) continue; // se arman con teléfono/correo editables
+    if (/^(\/demo\/?|https:\/\/api\.x\/p\/demo\/?)$/.test(href)) continue; // inicio del sitio
+    if (/\/dejar-opinion$/.test(href) || /icebergup\.com/.test(href)) continue; // rutas del sistema
+    const raw = href.replace(/^\/demo(?=\/)/, "");
+    if (values.has(href) || values.has(raw)) continue;
+    out.push(`${label} → ${href || "(vacío)"}`);
+  }
+  return out;
+}
+
+/** Plantillas en las que también se exige que todos los enlaces sean editables (--strict). */
+const LINK_STRICT = new Set(["urban-noir"]);
+
 const report = {};
+const linkReport = {};
 let total = 0;
+let totalLinks = 0;
 for (const [variant, types] of Object.entries(TEMPLATE_SCHEMA)) {
   for (const [type, schema] of Object.entries(types)) {
     // Su contenido lo gestiona otro módulo (Sorteos), no el editor.
@@ -63,7 +96,10 @@ for (const [variant, types] of Object.entries(TEMPLATE_SCHEMA)) {
       html = variant === "generic"
         ? renderGenericBlockHtml(type, sanitizeTemplateContent(content), { apiBaseUrl: "https://api.x", site: { id: "s", tenantId: "t", subdomain: "demo" } }) || ""
         : renderTemplateVariantHtml(type, { ...content, variant }, "https://api.x", { id: "s", tenantId: "t", subdomain: "demo" }) || "";
-    } catch (e) { report[`${variant}/${type}`] = [`ERROR: ${e.message}`]; continue; }
+    } catch (e) { report[`${variant}/${type}`] = [`ERROR: ${e.message}`]; total++; continue; }
+    // Se compara con el contenido saneado: las URLs pasan por el mismo filtro al dibujarse.
+    const links = fixedLinks(html, sanitizeTemplateContent(content, { escapeHtml: false }));
+    if (links.length) { linkReport[`${variant}/${type}`] = links; totalLinks += links.length; }
     const editable = contentTexts(content);
     for (const f of Object.values(schema)) for (const it of Object.values(f.items || {})) contentTexts(it.default, editable);
     const clean = (t) => t.replace(/^["“”]+|["“”]+$/g, "").trim();
@@ -71,8 +107,16 @@ for (const [variant, types] of Object.entries(TEMPLATE_SCHEMA)) {
     if (fixed.length) { report[`${variant}/${type}`] = fixed; total += fixed.length; }
   }
 }
-if (process.argv.includes("--json")) console.log(JSON.stringify(report, null, 2));
+if (process.argv.includes("--json")) console.log(JSON.stringify({ texts: report, links: linkReport }, null, 2));
 else {
   for (const [k, v] of Object.entries(report)) console.log(`${k}: ${v.map((t) => JSON.stringify(t.slice(0, 50))).join(", ")}`);
   console.log(`\nTextos fijos (no editables): ${total} en ${Object.keys(report).length} secciones`);
+  console.log("\nEnlaces con destino fijo (no editable):");
+  for (const [k, v] of Object.entries(linkReport)) console.log(`  ${LINK_STRICT.has(k.split("/")[0]) ? "✗" : "·"} ${k}: ${v.join(" | ")}`);
+  console.log(`Total: ${totalLinks}`);
+}
+const strictLinkFailures = Object.keys(linkReport).filter((k) => LINK_STRICT.has(k.split("/")[0])).length;
+if (process.argv.includes("--strict") && (total > 0 || strictLinkFailures > 0)) {
+  console.error("\n[audit] Hay contenido de plantilla que no se puede editar.");
+  process.exit(1);
 }

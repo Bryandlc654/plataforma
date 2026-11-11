@@ -174,44 +174,69 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between items-center h-20">
             <div class="flex-shrink-0 flex items-center">
-              <a data-analytics-click data-analytics-type="click" data-analytics-label="logo" href="${homeUrl}" class="font-display font-bold text-2xl tracking-tighter">${c.logoText || 'URBAN NOIR'}</a>
+              <a data-analytics-click data-analytics-type="click" data-analytics-label="logo" href="${homeUrl}" class="flex items-center gap-3 font-display font-bold text-2xl tracking-tighter">${c.logoImage ? `<img src="${c.logoImage}" alt="${c.logoText || "URBAN NOIR"}" class="h-10 w-auto object-contain">` : ""}${c.logoImage && c.hideLogoText ? "" : `<span>${c.logoText || "URBAN NOIR"}</span>`}</a>
             </div>
             <div class="hidden md:flex space-x-8">
               ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="text-black hover:text-gray-500 transition font-medium">${l.label}</a>`).join("")}
             </div>
             <div class="flex items-center space-x-4">
-              <button type="button" aria-label="Buscar" class="hover:text-gray-500 transition">
+              ${c.searchUrl ? `<a href="${siteHref(c.searchUrl)}" aria-label="Buscar" class="hover:text-gray-500 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </button>
+              </a>` : ""}
               <button type="button" id="un-cart-btn" aria-label="Carrito" class="hover:text-gray-500 transition relative">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                 <span data-count class="absolute -top-1 -right-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="display:none">0</span>
               </button>
-              <button type="button" aria-label="Menú" class="md:hidden hover:text-gray-500 transition">
+              <button type="button" aria-label="Menú" onclick="this.closest('nav').querySelector('[data-un-mobile]').classList.toggle('hidden')" class="md:hidden hover:text-gray-500 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>
             </div>
           </div>
         </div>
+        <div data-un-mobile class="hidden md:hidden border-t border-black bg-white px-4 py-4 flex flex-col">
+          ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="py-3 border-b border-gray-100 font-bold uppercase tracking-widest text-sm">${l.label}</a>`).join("")}
+        </div>
       </nav>`;
     }
 
     case "hero": {
-      const bg = (c.slides && c.slides.length && c.slides[0].backgroundImage) || c.backgroundImage || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2048&auto=format&fit=crop";
+      // Primera diapositiva: los campos de la sección. "slides": diapositivas adicionales.
+      const first = {
+        backgroundImage: c.backgroundImage || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2048&auto=format&fit=crop",
+        kicker: c.kicker,
+        title: c.title || "REDEFINE YOUR STREETS",
+        subtitle: c.subtitle,
+        buttonText: c.buttonText,
+        buttonUrl: c.buttonUrl || "#catalogo",
+      };
+      const extra = (Array.isArray(c.slides) ? c.slides : []).map((sl: any) => ({
+        backgroundImage: sl.backgroundImage || first.backgroundImage,
+        kicker: sl.kicker,
+        title: sl.title || "",
+        subtitle: sl.subtitle,
+        buttonText: sl.buttonText,
+        buttonUrl: sl.buttonUrl || "#catalogo",
+      }));
+      const slides = [first, ...extra];
+      const seconds = Number(c.autoplaySeconds ?? 6);
+      const heroId = `un-hero-${Math.random().toString(36).slice(2, 8)}`;
+      // Cambia de diapositiva (también funciona en el editor: es un atributo onclick).
+      const go = "var r=this.closest('[data-un-hero]'),i=+this.dataset.i;r.querySelectorAll('[data-un-slide]').forEach(function(s,j){s.style.opacity=j===i?1:0;s.style.pointerEvents=j===i?'auto':'none'});r.querySelectorAll('[data-un-dot]').forEach(function(d,j){d.style.background=j===i?'#fff':'#4b5563'});r.dataset.cur=i";
       return `
-      <header id="${c.anchor || 'inicio'}" class="relative h-screen flex items-center justify-center overflow-hidden bg-black text-white">
-        <div class="absolute inset-0 z-0 opacity-60 bg-cover bg-center" style="background-image: url('${bg}'); filter: grayscale(100%);"></div>
-        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
-          ${c.kicker ? `<span class="tracking-[0.3em] text-sm md:text-base mb-4 block uppercase border-b border-white pb-2">${c.kicker}</span>` : ""}
-          <h1 class="text-5xl md:text-8xl font-bold mb-6 leading-none">${nl(c.title || "REDEFINE YOUR STREETS")}</h1>
-          ${c.subtitle ? `<p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">${c.subtitle}</p>` : ""}
-          ${c.buttonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" href="${siteHref(c.buttonUrl || '#catalogo')}" class="bg-white text-black font-bold py-4 px-10 hover:bg-gray-300 transition-colors uppercase tracking-widest text-sm">${c.buttonText}</a>` : ""}
+      <header id="${c.anchor || 'inicio'}" data-un-hero data-hero-id="${heroId}" class="relative h-screen overflow-hidden bg-black text-white">
+        ${slides.map((sl, i) => `<div data-un-slide class="absolute inset-0 flex items-center justify-center transition-opacity duration-700" style="opacity:${i === 0 ? 1 : 0};pointer-events:${i === 0 ? "auto" : "none"}">
+          <div class="absolute inset-0 z-0 opacity-60 bg-cover bg-center" style="background-image: url('${sl.backgroundImage}'); filter: grayscale(100%);"></div>
+          <div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
+            ${sl.kicker ? `<span class="tracking-[0.3em] text-sm md:text-base mb-4 block uppercase border-b border-white pb-2">${sl.kicker}</span>` : ""}
+            ${sl.title ? `<h1 class="text-5xl md:text-8xl font-bold mb-6 leading-none">${nl(sl.title)}</h1>` : ""}
+            ${sl.subtitle ? `<p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto">${sl.subtitle}</p>` : ""}
+            ${sl.buttonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" href="${siteHref(sl.buttonUrl)}" class="bg-white text-black font-bold py-4 px-10 hover:bg-gray-300 transition-colors uppercase tracking-widest text-sm">${sl.buttonText}</a>` : ""}
+          </div>
+        </div>`).join("")}
+        ${slides.length > 1 ? `<div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+          ${slides.map((_, i) => `<button type="button" data-un-dot data-i="${i}" onclick="${go}" aria-label="Diapositiva ${i + 1}" class="w-3 h-3 rounded-full" style="background:${i === 0 ? "#fff" : "#4b5563"}"></button>`).join("")}
         </div>
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
-          <span class="w-3 h-3 rounded-full bg-white"></span>
-          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
-          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
-        </div>
+        ${seconds > 0 ? `<script>(function(){var r=document.querySelector('[data-hero-id="${heroId}"]');if(!r)return;setInterval(function(){var n=r.querySelectorAll('[data-un-dot]');var i=((+r.dataset.cur||0)+1)%n.length;n[i].click()},${Math.max(2, seconds) * 1000});})();</script>` : ""}` : ""}
       </header>`;
     }
 
@@ -262,7 +287,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
             <h2 class="text-4xl md:text-6xl font-bold mb-6">${nl(c.title || 'ÚNETE AL CLUB')}</h2>
             ${c.subtitle ? `<p class="text-gray-600 mb-10 text-lg">${c.subtitle}</p>` : ""}
             <form data-pub-form method="POST" action="${actionUrl}" class="flex flex-col sm:flex-row max-w-xl mx-auto gap-0 border-2 border-black p-1">
-              <input type="email" name="email" required placeholder="TU CORREO ELECTRÓNICO" class="flex-1 py-4 px-4 bg-transparent outline-none uppercase tracking-widest text-sm font-medium">
+              <input type="email" name="email" required placeholder="${c.placeholder || "TU CORREO ELECTRÓNICO"}" class="flex-1 py-4 px-4 bg-transparent outline-none uppercase tracking-widest text-sm font-medium">
               <button type="submit" class="bg-black text-white font-bold py-4 px-8 hover:bg-gray-800 transition-colors uppercase tracking-widest text-sm whitespace-nowrap">${c.buttonText || 'Suscribirse'}</button>
             </form>
           </div>
@@ -280,7 +305,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
           </div>
           ${c.backgroundImage ? `<div class="md:w-1/2 flex justify-center">
             <div class="relative">
-              <img src="${c.backgroundImage}" alt="Promociones" loading="lazy" class="w-full max-w-md h-auto object-cover grayscale border-4 border-white transform translate-x-4 -translate-y-4 shadow-[16px_16px_0px_0px_rgba(255,255,255,1)] relative z-10">
+              <img src="${c.backgroundImage}" alt="${c.imageAlt || c.title || "Promociones"}" loading="lazy" class="w-full max-w-md h-auto object-cover grayscale border-4 border-white transform translate-x-4 -translate-y-4 shadow-[16px_16px_0px_0px_rgba(255,255,255,1)] relative z-10">
               <div class="absolute inset-0 bg-white bg-opacity-20 transform translate-x-12 translate-y-4"></div>
             </div>
           </div>` : ""}
@@ -290,6 +315,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
 
     case "portfolio": {
       const items = c.items || [];
+      const currency = c.currency || "$";
       return `
       <section id="${c.anchor || 'productos'}" class="py-24 bg-white border-b border-black">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -310,13 +336,13 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
                 </div>
                 <div class="flex justify-between items-start">
                   <div>
-                    <h3 class="font-bold text-lg">${nl(item.title)}</h3>
+                    <h3 class="font-bold text-lg">${item.link ? `<a href="${siteHref(item.link)}" class="hover:underline">${nl(item.title)}</a>` : nl(item.title)}</h3>
                     ${item.desc ? `<p class="text-gray-500 text-sm">${item.desc}</p>` : ""}
                   </div>
                   ${item.compareAt ? `<div class="text-right">
-                    <span class="font-bold text-red-600 block">$${item.price}</span>
-                    <span class="text-sm text-gray-400 line-through">$${item.compareAt}</span>
-                  </div>` : `<span class="font-bold">$${item.price}</span>`}
+                    <span class="font-bold text-red-600 block">${currency}${item.price}</span>
+                    <span class="text-sm text-gray-400 line-through">${currency}${item.compareAt}</span>
+                  </div>` : `<span class="font-bold">${currency}${item.price}</span>`}
                 </div>
               </div>`;
             }).join("")}
@@ -368,7 +394,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
             <div>
-              <a href="${homeUrl}" class="font-display font-bold text-3xl tracking-tighter mb-6 block">${companyName}</a>
+              <a href="${homeUrl}" class="font-display font-bold text-3xl tracking-tighter mb-6 block">${c.logoImage ? `<img src="${c.logoImage}" alt="${companyName}" class="h-12 w-auto object-contain">` : companyName}</a>
               <p class="text-gray-400 text-sm leading-relaxed mb-6">${c.description || "Definiendo la estética de la calle contemporánea. Menos ruido, más actitud. Diseñado para el individuo moderno."}</p>
             </div>
             ${columns.map((col: any) => `<div>

@@ -2938,42 +2938,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "teamTitleHighlight": {
         "default": "Graduate."
-      },
-      "socials": {
-        "list": true,
-        "default": [
-          {
-            "icon": "fa-brands fa-facebook-f",
-            "url": "#",
-            "hover": "hover:bg-[#2d2e81] hover:border-[#2d2e81]"
-          },
-          {
-            "icon": "fa-brands fa-instagram",
-            "url": "#",
-            "hover": "hover:bg-gradient-to-tr hover:from-orange-500 hover:to-pink-500 hover:border-transparent"
-          },
-          {
-            "icon": "fa-brands fa-whatsapp text-lg",
-            "url": "#",
-            "hover": "hover:bg-[#7dd958] hover:border-[#7dd958]"
-          },
-          {
-            "icon": "fa-brands fa-tiktok",
-            "url": "#",
-            "hover": "hover:bg-black hover:border-black"
-          }
-        ],
-        "items": {
-          "icon": {
-            "default": "fa-brands fa-facebook-f"
-          },
-          "url": {
-            "default": "#"
-          },
-          "hover": {
-            "default": "hover:bg-[#2d2e81] hover:border-[#2d2e81]"
-          }
-        }
       }
     },
     "about": {
@@ -3677,13 +3641,17 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           }
         }
       },
+      "logoImage": {},
       "logoText": {
         "default": "URBAN NOIR"
-      }
+      },
+      "hideLogoText": {},
+      "searchUrl": {}
     },
     "hero": {
-      "slides": {},
-      "backgroundImage": {},
+      "backgroundImage": {
+        "default": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2048&auto=format&fit=crop"
+      },
       "kicker": {},
       "title": {
         "default": "REDEFINE YOUR STREETS"
@@ -3692,6 +3660,25 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "buttonText": {},
       "buttonUrl": {
         "default": "#catalogo"
+      },
+      "slides": {
+        "list": true,
+        "default": [],
+        "items": {
+          "backgroundImage": {},
+          "kicker": {},
+          "title": {
+            "default": ""
+          },
+          "subtitle": {},
+          "buttonText": {},
+          "buttonUrl": {
+            "default": "#catalogo"
+          }
+        }
+      },
+      "autoplaySeconds": {
+        "default": 6
       }
     },
     "features": {
@@ -3719,9 +3706,13 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
     "cta": {
       "newsletter": {},
       "title": {
-        "default": "ÚNETE AL CLUB"
+        "default": "ÚNETE AL CLUB",
+        "aliasOf": "imageAlt"
       },
       "subtitle": {},
+      "placeholder": {
+        "default": "TU CORREO ELECTRÓNICO"
+      },
       "buttonText": {
         "default": "Suscribirse"
       },
@@ -3732,7 +3723,10 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "buttonUrl": {
         "default": "#"
       },
-      "backgroundImage": {}
+      "backgroundImage": {},
+      "imageAlt": {
+        "default": "Promociones"
+      }
     },
     "portfolio": {
       "items": {
@@ -3746,9 +3740,13 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           "title": {},
           "id": {},
           "price": {},
+          "link": {},
           "desc": {},
           "compareAt": {}
         }
+      },
+      "currency": {
+        "default": "$"
       },
       "title": {
         "default": "MÁS BUSCADOS"
@@ -3905,6 +3903,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         }
       },
       "copyright": {},
+      "logoImage": {},
       "description": {
         "default": "Definiendo la estética de la calle contemporánea. Menos ruido, más actitud. Diseñado para el individuo moderno."
       },
@@ -4039,11 +4038,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "submitText": {
         "default": "Enviar opinión"
-      }
-    },
-    "sorteo-form": {
-      "emptyTitle": {
-        "default": "No hay testimonios"
       }
     },
     "gallery": {
@@ -4232,9 +4226,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           },
           "bio": {}
         }
-      },
-      "emptyTitle": {
-        "default": "No hay testimonios"
       }
     },
     "features": {

@@ -143,7 +143,15 @@ function analyzeFile(variant, file) {
     if (ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))) {
       const [left, right] = splitDefault(node.initializer);
       const key = contentKey(left);
-      if (key && !IGNORED_KEYS.has(key)) alias.set(node.name.text, { key, def: right ? lastLiteral(right) : NO_DEFAULT });
+      // Dueño del alias: la variable que guarda el objeto (const C = { … } → "C").
+      const obj = node.parent;
+      const owner = obj && ts.isObjectLiteralExpression(obj) && obj.parent && ts.isVariableDeclaration(obj.parent) && ts.isIdentifier(obj.parent.name) ? obj.parent.name.text : null;
+      if (key && owner && !IGNORED_KEYS.has(key)) {
+        const prev = alias.get(node.name.text);
+        const owners = new Set(prev ? prev.owners : []);
+        owners.add(owner);
+        alias.set(node.name.text, { key, def: right ? lastLiteral(right) : NO_DEFAULT, owners });
+      }
     }
     ts.forEachChild(node, visitAlias);
   };
@@ -165,7 +173,7 @@ function analyzeFile(variant, file) {
       const [left, right] = splitDefault(expr);
       const direct = contentKey(left);
       if (direct) return { key: direct, def: right ? lastLiteral(right) : NO_DEFAULT };
-      if (ts.isPropertyAccessExpression(left) && alias.has(left.name.text) && !(ts.isIdentifier(left.expression) && left.expression.text === "c")) {
+      if (ts.isPropertyAccessExpression(left) && alias.has(left.name.text) && ts.isIdentifier(left.expression) && alias.get(left.name.text).owners.has(left.expression.text)) {
         const a = alias.get(left.name.text);
         return { key: a.key, def: a.def };
       }
@@ -291,7 +299,7 @@ function analyzeFile(variant, file) {
         const ik = contentKey(node, param);
         if (ik) addItemField(listKey, ik, NO_DEFAULT);
       }
-      if (ts.isPropertyAccessExpression(node) && alias.has(node.name.text) && !(ts.isIdentifier(node.expression) && node.expression.text === "c")) {
+      if (ts.isPropertyAccessExpression(node) && alias.has(node.name.text) && ts.isIdentifier(node.expression) && alias.get(node.name.text).owners.has(node.expression.text)) {
         const a = alias.get(node.name.text);
         if (Array.isArray(a.def)) addListDefault(a.key, a.def);
         else addField(a.key, a.def);
