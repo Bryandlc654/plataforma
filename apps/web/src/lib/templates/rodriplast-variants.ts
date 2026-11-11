@@ -1,3 +1,6 @@
+// ARCHIVO GENERADO desde packages/shared/src/templates — no editar aquí.
+// Ejecuta `npm run sync:templates -w apps/web` tras cambiar la fuente.
+
 const PLACEHOLDER_LOGO = "https://placehold.co/200x80/ffffff/0f172a?text=Logo";
 
 function toOsmEmbed(url: string): string {
@@ -120,7 +123,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
             <nav class="hidden lg:flex items-center gap-7">
                 ${links.map((l: any) => `<a href="${siteHref(l.url)}" class="nav-link text-sm font-medium text-white/85 hover:text-white transition-colors">${l.label}</a>`).join("")}
             </nav>
-            <a href="${siteHref(ctaUrl)}" class="hidden lg:inline-flex items-center gap-2 rounded-full bg-rodri-primary text-rodri-primary-foreground px-5 py-2.5 text-sm font-semibold shadow-lg shadow-rodri-primary/20 hover:bg-rodri-primary-dark transition-all hover:scale-[1.03]">${ctaText}</a>
+            <a data-analytics-click data-analytics-type="click" data-analytics-label="header_cta" href="${siteHref(ctaUrl)}" class="hidden lg:inline-flex items-center gap-2 rounded-full bg-rodri-primary text-rodri-primary-foreground px-5 py-2.5 text-sm font-semibold shadow-lg shadow-rodri-primary/20 hover:bg-rodri-primary-dark transition-all hover:scale-[1.03]">${ctaText}</a>
             <button id="menuBtn" class="lg:hidden p-2 rounded-lg text-white" aria-label="Menú">
                 <i class="bi bi-list fs-3"></i>
             </button>
@@ -192,11 +195,11 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                 </h1>
                 <p class="mt-6 max-w-xl text-lg md:text-xl text-white/85 leading-relaxed">${c.subtitle || 'Fabricamos y distribuimos mangueras industriales, agrícolas y domésticas a partir de materiales 100% reciclados. Calidad certificada, compromiso real.'}</p>
                 <div class="mt-10 flex flex-wrap gap-4">
-                    <a href="${siteHref(c.buttonUrl || '#contacto')}" class="group inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-4 text-base font-semibold shadow-elegant transition-all hover:scale-[1.03]">
+                    <a data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" href="${siteHref(c.buttonUrl || '#contacto')}" class="group inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-4 text-base font-semibold shadow-elegant transition-all hover:scale-[1.03]">
                         ${c.buttonText || 'Solicitar cotización'}
                         <i class="bi bi-arrow-right h-5 w-5 group-hover:translate-x-1 transition-transform"></i>
                     </a>
-                    ${c.secondaryButtonText ? `<a href="${siteHref(c.secondaryButtonUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full glass text-white px-7 py-4 text-base font-semibold hover:bg-white/25 transition-all">
+                    ${c.secondaryButtonText ? `<a data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" href="${siteHref(c.secondaryButtonUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full glass text-white px-7 py-4 text-base font-semibold hover:bg-white/25 transition-all">
                         <i class="bi bi-play-circle h-5 w-5"></i>
                         ${c.secondaryButtonText}
                     </a>` : ''}
@@ -267,7 +270,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                     'Equipo técnico con más de 15 años de experiencia'
                 ]).map((f: any) => `<li class="flex items-center gap-4 rounded-xl bg-rodri-primary/5 border border-rodri-primary/10 px-5 py-4 transition hover:bg-rodri-primary/10 hover:border-rodri-primary/20"><div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rodri-primary text-white shrink-0"><i class="bi bi-check-lg h-4 w-4"></i></div><span class="text-rodri-foreground/85 font-medium">${typeof f === 'string' ? f : f.text || f.title || ''}</span></li>`).join("")}
                 </ul>
-                ${c.linkText || c.buttonText ? `<div class="mt-8"><a href="${siteHref(c.buttonUrl || c.linkUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-3.5 text-sm font-semibold shadow-elegant transition-all hover:scale-[1.03]">${c.buttonText || c.linkText}<i class="bi bi-arrow-right h-4 w-4"></i></a></div>` : ''}
+                ${c.linkText || c.buttonText ? `<div class="mt-8"><a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" href="${siteHref(c.buttonUrl || c.linkUrl || '#contacto')}" class="inline-flex items-center gap-2 rounded-full bg-rodri-primary hover:bg-rodri-primary-dark text-rodri-primary-foreground px-7 py-3.5 text-sm font-semibold shadow-elegant transition-all hover:scale-[1.03]">${c.buttonText || c.linkText}<i class="bi bi-arrow-right h-4 w-4"></i></a></div>` : ''}
             </div>
         </div>
     </section>`;
@@ -484,28 +487,28 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                         <label class="text-sm font-semibold text-rodri-foreground/85">${f.label}</label>
                         <textarea name="${f.name}" rows="5" ${f.required ? 'required' : ''} class="mt-2 w-full rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rodri-primary/30 focus:border-rodri-primary transition" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
                     </div>`).join("") || `<div>
-                        <label class="text-sm font-semibold text-rodri-foreground/85">Tipo de producto</label>
+                        <label class="text-sm font-semibold text-rodri-foreground/85" data-ed="productLabel">${c.productLabel || "Tipo de producto"}</label>
                         <div class="relative mt-2"><div class="absolute left-4 top-1/2 -translate-y-1/2 text-rodri-muted-foreground"><i class="bi bi-box-arrow-up-right h-4 w-4"></i></div><input type="text" name="producto" placeholder="Manguera agrícola, industrial..." class="w-full rounded-xl border border-gray-200 bg-white/50 pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rodri-primary/30 focus:border-rodri-primary transition"></div>
                     </div>
                     <div>
-                        <label class="text-sm font-semibold text-rodri-foreground/85">Mensaje</label>
+                        <label class="text-sm font-semibold text-rodri-foreground/85" data-ed="messageLabel">${c.messageLabel || "Mensaje"}</label>
                         <textarea name="mensaje" rows="5" required class="mt-2 w-full rounded-xl border border-gray-200 bg-white/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rodri-primary/30 focus:border-rodri-primary transition" placeholder="Descríbenos tu proyecto, volúmenes estimados y especificaciones..."></textarea>
                     </div>`}
                     <div data-pub-form-status style="display:none;padding:12px 16px;border-radius:12px;font-size:14px;"></div>
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-rodri-primary text-white px-8 py-4 font-semibold shadow-elegant hover:scale-[1.02] hover:shadow-[0_8px_32px_rgba(79,173,51,.25)] transition-all duration-300">${c.buttonText || 'Enviar solicitud'}<i class="bi bi-send h-4 w-4"></i></button>
+                    <button data-analytics-click data-analytics-type="click" data-analytics-label="contact_submit" type="submit" class="inline-flex items-center gap-2 rounded-full bg-gradient-rodri-primary text-white px-8 py-4 font-semibold shadow-elegant hover:scale-[1.02] hover:shadow-[0_8px_32px_rgba(79,173,51,.25)] transition-all duration-300">${c.buttonText || 'Enviar solicitud'}<i class="bi bi-send h-4 w-4"></i></button>
                 </form>
                 <div class="space-y-5">
                     <div class="reveal group flex items-start gap-4 p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)] hover:shadow-[0_8px_32px_rgba(79,173,51,.08)] hover:-translate-y-0.5 hover:border-rodri-primary/20 transition-all duration-500">
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-geo-alt-fill h-5 w-5"></i></div>
-                        <div class="min-w-0"><div class="font-semibold">Dirección</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.address || 'Parque Industrial · Guayaquil, Ecuador'}</div></div>
+                        <div class="min-w-0"><div class="font-semibold" data-ed="addressLabel">${c.addressLabel || "Dirección"}</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.address || 'Parque Industrial · Guayaquil, Ecuador'}</div></div>
                     </div>
                     <div class="reveal-1 group flex items-start gap-4 p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)] hover:shadow-[0_8px_32px_rgba(79,173,51,.08)] hover:-translate-y-0.5 hover:border-rodri-primary/20 transition-all duration-500">
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-telephone h-5 w-5"></i></div>
-                        <div class="min-w-0"><div class="font-semibold">Teléfono</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.phone || '+593 4 000 0000'}</div></div>
+                        <div class="min-w-0"><div class="font-semibold" data-ed="phoneLabel">${c.phoneLabel || "Teléfono"}</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.phone || '+593 4 000 0000'}</div></div>
                     </div>
                     <div class="reveal-2 group flex items-start gap-4 p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)] hover:shadow-[0_8px_32px_rgba(79,173,51,.08)] hover:-translate-y-0.5 hover:border-rodri-primary/20 transition-all duration-500">
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-rodri-primary text-white shadow-elegant group-hover:scale-110 transition-transform duration-500"><i class="bi bi-envelope h-5 w-5"></i></div>
-                        <div class="min-w-0"><div class="font-semibold">Correo</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.com'}</div></div>
+                        <div class="min-w-0"><div class="font-semibold" data-ed="emailLabel">${c.emailLabel || "Correo"}</div><div class="mt-1 text-sm text-rodri-muted-foreground">${c.email || 'ventas@rodriplast.com'}</div></div>
                     </div>
                     ${c.mapUrl ? `<div class="reveal aspect-[4/3] rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,.04)]"><iframe title="Ubicación ${c.kicker || 'Rodriplast'}" src="${toOsmEmbed(c.mapUrl)}" class="w-full h-full" loading="lazy" style="border:0" allowfullscreen></iframe></div>` : ''}
                 </div>
@@ -589,7 +592,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
                     </ul>
                 </div>
                 <div>
-                    <div class="font-semibold text-white text-sm uppercase tracking-wider">Contacto</div>
+                    <div class="font-semibold text-white text-sm uppercase tracking-wider" data-ed="contactTitle">${c.contactTitle || "Contacto"}</div>
                     <ul class="mt-5 space-y-3 text-sm">
                         <li class="flex items-start gap-3 text-white/50"><i class="bi bi-geo-alt-fill h-4 w-4 mt-0.5 shrink-0 text-rodri-primary-glow/60"></i><span>${address}</span></li>
                         <li class="flex items-start gap-3 text-white/50"><i class="bi bi-telephone h-4 w-4 mt-0.5 shrink-0 text-rodri-primary-glow/60"></i><span>${phone}</span></li>
@@ -600,7 +603,7 @@ export function getRodriplastHtml(type: string, c: any, apiBaseUrl?: string, sit
             </div>
             <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
                 <div>${copyright}</div>
-                <div class="flex gap-6"><a href="#" class="hover:text-white/70 transition-colors">Política de privacidad</a><a href="#" class="hover:text-white/70 transition-colors">Términos y condiciones</a><a href="/dejar-opinion" class="hover:text-white/70 transition-colors">Dejar una reseña</a></div>
+                <div class="flex gap-6"><a href="#" class="hover:text-white/70 transition-colors" data-ed="privacyText">${c.privacyText || "Política de privacidad"}</a><a href="#" class="hover:text-white/70 transition-colors" data-ed="termsText">${c.termsText || "Términos y condiciones"}</a><a href="/dejar-opinion" class="hover:text-white/70 transition-colors" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a></div>
             </div>
         </div>
     </footer>`;

@@ -41,7 +41,7 @@ export function getRawHtmlHtml(type: string, content: any, apiBaseUrl?: string, 
   if (!content || content.variant !== "raw-html") return null;
   if (typeof content.html !== "string" || !content.html.trim()) return null;
 
-  let html = content.html.replace(TOKEN_RE, (match, path: string) => {
+  let html = content.html.replace(TOKEN_RE, (_match: string, path: string) => {
     if (path.startsWith("asset:")) {
       const rel = path.slice("asset:".length);
       if (/^https?:\/\//i.test(rel)) return rel;
@@ -54,7 +54,7 @@ export function getRawHtmlHtml(type: string, content: any, apiBaseUrl?: string, 
     const actionUrl = `${apiBaseUrl || ""}/api/v1/leads/submit/${site.tenantId}`;
     // Elimina siteId previos (algunas plantillas traen uno) para no duplicarlos.
     html = html.replace(/<input\b[^>]*\bname\s*=\s*["']?siteId\b["']?[^>]*>/gi, "");
-    html = html.replace(/<form\b([^>]*)>/gi, (_m, attrs: string) => {
+    html = html.replace(/<form\b([^>]*)>/gi, (_m: string, attrs: string) => {
       const actionMatch = /\baction\s*=\s*["']?([^"'\s>]*)/i.exec(attrs);
       const needsAction = !actionMatch || actionMatch[1] === "" || actionMatch[1] === "#";
       let nextAttrs = attrs;

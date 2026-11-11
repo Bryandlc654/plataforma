@@ -1,6 +1,9 @@
+// ARCHIVO GENERADO desde packages/shared/src/templates — no editar aquí.
+// Ejecuta `npm run sync:templates -w apps/web` tras cambiar la fuente.
+
 const TOKEN_RE = /\{\{__ED::([^{}]+)\}\}/g;
 
-function escapeHtmlValue(value: unknown): string {
+export function escapeHtmlValue(value: unknown): string {
   if (value == null) return "";
   return String(value)
     .replace(/&/g, "&amp;")
@@ -28,12 +31,14 @@ function resolveMedia(v: unknown, apiBaseUrl?: string): string {
 }
 
 /**
- * Renderiza bloques importados desde ZIP (variant "raw-html").
- * Sustituye placeholders {{__ED::...}} por el contenido editable actual.
- * - Campo normal:  {{__ED::title}}  /  {{__ED::items::0::titulo}}
- * - Asset local:   {{__ED::asset:/uploads/templates/<slug>/img.png}}
+ * Renderiza un bloque de plantilla importado desde un ZIP (variant "raw-html").
+ * El HTML se guardó con placeholders {{__ED::...}}; aquí se sustituyen por el
+ * contenido editable actual (textos, imágenes, urls).
+ * - Token de campo normal:  {{__ED::title}}  o  {{__ED::items::0::titulo}}
+ * - Token de asset local:   {{__ED::asset:/uploads/templates/<slug>/img.png}}
  *
- * Si se pasa `site` se inyecta el envío AJAX de leads ({ action + data-pub-form }).
+ * Si se pasa `site` (contexto de publicación), se inyecta a cada <form> el
+ * envío AJAX de leads hacia la API ({ action + data-pub-form + hidden inputs }).
  */
 export function getRawHtmlHtml(type: string, content: any, apiBaseUrl?: string, site?: any): string | null {
   if (!content || content.variant !== "raw-html") return null;

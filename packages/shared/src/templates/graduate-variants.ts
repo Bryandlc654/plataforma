@@ -889,8 +889,8 @@ return `${head}
       }).join("")}
       <div class="md:col-span-3 bg-gray-50 rounded-3xl p-8 border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 mt-2">
         <div>
-          <h4 class="font-bold text-gray-900 mb-1">Marcas que confían en nosotros</h4>
-          <p class="text-sm text-gray-500">Agencia avalada por cientos de casos reales.</p>
+          <h4 class="font-bold text-gray-900 mb-1" data-ed="clientsHeading">${c.clientsHeading || "Marcas que confían en nosotros"}</h4>
+          <p class="text-sm text-gray-500" data-ed="clientsSubheading">${c.clientsSubheading || "Agencia avalada por cientos de casos reales."}</p>
         </div>
         <div class="flex flex-wrap items-center gap-6 md:gap-10 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
           ${(C.brands || []).map((b: any) => `<div class="${b.classes || "text-xl md:text-2xl font-black"}">${b.title || ""}<span style="color:${b.color || "#2d2e81"}">${b.accent || ""}</span></div>`).join("")}
@@ -978,7 +978,7 @@ return `${head}
       <div class="text-gray-500 text-sm">${C.copyright}</div>
       <div class="flex gap-6 text-sm font-medium text-gray-500">
         ${(C.legalLinks || []).map((l: any) => `<a href="${l.url || "#"}" class="hover:text-white transition-colors">${l.label}</a>`).join("")}
-        <a href="/dejar-opinion" class="hover:text-white transition-colors">Dejar una reseña</a>
+        <a href="/dejar-opinion" class="hover:text-white transition-colors" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a>
       </div>
     </div>
   </div>

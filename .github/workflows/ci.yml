@@ -17,6 +17,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Plantillas del web sincronizadas con packages/shared
+        run: node apps/web/scripts/sync-templates.js --check
       - run: npm run lint
 
   typecheck:

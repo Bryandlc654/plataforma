@@ -20,13 +20,15 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
     <div class="hidden md:flex space-x-gutter items-center">
       ${(c.links || []).map((l: any) => `<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-surface-container-low dark:hover:bg-on-surface-variant/10 px-3 py-2 rounded-DEFAULT font-body-md text-body-md" href="${l.url}">${l.label}</a>`).join("")}
     </div>
-    <button data-analytics-click data-analytics-type="click" data-analytics-label="header_cta" class="hidden md:inline-flex items-center justify-center bg-primary text-on-primary hover:bg-primary/90 transition-colors px-6 py-3 rounded-lg font-label-sm text-label-sm uppercase tracking-wider">
-      Consultoría
-    </button>
-    <button class="md:hidden text-primary">
+    <button data-analytics-click data-analytics-type="click" data-analytics-label="header_cta" data-ed="ctaText" class="hidden md:inline-flex items-center justify-center bg-primary text-on-primary hover:bg-primary/90 transition-colors px-6 py-3 rounded-lg font-label-sm text-label-sm uppercase tracking-wider">${c.ctaText || "Consultoría"}</button>
+    <button class="md:hidden text-primary p-2" onclick="this.closest('header').querySelector('[data-mobile-menu]').classList.toggle('hidden')" aria-label="Abrir menú">
       <span class="material-symbols-outlined">menu</span>
     </button>
   </nav>
+  <div data-mobile-menu class="hidden md:hidden flex flex-col gap-4 bg-surface dark:bg-on-background border-t border-outline-variant/20 px-margin-mobile py-6">
+    ${(c.links || []).map((l: any) => `<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors py-2 font-body-md text-body-md" href="${l.url}">${l.label}</a>`).join("")}
+    <button class="inline-flex items-center justify-center bg-primary text-on-primary hover:bg-primary/90 transition-colors px-6 py-3 rounded-lg font-label-sm text-label-sm uppercase tracking-wider mt-2">${c.ctaText || "Consultoría"}</button>
+  </div>
 </header>`;
     }
 
@@ -39,7 +41,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
   </div>
   <div class="relative z-10 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-section-padding">
     <div class="max-w-2xl">
-      <span class="inline-block mb-4 px-3 py-1 bg-primary/10 text-primary rounded-[2px] font-label-sm text-label-sm uppercase tracking-wider">Consultoría Estratégica</span>
+      <span class="inline-block mb-4 px-3 py-1 bg-primary/10 text-primary rounded-[2px] font-label-sm text-label-sm uppercase tracking-wider" data-ed="kicker">${c.kicker || "Consultoría Estratégica"}</span>
       <h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background mb-6">
         ${c.title || ""}
       </h1>
@@ -51,9 +53,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
           ${c.buttonText}
           <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
         </button>` : ""}
-        <button data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" class="border border-outline-variant text-on-background hover:bg-surface-container-low transition-colors px-8 py-4 rounded-lg font-label-sm text-label-sm uppercase tracking-wider">
-          Nuestros Casos de Éxito
-        </button>
+        <button data-analytics-click data-analytics-type="click" data-analytics-label="hero_secondary_cta" class="border border-outline-variant text-on-background hover:bg-surface-container-low transition-colors px-8 py-4 rounded-lg font-label-sm text-label-sm uppercase tracking-wider" data-ed="secondaryButtonText">${c.secondaryButtonText || "Nuestros Casos de Éxito"}</button>
       </div>
     </div>
   </div>
@@ -75,7 +75,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
         </div>
         <h3 class="font-headline-md text-[20px] leading-[28px] font-semibold text-on-background mb-3">${item.title || ""}</h3>
         <p class="font-body-md text-body-md text-on-surface-variant flex-grow mb-6">${item.desc || item.description || ""}</p>
-        <a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" class="inline-flex items-center font-label-sm text-label-sm text-primary uppercase tracking-wider group-hover:underline underline-offset-4" href="#">Conocer más <span class="material-symbols-outlined text-[16px] ml-1">arrow_right_alt</span></a>
+        <a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" class="inline-flex items-center font-label-sm text-label-sm text-primary uppercase tracking-wider group-hover:underline underline-offset-4" href="${item.url || "#"}"><span data-ed="linkText">${c.linkText || "Conocer más"}</span> <span class="material-symbols-outlined text-[16px] ml-1">arrow_right_alt</span></a>
       </div>`).join("")}
     </div>
   </div>
@@ -87,7 +87,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
   <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter items-center">
       <div>
-        <span class="inline-block mb-4 px-3 py-1 bg-primary/10 text-primary rounded-[2px] font-label-sm text-label-sm uppercase tracking-wider">Nuestra Misión</span>
+        <span class="inline-block mb-4 px-3 py-1 bg-primary/10 text-primary rounded-[2px] font-label-sm text-label-sm uppercase tracking-wider" data-ed="kicker">${c.kicker || "Nuestra Misión"}</span>
         <h2 class="font-headline-md text-headline-md text-on-background mb-6">${c.title || ""}</h2>
         <p class="font-body-lg text-body-lg text-on-surface-variant mb-6">
           ${c.description || ""}
@@ -145,7 +145,7 @@ export function getPrestigeHtml(type: string, c: any, apiBaseUrl?: string, site?
     </div>
     <div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-8 gap-y-4 md:justify-end">
       ${c.columns?.[0]?.links?.map((l: any) => `<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-2 underline-offset-4 font-body-md text-body-md" href="${l.url}">${l.label}</a>`).join("") || ""}
-      <a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-2 underline-offset-4 font-body-md text-body-md" href="/dejar-opinion">Dejar una reseña</a>
+      <a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed underline decoration-2 underline-offset-4 font-body-md text-body-md" href="/dejar-opinion" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a>
     </div>
   </div>
 </footer>`;

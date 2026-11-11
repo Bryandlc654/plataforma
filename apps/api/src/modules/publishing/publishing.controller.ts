@@ -7,6 +7,8 @@ import { PublishingService } from "./publishing.service";
 import { OrdersService } from "../orders/orders.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { Public } from "../../common/decorators/public.decorator";
+import { RequirePermissions } from "../../common/decorators/permissions.decorator";
+import { PERMISSIONS } from "../../shared/index";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 
 @ApiTags("publishing")
@@ -17,6 +19,7 @@ export class PublishingController {
     private ordersService: OrdersService,
   ) {}
 
+  @RequirePermissions(PERMISSIONS.SITE_PUBLISH)
   @Post("sites/:id/publish")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -25,6 +28,7 @@ export class PublishingController {
     return this.publishingService.publish(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_PUBLISH)
   @Post("sites/:id/unpublish")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -33,6 +37,7 @@ export class PublishingController {
     return this.publishingService.unpublish(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get("sites/:id/preview")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

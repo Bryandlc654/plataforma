@@ -1,3 +1,6 @@
+// ARCHIVO GENERADO desde packages/shared/src/templates — no editar aquí.
+// Ejecuta `npm run sync:templates -w apps/web` tras cambiar la fuente.
+
 export function getArtCulinaireHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
   if (c.variant !== "art-culinaire") return null;
 
@@ -24,22 +27,20 @@ export function getArtCulinaireHtml(type: string, c: any, apiBaseUrl?: string, s
         </a>
     </li>`).join("")}
 </ul>
-<button class="bg-primary text-on-primary px-8 py-4 font-label-sm text-label-sm uppercase tracking-widest hover:bg-on-surface-variant transition-colors rounded-none">
+<button data-analytics-click data-analytics-type="click" data-analytics-label="header_cta" class="bg-primary text-on-primary px-8 py-4 font-label-sm text-label-sm uppercase tracking-widest hover:bg-on-surface-variant transition-colors rounded-none">
     ${c.buttonText || "Reservations"}
 </button>
 </div>
 <!-- Mobile Nav Variant -->
 <div class="flex md:hidden justify-between items-center px-margin-mobile py-4 w-full">
     ${logoEl}
-<button class="text-primary p-2" onclick="this.closest('header, nav').querySelector('[data-mobile-menu]').classList.toggle('hidden')" aria-label="Abrir menú">
+<button class="text-primary p-2" onclick="this.closest('nav').querySelector('[data-mobile-menu]').classList.toggle('hidden')" aria-label="Abrir menú">
 <span class="material-symbols-outlined" data-icon="menu">menu</span>
 </button>
 </div>
 <div data-mobile-menu class="hidden md:hidden flex flex-col gap-4 bg-surface dark:bg-primary px-margin-mobile py-6">
     ${(c.links || []).map((l: any) => `<a class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-on-primary transition-colors font-label-sm text-label-sm uppercase tracking-widest py-2" href="${l.url}">${l.label}</a>`).join("")}
-    <button class="bg-primary text-on-primary px-8 py-4 font-label-sm text-label-sm uppercase tracking-widest hover:bg-on-surface-variant transition-colors rounded-none self-start mt-2">
-        ${c.buttonText || "Reservations"}
-    </button>
+    <button class="bg-primary text-on-primary px-8 py-4 font-label-sm text-label-sm uppercase tracking-widest hover:bg-on-surface-variant transition-colors rounded-none self-start mt-2">${c.buttonText || "Reservations"}</button>
 </div>
 </nav>`;
     }
@@ -58,7 +59,7 @@ export function getArtCulinaireHtml(type: string, c: any, apiBaseUrl?: string, s
 <p class="font-body-lg text-body-lg text-surface-container-low mb-12 max-w-xl opacity-0 animate-fade-in-up" style="animation: fadeInUp 1s ease-out forwards; animation-delay: 0.4s;">
     ${c.subtitle || ""}
 </p>
-<button class="bg-surface text-primary px-10 py-5 font-label-sm text-label-sm uppercase tracking-widest hover:bg-tertiary-fixed transition-colors duration-300 rounded-none border-none opacity-0 animate-fade-in-up" style="animation: fadeInUp 1s ease-out forwards; animation-delay: 0.6s;">
+<button data-analytics-click data-analytics-type="click" data-analytics-label="hero_cta" class="bg-surface text-primary px-10 py-5 font-label-sm text-label-sm uppercase tracking-widest hover:bg-tertiary-fixed transition-colors duration-300 rounded-none border-none opacity-0 animate-fade-in-up" style="animation: fadeInUp 1s ease-out forwards; animation-delay: 0.6s;">
     ${c.buttonText || "Book a Table"}
 </button>
 </div>
@@ -78,7 +79,7 @@ export function getArtCulinaireHtml(type: string, c: any, apiBaseUrl?: string, s
     ${c.description2 || ""}
 </p>
 <div class="mt-4">
-<a class="inline-flex items-center gap-2 font-label-sm text-label-sm uppercase tracking-widest text-primary hover:text-tertiary-fixed-dim transition-colors group" href="#">
+<a data-analytics-click data-analytics-type="click" data-analytics-label="about_cta" class="inline-flex items-center gap-2 font-label-sm text-label-sm uppercase tracking-widest text-primary hover:text-tertiary-fixed-dim transition-colors group" href="#">
     ${c.linkText || "Discover our story"}
     <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
 </a>
@@ -138,7 +139,7 @@ ${(c.categories || []).map((cat: any) => `
 </p>
 </div>
 <div class="flex flex-col gap-2">
-<h4 class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">Hours</h4>
+<h4 class="font-label-sm text-label-sm uppercase tracking-widest text-secondary" data-ed="hoursTitle">${c.hoursTitle || "Hours"}</h4>
 <p class="font-body-md text-body-md text-on-surface-variant">
     ${(c.hours || "").replace(/\\n/g, '<br/>')}
 </p>
@@ -191,7 +192,7 @@ ${f.type === "textarea" ? `
 </div>
 <div class="flex gap-8">
   ${c.columns?.[0]?.links?.map((l: any) => `<a class="font-label-sm text-label-sm uppercase tracking-widest text-on-primary/60 dark:text-on-background/60 hover:text-tertiary-fixed dark:hover:text-tertiary transition-colors duration-200" href="${l.url}">${l.label}</a>`).join("") || ""}
-  <a class="font-label-sm text-label-sm uppercase tracking-widest text-on-primary/60 dark:text-on-background/60 hover:text-tertiary-fixed dark:hover:text-tertiary transition-colors duration-200" href="/dejar-opinion">Dejar una reseña</a>
+  <a class="font-label-sm text-label-sm uppercase tracking-widest text-on-primary/60 dark:text-on-background/60 hover:text-tertiary-fixed dark:hover:text-tertiary transition-colors duration-200" href="/dejar-opinion" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a>
 </div>
 <div class="font-body-md text-body-md text-on-primary dark:text-on-background opacity-50">
     ${c.copyright || "© 2024 L'ART CULINAIRE. ALL RIGHTS RESERVED."}

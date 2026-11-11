@@ -27,9 +27,17 @@ export function setIn(node: any, path: Path, value: any): any {
   return copy;
 }
 
+/**
+ * ¿Es un elemento HTML? No usa `instanceof HTMLElement` porque el lienzo vive en un
+ * iframe y sus nodos pertenecen a otro `window`.
+ */
+export function isHtmlElement(node: unknown): node is HTMLElement {
+  return !!node && (node as Node).nodeType === 1 && typeof (node as HTMLElement).tagName === "string" && "style" in (node as object);
+}
+
 /** Elemento "hoja" con texto propio: sin elementos hijos (salvo <br>). */
 export function isTextLeaf(el: Element): boolean {
-  if (!(el instanceof HTMLElement)) return false;
+  if (!isHtmlElement(el)) return false;
   if (["IMG", "SVG", "VIDEO", "IFRAME", "INPUT", "TEXTAREA", "SELECT", "SCRIPT", "STYLE"].includes(el.tagName.toUpperCase())) return false;
   if (Array.from(el.children).some((c) => c.tagName !== "BR")) return false;
   return !!norm(el.textContent || "");
@@ -47,7 +55,8 @@ export function matchTextLeaf(root: HTMLElement, el: HTMLElement, leaves: Leaf[]
 }
 
 function bgUrl(el: HTMLElement): string {
-  const bg = getComputedStyle(el).backgroundImage;
+  const view = el.ownerDocument?.defaultView || window;
+  const bg = view.getComputedStyle(el).backgroundImage;
   const m = /url\(["']?(.*?)["']?\)/.exec(bg || "");
   return m ? m[1] : "";
 }
@@ -62,3 +71,17 @@ export function matchImageLeaf(el: HTMLElement, leaves: Leaf[]): Leaf | null {
     leaves.find((l) => l.value && /^(https?:|\/|data:)/.test(l.value) && (src === l.value || src.includes(l.value) || decoded.includes(l.value))) || null
   );
 }
+
+/**
+ * Texto marcado en la plantilla con `data-ed="clave"` (o `clave::0::sub` para rutas):
+ * se edita aunque el valor aún no exista en el contenido (usa el texto por defecto).
+ */
+export function matchMarkedLeaf(el: HTMLElement, root: HTMLElement): Leaf | null {
+  const marked = el.closest<HTMLElement>("[data-ed]");
+  if (!marked || !root.contains(marked) || !isTextLeaf(marked)) return null;
+  const key = marked.getAttribute("data-ed") || "";
+  if (!key) return null;
+  const path: Path = key.split("::").map((k) => (/^\d+$/.test(k) ? Number(k) : k));
+  return { path, value: marked.innerText ?? marked.textContent ?? "" };
+}
+

@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { HiOutlineAdjustments, HiOutlinePlus, HiOutlineX } from "react-icons/hi";
 import { BLOCK_META } from "@/components/blocks";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
 import { ImageField } from "@/components/blocks/editors/image-field";
 import type { SitePalette } from "@/lib/site-palette";
-import { collectStrings, isTextLeaf, matchImageLeaf, matchTextLeaf, setIn, type Path } from "./inline-edit";
+import { collectStrings, isHtmlElement, isTextLeaf, matchImageLeaf, matchMarkedLeaf, matchTextLeaf, setIn, type Path } from "./inline-edit";
 
 interface Props {
   /** Bloque tal como se dibuja (puede incluir enlaces inyectados). */
@@ -38,9 +39,11 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
     el.style.outlineOffset = "2px";
     el.style.cursor = "text";
     el.focus();
-    const range = document.createRange();
+    // El lienzo está en un iframe: rango y selección son de su documento.
+    const doc = el.ownerDocument;
+    const range = doc.createRange();
     range.selectNodeContents(el);
-    const sel = window.getSelection();
+    const sel = doc.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
 
@@ -69,13 +72,19 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
     const root = rootRef.current;
     if (!root) return;
     const target = e.target as HTMLElement;
+    if (!isHtmlElement(target)) return;
     if (target.isContentEditable) return; // ya se está escribiendo
     if (target.closest("[data-inline-dialog], [data-editor-ui]")) return; // diálogo de imagen y controles del editor
     // En el editor los enlaces y botones no navegan.
     if (target.closest("a, button, form")) e.preventDefault();
 
-    const stack = document.elementsFromPoint(e.clientX, e.clientY).filter((n): n is HTMLElement => n instanceof HTMLElement && root.contains(n) && n !== root);
+    const stack = root.ownerDocument.elementsFromPoint(e.clientX, e.clientY).filter((n): n is HTMLElement => isHtmlElement(n) && root.contains(n) && n !== root);
     for (const el of stack) {
+      const marked = matchMarkedLeaf(el, root);
+      if (marked) {
+        const target = el.closest<HTMLElement>("[data-ed]")!;
+        e.stopPropagation(); onSelect(block.id); startTextEdit(target, marked.path, marked.value); return;
+      }
       if (isTextLeaf(el)) {
         const leaf = matchTextLeaf(root, el, leaves);
         if (leaf) { e.stopPropagation(); onSelect(block.id); startTextEdit(el, leaf.path, leaf.value); return; }
@@ -119,7 +128,7 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
         <HiOutlinePlus className="h-4 w-4" />
       </button>
 
-      {imagePath && (
+      {imagePath && typeof document !== "undefined" && createPortal(
         <div data-inline-dialog className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/40 p-4" onKeyDown={(e) => e.key === "Escape" && setImagePath(null)} onClick={(e) => { e.stopPropagation(); setImagePath(null); }}>
           <div className="w-full max-w-sm cursor-default rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
@@ -132,7 +141,8 @@ export function CanvasBlock({ block, sourceContent, active, hidden, onSelect, on
               onChange={(v) => { onContentChange(block.id, setIn(sourceContent, imagePath, v)); if (v) setImagePath(null); }}
             />
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       <style jsx global>{`

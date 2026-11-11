@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   buildCapturedThemeOverrides,
   paletteCssVariables,
@@ -83,17 +83,20 @@ function buildThemeCss(
  * `dangerouslySetInnerHTML` no ejecuta scripts en las vistas previas de React.
  */
 function TemplateRuntimeScript({ script }: { script: string }) {
+  // Se ejecuta en el documento donde se dibuja la plantilla (el iframe del editor o la página).
+  const anchorRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (!script) return;
-    const el = document.createElement("script");
+    const doc = anchorRef.current?.ownerDocument;
+    if (!script || !doc) return;
+    const el = doc.createElement("script");
     el.setAttribute("data-ed-template-runtime", "1");
     el.textContent = script;
-    document.body.appendChild(el);
+    doc.body.appendChild(el);
     return () => {
       el.remove();
     };
   }, [script]);
-  return null;
+  return <span ref={anchorRef} hidden />;
 }
 
 /**

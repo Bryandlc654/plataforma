@@ -4,6 +4,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { applyPaletteToVariantHtml, type SitePalette } from "@/lib/site-palette";
+import { isTemplateVariant, renderTemplateVariantHtml } from "@/lib/templates";
 import { API_ORIGIN } from "@/lib/api-config";
 
 function resolveMediaUrl(value: any): any {
@@ -52,6 +53,42 @@ function DarkDots({ total, active, onDot }: { total: number; active: number; onD
   );
 }
 
+/**
+ * En el lienzo el header fijo/absoluto taparía la barra del editor y la primera sección:
+ * se dibuja en el flujo normal de la página.
+ */
+const EDITOR_HEADER_FIXES: Record<string, [string, string]> = {
+  rodriplast: ['class="fixed top-0 inset-x-0 z-50', 'class="relative top-0 inset-x-0 z-50'],
+  indigo: ['class="fixed w-full z-50 top-0 left-0 p-6 flex', 'class="relative w-full z-50 top-0 left-0 p-6 flex'],
+  "urban-noir": ['class="fixed w-full z-50', 'class="relative w-full z-50'],
+  graduate: ['<header class="absolute top-0 left-0 w-full z-50">', '<header class="relative z-50">'],
+};
+
+function staticEditorHeader(html: string, variant: string): string {
+  const fix = EDITOR_HEADER_FIXES[variant];
+  return fix ? html.replace(fix[0], fix[1]) : html;
+}
+
+/** Envío de formularios dentro del HTML de una plantilla (vista previa y editor). */
+async function submitTemplateForm(e: React.FormEvent<HTMLDivElement>) {
+  const form = e.target as HTMLFormElement;
+  if (!form || form.tagName !== "FORM") return;
+  e.preventDefault();
+  const data: Record<string, any> = {};
+  new FormData(form).forEach((v, k) => { data[k] = v; });
+  const tenantId = useAuthStore.getState().tenantId;
+  const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  if (btn) btn.disabled = true;
+  try {
+    if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
+    else await new Promise((res) => setTimeout(res, 1000));
+    form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
+  } catch {
+    if (btn) btn.disabled = false;
+    alert("Error al enviar el formulario");
+  }
+}
+
 export function BlockRenderer({ type, content, palette }: { type: string; content: any; palette?: SitePalette }) {
   const c = resolveMediaUrl(content || {});
   const primary = palette?.primary || c.primaryColor || "#2563EB";
@@ -76,15 +113,14 @@ export function BlockRenderer({ type, content, palette }: { type: string; conten
   const [reviewHover, setReviewHover] = useState(0);
   const [reviewFormState, setReviewFormState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const revealRef = useRef<HTMLDivElement>(null);
-  const rawHtmlRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (c.variant !== "raw-html" || (type !== "header" && type !== "footer")) return;
-    const root = rawHtmlRef.current;
+    const root = revealRef.current;
     if (!root) return;
     root.querySelectorAll("*").forEach((el) => {
       const elm = el as HTMLElement;
-      const pos = getComputedStyle(elm).position;
+      const pos = (elm.ownerDocument.defaultView || window).getComputedStyle(elm).position;
       if (pos === "fixed" || pos === "sticky") elm.style.position = "relative";
     });
   }, [c.variant, type, c]);
@@ -109,7 +145,7 @@ export function BlockRenderer({ type, content, palette }: { type: string; conten
     let idx = 0;
     const dots: HTMLButtonElement[] = [];
     slides.forEach((_, i) => {
-      const dot = document.createElement("button");
+      const dot = root.ownerDocument.createElement("button");
       dot.className = "w-2.5 h-2.5 rounded-full bg-white/30 transition-all duration-300 hover:bg-white/60";
       if (i === 0) { dot.classList.remove("bg-white/30"); dot.classList.add("bg-white", "scale-125"); }
       dot.addEventListener("click", () => {
@@ -141,274 +177,22 @@ export function BlockRenderer({ type, content, palette }: { type: string; conten
     return () => { clearInterval(interval); dots.forEach(d => d.remove()); };
   }, [c.variant, type, c]);
 
-  if (c.variant === "prestige") {
-    // Import from local lib directory since Vercel root doesn't have access to packages/
-    const { getPrestigeHtml } = require("../../../lib/prestige-variants");
-    const html = applyPaletteToVariantHtml(getPrestigeHtml(type, c), c.variant, palette);
-    if (html) {
-      return (
-        <div 
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "art-culinaire") {
-    const { getArtCulinaireHtml } = require("../../../lib/art-culinaire-variants");
-    const html = applyPaletteToVariantHtml(getArtCulinaireHtml(type, c), c.variant, palette);
-    if (html) {
-      return (
-        <div 
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "rodriplast") {
-    const { getRodriplastHtml } = require("../../../lib/rodriplast-variants");
-    let html = applyPaletteToVariantHtml(getRodriplastHtml(type, c), c.variant, palette);
-    // In the editor the fixed header overlaps the project header; render it static here
-    if (html && type === "header") {
-      html = html.replace('class="fixed top-0 inset-x-0 z-50', 'class="relative top-0 inset-x-0 z-50');
-    }
-    if (html) {
-      return (
-        <div 
-          ref={revealRef}
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) {
-              btn.innerHTML = '¡Mensaje enviado! <i class="bi bi-check-lg h-4 w-4"></i>'; 
-              btn.style.background = '#16a34a';
-              btn.disabled = true;
-            }
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "indigo") {
-    const { getIndigoHtml } = require("../../../lib/indigo-variants");
-    let html = applyPaletteToVariantHtml(getIndigoHtml(type, c), c.variant, palette);
-    if (html && type === "header") {
-      html = html.replace('class="fixed w-full z-50 top-0 left-0 p-6 flex', 'class="relative w-full z-50 top-0 left-0 p-6 flex');
-    }
-    if (html) {
-      return (
-        <div 
-          ref={revealRef}
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form" && type !== "cta" && type !== "contact-section") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) {
-              btn.innerHTML = '¡Mensaje enviado! <i class="bi bi-check-lg h-4 w-4"></i>'; 
-              btn.style.background = '#16a34a';
-              btn.disabled = true;
-            }
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "dishora") {
-    const { getDishoraHtml } = require("../../../lib/dishora-variants");
-    const html = applyPaletteToVariantHtml(getDishoraHtml(type, c), c.variant, palette);
-    if (html) {
-      return (
-        <div 
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "graduate") {
-    const { getGraduateHtml } = require("../../../lib/graduate-variants");
-    const html = applyPaletteToVariantHtml(getGraduateHtml(type, c), c.variant, palette);
-    if (html) {
-      return (
-        <div 
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form" && type !== "cta") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "urban-noir") {
-    const { getUrbanNoirHtml } = require("../../../lib/urban-noir-variants");
-    let html = applyPaletteToVariantHtml(getUrbanNoirHtml(type, c), c.variant, palette);
-    // In the editor the fixed header overlaps the project header; render it static here
-    if (html && type === "header") {
-      html = html.replace('class="fixed w-full z-50', 'class="relative w-full z-50');
-    }
-    if (html) {
-      return (
-        <div 
-          ref={revealRef}
-          dangerouslySetInnerHTML={{ __html: html }} 
-          onSubmit={async (e) => {
-            if (type !== "contact" && type !== "form" && type !== "cta" && type !== "contact-section") return;
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
-        />
-      );
-    }
-  }
-
-  if (c.variant === "raw-html") {
-    const { getRawHtmlHtml } = require("../../../lib/raw-html-variants");
-    const html = getRawHtmlHtml(type, c, API_ORIGIN);
+  if (isTemplateVariant(c.variant)) {
+    const isRaw = c.variant === "raw-html";
+    let html = renderTemplateVariantHtml(type, c, API_ORIGIN);
+    if (html && !isRaw) html = applyPaletteToVariantHtml(html, c.variant, palette);
+    if (html && type === "header") html = staticEditorHeader(html, c.variant);
     if (html) {
       return (
         <div
-          ref={rawHtmlRef}
+          ref={revealRef}
           dangerouslySetInnerHTML={{ __html: html }}
-          onClick={(e) => {
-            const anchor = (e.target as HTMLElement)?.closest?.("a") as HTMLAnchorElement | null;
-            if (!anchor) return;
-            const href = anchor.getAttribute("href") || "";
+          onClick={isRaw ? (e) => {
+            const anchor = (e.target as HTMLElement)?.closest?.("a");
+            const href = anchor?.getAttribute("href") || "";
             if (href.startsWith("/") && !href.startsWith("//")) e.preventDefault();
-          }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const formData = new FormData(form);
-            const data: Record<string, any> = {};
-            formData.forEach((v, k) => { data[k] = v; });
-            const tenantId = useAuthStore.getState().tenantId;
-            const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-            if (btn) btn.disabled = true;
-            try {
-              if (tenantId) await api.post(`/leads/submit/${tenantId}`, data);
-              else await new Promise(res => setTimeout(res, 1000));
-              form.innerHTML = `<div class="text-center p-8"><h3 class="font-bold text-xl text-green-600 mb-2">¡Enviado!</h3><p>Gracias por tu mensaje.</p></div>`;
-            } catch (err) {
-              if (btn) btn.disabled = false;
-              alert("Error al enviar el formulario");
-            }
-          }}
+          } : undefined}
+          onSubmit={submitTemplateForm}
         />
       );
     }
@@ -1074,7 +858,7 @@ export function BlockRenderer({ type, content, palette }: { type: string; conten
                       {[1, 2, 3, 4, 5].map(star => (
                         <button key={star} type="button"
                           className={`text-3xl transition-colors ${star <= (reviewHover || reviewRating) ? "text-yellow-400" : "text-slate-300"}`}
-                          onClick={() => { setReviewRating(star); const hidden = document.getElementById("review-rating-hidden") as HTMLInputElement; if (hidden) hidden.value = String(star); }}
+                          onClick={(e) => { setReviewRating(star); const hidden = (e.currentTarget.ownerDocument || document).getElementById("review-rating-hidden") as HTMLInputElement; if (hidden) hidden.value = String(star); }}
                           onMouseEnter={() => setReviewHover(star)}
                           onMouseLeave={() => setReviewHover(0)}
                         >★</button>

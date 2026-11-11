@@ -18,11 +18,49 @@ import { sitePublicUrl } from "@/lib/site-url";
 import { DomainSearchModal } from "@/components/editor/domain-search-modal";
 import { SectionPicker } from "@/components/editor/section-picker";
 import { CanvasBlock } from "@/components/editor/canvas-block";
+import { CanvasFrame } from "@/components/editor/canvas-frame";
+import { templateCanvasClass } from "@/lib/templates";
 import { useConfirm } from "@/components/providers/confirm-provider";
 
 interface Block { id: string; type: string; content: any; styles: any; sortOrder: number; }
 interface SitePage { id: string; name: string; slug: string; path: string; isDefault: boolean; sortOrder: number; blocks: Block[]; }
 interface Site { id: string; name: string; subdomain: string; domain?: string; isPublished: boolean; primaryColor: string; secondaryColor?: string; logoUrl?: string; faviconUrl?: string; seoTitle?: string; seoDesc?: string; settings?: any; pages: SitePage[]; }
+
+const SHARED_BLOCK_TYPES = new Set(["header", "footer"]);
+const byOrder = (a: Block, b: Block) => a.sortOrder - b.sortOrder;
+const sameJson = (a: any, b: any) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/**
+ * Aplica un cambio a un bloque. El header y el footer son compartidos: el API copia sus
+ * cambios a todas las páginas, así que aquí se reflejan también en las demás páginas.
+ */
+function patchBlock(site: Site, blockId: string, patch: Partial<Block>): Site {
+  let type: string | undefined;
+  for (const pg of site.pages) for (const b of pg.blocks) if (b.id === blockId) type = b.type;
+  const shared = !!type && SHARED_BLOCK_TYPES.has(type);
+  return {
+    ...site,
+    pages: site.pages.map((pg) => ({
+      ...pg,
+      blocks: pg.blocks.map((b) => (b.id === blockId || (shared && b.type === type) ? { ...b, ...patch } : b)),
+    })),
+  };
+}
+
+/** Restaura los bloques de una instantánea del historial sin tocar páginas ni ajustes actuales. */
+function withSnapshotBlocks(current: Site, snapshot: Site): Site {
+  return {
+    ...current,
+    pages: current.pages.map((pg) => {
+      const snap = snapshot.pages.find((p) => p.id === pg.id);
+      return snap ? { ...pg, blocks: JSON.parse(JSON.stringify(snap.blocks)) } : pg;
+    }),
+  };
+}
+
+function remapBlockIds(site: Site, ids: Map<string, string>): Site {
+  return { ...site, pages: site.pages.map((pg) => ({ ...pg, blocks: pg.blocks.map((b) => (ids.has(b.id) ? { ...b, id: ids.get(b.id)! } : b)) })) };
+}
 
 export function SiteEditor({ siteId }: { siteId: string }) {
   const [site, setSite] = useState<Site | null>(null);
@@ -69,8 +107,18 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savePendingRef = useRef<() => Promise<void>>(async () => {});
   const { confirm } = useConfirm();
+  const syncingRef = useRef(false);
+  const siteRef = useRef<Site | null>(null);
+  const canvasDocRef = useRef<Document | null>(null);
+  const [canvasDoc, setCanvasDoc] = useState<Document | null>(null);
+  siteRef.current = site;
 
-  const fetchSite = useCallback(async () => {
+  /** Los bloques se dibujan dentro del iframe del lienzo. */
+  const scrollToBlock = (id: string, block: ScrollLogicalPosition = "start") => {
+    (canvasDocRef.current || document).getElementById(`block-${id}`)?.scrollIntoView({ behavior: "smooth", block });
+  };
+
+  const fetchSite = useCallback(async (keepPageId?: string) => {
     setLoading(true);
     try {
       const res: any = await api.get(`/sites/${siteId}`);
@@ -84,7 +132,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       setPalette(resolveSitePalette(s.settings, s.primaryColor, s.secondaryColor));
       setPaletteDirty(false);
       setUnpublishedBehavior((s.settings as any)?.unpublishedBehavior === "maintenance" ? "maintenance" : "404");
-      if (s.pages.length > 0) setActivePageId(s.pages.find(p => p.isDefault)?.id || s.pages[0].id);
+      if (s.pages.length > 0) setActivePageId((keepPageId && s.pages.some(p => p.id === keepPageId) ? keepPageId : null) || s.pages.find(p => p.isDefault)?.id || s.pages[0].id);
     } catch { setSite(null); }
     finally { setLoading(false); }
   }, [siteId]);
@@ -105,25 +153,80 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     setHistoryIdxState(histPos.current);
   }, []);
 
-  const undo = useCallback(() => {
-    if (histPos.current <= 0) return;
-    const target = historyRef.current[histPos.current - 1];
-    if (!target) return;
-    if (site) queueContentDiff(site, target);
-    histPos.current -= 1;
-    setHistoryIdxState(histPos.current);
-    setSite(JSON.parse(JSON.stringify(target)));
-  }, [site]);
+  /**
+   * Lleva el servidor del estado `from` al estado `to`: borra, vuelve a crear, reordena y
+   * actualiza estilos y contenido. Los bloques recreados reciben un id nuevo, que se
+   * reemplaza en el historial para que deshacer/rehacer sigan funcionando.
+   */
+  const syncBlocks = async (from: Site, to: Site) => {
+    const idMap = new Map<string, string>();
+    for (const pg of to.pages) {
+      const before = from.pages.find((p) => p.id === pg.id);
+      if (!before) continue;
+      const beforeById = new Map(before.blocks.map((b) => [b.id, b]));
+      const targetIds = new Set(pg.blocks.map((b) => b.id));
+      let structural = false;
 
-  const redo = useCallback(() => {
-    if (histPos.current >= historyRef.current.length - 1) return;
-    const target = historyRef.current[histPos.current + 1];
-    if (!target) return;
-    if (site) queueContentDiff(site, target);
-    histPos.current += 1;
-    setHistoryIdxState(histPos.current);
-    setSite(JSON.parse(JSON.stringify(target)));
-  }, [site]);
+      for (const b of before.blocks) {
+        if (targetIds.has(b.id)) continue;
+        delete pendingBlocksRef.current[b.id];
+        await api.delete(`/blocks/${b.id}`);
+        structural = true;
+      }
+
+      const ordered = [...pg.blocks].sort(byOrder);
+      for (const b of ordered) {
+        const prev = beforeById.get(b.id);
+        if (!prev) {
+          const res: any = await api.post(`/pages/${pg.id}/blocks`, { type: b.type, content: b.content, ...(b.styles ? { styles: b.styles } : {}) });
+          idMap.set(b.id, (res.data || res).id);
+          structural = true;
+          continue;
+        }
+        if (!sameJson(prev.styles || {}, b.styles || {})) await api.put(`/blocks/${b.id}`, { styles: b.styles || {} });
+        if (!sameJson(prev.content, b.content)) pendingBlocksRef.current[b.id] = b.content;
+      }
+
+      const beforeOrder = [...before.blocks].sort(byOrder).map((b) => b.id).filter((id) => targetIds.has(id));
+      const afterOrder = ordered.map((b) => b.id).filter((id) => beforeById.has(id));
+      if (structural || !sameJson(beforeOrder, afterOrder)) {
+        await api.put(`/pages/${pg.id}/blocks/reorder`, { blockIds: ordered.map((b) => idMap.get(b.id) || b.id) });
+      }
+    }
+
+    if (idMap.size > 0) {
+      historyRef.current = historyRef.current.map((snap) => remapBlockIds(snap, idMap));
+      setHistory([...historyRef.current]);
+      setSite((p) => (p ? remapBlockIds(p, idMap) : p));
+      setActiveBlockId((id) => (id && idMap.has(id) ? idMap.get(id)! : id));
+    }
+    setHasChanges(true);
+    if (Object.keys(pendingBlocksRef.current).length > 0) { setDirty(true); scheduleSave(); }
+  };
+
+  const restoreHistory = async (pos: number) => {
+    const current = siteRef.current;
+    const snapshot = historyRef.current[pos];
+    if (!current || !snapshot || syncingRef.current) return;
+    syncingRef.current = true;
+    const next = withSnapshotBlocks(current, snapshot);
+    histPos.current = pos;
+    setHistoryIdxState(pos);
+    setSite(next);
+    try {
+      await syncBlocks(current, next);
+    } catch (err: any) {
+      setToast(err.response?.data?.message || "No se pudo deshacer en el servidor; se recargó el sitio");
+      await fetchSite(activePageId || undefined);
+    } finally {
+      syncingRef.current = false;
+    }
+  };
+  const restoreRef = useRef(restoreHistory);
+  restoreRef.current = restoreHistory;
+
+  const undo = useCallback(() => { if (histPos.current > 0) restoreRef.current(histPos.current - 1); }, []);
+  const redo = useCallback(() => { if (histPos.current < historyRef.current.length - 1) restoreRef.current(histPos.current + 1); }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -131,8 +234,12 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       else if ((e.ctrlKey || e.metaKey) && e.key === "z" && e.shiftKey) { e.preventDefault(); redo(); }
       else if ((e.ctrlKey || e.metaKey) && e.key === "y") { e.preventDefault(); redo(); }
     };
-    window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo]);
+    // El lienzo es un iframe: sus teclas no llegan a la ventana del editor.
+    const canvasWin = canvasDoc?.defaultView;
+    window.addEventListener("keydown", handler);
+    canvasWin?.addEventListener("keydown", handler);
+    return () => { window.removeEventListener("keydown", handler); canvasWin?.removeEventListener("keydown", handler); };
+  }, [undo, redo, canvasDoc]);
 
   useEffect(() => { if (!dirty && !saving && !saveError) return; const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty, saving, saveError]);
 
@@ -146,8 +253,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
   const blogCfg = (site?.settings as any)?.blog;
   const injectBlogNav = (block: Block): Block => {
     if (!site || blogCfg?.enabled !== true || block.type !== "header") return block;
-    const base = site.domain ? `https://${site.domain}` : `https://build.icebergup.com/${site.subdomain}`;
-    const url = `${base}/${blogCfg.slug || "blog"}`;
+    const url = `${sitePublicUrl(site).replace(/\/+$/, "")}/${blogCfg.slug || "blog"}`;
     const content = { ...(block.content || {}) };
     const links = Array.isArray(content.links) ? content.links : [];
     if (!links.some((l: any) => l?.url === url)) {
@@ -173,7 +279,14 @@ export function SiteEditor({ siteId }: { siteId: string }) {
         if (Object.keys(blocks).length === 0 && !hasSeo) break;
         setSaving(true);
         try {
-          for (const [id, content] of Object.entries(blocks)) await api.put(`/blocks/${id}`, { content });
+          for (const [id, content] of Object.entries(blocks)) {
+            try { await api.put(`/blocks/${id}`, { content }); }
+            catch (err: any) {
+              // El bloque ya no existe (se borró en otra pestaña): no tiene sentido reintentar.
+              if (err.response?.status === 404) { if (pendingBlocksRef.current[id] === content) delete pendingBlocksRef.current[id]; continue; }
+              throw err;
+            }
+          }
           if (hasSeo) await api.put(`/seo/sites/${siteId}`, seo);
           // Solo se descarta lo que no cambió mientras se guardaba.
           for (const [id, content] of Object.entries(blocks)) if (pendingBlocksRef.current[id] === content) delete pendingBlocksRef.current[id];
@@ -203,18 +316,6 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     saveTimerRef.current = setTimeout(() => { savePendingRef.current(); }, 1200);
   }, []);
 
-  /** Tras deshacer/rehacer, manda al servidor los bloques cuyo contenido cambió. */
-  const queueContentDiff = (from: Site, to: Site) => {
-    const before = new Map<string, any>();
-    from.pages.forEach(pg => pg.blocks.forEach(b => before.set(b.id, b.content)));
-    to.pages.forEach(pg => pg.blocks.forEach(b => {
-      if (before.has(b.id) && JSON.stringify(before.get(b.id)) !== JSON.stringify(b.content)) pendingBlocksRef.current[b.id] = b.content;
-    }));
-    setDirty(true);
-    setHasChanges(true);
-    scheduleSave();
-  };
-
   // Al salir de la pestaña o cerrar, intenta guardar lo pendiente.
   useEffect(() => {
     const flush = () => { if (document.visibilityState === "hidden") savePendingRef.current(); };
@@ -222,27 +323,37 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     return () => { document.removeEventListener("visibilitychange", flush); if (saveTimerRef.current) clearTimeout(saveTimerRef.current); if (retryRef.current) clearTimeout(retryRef.current); };
   }, []);
 
+  /** Slug libre dentro del sitio: base, base-2, base-3… */
+  const uniqueSlug = (base: string) => {
+    const taken = new Set((site?.pages || []).map((p) => p.slug));
+    const clean = base || "pagina";
+    if (!taken.has(clean)) return clean;
+    let i = 2;
+    while (taken.has(`${clean}-${i}`)) i++;
+    return `${clean}-${i}`;
+  };
+
   const addPage = async () => {
     if (!newPageName.trim()) return;
-    const slug = newPageName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const name = newPageName.trim();
+    const slug = uniqueSlug(name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
     try {
-      const res: any = await api.post(`/sites/${siteId}/pages`, { name: newPageName, slug });
+      const res: any = await api.post(`/sites/${siteId}/pages`, { name, slug });
       const page = res.data || res;
       setSite(p => p ? { ...p, pages: [...p.pages, { ...page, blocks: [] }] } : p);
       setActivePageId(page.id);
+      setActiveBlockId(null);
       setShowAddPage(false);
       setNewPageName("");
       setToast("Página creada");
 
-      const defaultPage = site?.pages.find(p => p.isDefault);
-      if (defaultPage) {
-        const headerBlock = defaultPage.blocks.find(b => b.type === "header");
-        if (headerBlock) {
-          const links = headerBlock.content?.links || [];
-          const updatedContent = { ...headerBlock.content, links: [...links, { label: newPageName, url: `/${slug}` }] };
-          await api.put(`/blocks/${headerBlock.id}`, { content: updatedContent });
-          await fetchSite();
-        }
+      // Enlace en el menú: el header es compartido, el API lo copia a todas las páginas.
+      const headerBlock = site?.pages.find(p => p.isDefault)?.blocks.find(b => b.type === "header");
+      if (headerBlock) {
+        const links = Array.isArray(headerBlock.content?.links) ? headerBlock.content.links : [];
+        const content = { ...headerBlock.content, links: [...links, { label: name, url: `/${slug}` }] };
+        await api.put(`/blocks/${headerBlock.id}`, { content });
+        setSite(p => (p ? patchBlock(p, headerBlock.id, { content }) : p));
       }
     } catch (err: any) { setToast(err.response?.data?.message || "Error al crear página"); }
   };
@@ -265,18 +376,22 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     const page = site?.pages.find(p => p.id === pageId);
     if (!page) return;
     try {
-      const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: `${page.slug}-copy`, path: page.path });
+      // Sin `path`: el API lo arma con el slug; con el del original habría dos páginas en la misma ruta.
+      const res: any = await api.post(`/sites/${siteId}/pages`, { name: `${page.name} (copia)`, slug: uniqueSlug(`${page.slug}-copia`) });
       const newP = res.data || res;
-      await Promise.all(page.blocks.map(b => api.post(`/pages/${newP.id}/blocks`, { type: b.type, content: JSON.parse(JSON.stringify(b.content)) })));
-      await fetchSite();
+      // En orden y de a uno: el API calcula la posición con los bloques que ya existen.
+      for (const b of [...page.blocks].sort(byOrder)) {
+        await api.post(`/pages/${newP.id}/blocks`, { type: b.type, content: JSON.parse(JSON.stringify(b.content)), ...(b.styles ? { styles: b.styles } : {}) });
+      }
+      await fetchSite(newP.id);
       setToast("Página duplicada");
-    } catch { setToast("Error al duplicar"); }
+    } catch (err: any) { setToast(err.response?.data?.message || "Error al duplicar"); }
   };
 
   const updateBlock = (blockId: string, content: any) => {
     setSite(p => {
       if (!p) return p;
-      const next = { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.map(b => b.id === blockId ? { ...b, content } : b) })) };
+      const next = patchBlock(p, blockId, { content });
       pushHistory(next);
       return next;
     });
@@ -324,7 +439,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       const newBlock = (res.data || res) as Block;
       insertLocal(newBlock, afterIndex);
       setActiveBlockId(newBlock.id);
-      setTimeout(() => document.getElementById(`block-${newBlock.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+      setTimeout(() => scrollToBlock(newBlock.id, "center"), 50);
       setToast(`${BLOCK_META[type]?.label || type} agregado`);
     } catch (err: any) { setToast(err.response?.data?.message || "Error al agregar bloque"); }
   };
@@ -336,12 +451,8 @@ export function SiteEditor({ siteId }: { siteId: string }) {
     if (!src) return;
     if (src.type === "header" || src.type === "footer") { setToast("El encabezado y el pie son compartidos; no se pueden duplicar"); return; }
     try {
-      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type: src.type, content: JSON.parse(JSON.stringify(src.content)), afterIndex: idx });
+      const res: any = await api.post(`/pages/${activePageId}/blocks`, { type: src.type, content: JSON.parse(JSON.stringify(src.content)), afterIndex: idx, ...(src.styles ? { styles: src.styles } : {}) });
       const copy = (res.data || res) as Block;
-      if (src.styles) {
-        await api.put(`/blocks/${copy.id}`, { styles: src.styles });
-        copy.styles = src.styles;
-      }
       insertLocal(copy, idx);
       setActiveBlockId(copy.id);
       setToast("Sección duplicada");
@@ -357,7 +468,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
       await api.put(`/blocks/${blockId}`, { styles });
       setSite(p => {
         if (!p) return p;
-        const next = { ...p, pages: p.pages.map(pg => ({ ...pg, blocks: pg.blocks.map(b => b.id === blockId ? { ...b, styles } : b) })) };
+        const next = patchBlock(p, blockId, { styles });
         pushHistory(next);
         return next;
       });
@@ -513,7 +624,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           pageName={activePage?.name}
           blocks={sortedBlocks.map(b => ({ id: b.id, type: b.type, hidden: !!b.styles?.hidden }))}
           activeBlockId={activeBlockId}
-          onSelect={(id) => { setActiveBlockId(id); document.getElementById(`block-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+          onSelect={(id) => { setActiveBlockId(id); scrollToBlock(id); }}
           onReorder={reorderBlocks}
           onDuplicate={duplicateBlock}
           onToggleHidden={toggleHidden}
@@ -521,10 +632,14 @@ export function SiteEditor({ siteId }: { siteId: string }) {
           onAdd={() => openPicker()}
         />
 
-        {/* CANVAS */}
-        <main data-tour="canvas" className={`flex-1 overflow-y-auto bg-slate-200/70 ${device === "mobile" ? "py-6" : ""}`} onClick={() => setActiveBlockId(null)}>
+        {/* CANVAS: iframe para que la vista móvil use los breakpoints reales */}
+        <main data-tour="canvas" className={`flex min-w-0 flex-1 justify-center overflow-hidden bg-slate-200/70 ${device === "mobile" ? "py-6" : ""}`} onClick={() => setActiveBlockId(null)}>
+          <CanvasFrame
+            onDocument={(doc) => { canvasDocRef.current = doc; setCanvasDoc(doc); }}
+            className={`block h-full border-0 bg-white transition-all duration-200 ${device === "mobile" ? "w-[390px] max-w-full rounded-2xl shadow-xl ring-1 ring-slate-300" : "w-full"}`}
+          >
           <div
-            className={`mx-auto bg-white transition-all duration-200 ${device === "mobile" ? "w-[390px] max-w-full overflow-hidden rounded-2xl shadow-xl ring-1 ring-slate-300" : "min-h-full w-full"} ${templateWrapperClass(site?.settings?.globalStyles, activePage?.path)} ${activePage?.blocks?.[0]?.content?.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background font-body-md text-body-md' : ''}`}
+            className={`min-h-screen bg-white ${templateWrapperClass(site?.settings?.globalStyles, activePage?.path)} ${templateCanvasClass(activePage?.blocks?.[0]?.content?.variant)}`}
             onClick={(e) => e.stopPropagation()}
           >
             <TemplateGlobalStyles
@@ -554,6 +669,7 @@ export function SiteEditor({ siteId }: { siteId: string }) {
               </div>
             )}
           </div>
+          </CanvasFrame>
         </main>
 
         {/* TEMA Y CONFIGURACIÓN DEL SITIO */}

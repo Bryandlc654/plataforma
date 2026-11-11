@@ -5,6 +5,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { PagesService } from "./pages.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { RequirePermissions } from "../../common/decorators/permissions.decorator";
+import { PERMISSIONS } from "../../shared/index";
 
 @ApiTags("pages")
 @Controller()
@@ -13,12 +15,14 @@ import { CurrentUser } from "../../common/decorators/current-user.decorator";
 export class PagesController {
   constructor(private pagesService: PagesService) {}
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get("sites/:siteId/pages")
   @ApiOperation({ summary: "List pages for a site" })
   async findAll(@Param("siteId") siteId: string, @CurrentUser() user: any) {
     return this.pagesService.findAll(siteId, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Post("sites/:siteId/pages")
   @ApiOperation({ summary: "Create page" })
   async create(
@@ -29,24 +33,28 @@ export class PagesController {
     return this.pagesService.create(siteId, user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get("pages/:id")
   @ApiOperation({ summary: "Get page by ID" })
   async findById(@Param("id") id: string, @CurrentUser() user: any) {
     return this.pagesService.findById(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put("pages/:id")
   @ApiOperation({ summary: "Update page" })
   async update(@Param("id") id: string, @CurrentUser() user: any, @Body() body: any) {
     return this.pagesService.update(id, user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Delete("pages/:id")
   @ApiOperation({ summary: "Delete page" })
   async remove(@Param("id") id: string, @CurrentUser() user: any) {
     return this.pagesService.remove(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put("sites/:siteId/pages/reorder")
   @ApiOperation({ summary: "Reorder pages" })
   async reorderPages(
@@ -57,6 +65,7 @@ export class PagesController {
     return this.pagesService.reorderPages(siteId, user.tenantId, pageIds);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Post("pages/:pageId/blocks")
   @ApiOperation({ summary: "Add block to page" })
   async addBlock(
@@ -67,18 +76,21 @@ export class PagesController {
     return this.pagesService.addBlock(pageId, user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put("blocks/:id")
   @ApiOperation({ summary: "Update block" })
   async updateBlock(@Param("id") id: string, @CurrentUser() user: any, @Body() body: any) {
     return this.pagesService.updateBlock(id, user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Delete("blocks/:id")
   @ApiOperation({ summary: "Delete block" })
   async removeBlock(@Param("id") id: string, @CurrentUser() user: any) {
     return this.pagesService.removeBlock(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put("pages/:pageId/blocks/reorder")
   @ApiOperation({ summary: "Reorder blocks" })
   async reorderBlocks(

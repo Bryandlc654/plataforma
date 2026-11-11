@@ -1,8 +1,11 @@
+import { escapeHtmlText } from "./sanitize";
+
 export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
   if (c.variant !== "urban-noir") return null;
 
   const nl = (s: any) => String(s || "").replace(/\n/g, "<br>");
-  const esc = (s: any) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  // Idempotente: el contenido ya llega saneado desde renderTemplateVariantHtml.
+  const esc = (s: any) => escapeHtmlText(s);
 
   const siteBase = !site?.domain && site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
   const homeUrl = site?.domain ? `https://${site.domain}` : (site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "/");
@@ -372,7 +375,7 @@ export function getUrbanNoirHtml(type: string, c: any, apiBaseUrl?: string, site
               </ul>
             </div>`).join("")}
             <div>
-              <h4 class="font-bold uppercase tracking-widest mb-6 border-b border-gray-800 pb-2">Síguenos</h4>
+              <h4 class="font-bold uppercase tracking-widest mb-6 border-b border-gray-800 pb-2" data-ed="socialTitle">${c.socialTitle || "Síguenos"}</h4>
               <div class="flex space-x-4">
                 ${social.map((s: any) => `<a data-analytics-click data-analytics-type="click" data-analytics-label="social_${s.label || 'link'}" href="${siteHref(s.url)}" aria-label="${s.label}" class="w-10 h-10 border border-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-black transition">${socialSvg(s.label)}</a>`).join("")}
               </div>

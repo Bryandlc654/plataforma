@@ -25,8 +25,9 @@ export function normalizePublicPath(p: string): string {
 }
 
 export function escapeHtml(value: string | null | undefined): string {
+  // No vuelve a escapar entidades válidas: el contenido de los bloques ya llega saneado.
   return (value || "")
-    .replace(/&/g, "&amp;")
+    .replace(/&(?!(?:#\d{1,7}|#x[0-9a-fA-F]{1,6}|[A-Za-z][A-Za-z0-9]{1,31});)/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")

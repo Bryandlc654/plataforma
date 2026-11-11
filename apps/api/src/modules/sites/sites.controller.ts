@@ -8,6 +8,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from "@nestjs/swagg
 import { SitesService } from "./sites.service";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { RequirePermissions } from "../../common/decorators/permissions.decorator";
+import { PERMISSIONS } from "../../shared/index";
 
 @ApiTags("sites")
 @Controller("sites")
@@ -16,6 +18,7 @@ import { CurrentUser } from "../../common/decorators/current-user.decorator";
 export class SitesController {
   constructor(private sitesService: SitesService) {}
 
+  @RequirePermissions(PERMISSIONS.SITE_CREATE)
   @Post()
   @ApiOperation({ summary: "Create new site" })
   async create(
@@ -25,6 +28,7 @@ export class SitesController {
     return this.sitesService.create(user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get()
   @ApiOperation({ summary: "List tenant sites" })
   async findAll(
@@ -41,12 +45,14 @@ export class SitesController {
     return this.sitesService.getCapabilities(user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get(":id")
   @ApiOperation({ summary: "Get site by ID" })
   async findById(@Param("id") id: string, @CurrentUser() user: any) {
     return this.sitesService.findById(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put(":id")
   @ApiOperation({ summary: "Update site" })
   async update(
@@ -57,18 +63,21 @@ export class SitesController {
     return this.sitesService.update(id, user.tenantId, body);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_DELETE)
   @Delete(":id")
   @ApiOperation({ summary: "Soft-delete site" })
   async remove(@Param("id") id: string, @CurrentUser() user: any) {
     return this.sitesService.remove(id, user.tenantId);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_READ)
   @Get(":id/check-domain")
   @ApiOperation({ summary: "Check if custom domain DNS points to server" })
   async checkDomain(@Param("id") id: string, @CurrentUser() user: any, @Query("domain") domain: string) {
     return this.sitesService.checkDomainDns(id, user.tenantId, domain);
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Post(":id/apk")
   @ApiOperation({ summary: "Upload APK for a site" })
   @ApiConsumes("multipart/form-data")
@@ -102,6 +111,7 @@ export class SitesController {
     });
   }
 
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Delete(":id/apk")
   @ApiOperation({ summary: "Remove APK from a site" })
   async removeApk(@Param("id") id: string, @CurrentUser() user: any) {

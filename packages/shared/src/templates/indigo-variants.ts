@@ -188,7 +188,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         </div>
         <div class="absolute bottom-10 right-10 flex-col items-end gap-2 z-10 hidden md:flex">
           <div class="w-24 h-[2px]" style="background:${B}"></div>
-          <span class="uppercase tracking-widest text-xs font-bold" style="color:${B};font-family:Poppins,sans-serif">Scroll para descubrir</span>
+          <span class="uppercase tracking-widest text-xs font-bold" style="color:${B};font-family:Poppins,sans-serif" data-ed="scrollText">${c.scrollText || "Scroll para descubrir"}</span>
         </div>
       </section>`;
     }
@@ -422,7 +422,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                       <h3 class="font-black text-4xl md:text-6xl uppercase tracking-tighter" style="color:${B};font-family:Poppins,sans-serif">${p.title}</h3>
                       <p class="font-bold text-xl md:text-2xl mt-2 tracking-widest uppercase" style="color:white">${p.sub}</p>
                     </div>
-                    <div class="mt-6 md:mt-0"><span class="border-2 font-bold uppercase tracking-widest py-3 px-8" style="border-color:${B};color:${B}">Ver Proyecto</span></div>
+                    <div class="mt-6 md:mt-0"><span class="border-2 font-bold uppercase tracking-widest py-3 px-8" style="border-color:${B};color:${B}" data-ed="projectLinkText">${c.projectLinkText || "Ver Proyecto"}</span></div>
                   </div>` : `<img src="${p.img}" alt="${p.title}" class="w-full ${p.imgHeight} object-cover transition-transform duration-700 group-hover:scale-105">
                   ${p.hover === 'overlay-brand' ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" style="background:${B};opacity:0;transition:opacity 0.3s" onmouseover="this.style.opacity=0.95" onmouseout="this.style.opacity=0">
                     <h3 class="font-black text-4xl md:text-5xl uppercase tracking-tighter mb-4" style="font-family:Poppins,sans-serif;color:${D}">${p.title}</h3>
@@ -588,7 +588,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                 <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">${f.label}</label>
                 <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
               </div>`).join("") || `<div>
-                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}">Mensaje</label>
+                <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}" data-ed="messageLabel">${c.messageLabel || "Mensaje"}</label>
                 <textarea name="mensaje" rows="4" required class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="Cuéntanos tu proyecto..."></textarea>
               </div>`}
               <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D};background:white"></div>
@@ -697,16 +697,16 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               <a href="#" class="block mb-6">
                 <img src="${logo}" alt="${companyName}" class="h-16 w-auto object-contain" style="filter:brightness(0) invert(1)">
               </a>
-              <p class="font-light opacity-70 mb-6 max-w-xs" style="color:${D}">Laboratorio de ideas creativas. Rompemos moldes con Letras 3D y Branding disruptivo.</p>
+              <p class="font-light opacity-70 mb-6 max-w-xs" style="color:${D}" data-ed="footerText">${c.footerText || "Laboratorio de ideas creativas. Rompemos moldes con Letras 3D y Branding disruptivo."}</p>
             </div>
             <div>
-              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Agencia</h4>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif" data-ed="col1Title">${c.col1Title || "Agencia"}</h4>
               <ul class="space-y-4 font-light opacity-80" style="color:${D}">
                 ${links.map((l: any) => `<li><a href="${toHref(l.url)}" class="hover:font-semibold transition-all" style="color:${D}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${l.label}</a></li>`).join("")}
               </ul>
             </div>
             <div>
-              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Estudio</h4>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif" data-ed="col2Title">${c.col2Title || "Estudio"}</h4>
               <ul class="space-y-4 font-light opacity-80" style="color:${D}">
                 <li><a href="mailto:${email}" class="hover:font-semibold transition-all" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${email}</a></li>
                 <li><a href="tel:${phone.replace(/[^0-9+]/g, '')}" class="hover:font-semibold transition-all" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'">${phone}</a></li>
@@ -714,7 +714,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               </ul>
             </div>
             <div>
-              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif">Redes</h4>
+              <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif" data-ed="col3Title">${c.col3Title || "Redes"}</h4>
               <ul class="space-y-4 font-light opacity-80" style="color:${D}">
                 ${social.map((s: any) => `<li><a href="${s.url || '#'}" class="hover:font-semibold transition-all flex items-center gap-2" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" ${s.url && s.url !== '#' ? 'target="_blank" rel="noopener"' : ''}>↗ ${s.label}</a></li>`).join("")}
               </ul>
@@ -723,14 +723,14 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
           <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-6" style="border-top:2px solid rgba(0,0,0,0.1)">
             <div class="text-sm font-semibold opacity-60" style="color:${D}">${copyright}</div>
             <div class="flex gap-6 text-sm font-semibold opacity-60" style="color:${D}">
-              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Privacidad</a>
-              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Términos</a>
-              <a href="/dejar-opinion" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors">Dejar una reseña</a>
+              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="privacyText">${c.privacyText || "Privacidad"}</a>
+              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="termsText">${c.termsText || "Términos"}</a>
+              <a href="/dejar-opinion" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a>
             </div>
           </div>
         </div>
         <div class="absolute bottom-[-5%] left-0 w-full overflow-hidden flex justify-center pointer-events-none select-none z-0" style="opacity:0.05">
-          <span class="font-black text-dark whitespace-nowrap" style="font-size:15vw;line-height:1;font-family:Poppins,sans-serif">INDIGO AGENCY</span>
+          <span class="font-black text-dark whitespace-nowrap" style="font-size:15vw;line-height:1;font-family:Poppins,sans-serif" data-ed="bigText">${c.bigText || "INDIGO AGENCY"}</span>
         </div>
         ${footerScript()}
       </footer>`;

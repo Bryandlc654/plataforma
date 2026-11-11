@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { templateCanvasClass } from "@/lib/templates";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { BlockRenderer } from "@/components/blocks/renderers/block-renderer";
@@ -78,7 +79,7 @@ export default function TemplatePreviewPage() {
       </div>}
 
       {/* Render Template Blocks */}
-      <div className={`${embed ? "" : "pt-12"} ${templateWrapperClass(template.globalStyles, defaultPage?.path)} ${template.variant === 'art-culinaire' ? 'theme-art-culinaire bg-background text-on-background font-body-md text-body-md selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed-variant' : ''}`}>
+      <div className={`${embed ? "" : "pt-12"} ${templateWrapperClass(template.globalStyles, defaultPage?.path)} ${templateCanvasClass(template.variant)}`}>
         <TemplateGlobalStyles globalStyles={template.globalStyles} pagePath={defaultPage?.path} />
         {blocks.length === 0 ? (
           <div className="flex items-center justify-center h-64 text-slate-500">
