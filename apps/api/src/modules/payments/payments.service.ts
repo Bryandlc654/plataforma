@@ -238,6 +238,20 @@ export class PaymentsService {
     return { paypalOrderId: createJson.id, orderId: order.id, totalAmount, currency: PAYPAL_CURRENCY };
   }
 
+  /** Reembolsa una captura que no corresponde al pedido. Si falla, queda en el log para revisión manual. */
+  private async refundPaypalCapture(paypal: PaypalProvider, accessToken: string, captureId: string): Promise<void> {
+    try {
+      const res = await fetch(`${this.paypalApiBase(paypal.mode)}/v2/payments/captures/${encodeURIComponent(captureId)}/refund`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (!res.ok) console.error(`[payments] Reembolso PayPal falló (${captureId}): HTTP ${res.status}`);
+    } catch (err: any) {
+      console.error(`[payments] Reembolso PayPal falló (${captureId}): ${err?.message}`);
+    }
+  }
+
   async capturePaypalOrder(tenantId: string, paypalOrderId: string, orderId: string) {
     const pgw = await this.loadPaymentGateway(tenantId);
     const paypal = pgw.providers.paypal;
@@ -246,11 +260,13 @@ export class PaymentsService {
 
     const order = await this.prisma.order.findFirst({ where: { id: orderId, tenantId } });
     if (!order) throw new NotFoundException("Pedido no encontrado");
-    if (order.status === "paid") {
-      return { orderId, status: "paid", paypalOrderId, captureId: order.paymentReference || null, alreadyPaid: true };
-    }
-    if (order.paymentReference && order.paymentReference !== paypalOrderId) {
+    // El pedido debe haberse creado para PayPal y con ESTA orden de PayPal: si no, se podría
+    // pagar una orden barata y marcar como pagado otro pedido (p. ej. uno contra entrega).
+    if (order.paymentMethod !== "paypal" || !order.paymentReference || order.paymentReference !== paypalOrderId) {
       throw new BadRequestException("La referencia de pago no coincide con el pedido");
+    }
+    if (order.status === "paid") {
+      return { orderId, status: "paid", paypalOrderId, captureId: null, alreadyPaid: true };
     }
 
     const accessToken = await this.getAccessToken(paypal);
@@ -275,10 +291,19 @@ export class PaymentsService {
       throw new BadRequestException(`El pago no fue completado (estado: ${status || "desconocido"})`);
     }
 
-    const captureId =
-      capJson?.purchase_units?.[0]?.payments?.captures?.[0]?.id ||
-      capJson?.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id ||
-      null;
+    const unit = capJson?.purchase_units?.[0];
+    const capture = unit?.payments?.captures?.[0];
+    const captureId = capture?.id || null;
+
+    // Lo cobrado debe ser exactamente este pedido: referencia, monto y moneda.
+    const expectedCents = Math.round(Number(order.totalAmount) * 100);
+    const paidCents = Math.round(Number(capture?.amount?.value) * 100);
+    const currency = capture?.amount?.currency_code;
+    const referenceOk = !unit?.reference_id || unit.reference_id === order.id;
+    if (capture?.status !== "COMPLETED" || !referenceOk || !Number.isFinite(paidCents) || paidCents !== expectedCents || currency !== (order.currency || PAYPAL_CURRENCY)) {
+      if (captureId) await this.refundPaypalCapture(paypal, accessToken, captureId);
+      throw new BadRequestException("El monto cobrado no coincide con el pedido; el pago fue reembolsado");
+    }
 
     await this.prisma.order.update({
       where: { id: order.id },
@@ -401,6 +426,12 @@ export class PaymentsService {
       throw new BadRequestException(
         `El pago no fue aprobado (estado: ${transactionStatus || statusCode || "desconocido"})`
       );
+    }
+
+    // La transacción confirmada debe ser la de este pedido (no otra transacción aprobada del comercio).
+    const confirmedClientTx = String(json?.clientTransactionId ?? json?.clientTxId ?? "");
+    if (confirmedClientTx && confirmedClientTx !== clientTxId) {
+      throw new BadRequestException("La transacción de Payphone no corresponde a este pedido");
     }
 
     const expected = Math.round(Number(order.totalAmount) * 100);

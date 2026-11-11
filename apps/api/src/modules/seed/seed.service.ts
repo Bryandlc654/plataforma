@@ -9,16 +9,24 @@ export class SeedService implements OnModuleInit {
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
-    const enabled =
-      process.env.SEED_ON_STARTUP === "true" || process.env.NODE_ENV !== "production";
-    if (!enabled) {
-      this.logger.log("Seed disabled, skipping");
-      return;
-    }
+    // Permisos y roles del sistema se sincronizan SIEMPRE (también en producción): el código
+    // protege rutas con @RequirePermissions y la base debe tener los permisos de ROLE_PERMISSIONS.
+    // Es idempotente y no toca los roles personalizados de cada negocio.
     try {
       await this.seedPermissions();
       await this.seedRoles();
       await this.seedRolePermissions();
+    } catch (err: any) {
+      this.logger.error(`Role/permission sync failed: ${err?.message ? String(err.message) : "Unknown error"}`);
+    }
+
+    const enabled =
+      process.env.SEED_ON_STARTUP === "true" || process.env.NODE_ENV !== "production";
+    if (!enabled) {
+      this.logger.log("Data seed disabled, skipping");
+      return;
+    }
+    try {
       await this.seedPlans();
       await this.seedEcommerceTemplate();
       this.logger.log("Database seeded successfully");
@@ -87,8 +95,9 @@ export class SeedService implements OnModuleInit {
   }
 
   private async seedRolePermissions() {
+    // Solo los roles globales del sistema; los roles propios de cada negocio no se tocan.
     const roles = await this.prisma.role.findMany({
-      where: { isSystem: true },
+      where: { isSystem: true, tenantId: null },
       select: { id: true, name: true },
     });
     const permissions = await this.prisma.permission.findMany({
@@ -106,12 +115,15 @@ export class SeedService implements OnModuleInit {
               .map((name) => permByName.get(name))
               .filter((id): id is string => !!id);
 
-      await this.prisma.$transaction([
-        this.prisma.rolePermission.deleteMany({ where: { roleId: role.id } }),
-        this.prisma.rolePermission.createMany({
-          data: canonical.map((permissionId) => ({ roleId: role.id, permissionId })),
-        }),
-      ]);
+      // Diferencial: agrega lo que falta y quita lo que sobra. Así varias instancias que
+      // arrancan a la vez no chocan (antes borraba todo y volvía a crear).
+      await this.prisma.rolePermission.createMany({
+        data: canonical.map((permissionId) => ({ roleId: role.id, permissionId })),
+        skipDuplicates: true,
+      });
+      await this.prisma.rolePermission.deleteMany({
+        where: { roleId: role.id, permissionId: { notIn: canonical } },
+      });
       total += canonical.length;
     }
 
