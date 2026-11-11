@@ -80,7 +80,7 @@ function fixedLinks(html, content) {
 }
 
 /** Plantillas en las que también se exige que todos los enlaces sean editables (--strict). */
-const LINK_STRICT = new Set(["urban-noir"]);
+const LINK_STRICT = new Set(["urban-noir", "indigo"]);
 
 const report = {};
 const linkReport = {};

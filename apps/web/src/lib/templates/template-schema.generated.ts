@@ -1049,9 +1049,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         "default": "https://placehold.co/200x60/050505/fdcb0c?text=INDIGO"
       },
       "navbarStyle": {},
-      "logoUrl": {
-        "default": "#"
-      },
+      "logoUrl": {},
       "companyName": {
         "default": "Indigo Publicidad"
       }
@@ -1085,6 +1083,10 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "backgroundImage": {
         "default": ""
+      },
+      "buttonText": {},
+      "buttonUrl": {
+        "default": "#contacto"
       },
       "scrollText": {
         "default": "Scroll para descubrir"
@@ -1367,6 +1369,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "imageUrl": {
         "default": "https://placehold.co/1200x600/fdcb0c/050505?text=PORTAFOLIO"
       },
+      "linkUrl": {},
       "exploreText": {
         "default": "Explorar<br>Galería"
       }
@@ -1406,7 +1409,8 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
           },
           "description": {
             "aliasOf": "quote"
-          }
+          },
+          "image": {}
         }
       }
     },
@@ -1640,7 +1644,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         "default": "¿Listo para"
       },
       "email": {
-        "aliasOf": "buttonUrl",
         "default": "hola@indigopublicidad.com"
       },
       "phone": {
@@ -1697,6 +1700,9 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "messageLabel": {
         "default": "Mensaje"
+      },
+      "messagePlaceholder": {
+        "default": "Cuéntanos tu proyecto..."
       }
     },
     "contact": {
@@ -1717,7 +1723,6 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
         "default": "¿Listo para"
       },
       "email": {
-        "aliasOf": "buttonUrl",
         "default": "hola@indigopublicidad.com"
       },
       "phone": {
@@ -1774,6 +1779,9 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       },
       "messageLabel": {
         "default": "Mensaje"
+      },
+      "messagePlaceholder": {
+        "default": "Cuéntanos tu proyecto..."
       }
     },
     "process": {
@@ -1975,8 +1983,14 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
       "col3Title": {
         "default": "Redes"
       },
+      "privacyUrl": {
+        "default": "#"
+      },
       "privacyText": {
         "default": "Privacidad"
+      },
+      "termsUrl": {
+        "default": "#"
       },
       "termsText": {
         "default": "Términos"
@@ -2002,6 +2016,7 @@ export const TEMPLATE_SCHEMA: Record<string, Record<string, Record<string, Templ
     },
     "image": {
       "background": {},
+      "link": {},
       "imageUrl": {
         "default": "https://placehold.co/1200x600/fdcb0c/050505?text=IMAGEN"
       },

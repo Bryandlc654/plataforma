@@ -1,4 +1,5 @@
 import { TEMPLATE_SCHEMA, type TemplateFieldSchema } from "@/lib/templates";
+import { sectionConfig, type SectionConfig } from "./section-config";
 
 /**
  * Campos editables de una sección: los que declara el esquema de su plantilla (con sus
@@ -32,6 +33,7 @@ const LABELS: Record<string, string> = {
   icon: "Ícono", items: "Elementos", links: "Enlaces", columns: "Columnas", fields: "Campos del formulario", images: "Imágenes", slides: "Diapositivas",
   phone: "Teléfono", email: "Correo", address: "Dirección", hours: "Horario", companyName: "Nombre de la empresa", copyright: "Derechos reservados",
   price: "Precio", period: "Periodo", features: "Características", stats: "Estadísticas", alt: "Texto alternativo", caption: "Pie de foto",
+  messageLabel: "Etiqueta del mensaje", messagePlaceholder: "Texto de ayuda del mensaje", highlight: "Texto destacado",
   question: "Pregunta", answer: "Respuesta", category: "Categoría", tag: "Etiqueta", tags: "Etiquetas", year: "Año", suffix: "Sufijo",
   placeholder: "Texto de ayuda", required: "Obligatorio", type: "Tipo", options: "Opciones", message: "Mensaje", number: "Número",
   reviewLinkText: "Texto del enlace de reseñas", privacyText: "Texto de privacidad", termsText: "Texto de términos", mapUrl: "Enlace del mapa",
@@ -64,19 +66,6 @@ const HINTS: Record<string, string> = {
   newsletter: "Cambia la sección a un campo de correo con botón de suscribirse.",
 };
 
-/** Etiquetas propias de una sección (cuando el nombre genérico confunde). */
-const SECTION_LABELS: Record<string, Record<string, string>> = {
-  "urban-noir/hero": {
-    backgroundImage: "Imagen de fondo", kicker: "Antetítulo", title: "Título", subtitle: "Subtítulo",
-    buttonText: "Texto del botón", buttonUrl: "Enlace del botón", slides: "Más diapositivas",
-  },
-  "urban-noir/footer": { columns: "Columnas de enlaces", links: "Enlaces" },
-  "urban-noir/header": { links: "Menú" },
-  "urban-noir/features": { items: "Categorías", linkText: "Texto del enlace «ver todo»", linkUrl: "Enlace «ver todo»" },
-  "urban-noir/portfolio": { items: "Productos" },
-  "urban-noir/benefits": { items: "Beneficios" },
-};
-
 const SELECTS: Record<string, { label: string; value: string }[]> = {
   logoType: [{ label: "Texto", value: "text" }, { label: "Imagen", value: "image" }, { label: "Imagen y texto", value: "both" }],
   alignment: [{ label: "Izquierda", value: "left" }, { label: "Centro", value: "center" }, { label: "Derecha", value: "right" }],
@@ -94,7 +83,8 @@ export function labelFor(key: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-const IMAGE_KEY = /(image|img|photo|avatar|logo|thumbnail|poster|background|bg|cover|banner|picture)$/i;
+// "imageUrl", "logoSrc", "storyImgBack"… también son imágenes aunque terminen en Url/Src.
+const IMAGE_KEY = /(image|img|photo|avatar|logo|thumbnail|poster|background|bg|cover|banner|picture)(url|src|back|front)?$/i;
 const URL_KEY = /(url|link|href)$/i;
 const IMAGE_VALUE = /^(https?:|\/uploads\/|data:image\/).+\.(png|jpe?g|webp|gif|avif|svg)(\?|$)|googleusercontent\.com|unsplash\.com|placehold\.co/i;
 
@@ -120,9 +110,11 @@ export function schemaFor(type: string, content: any): SchemaFields {
   return (variant && TEMPLATE_SCHEMA[variant]?.[type]) || {};
 }
 
-function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: unknown; aliasOf?: string }> | undefined, values: any[]): FieldDef[] {
+function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: unknown; aliasOf?: string }> | undefined, values: any[], cfg: SectionConfig = {}): FieldDef[] {
   const keys: string[] = [];
-  const add = (k: string) => { if (!HIDDEN.has(k) && !keys.includes(k)) keys.push(k); };
+  const hidden = new Set(cfg.itemHidden?.[listKey] || []);
+  const labels = cfg.itemLabels?.[listKey] || {};
+  const add = (k: string) => { if (!HIDDEN.has(k) && !hidden.has(k) && !keys.includes(k)) keys.push(k); };
   Object.keys(schemaItems || {}).forEach((k) => {
     const alias = schemaItems![k].aliasOf;
     // Alternativo (description de desc): solo si algún elemento lo usa.
@@ -135,7 +127,7 @@ function itemFieldDefs(listKey: string, schemaItems: Record<string, { default?: 
     const kind = kindOf(k, sample, listKey);
     const def: FieldDef = {
       key: k,
-      label: labelFor(k),
+      label: labels[k] || labelFor(k),
       kind,
       default: schemaItems?.[k]?.default,
       options: kind === "select" ? (listKey === "fields" && k === "type" ? FORM_FIELD_TYPES : SELECTS[k]) : undefined,
@@ -161,8 +153,19 @@ function groupFieldDefs(obj: any): FieldDef[] {
 export function fieldsFor(type: string, content: any): FieldDef[] {
   const c = content || {};
   const schema = schemaFor(type, c);
+  const cfg = sectionConfig(c.variant, type);
+  const hidden = new Set(cfg.hidden || []);
+  // Según el diseño elegido (p. ej. "Tres columnas"), solo los campos que aplican.
+  const visible = cfg.visible?.(c);
+  const visibleSet = visible ? new Set(visible) : null;
   const keys: string[] = [];
-  const add = (k: string) => { if (!HIDDEN.has(k) && !keys.includes(k)) keys.push(k); };
+  const add = (k: string) => {
+    if (HIDDEN.has(k) || hidden.has(k) || keys.includes(k)) return;
+    if (visibleSet && !visibleSet.has(k)) return;
+    keys.push(k);
+  };
+  // Las opciones de diseño van primero: cambian qué campos se muestran.
+  Object.keys(cfg.selects || {}).forEach(add);
   Object.keys(schema).forEach((k) => {
     if (schema[k].aliasOf && (c[k] == null || c[k] === "")) return;
     add(k);
@@ -174,13 +177,18 @@ export function fieldsFor(type: string, content: any): FieldDef[] {
     add(k);
   });
 
-  const sectionLabels = SECTION_LABELS[`${c.variant || "generic"}/${type}`] || {};
+  // Con `visible`, el orden es el de la configuración (p. ej. antetítulo antes del título).
+  if (visible) keys.sort((a, b) => visible.indexOf(a) - visible.indexOf(b));
+  const sectionLabels = cfg.labels || {};
   return keys.map((key) => {
     const s = schema[key];
     const value = c[key] ?? s?.default;
-    const kind = s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
-    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: HINTS[key], kind, default: s?.default, options: kind === "select" ? SELECTS[key] : undefined };
-    if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : []);
+    const options = cfg.selects?.[key] || SELECTS[key];
+    const kind: FieldKind = cfg.selects?.[key]
+      ? "select"
+      : s?.list ? (Array.isArray(value) && value.length && value.every((v: unknown) => typeof v === "string") ? "stringList" : "list") : kindOf(key, value ?? "");
+    const def: FieldDef = { key, label: sectionLabels[key] || labelFor(key), hint: HINTS[key], kind, default: s?.default, options: kind === "select" ? options : undefined };
+    if (kind === "list") def.itemFields = itemFieldDefs(key, s?.items, Array.isArray(value) ? value : [], cfg);
     // Objetos anidados (plantillas importadas): sus campos se editan agrupados.
     if (kind === "group") def.itemFields = groupFieldDefs(value);
     return def;

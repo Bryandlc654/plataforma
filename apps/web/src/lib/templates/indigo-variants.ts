@@ -5,32 +5,10 @@
 
 const PLACEHOLDER_LOGO = "https://placehold.co/200x60/050505/fdcb0c?text=INDIGO";
 
-function siteHref(url?: string) {
-  if (!url || url === "#") return "#";
-  return url.startsWith("/") || url.startsWith("http") ? url : `#${url}`;
-}
-
 function actionUrl(site?: any, apiBaseUrl?: string) {
   const host = apiBaseUrl || "https://plataforma-api-rkav7vkxia-uc.a.run.app";
   if (site?.tenantId) return `${host}/api/v1/leads/submit/${site.tenantId}`;
   return `${host}/api/v1/leads`;
-}
-
-function heroScript() {
-  return `<script>
-    (function(){
-      if(window._indigoNav) return;
-      window._indigoNav = true;
-      var hamburger = document.getElementById('indigoHamburger');
-      var nav = document.getElementById('indigoMobileNav');
-      var overlay = document.getElementById('indigoNavOverlay');
-      var close = document.getElementById('indigoNavClose');
-      if(!hamburger||!nav) return;
-      hamburger.addEventListener('click',function(){ nav.classList.remove('max-h-0','opacity-0','pointer-events-none'); nav.classList.add('max-h-[500px]','opacity-100'); overlay.classList.remove('opacity-0','pointer-events-none'); overlay.classList.add('opacity-100'); });
-      if(close) close.addEventListener('click',function(){ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
-      if(overlay) overlay.addEventListener('click',function(){ nav.classList.add('max-h-0','opacity-0','pointer-events-none'); nav.classList.remove('max-h-[500px]','opacity-100'); overlay.classList.add('opacity-0','pointer-events-none'); overlay.classList.remove('opacity-100'); });
-    })();
-  </script>`;
 }
 
 function marqueeScript() {
@@ -49,17 +27,14 @@ function marqueeScript() {
   </script>`;
 }
 
-function footerScript() {
-  return `<script>
-    (function(){
-      if(window._indigoFooter) return;
-      window._indigoFooter = true;
-      var btn = document.getElementById('footerToggle');
-      var col = document.getElementById('footerCol1');
-      if(!btn||!col) return;
-      btn.addEventListener('click',function(){ col.classList.toggle('max-h-0'); col.classList.toggle('max-h-96'); });
-    })();
-  </script>`;
+/** URL de inserción para YouTube / Vimeo (acepta el enlace normal del video). */
+function videoEmbed(url: string): string {
+  const u = String(url || "").trim();
+  const yt = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,})/i.exec(u);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vm = /vimeo\.com\/(?:video\/)?(\d+)/i.exec(u);
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  return u;
 }
 
 export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: any): string | null {
@@ -68,12 +43,21 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
   const L = "#fcfcfc";
 
   const siteBase = !site?.domain && site?.subdomain ? `/${String(site.subdomain).replace(/^\/+/, "")}` : "";
+  const homeUrl = site?.domain ? `https://${site.domain}` : (siteBase || "/");
+  /**
+   * Destino de un enlace: #seccion, /pagina (dentro del sitio), https://, mailto:, tel:.
+   * Un nombre suelto ("contacto") se toma como sección (#contacto).
+   */
   const toHref = (url?: string) => {
-    if (!url || url === "#") return "#";
-    if (url.startsWith("http") || url.startsWith("#")) return url;
-    if (!url.startsWith("/")) return `#${url}`;
-    return `${siteBase}${url}`;
+    const u = String(url || "").trim();
+    if (!u || u === "#") return "#";
+    if (/^(https?:|mailto:|tel:|#|\/\/)/i.test(u)) return u;
+    if (u.startsWith("/")) return `${siteBase}${u}`;
+    return `#${u}`;
   };
+  const external = (url?: string) => (/^(https?:)?\/\//i.test(String(url || "")) ? 'target="_blank" rel="noopener"' : "");
+  /** Abre/cierra el menú móvil (atributo onclick: funciona también en el editor). */
+  const toggleNav = "var n=this.closest('nav');n.querySelectorAll('[data-indigo-mobile],[data-indigo-overlay]').forEach(function(e){var open=e.style.opacity==='1';e.style.opacity=open?'0':'1';e.style.pointerEvents=open?'none':'auto';if(e.hasAttribute('data-indigo-mobile'))e.style.maxHeight=open?'0':'500px'})";
 
   const offsetImg = (img: string, alt: string, borderColor?: string, direction?: string) => {
     const bc = borderColor || B;
@@ -91,7 +75,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     </li>`).join("");
 
   const offsetBtn = (text: string, href: string) =>
-    `<a href="${siteHref(href)}" class="inline-block relative group w-max z-10">
+    `<a href="${toHref(href)}" ${external(href)} class="inline-block relative group w-max z-10">
       <span class="absolute inset-0 translate-x-2 translate-y-2 group-hover:translate-x-1 group-hover:translate-y-1 transition-transform" style="background:${B}"></span>
       <span class="relative block border-2 font-bold uppercase tracking-widest py-4 px-10 group-hover:text-white transition-colors" style="border-color:${B};background:white;color:${B}" onmouseover="this.style.background='${D}';this.style.color='${B}'" onmouseout="this.style.background='white';this.style.color='${B}'">${text}</span>
     </a>`;
@@ -108,23 +92,22 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const logo = c.logoImage || site?.logoUrl || PLACEHOLDER_LOGO;
       const isWhite = c.navbarStyle === "white";
       return `<nav class="fixed w-full z-50 top-0 left-0 p-6 flex justify-between items-center" ${isWhite ? `style="background:white;border-bottom:1px solid rgba(0,0,0,0.1);color:${D}"` : `style="mix-blend-mode:difference;color:${L}"`}>
-        <a href="${siteHref(c.logoUrl || '#')}" class="inline-block">
+        <a href="${c.logoUrl ? toHref(c.logoUrl) : homeUrl}" class="inline-block">
           <img src="${logo}" alt="${c.companyName || site?.name || 'Indigo Publicidad'}" class="h-10 md:h-12 w-auto object-contain" ${isWhite ? 'style="filter:brightness(0) invert(1)"' : 'style="filter:brightness(0) invert(1)"'}>
         </a>
         <div class="hidden md:flex gap-8 font-semibold text-sm tracking-widest uppercase" style="font-family:Poppins,sans-serif">
           ${links.map((l: any) => `<a href="${toHref(l.url)}" class="transition-colors" style="color:${isWhite ? (l.active ? B : D) : B}" ${!isWhite ? '' : `onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${l.active ? B : D}'"`}>${l.label}</a>`).join("")}
         </div>
-        <button id="indigoHamburger" class="md:hidden" style="color:${B}" aria-label="Menú">
+        <button type="button" onclick="${toggleNav}" class="md:hidden" style="color:${B}" aria-label="Menú">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
         </button>
-        <div id="indigoNavOverlay" class="fixed inset-0 z-40 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" style="background:rgba(0,0,0,0.6)"></div>
-        <div id="indigoMobileNav" class="md:hidden absolute top-full left-0 w-full max-h-0 opacity-0 pointer-events-none overflow-hidden transition-all duration-300 z-50" style="background:${D}">
+        <div data-indigo-overlay onclick="this.closest('nav').querySelector('button[aria-label=Menú]').click()" class="fixed inset-0 z-40 transition-opacity duration-300 md:hidden" style="background:rgba(0,0,0,0.6);opacity:0;pointer-events:none"></div>
+        <div data-indigo-mobile class="md:hidden absolute top-full left-0 w-full overflow-hidden transition-all duration-300 z-50" style="background:${D};max-height:0;opacity:0;pointer-events:none">
           <div class="px-6 py-8 flex flex-col gap-6">
-            <button id="indigoNavClose" class="absolute top-4 right-6 text-2xl" style="color:${L}" aria-label="Cerrar">&times;</button>
+            <button type="button" onclick="this.closest('nav').querySelector('button[aria-label=Menú]').click()" class="absolute top-4 right-6 text-2xl" style="color:${L}" aria-label="Cerrar">&times;</button>
             ${links.map((l: any) => `<a href="${toHref(l.url)}" class="text-sm font-semibold uppercase tracking-widest" style="color:${L};font-family:Poppins,sans-serif">${l.label}</a>`).join("")}
           </div>
         </div>
-        ${heroScript()}
       </nav>`;
     }
 
@@ -188,6 +171,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
           <p class="max-w-xl text-lg md:text-xl font-light mt-8 opacity-90" style="border-left:4px solid ${B};padding-left:1.5rem">
             ${desc}
           </p>
+          ${c.buttonText ? `<div class="mt-12">${offsetBtn(c.buttonText, c.buttonUrl || "#contacto")}</div>` : ""}
         </div>
         <div class="absolute bottom-10 right-10 flex-col items-end gap-2 z-10 hidden md:flex">
           <div class="w-24 h-[2px]" style="background:${B}"></div>
@@ -315,13 +299,13 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <h2 class="font-extrabold text-5xl md:text-7xl relative z-10 inline-block" style="color:${D};font-family:Poppins,sans-serif">${title}</h2>
             <p class="text-xl font-light opacity-80 mt-4 max-w-2xl mx-auto" style="color:${D}">${desc}</p>
           </div>
-          <div class="relative group max-w-5xl mx-auto">
+          <${c.linkUrl ? `a href="${toHref(c.linkUrl)}" ${external(c.linkUrl)}` : "div"} class="relative group max-w-5xl mx-auto block">
             <div class="absolute inset-0 ${c.variant === 'indigo' ? 'translate-x-4 translate-y-4 group-hover:translate-x-8 group-hover:translate-y-8' : ''} transition-transform duration-500 z-0" style="background:${B}"></div>
             <img src="${img}" alt="Portafolio Indigo" class="relative z-10 w-full h-auto object-cover border-4" style="border-color:${D};filter:contrast(1.25)">
             <div class="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none" style="background:rgba(5,5,5,0.8)">
               <span class="text-4xl uppercase font-bold tracking-widest border-2 p-6 text-center" style="color:${B};border-color:${B};font-family:Poppins,sans-serif" data-ed="exploreText">${c.exploreText || "Explorar<br>Galería"}</span>
             </div>
-          </div>
+          </${c.linkUrl ? "a" : "div"}>
         </div>
       </section>`;
     }
@@ -341,7 +325,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               <div class="text-4xl mb-6" style="color:${B}">"</div>
               <p class="font-light mb-6 italic opacity-80" style="color:${D}">"${item.quote || item.description || ''}"</p>
               <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full" style="background:rgba(0,0,0,0.1)"></div>
+                ${item.image ? `<img src="${item.image}" alt="${item.name || ""}" class="w-12 h-12 rounded-full object-cover">` : `<div class="w-12 h-12 rounded-full" style="background:rgba(0,0,0,0.1)"></div>`}
                 <div>
                   <h4 class="font-bold" style="color:${D};font-family:Poppins,sans-serif">${item.name}</h4>
                   <span class="text-sm uppercase tracking-widest" style="color:${B}">${item.role}</span>
@@ -417,7 +401,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
               const shadowCls = shadow ? `${isSlide ? 'shadow-[12px_12px_0_rgba(5,5,5,1)]' : 'shadow-[8px_8px_0_rgba(5,5,5,1)]'} hover:shadow-none hover:translate-y-3 hover:translate-x-3` : '';
               const numSize = isSlide ? 'text-4xl p-4' : 'text-3xl p-3';
               return `<div class="md:col-span-${span} group relative overflow-hidden border-4 transition-all duration-300 block ${isSlide ? '' : (p.mt || 'mt-0')}" style="background:white;border-color:${D};${shadowCls}">
-                <a href="${siteHref(p.url)}" class="block cursor-pointer">
+                <a href="${toHref(p.url)}" ${external(p.url)} class="block cursor-pointer">
                   <div class="absolute top-6 left-6 z-20 font-black ${numSize} border-4" style="border-color:${D}" ${numBg}>${p.number}</div>
                   ${isSlide ? `<img src="${p.img}" alt="${p.title}" class="w-full ${p.imgHeight} object-cover transition-all duration-500 group-hover:grayscale" style="filter:contrast(1.25) saturate(1.5)">
                   <div class="absolute bottom-0 left-0 w-full p-8 md:p-12 translate-y-full group-hover:translate-y-0 transition-transform duration-500 flex flex-col md:flex-row justify-between items-start md:items-end" style="background:${D}">
@@ -442,7 +426,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                 <div class="absolute inset-0" style="opacity:0.1;background-image:radial-gradient(${D} 2px,transparent 2px);background-size:20px 20px"></div>
                 <div class="relative z-10">
                   <h3 class="font-black text-5xl md:text-7xl uppercase tracking-tighter mb-12" style="font-family:Poppins,sans-serif;color:${D};filter:drop-shadow(4px 4px 0 white)">${title}</h3>
-                  <a href="${siteHref(ctaUrl)}" class="inline-block font-black text-xl md:text-2xl uppercase tracking-widest py-6 px-12 border-4 transition-all" style="background:${D};color:white;border-color:${D};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='white';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${ctaUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+                  <a href="${toHref(ctaUrl)}" class="inline-block font-black text-xl md:text-2xl uppercase tracking-widest py-6 px-12 border-4 transition-all" style="background:${D};color:white;border-color:${D};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='white';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${ctaUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
                     ${ctaText}
                   </a>
                 </div>
@@ -483,7 +467,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                 </div>
                 <div class="relative inline-block">
                   <h4 class="font-bold uppercase tracking-widest mb-2" style="border-left:4px solid ${D};padding-left:1rem">${phoneLabel}</h4>
-                  <p class="font-black text-3xl md:text-5xl" style="font-family:Poppins,sans-serif">${phone}</p>
+                  <a href="tel:${String(phone).replace(/[^0-9+]/g, '')}" class="block font-black text-3xl md:text-5xl" style="font-family:Poppins,sans-serif;color:${D}">${phone}</a>
                 </div>
                 <div class="relative inline-block">
                   <h4 class="font-bold uppercase tracking-widest mb-2" style="border-left:4px solid ${D};padding-left:1rem">${addressLabel}</h4>
@@ -543,7 +527,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <p class="text-2xl font-bold mb-12 max-w-2xl mx-auto border-2 p-4" style="background:white;border-color:${D};box-shadow:4px 4px 0 ${D};color:${D}">
               ${desc}
             </p>
-            <a href="${siteHref(btnUrl)}" class="inline-flex items-center gap-4 border-4 font-black uppercase tracking-widest py-6 px-8 md:px-16 text-xl md:text-2xl transition-all inline-block" style="border-color:${D};background:${D};color:${B};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='${B}';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${btnUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+            <a href="${toHref(btnUrl)}" class="inline-flex items-center gap-4 border-4 font-black uppercase tracking-widest py-6 px-8 md:px-16 text-xl md:text-2xl transition-all inline-block" style="border-color:${D};background:${D};color:${B};box-shadow:8px 8px 0 ${D}" onmouseover="this.style.background='white';this.style.color='${D}';this.style.boxShadow='none';this.style.transform='translate(2px,2px)'" onmouseout="this.style.background='${D}';this.style.color='${B}';this.style.boxShadow='8px 8px 0 ${D}';this.style.transform='none'" ${btnUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
               ${btnText}
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
             </a>
@@ -554,7 +538,8 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       const title = c.title || "destacar?";
       const subtitle = c.description || "Hagamos que tu marca sea imposible de ignorar.";
       const btnText = c.buttonText || "Iniciar Proyecto";
-      const btnUrl = c.buttonUrl || c.email ? `mailto:${c.email || 'hola@indigopublicidad.com'}` : "#";
+      // Antes: c.buttonUrl || c.email ? … — por precedencia el botón iba siempre al correo.
+      const btnUrl = c.buttonUrl || `mailto:${c.email || "hola@indigopublicidad.com"}`;
       const phone = c.phone || "";
       const address = c.address || "";
       const submitText = c.submitText || "ENVIAR";
@@ -569,7 +554,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
           <p class="text-xl md:text-3xl mb-16 font-medium max-w-3xl mx-auto inline-block px-4 py-2 border-2" style="color:${D};background:${B};border-color:${D};box-shadow:4px 4px 0 ${D};font-family:Poppins,sans-serif">
             ${subtitle}
           </p>
-          <a href="${btnUrl}" class="inline-flex items-center gap-4 relative group" ${btnUrl.startsWith('mailto') || btnUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+          <a href="${toHref(btnUrl)}" class="inline-flex items-center gap-4 relative group" ${external(btnUrl)}>
             <span class="absolute inset-0 translate-x-3 translate-y-3 group-hover:translate-x-1 group-hover:translate-y-1 transition-transform duration-300 rounded-full" style="background:${D}"></span>
             <span class="relative flex items-center gap-4 border-4 font-black uppercase tracking-widest py-5 px-12 md:py-6 md:px-16 text-xl md:text-2xl rounded-full transition-colors" style="border-color:${D};background:white;color:${D};font-family:Poppins,sans-serif" onmouseover="this.style.background='${D}';this.style.color='${B}'" onmouseout="this.style.background='white';this.style.color='${D}'">
               ${btnText}
@@ -592,7 +577,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
                 <textarea name="${f.name}" rows="4" ${f.required ? 'required' : ''} class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="${f.placeholder || ''}">${f.value || ''}</textarea>
               </div>`).join("") || `<div>
                 <label class="block text-sm font-bold uppercase tracking-widest mb-2" style="color:${D}" data-ed="messageLabel">${c.messageLabel || "Mensaje"}</label>
-                <textarea name="mensaje" rows="4" required class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="Cuéntanos tu proyecto..."></textarea>
+                <textarea name="mensaje" rows="4" required class="w-full px-4 py-3 text-sm border-2 outline-none resize-none" style="border-color:${D};background:white;color:${D}" placeholder="${c.messagePlaceholder || "Cuéntanos tu proyecto..."}"></textarea>
               </div>`}
               <div data-pub-form-status style="display:none;padding:12px 16px;font-size:14px;border:2px solid ${D};color:${D};background:white"></div>
               <button data-analytics-click data-analytics-type="click" data-analytics-label="indigo_cta_submit" type="submit" class="w-full py-4 text-sm font-bold uppercase tracking-widest border-2 transition-all" style="border-color:${D};background:${D};color:${B}" onmouseover="this.style.boxShadow='4px 4px 0 white'" onmouseout="this.style.boxShadow='none'">
@@ -697,7 +682,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         <div class="container mx-auto px-6 relative z-10">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-24">
             <div class="md:col-span-1">
-              <a href="#" class="block mb-6">
+              <a href="${homeUrl}" class="block mb-6">
                 <img src="${logo}" alt="${companyName}" class="h-16 w-auto object-contain" style="filter:brightness(0) invert(1)">
               </a>
               <p class="font-light opacity-70 mb-6 max-w-xs" style="color:${D}" data-ed="footerText">${c.footerText || "Laboratorio de ideas creativas. Rompemos moldes con Letras 3D y Branding disruptivo."}</p>
@@ -719,15 +704,15 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
             <div>
               <h4 class="font-bold text-xl mb-6 uppercase tracking-widest" style="color:${D};font-family:Poppins,sans-serif" data-ed="col3Title">${c.col3Title || "Redes"}</h4>
               <ul class="space-y-4 font-light opacity-80" style="color:${D}">
-                ${social.map((s: any) => `<li><a href="${s.url || '#'}" class="hover:font-semibold transition-all flex items-center gap-2" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" ${s.url && s.url !== '#' ? 'target="_blank" rel="noopener"' : ''}>↗ ${s.label}</a></li>`).join("")}
+                ${social.map((s: any) => `<li><a href="${toHref(s.url)}" class="hover:font-semibold transition-all flex items-center gap-2" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" ${s.url && s.url !== '#' ? 'target="_blank" rel="noopener"' : ''}>↗ ${s.label}</a></li>`).join("")}
               </ul>
             </div>
           </div>
           <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-6" style="border-top:2px solid rgba(0,0,0,0.1)">
             <div class="text-sm font-semibold opacity-60" style="color:${D}">${copyright}</div>
             <div class="flex gap-6 text-sm font-semibold opacity-60" style="color:${D}">
-              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="privacyText">${c.privacyText || "Privacidad"}</a>
-              <a href="#" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="termsText">${c.termsText || "Términos"}</a>
+              <a href="${toHref(c.privacyUrl || "#")}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="privacyText">${c.privacyText || "Privacidad"}</a>
+              <a href="${toHref(c.termsUrl || "#")}" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="termsText">${c.termsText || "Términos"}</a>
               <a href="/dejar-opinion" onmouseover="this.style.color='${B}'" onmouseout="this.style.color='${D}'" class="transition-colors" data-ed="reviewLinkText">${c.reviewLinkText || "Dejar una reseña"}</a>
             </div>
           </div>
@@ -735,7 +720,6 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
         <div class="absolute bottom-[-5%] left-0 w-full overflow-hidden flex justify-center pointer-events-none select-none z-0" style="opacity:0.05">
           <span class="font-black text-dark whitespace-nowrap" style="font-size:15vw;line-height:1;font-family:Poppins,sans-serif" data-ed="bigText">${c.bigText || "INDIGO AGENCY"}</span>
         </div>
-        ${footerScript()}
       </footer>`;
     }
 
@@ -743,7 +727,7 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
       return `<section id="${c.anchor || 'video'}" class="py-24 md:py-32" style="background:${D}">
         <div class="max-w-5xl mx-auto px-6">
           <div class="relative aspect-video overflow-hidden border-4" style="border-color:${D}">
-            ${c.videoUrl ? `<iframe src="${c.videoUrl}" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>` : `<img src="${c.thumbnail || c.imageUrl || 'https://placehold.co/1280x720/fdcb0c/050505?text=VIDEO'}" alt="${c.title || 'Video'}" class="w-full h-full object-cover">`}
+            ${c.videoUrl ? `<iframe src="${videoEmbed(c.videoUrl)}" class="w-full h-full" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>` : `<img src="${c.thumbnail || c.imageUrl || 'https://placehold.co/1280x720/fdcb0c/050505?text=VIDEO'}" alt="${c.title || 'Video'}" class="w-full h-full object-cover">`}
           </div>
         </div>
       </section>`;
@@ -752,9 +736,9 @@ export function getIndigoHtml(type: string, c: any, apiBaseUrl?: string, site?: 
     case "image": {
       return `<section id="${c.anchor || 'imagen'}" class="py-16" style="background:${c.background === 'dark' ? D : L}">
         <div class="max-w-5xl mx-auto px-6">
-          <div class="border-4 overflow-hidden" style="border-color:${D}">
+          <${c.link ? `a href="${toHref(c.link)}" ${external(c.link)}` : "div"} class="block border-4 overflow-hidden" style="border-color:${D}">
             <img src="${c.imageUrl || 'https://placehold.co/1200x600/fdcb0c/050505?text=IMAGEN'}" alt="${c.title || c.alt || 'Imagen'}" class="w-full h-auto object-cover" loading="lazy">
-          </div>
+          </${c.link ? "a" : "div"}>
         </div>
       </section>`;
     }
