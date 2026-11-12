@@ -70,7 +70,7 @@ export default function DashboardPage() {
       const res: any = await api.get(`/dashboard/tenant/${tenantId}`);
       setTenantData(res.data || res);
     } catch (err: any) {
-      if (err.response?.status === 403) setError("No tienes acceso a este negocio");
+      if (err.response?.status === 403) setError("No tienes acceso a esta empresa");
       setTenantData(null);
     } finally { setLoading(false); }
   }, [tenantId]);
@@ -163,7 +163,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
               <div><h1 className="text-xl font-bold text-[#303030]">Dashboard Global</h1><p className="text-sm text-[#616161] mt-1">Administración de la plataforma SaaS</p></div>
               <div className="flex gap-2">
-                <Link href="/dashboard/admin/tenants" className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg> Gestionar tenants</Link>
+                <Link href="/dashboard/admin/tenants" className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg> Gestionar empresas</Link>
                 <Link href="/dashboard/admin/users" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7]"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Usuarios</Link>
                 <Link href="/dashboard/admin/billing" className="inline-flex items-center gap-1.5 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] bg-white px-4 py-2 text-xs font-medium text-[#616161] hover:bg-[#f7f7f7]"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Facturación</Link>
               </div>
@@ -171,7 +171,7 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
               <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">Tenants</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
+                <div className="flex items-center justify-between mb-3"><p className="text-xs font-medium text-[#616161] uppercase">Empresas</p><div className="h-8 w-8 rounded-lg bg-primary-50 flex items-center justify-center"><svg className="h-4 w-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div></div>
                 <p className="text-2xl font-bold text-primary-700">{adminData?.summary?.totalTenants ?? 0}<span className="text-xs font-normal text-green-600 ml-1">{adminData?.summary?.activeTenants ?? 0} activos</span></p>
               </div>
               <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-5 hover:shadow-md transition-shadow">
@@ -198,11 +198,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="card">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-[#303030]">Tenants recientes</h3><Link href="/dashboard/admin/tenants" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver todos →</Link></div>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-[#303030]">Empresas recientes</h3><Link href="/dashboard/admin/tenants" className="text-xs font-medium text-primary-600 hover:text-primary-700">Ver todos →</Link></div>
               {adminData?.recentTenants && adminData.recentTenants.length > 0 ? (
                 <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-[#e3e3e3]"><th className="text-left py-2 px-3 text-[#616161]">Nombre</th><th className="text-left py-2 px-3 text-[#616161]">Plan</th><th className="text-left py-2 px-3 text-[#616161]">Usuarios</th><th className="text-left py-2 px-3 text-[#616161]">Sitios</th><th className="text-left py-2 px-3 text-[#616161]">Estado</th><th className="text-left py-2 px-3 text-[#616161]">Fecha</th></tr></thead>
                   <tbody>{adminData.recentTenants.map((t) => (<tr key={t.id} className="border-b border-[#ebebeb] hover:bg-[#f7f7f7]"><td className="py-2 px-3 font-medium">{t.name}</td><td className="py-2 px-3 text-xs text-[#616161]">{t.plan?.name||"Free"}</td><td className="py-2 px-3">{t._count.userTenants}</td><td className="py-2 px-3">{t._count.sites}</td><td className="py-2 px-3"><span className={`rounded-full px-2 py-0.5 text-xs ${t.isActive?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}`}>{t.isActive?"Activo":"Inactivo"}</span></td><td className="py-2 px-3 text-[#616161] text-xs">{formatDate(t.createdAt)}</td></tr>))}</tbody></table></div>
-              ) : <p className="text-sm text-[#616161]">No hay tenants</p>}
+              ) : <p className="text-sm text-[#616161]">No hay empresas</p>}
             </div>
           </>
         )}
@@ -436,9 +436,9 @@ export default function DashboardPage() {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold text-[#303030] mb-2">Sin negocio</h2>
-                  <p className="text-sm text-[#616161] mb-6">Selecciona o crea un negocio</p>
-                  <Link href="/dashboard/new-tenant" className="btn-primary">Crear negocio</Link>
+                  <h2 className="text-xl font-semibold text-[#303030] mb-2">Sin empresa</h2>
+                  <p className="text-sm text-[#616161] mb-6">Selecciona o crea una empresa</p>
+                  <Link href="/dashboard/new-tenant" className="btn-primary">Crear empresa</Link>
                 </div>
               </div>
             )}

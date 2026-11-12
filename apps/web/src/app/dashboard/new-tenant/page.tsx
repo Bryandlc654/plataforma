@@ -46,7 +46,7 @@ export default function NewTenantPage() {
       router.push("/dashboard");
     } catch (err: any) {
       setError(
-        err.response?.data?.message || "Error al crear el negocio"
+        err.response?.data?.message || "Error al crear la empresa"
       );
     } finally {
       setLoading(false);
@@ -58,10 +58,10 @@ export default function NewTenantPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-xl font-bold text-[#303030]">
-              Crear nuevo negocio
+              Crear nueva empresa
             </h1>
             <p className="mt-2 text-sm text-[#616161]">
-              Crea un espacio para tu negocio, empresa o proyecto
+              Crea un espacio para tu empresa o proyecto
             </p>
           </div>
 
@@ -74,7 +74,7 @@ export default function NewTenantPage() {
 
             <div>
               <label className="label" htmlFor="name">
-                Nombre del negocio
+                Nombre de la empresa
               </label>
               <input
                 id="name"
@@ -110,7 +110,7 @@ export default function NewTenantPage() {
                 id="subdomain"
                 type="text"
                 className="input-field"
-                placeholder="mi-negocio"
+                placeholder="mi-empresa"
                 {...register("subdomain")}
               />
             </div>
@@ -128,7 +128,7 @@ export default function NewTenantPage() {
                 disabled={loading}
                 className="btn-primary flex-1"
               >
-                {loading ? "Creando..." : "Crear negocio"}
+                {loading ? "Creando..." : "Crear empresa"}
               </button>
             </div>
           </form>

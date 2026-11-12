@@ -116,7 +116,7 @@ export class TenantsService {
     });
 
     if (!membership) {
-      throw new ForbiddenException("You are not a member of this tenant");
+      throw new ForbiddenException("No eres miembro de esta empresa");
     }
 
     const tenant = await this.prisma.tenant.findUnique({
@@ -144,7 +144,7 @@ export class TenantsService {
     });
 
     if (!tenant) {
-      throw new NotFoundException("Tenant not found");
+      throw new NotFoundException("Empresa no encontrada");
     }
 
     return tenant;
@@ -160,7 +160,7 @@ export class TenantsService {
     });
 
     if (!membership || !membership.isOwner) {
-      throw new ForbiddenException("Only tenant owner can update settings");
+      throw new ForbiddenException("Solo el propietario de la empresa puede actualizar la configuración");
     }
 
     return this.prisma.tenant.update({
@@ -193,11 +193,11 @@ export class TenantsService {
     });
 
     if (!membership || !membership.isOwner) {
-      throw new ForbiddenException("Only tenant owner can update settings");
+      throw new ForbiddenException("Solo el propietario de la empresa puede actualizar la configuración");
     }
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) throw new NotFoundException("Tenant not found");
+    if (!tenant) throw new NotFoundException("Empresa no encontrada");
 
     const current = (tenant.settings as any) || {};
     const merged = { ...current, ...settings };
@@ -218,7 +218,7 @@ export class TenantsService {
     if (!membership) throw new ForbiddenException("Not a member");
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) throw new NotFoundException("Tenant not found");
+    if (!tenant) throw new NotFoundException("Empresa no encontrada");
 
     return {
       name: tenant.name,
@@ -290,11 +290,11 @@ export class TenantsService {
     });
 
     if (!userTenant || userTenant.tenantId !== tenantId) {
-      throw new NotFoundException("Member not found in this tenant");
+      throw new NotFoundException("Miembro no encontrado en esta empresa");
     }
 
     if (userTenant.isOwner) {
-      throw new ForbiddenException("No puedes eliminar al propietario del negocio");
+      throw new ForbiddenException("No puedes eliminar al propietario de la empresa");
     }
 
     if (userTenant.userId === actorUserId) {
@@ -490,7 +490,7 @@ export class TenantsService {
 
   private async findByIdAdmin(id: string) {
     const t = await this.prisma.tenant.findUnique({ where: { id } });
-    if (!t || t.deletedAt) throw new NotFoundException("Tenant not found");
+    if (!t || t.deletedAt) throw new NotFoundException("Empresa no encontrada");
     return t;
   }
 }

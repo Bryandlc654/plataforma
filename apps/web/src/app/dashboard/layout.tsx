@@ -183,7 +183,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         title: "Gestión Core",
         links: [
           { href: "/dashboard", label: "Dashboard Global", icon: "home" },
-          { href: "/dashboard/admin/tenants", label: "Tenants", icon: "admintenants" },
+          { href: "/dashboard/admin/tenants", label: "Empresas", icon: "admintenants" },
           { href: "/dashboard/admin/users", label: "Usuarios", icon: "adminusers" },
           { href: "/dashboard/admin/plans", label: "Planes", icon: "adminplans" },
           { href: "/dashboard/admin/billing", label: "Facturación", icon: "billing" },
@@ -305,7 +305,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                   {!isPlatformStaff && tenants.length > 1 && (
                     <div className="border-b border-[#ebebeb] py-1">
-                      <p className="px-3 pb-1 pt-1.5 text-[12px] font-medium text-[#616161]">Negocios</p>
+                      <p className="px-3 pb-1 pt-1.5 text-[12px] font-medium text-[#616161]">Empresas</p>
                       {tenants.map((t) => (
                         <button key={t.id} onClick={() => { handleSelectTenant(t); setUserMenu(false); }} className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-[13px] hover:bg-[#f1f1f1] ${t.id === tenantId ? "font-semibold" : ""}`}>
                           <span className="truncate">{t.name}</span>
@@ -351,7 +351,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ))}
 
             {!isPlatformStaff && !tenant && (
-              <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-[#303030] hover:bg-[#f1f1f1]">+ Crear negocio</Link>
+              <Link href="/dashboard/new-tenant" className="mt-4 flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-semibold text-[#303030] hover:bg-[#f1f1f1]">+ Crear empresa</Link>
             )}
           </nav>
 

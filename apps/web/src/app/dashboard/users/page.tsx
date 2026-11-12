@@ -43,7 +43,7 @@ export default function UsersPage() {
   const sendInvitation = async () => { if (!inviteEmail.trim() || !inviteRole) return; setSending(true); try { await api.post("/invitations", { email: inviteEmail, roleId: inviteRole }); setShowInvite(false); setInviteEmail(""); setToast("Invitación enviada"); fetchInvitations(); } catch (err: any) { alert(err.response?.data?.message || "Error al enviar invitación"); } finally { setSending(false); } };
   const revokeInvitation = async (id: string) => { await api.delete(`/invitations/${id}`); fetchInvitations(); };
   const changeRole = async (memberId: string, roleId: string, currentRoles: any[]) => { try { const hasRole = currentRoles.some((r: any) => r.id === roleId); if (hasRole) { await api.delete(`/roles/remove/${memberId}/${roleId}`); } else { await api.post("/roles/assign", { userTenantId: memberId, roleId }); } fetchData(); } catch {} };
-  const removeMember = async (memberId: string, userName: string) => { if (!(await confirm(`¿Eliminar a ${userName} del negocio?`))) return; try { await api.delete(`/tenants/${tenantId}/members/${memberId}`); fetchData(); } catch (err: any) { alert(err.response?.data?.message || "Error al eliminar miembro"); } };
+  const removeMember = async (memberId: string, userName: string) => { if (!(await confirm(`¿Eliminar a ${userName} de la empresa?`))) return; try { await api.delete(`/tenants/${tenantId}/members/${memberId}`); fetchData(); } catch (err: any) { alert(err.response?.data?.message || "Error al eliminar miembro"); } };
   if (loading) return <div className="p-8 flex items-center justify-center"><p className="text-[#616161]">Cargando...</p></div>;
   return (
     <div className="p-8">

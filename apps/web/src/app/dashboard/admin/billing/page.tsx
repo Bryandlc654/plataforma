@@ -95,14 +95,14 @@ export default function AdminBillingPage() {
       {/* Plans breakdown */}
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)] p-6">
-          <h3 className="font-semibold text-[#303030] mb-4">Tenants por plan</h3>
+          <h3 className="font-semibold text-[#303030] mb-4">Empresas por plan</h3>
           <div className="space-y-3">
             {data.plans.map((p) => (
               <div key={p.slug} className="flex items-center gap-3">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-[#303030]">{p.name}</span>
-                    <span className="text-sm text-[#616161]">{p.tenants} tenants</span>
+                    <span className="text-sm text-[#616161]">{p.tenants} empresas</span>
                   </div>
                   <div className="h-2 bg-[#f1f1f1] rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all ${
@@ -148,7 +148,7 @@ export default function AdminBillingPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[#f7f7f7] border-b border-[#e3e3e3]">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#616161] uppercase">Tenant</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-[#616161] uppercase">Empresa</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-[#616161] uppercase">Monto</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-[#616161] uppercase">Estado</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-[#616161] uppercase">Fecha</th>

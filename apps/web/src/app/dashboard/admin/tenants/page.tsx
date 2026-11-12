@@ -167,7 +167,7 @@ export default function AdminTenantsPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          <p className="text-sm text-[#616161]">Cargando tenants...</p>
+          <p className="text-sm text-[#616161]">Cargando empresas...</p>
         </div>
       </div>
 );
@@ -178,8 +178,8 @@ export default function AdminTenantsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-bold text-[#303030]">Tenants</h1>
-          <p className="text-sm text-[#616161] mt-1">Administración de negocios en la plataforma</p>
+          <h1 className="text-xl font-bold text-[#303030]">Empresas</h1>
+          <p className="text-sm text-[#616161] mt-1">Administración de empresas en la plataforma</p>
         </div>
         <button
           onClick={openCreate}
@@ -188,7 +188,7 @@ export default function AdminTenantsPage() {
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Nuevo tenant
+          Nueva empresa
         </button>
       </div>
 
@@ -243,7 +243,7 @@ export default function AdminTenantsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[#f7f7f7] border-b border-[#e3e3e3]">
-                <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#616161] uppercase tracking-wider">Tenant</th>
+                <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#616161] uppercase tracking-wider">Empresa</th>
                 <th className="text-left py-3.5 px-4 text-xs font-semibold text-[#616161] uppercase tracking-wider">Plan</th>
                 <th className="text-center py-3.5 px-4 text-xs font-semibold text-[#616161] uppercase tracking-wider">Usuarios</th>
                 <th className="text-center py-3.5 px-4 text-xs font-semibold text-[#616161] uppercase tracking-wider">Sitios</th>
@@ -255,7 +255,7 @@ export default function AdminTenantsPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
-                    <p className="text-[#8a8a8a] text-sm">No se encontraron tenants</p>
+                    <p className="text-[#8a8a8a] text-sm">No se encontraron empresas</p>
                   </td>
                 </tr>
               ) : (
@@ -469,7 +469,7 @@ export default function AdminTenantsPage() {
                     onClick={() => { openEdit(selected); setSelected(null); }}
                     className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium border border-[#e3e3e3] bg-[#f7f7f7] text-[#303030] hover:bg-[#f1f1f1] transition-colors"
                   >
-                    Editar tenant
+                    Editar empresa
                   </button>
                   <button
                     onClick={() => { setShowConfirm({ id: selected.id, action: selected.isActive ? "suspend" : "reactivate" }); setSelected(null); }}
@@ -479,13 +479,13 @@ export default function AdminTenantsPage() {
                         : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
                     }`}
                   >
-                    {selected.isActive ? "Suspender tenant" : "Reactivar tenant"}
+                    {selected.isActive ? "Suspender empresa" : "Reactivar empresa"}
                   </button>
                   <button
                     onClick={() => { setShowConfirm({ id: selected.id, action: "delete" }); setSelected(null); }}
                     className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
                   >
-                    Eliminar tenant
+                    Eliminar empresa
                   </button>
                 </div>
               </div>
@@ -514,14 +514,14 @@ export default function AdminTenantsPage() {
                 )}
               </div>
               <h4 className="text-lg font-semibold text-[#303030]">
-                {showConfirm.action === "delete" ? "Eliminar tenant" : showConfirm.action === "suspend" ? "Suspender tenant" : "Reactivar tenant"}
+                {showConfirm.action === "delete" ? "Eliminar empresa" : showConfirm.action === "suspend" ? "Suspender empresa" : "Reactivar empresa"}
               </h4>
               <p className="text-sm text-[#616161] mt-1">
                 {showConfirm.action === "delete"
-                  ? "Esta acción no se puede deshacer. El tenant será eliminado permanentemente."
+                  ? "Esta acción no se puede deshacer. La empresa será eliminada permanentemente."
                   : showConfirm.action === "suspend"
-                  ? "El tenant será suspendido y sus usuarios no podrán acceder."
-                  : "El tenant será reactivado y sus usuarios podrán acceder nuevamente."}
+                  ? "La empresa será suspendida y sus usuarios no podrán acceder."
+                  : "La empresa será reactivada y sus usuarios podrán acceder nuevamente."}
               </p>
             </div>
             <div className="flex gap-3">
@@ -545,7 +545,7 @@ export default function AdminTenantsPage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => { setShowModal(false); setEditing(false); setEditingId(null); }} />
           <div className="relative bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-[#303030]">{editing ? "Editar tenant" : "Nuevo tenant"}</h3>
+              <h3 className="text-lg font-semibold text-[#303030]">{editing ? "Editar empresa" : "Nueva empresa"}</h3>
               <button onClick={() => { setShowModal(false); setEditing(false); setEditingId(null); }} className="p-1.5 rounded-lg text-[#8a8a8a] hover:text-[#616161] hover:bg-[#f1f1f1]">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -554,17 +554,17 @@ export default function AdminTenantsPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#303030] mb-1.5">Nombre del negocio</label>
+                <label className="block text-sm font-medium text-[#303030] mb-1.5">Nombre de la empresa</label>
                 <input className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="Ej: Restaurante El Buen Sabor" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#303030] mb-1.5">Slug</label>
-                  <input className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="mi-negocio" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                  <input className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="mi-empresa" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#303030] mb-1.5">Subdominio</label>
-                  <input className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="mi-negocio" value={form.subdomain} onChange={(e) => setForm({ ...form, subdomain: e.target.value })} />
+                  <input className="w-full px-4 py-2.5 text-sm border border-[#e3e3e3] rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="mi-empresa" value={form.subdomain} onChange={(e) => setForm({ ...form, subdomain: e.target.value })} />
                 </div>
               </div>
               <div>
@@ -577,7 +577,7 @@ export default function AdminTenantsPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => { setShowModal(false); setEditing(false); setEditingId(null); }} className="flex-1 btn-secondary text-sm">Cancelar</button>
-              <button onClick={submitTenant} className="flex-1 btn-primary text-sm">{editing ? "Guardar cambios" : "Crear tenant"}</button>
+              <button onClick={submitTenant} className="flex-1 btn-primary text-sm">{editing ? "Guardar cambios" : "Crear empresa"}</button>
             </div>
           </div>
         </div>

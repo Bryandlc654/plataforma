@@ -48,7 +48,7 @@ export default function AuditPage() {
   const actionLabel = (action: string) => {
     const labels: Record<string, string> = {
       "user.register": "Registro de usuario", "user.login": "Inicio de sesión",
-      "user.invited": "Usuario invitado", "tenant.create": "Creación de negocio",
+      "user.invited": "Usuario invitado", "tenant.create": "Creación de empresa",
       "site.create": "Creación de sitio", "site.publish": "Publicación de sitio",
       "subscription.upgrade": "Cambio de plan", "subscription.cancel": "Cancelación",
       "invitation.created": "Invitación creada", "invitation.accepted": "Invitación aceptada",
@@ -95,7 +95,7 @@ export default function AuditPage() {
                 <tr className="border-b border-[#e3e3e3]">
                   <th className="text-left py-2 px-3 text-[#616161] font-medium">Acción</th>
                   <th className="text-left py-2 px-3 text-[#616161] font-medium">Usuario</th>
-                  {isAdmin && <th className="text-left py-2 px-3 text-[#616161] font-medium">Tenant</th>}
+                  {isAdmin && <th className="text-left py-2 px-3 text-[#616161] font-medium">Empresa</th>}
                   <th className="text-left py-2 px-3 text-[#616161] font-medium">Recurso</th>
                   <th className="text-left py-2 px-3 text-[#616161] font-medium">Fecha</th>
                 </tr>

@@ -97,7 +97,7 @@ export default function AdminUsersPage() {
   };
 
   const removeTenant = async (userId: string, tenantId: string, tenantName: string) => {
-    if (!(await confirm(`¿Remover al usuario del negocio "${tenantName}"?`))) return;
+    if (!(await confirm(`¿Remover al usuario de la empresa "${tenantName}"?`))) return;
     try { await api.delete(`/users/admin/${userId}/tenant/${tenantId}`); fetchUsers(); }
     catch (err: any) { alert(err.response?.data?.message || "Error"); }
   };
@@ -137,7 +137,7 @@ export default function AdminUsersPage() {
   }
 
   const roleLabel = (roles: string[]) => {
-    const map: Record<string, string> = { super_admin: "Super Admin", platform_admin: "Admin de plataforma", owner: "Owner", admin: "Admin del negocio", editor: "Editor", marketing: "Marketing", billing: "Billing", viewer: "Viewer", support: "Soporte" };
+    const map: Record<string, string> = { super_admin: "Super Admin", platform_admin: "Admin de plataforma", owner: "Owner", admin: "Admin de la empresa", editor: "Editor", marketing: "Marketing", billing: "Billing", viewer: "Viewer", support: "Soporte" };
     return roles.map((r) => map[r] || r).join(", ");
   };
 
@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
             <option value="platform_admin">Admin de plataforma</option>
             <option value="support">Soporte</option>
             <option value="owner">Owner</option>
-            <option value="admin">Admin del negocio</option>
+            <option value="admin">Admin de la empresa</option>
             <option value="editor">Editor</option>
             <option value="marketing">Marketing</option>
             <option value="billing">Billing</option>
@@ -344,7 +344,7 @@ export default function AdminUsersPage() {
                   <>
                     <hr className="border-[#ebebeb]" />
                     <div>
-                      <p className="text-xs font-medium text-[#616161] uppercase mb-2">Negocios ({selected.userTenants.length})</p>
+                      <p className="text-xs font-medium text-[#616161] uppercase mb-2">Empresas ({selected.userTenants.length})</p>
                       <div className="space-y-3">
                         {selected.userTenants.map((ut, i) => (
                           <div key={i} className="p-3 rounded-xl bg-[#f7f7f7] border border-[#ebebeb]">
@@ -377,11 +377,11 @@ export default function AdminUsersPage() {
               <hr className="border-[#ebebeb]" />
 
               <div>
-                <p className="text-xs font-medium text-[#616161] uppercase mb-2">Asignar a un negocio</p>
+                <p className="text-xs font-medium text-[#616161] uppercase mb-2">Asignar a una empresa</p>
                 <div className="flex gap-2">
                   <select value={assignTenantId} onChange={(e) => setAssignTenantId(e.target.value)}
                     className="flex-1 text-sm border border-[#e3e3e3] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500/20">
-                    <option value="">Seleccionar tenant...</option>
+                    <option value="">Seleccionar empresa...</option>
                     {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                   <button onClick={assignTenant} disabled={!assignTenantId || roleLoading}
@@ -435,7 +435,7 @@ export default function AdminUsersPage() {
               <h4 className="text-lg font-semibold text-[#303030]">{showConfirm.action === "delete" ? "Eliminar usuario" : showConfirm.action === "block" ? "Bloquear usuario" : "Desbloquear usuario"}</h4>
               <p className="text-sm text-[#616161] mt-1">
                 {showConfirm.action === "delete"
-                  ? `¿Eliminar permanentemente a ${showConfirm.name}? Se le quitará el acceso a sus negocios y no podrá iniciar sesión.`
+                  ? `¿Eliminar permanentemente a ${showConfirm.name}? Se le quitará el acceso a sus empresas y no podrá iniciar sesión.`
                   : showConfirm.action === "block"
                     ? `¿Bloquear a ${showConfirm.name}? No podrá iniciar sesión.`
                     : `¿Desbloquear a ${showConfirm.name}? Podrá iniciar sesión nuevamente.`}

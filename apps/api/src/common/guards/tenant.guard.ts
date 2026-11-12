@@ -19,7 +19,7 @@ export class TenantGuard implements CanActivate {
       request.query.tenantId;
 
     if (!tenantId) {
-      throw new BadRequestException("Tenant ID is required");
+      throw new BadRequestException("El ID de la empresa es obligatorio");
     }
 
     const tenant = await this.prisma.tenant.findUnique({
@@ -27,7 +27,7 @@ export class TenantGuard implements CanActivate {
     });
 
     if (!tenant) {
-      throw new ForbiddenException("Tenant not found or inactive");
+      throw new ForbiddenException("Empresa no encontrada o inactiva");
     }
 
     const user = request.user;
@@ -37,7 +37,7 @@ export class TenantGuard implements CanActivate {
       user?.roles?.includes("support");
 
     if (!tenant.isActive && !isSystemUser) {
-      throw new ForbiddenException("Tenant is suspended");
+      throw new ForbiddenException("La empresa está suspendida");
     }
 
     if (user?.id && !isSystemUser) {
@@ -49,7 +49,7 @@ export class TenantGuard implements CanActivate {
       });
 
       if (!membership) {
-        throw new ForbiddenException("You are not a member of this tenant");
+        throw new ForbiddenException("No eres miembro de esta empresa");
       }
     }
 
