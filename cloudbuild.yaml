@@ -1,6 +1,7 @@
 steps:
   # Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
     args:
       - 'build'
       - '-f'
@@ -11,21 +12,32 @@ steps:
 
   # Push image to registry before deploying
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
     args: ['push', 'gcr.io/$PROJECT_ID/plataforma-api']
 
-  # Apply pending database migrations before deploying (fail build on error)
-  # Se invoca el binario de Prisma 6 que ya viene en la imagen. Con `npx` sin `dir`,
-  # Cloud Build corre desde /workspace, no encuentra node_modules y descarga Prisma 7,
-  # que rechaza el `url` del datasource (P1012) y rompe el pipeline.
-  - name: 'gcr.io/$PROJECT_ID/plataforma-api'
-    dir: '/app'
-    entrypoint: 'node'
+  # Descarga el Cloud SQL Auth Proxy en /workspace para poder usarlo desde el
+  # paso de migraciones (los pasos de Cloud Build estan aislados entre si).
+  - name: 'gcr.io/cloud-builders/wget'
+    id: 'proxy-install'
+    entrypoint: 'bash'
     args:
-      - '/app/node_modules/prisma/build/index.js'
-      - 'migrate'
-      - 'deploy'
-      - '--schema=/app/packages/database/prisma/schema.prisma'
+      - '-c'
+      - 'wget -q -O /workspace/cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64 && chmod +x /workspace/cloud-sql-proxy'
+    waitFor: ['-']
+
+  # Apply pending database migrations before deploying (fail build on error)
+  # El DATABASE_URL usa el socket unix `unix:/cloudsql/...`, asi que el proxy se
+  # arranca dentro de este mismo paso: un sidecar en primer plano nunca termina y
+  # cuelga el build. Se invoca el binario de Prisma 6 que ya viene en la imagen.
+  - name: 'gcr.io/$PROJECT_ID/plataforma-api'
+    id: 'migrate'
+    dir: '/app'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - 'mkdir -p /cloudsql; /workspace/cloud-sql-proxy --unix-socket=/cloudsql iceberg-460502:us-central1:plataforma-mysql & PROXY_PID=$$!; for i in $$(seq 1 30); do [ -S /cloudsql/iceberg-460502:us-central1:plataforma-mysql ] && break; sleep 1; done; node /app/node_modules/prisma/build/index.js migrate deploy --schema=/app/packages/database/prisma/schema.prisma; RC=$$?; kill $$PROXY_PID 2>/dev/null; exit $$RC'
     secretEnv: ['DATABASE_URL']
+    waitFor: ['proxy-install', 'push-image']
 
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
