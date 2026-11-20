@@ -25,6 +25,17 @@ const GOALS = [
   { id: "migrate", label: "Trasladar un sitio existente" },
 ];
 
+const FOOD_TYPES = [
+  { id: "restaurant", label: "Restaurante" },
+  { id: "burgers", label: "Hamburguesas" },
+  { id: "pizza", label: "Pizzería" },
+  { id: "cafe", label: "Cafetería o panadería" },
+  { id: "fastfood", label: "Comida rápida" },
+  { id: "foodtruck", label: "Food truck" },
+  { id: "bar", label: "Bar o cócteles" },
+  { id: "other", label: "Otro" },
+];
+
 const fmtDate = (d: Date) => d.toLocaleDateString("es", { day: "numeric", month: "short" });
 
 export default function WelcomePage() {
@@ -38,6 +49,26 @@ export default function WelcomePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [methods, setMethods] = useState<{ paypal: { enabled: boolean }; payphone: { enabled: boolean } } | null>(null);
+  // Jeaz Shop o Jeaz Food: llega en la URL justo después de registrarse y se confirma con el servidor.
+  const [product, setProduct] = useState<"shop" | "food" | null>(null);
+  const [foodType, setFoodType] = useState("restaurant");
+  const isFood = product === "food";
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("product");
+    if (fromUrl === "food" || fromUrl === "shop") setProduct(fromUrl);
+  }, []);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    api
+      .get(`/tenants/${tenantId}/settings`)
+      .then((res: any) => {
+        const p = (res.data || res)?.product;
+        if (p === "food" || p === "shop") setProduct(p);
+      })
+      .catch(() => setProduct((cur) => cur || "shop"));
+  }, [tenantId]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -47,15 +78,16 @@ export default function WelcomePage() {
   }, [hasHydrated, ensureSession, router, isAuthenticated]);
 
   useEffect(() => {
+    if (!product) return;
     api
-      .get("/plans")
+      .get(`/plans?product=${product}`)
       .then((res: any) => {
         const list: Plan[] = (res.data || res || []).filter((p: Plan) => Number(p.price) > 0);
         setPlans(list);
         if (list[0]) setPlanSlug(list[0].slug);
       })
       .catch(() => setPlans([]));
-  }, []);
+  }, [product]);
 
   useEffect(() => {
     api
@@ -115,13 +147,20 @@ export default function WelcomePage() {
         if (name) {
           await api.put(`/tenants/${tenantId}`, { name });
           useAuthStore.setState((s: any) => ({ tenant: s.tenant ? { ...s.tenant, name } : s.tenant }));
+          // El enlace del menú toma el nombre del restaurante (si está libre).
+          if (isFood) await api.put("/food/settings", { slug: name }).catch(() => undefined);
         }
         await api.put(`/tenants/${tenantId}/settings`, {
-          onboarding: { completed: true, goals: chosen },
+          onboarding: { completed: true, goals: isFood ? (skipGoals ? [] : [foodType]) : chosen },
         });
       }
     } catch {
       // No bloquea: el panel sigue funcionando aunque no se guarden las preferencias.
+    }
+    if (isFood) {
+      // Jeaz Food no usa plantillas: va directo a su panel para armar el menú.
+      router.replace("/dashboard/food?welcome=1");
+      return;
     }
     // Directo a elegir plantilla (ya ordenada según lo que quiere crear).
     router.replace(chosen.length ? `/dashboard/sites/new?goals=${chosen.join(",")}` : "/dashboard/sites/new");
@@ -187,8 +226,8 @@ export default function WelcomePage() {
                     <span>
                       <span className="block font-semibold">{p.name}</span>
                       <span className="text-xs text-[#616161]">
-                        {p.maxSites} {p.maxSites === 1 ? "sitio" : "sitios"} · {p.maxUsers}{" "}
-                        {p.maxUsers === 1 ? "usuario" : "usuarios"}
+                        {isFood ? "" : `${p.maxSites} ${p.maxSites === 1 ? "sitio" : "sitios"} · `}
+                        {p.maxUsers} {p.maxUsers === 1 ? "usuario" : "usuarios"}
                       </span>
                     </span>
                     <span className="font-semibold">{Number(p.price)} $/mes</span>
@@ -219,17 +258,21 @@ export default function WelcomePage() {
                 Omitir por ahora
               </button>
               <p className="mt-4 text-center text-xs leading-relaxed text-[#8a8a8a]">
-                No se te cobra durante la prueba. Si no agregas un método de pago, tu sitio seguirá disponible
-                hasta que termine la prueba.
+                No se te cobra durante la prueba. Si no agregas un método de pago, tu {isFood ? "menú" : "sitio"} seguirá
+                disponible hasta que termine la prueba.
               </p>
             </div>
           </div>
         </main>
       ) : (
         <main className="flex flex-1 flex-col items-center px-4 pb-16 pt-8">
-          <h1 className="text-center text-[30px] font-medium tracking-tight">Cuéntanos de tu negocio</h1>
+          <h1 className="text-center text-[30px] font-medium tracking-tight">
+            {isFood ? "Cuéntanos de tu restaurante" : "Cuéntanos de tu negocio"}
+          </h1>
           <p className="mt-2 text-center text-lg text-white/60">
-            Con esto te mostramos las plantillas que mejor te sirven.
+            {isFood
+              ? "Con esto preparamos tu menú digital. Lo puedes cambiar cuando quieras."
+              : "Con esto te mostramos las plantillas que mejor te sirven."}
           </p>
           <div className="sp-card mt-10 w-full max-w-[520px] !p-6">
             <label htmlFor="business-name" className="mb-1.5 block text-sm font-medium text-[#303030]">Nombre de tu negocio</label>
@@ -238,11 +281,21 @@ export default function WelcomePage() {
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               maxLength={60}
-              placeholder="Ej. Panadería La Esquina"
+              placeholder={isFood ? "Ej. Brasa & Barrio" : "Ej. Panadería La Esquina"}
               className="sp-input mb-5"
               autoFocus
             />
-            <p className="mb-2 text-sm font-medium text-[#303030]">¿Qué quieres crear?</p>
+            <p className="mb-2 text-sm font-medium text-[#303030]">{isFood ? "¿Qué tipo de negocio tienes?" : "¿Qué quieres crear?"}</p>
+            {isFood ? (
+              <div className="flex flex-wrap gap-2">
+                {FOOD_TYPES.map((t) => (
+                  <button key={t.id} type="button" className="sp-chip" data-on={foodType === t.id} onClick={() => setFoodType(t.id)}>
+                    <span aria-hidden>{foodType === t.id ? "✓" : "+"}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
             <div className="flex flex-wrap gap-2">
               {GOALS.map((g) => (
                 <button
@@ -257,6 +310,7 @@ export default function WelcomePage() {
                 </button>
               ))}
             </div>
+            )}
             <button onClick={() => finish(false)} disabled={busy} className="sp-btn mt-6 !h-12 !rounded-2xl">
               {busy ? "Preparando tu panel..." : "Continuar"}
             </button>

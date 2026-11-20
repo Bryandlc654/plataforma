@@ -10,6 +10,55 @@ import api from "@/lib/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type Product = "shop" | "food";
+
+/** Los dos productos de la plataforma: se elige uno al crear la cuenta. */
+export const PRODUCTS: Array<{
+  id: Product;
+  name: string;
+  title: string;
+  description: string;
+  points: string[];
+  example: string;
+}> = [
+  {
+    id: "shop",
+    name: "Jeaz Shop",
+    title: "Tu sitio web o tienda online",
+    description: "Para negocios, marcas y profesionales que quieren una web propia para mostrarse y vender.",
+    points: [
+      "Plantillas profesionales y editor visual",
+      "Tienda con carrito, pagos en línea y cupones",
+      "Dominio propio, SEO, blog, reservas y leads",
+    ],
+    example: "Tiendas, empresas, servicios, portafolios",
+  },
+  {
+    id: "food",
+    name: "Jeaz Food",
+    title: "Menú digital con pedidos",
+    description: "Para restaurantes y negocios de comida que quieren recibir pedidos desde un menú en línea.",
+    points: [
+      "Menú con fotos, categorías, extras y combos",
+      "Pedidos por delivery, retiro o en mesa, directo a tu WhatsApp",
+      "Panel de pedidos en vivo y ventas del día",
+    ],
+    example: "Restaurantes, hamburgueserías, cafeterías, food trucks",
+  },
+];
+
+export function ProductIcon({ id, className = "" }: { id: Product; className?: string }) {
+  return id === "food" ? (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 3v7a3 3 0 003 3v8M7 3v6M10 3v7a3 3 0 01-3 3M17 21V3c-2.2 0-4 2.7-4 6v4h4" />
+    </svg>
+  ) : (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9l1.5-5h15L21 9M3 9h18M3 9a3 3 0 006 0m0 0a3 3 0 006 0m0 0a3 3 0 006 0M5 12v8h14v-8M10 20v-5h4v5" />
+    </svg>
+  );
+}
+
 export function BrandMark({ className = "" }: { className?: string }) {
   const { branding } = usePlatformBranding();
   const logo = resolveBrandingLogo(branding.logoUrl);
@@ -44,7 +93,9 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const { startWithEmail, verifyEmail, resendVerification, login, isLoading, ensureSession, hasHydrated } =
     useAuthStore();
-  const [step, setStep] = useState<"email" | "code" | "password">("email");
+  const [step, setStep] = useState<"product" | "email" | "code" | "password">(mode === "register" ? "product" : "email");
+  const [product, setProduct] = useState<Product | null>(null);
+  const chosen = PRODUCTS.find((p) => p.id === product);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,6 +130,16 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     })();
   }, [ensureSession, hasHydrated, router]);
 
+  // /register?product=food (o shop) llega con el producto ya elegido.
+  useEffect(() => {
+    if (mode !== "register") return;
+    const p = new URLSearchParams(window.location.search).get("product");
+    if (p === "shop" || p === "food") {
+      setProduct(p);
+      setStep("email");
+    }
+  }, [mode]);
+
   useEffect(() => {
     if (cooldown <= 0) return;
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
@@ -104,7 +165,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
     }
     try {
       setError(null);
-      const res = await startWithEmail(value);
+      const res = await startWithEmail(value, product || "shop");
       setEmail(res.email);
       setCooldown(30);
       setStep("code");
@@ -160,7 +221,7 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       setSaving(true);
       setError(null);
       await api.post("/auth/set-password", { password });
-      router.replace("/welcome");
+      router.replace(product === "food" ? "/welcome?product=food" : "/welcome");
     } catch (err: any) {
       setError(err.response?.data?.message || "No pudimos guardar la contraseña. Inténtalo de nuevo.");
     } finally {
@@ -211,14 +272,104 @@ export function AuthFlow({ mode }: { mode: "login" | "register" }) {
       </header>
 
       <main className="flex flex-1 flex-col items-center px-4 pb-16 pt-8 sm:pt-14">
-        {step === "email" ? (
+        {step === "product" ? (
           <>
+            <h1 className="text-center text-[34px] font-medium leading-tight tracking-tight">¿Qué quieres crear?</h1>
+            <p className="mt-2 max-w-[560px] text-center text-lg text-white/60">
+              Elige el producto para tu negocio. Empiezas con 3 días gratis, sin tarjeta.
+            </p>
+            <div className="mt-10 grid w-full max-w-[860px] gap-4 md:grid-cols-2">
+              {PRODUCTS.map((p) => {
+                const on = product === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setProduct(p.id)}
+                    aria-pressed={on}
+                    className={`group flex flex-col rounded-[24px] border p-6 text-left transition ${
+                      on
+                        ? "border-white bg-white text-[#303030] shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+                        : "border-white/15 bg-white/[0.04] text-white hover:border-white/40 hover:bg-white/[0.07]"
+                    }`}
+                  >
+                    <span className="flex items-center justify-between">
+                      <span
+                        className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+                          on ? "bg-[var(--color-secondary)] text-[var(--color-on-secondary)]" : "bg-white/10 text-white"
+                        }`}
+                      >
+                        <ProductIcon id={p.id} className="h-6 w-6" />
+                      </span>
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                          on ? "border-[#303030] bg-[#303030] text-white" : "border-white/40"
+                        }`}
+                        aria-hidden
+                      >
+                        {on && (
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                    </span>
+                    <span className="mt-5 text-[13px] font-semibold uppercase tracking-wider opacity-60">{p.name}</span>
+                    <span className="mt-1 text-[22px] font-semibold leading-tight">{p.title}</span>
+                    <span className={`mt-2 text-[15px] leading-snug ${on ? "text-[#616161]" : "text-white/60"}`}>{p.description}</span>
+                    <ul className="mt-5 space-y-2 text-[14px]">
+                      {p.points.map((pt) => (
+                        <li key={pt} className="flex items-start gap-2">
+                          <span className={on ? "text-emerald-600" : "text-white/70"} aria-hidden>✓</span>
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="mt-auto block pt-5">
+                      <span className={`block border-t pt-4 text-[13px] ${on ? "border-[#ebebeb] text-[#616161]" : "border-white/10 text-white/50"}`}>
+                        Ideal para: {p.example}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              disabled={!product}
+              onClick={() => setStep("email")}
+              className="sp-btn mt-8 !h-12 w-full max-w-[376px] !rounded-xl disabled:opacity-50"
+            >
+              {chosen ? `Continuar con ${chosen.name}` : "Elige una opción"}
+            </button>
+            <p className="mt-4 text-center text-sm text-white/60">
+              ¿Ya tienes una cuenta?{" "}
+              <Link href="/login" className="font-medium text-white underline">
+                Iniciar sesión
+              </Link>
+            </p>
+          </>
+        ) : step === "email" ? (
+          <>
+            {mode === "register" && chosen && (
+              <button
+                type="button"
+                onClick={() => setStep("product")}
+                className="mb-5 flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] py-1.5 pl-2 pr-3 text-[13px] text-white/80 hover:bg-white/10"
+              >
+                <ProductIcon id={chosen.id} className="h-4 w-4" />
+                <span className="font-semibold text-white">{chosen.name}</span>
+                <span className="text-white/50">· Cambiar</span>
+              </button>
+            )}
             <h1 className="text-center text-[34px] font-medium leading-tight tracking-tight">
               {mode === "register" ? "Empieza tu prueba gratis" : "Inicia sesión"}
             </h1>
             <p className="mt-2 text-center text-lg text-white/60">
               {mode === "register"
-                ? "3 días gratis para crear tu sitio web, sin tarjeta"
+                ? product === "food"
+                  ? "3 días gratis para crear el menú digital de tu restaurante, sin tarjeta"
+                  : "3 días gratis para crear tu sitio web, sin tarjeta"
                 : "Ingresa tu correo para continuar"}
             </p>
 

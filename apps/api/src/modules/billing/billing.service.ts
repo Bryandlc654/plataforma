@@ -86,6 +86,9 @@ export class BillingService {
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null } });
     if (!tenant) throw new BadRequestException("Tenant not found");
+    if ((plan as any).product && (plan as any).product !== tenant.product) {
+      throw new BadRequestException("Este plan no corresponde a tu producto (Jeaz Shop / Jeaz Food)");
+    }
 
     const payphoneToken = this.configService.get<string>("payphone.token");
     if (!payphoneToken) {
@@ -262,6 +265,9 @@ export class BillingService {
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null } });
     if (!tenant) throw new BadRequestException("Tenant not found");
+    if ((plan as any).product && (plan as any).product !== tenant.product) {
+      throw new BadRequestException("Este plan no corresponde a tu producto (Jeaz Shop / Jeaz Food)");
+    }
 
     const paypal = await this.platformService.getPaypalCredentials();
     if (!paypal.enabled || !paypal.clientId || !paypal.secret) {

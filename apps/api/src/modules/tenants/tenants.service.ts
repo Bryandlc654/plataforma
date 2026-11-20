@@ -230,6 +230,7 @@ export class TenantsService {
       primaryColor: tenant.primaryColor,
       secondaryColor: tenant.secondaryColor,
       subscriptionEndsAt: tenant.subscriptionEndsAt,
+      product: tenant.product,
       settings: tenant.settings || {},
     };
   }
@@ -341,6 +342,7 @@ export class TenantsService {
         slug: true,
         subdomain: true,
         isActive: true,
+        product: true,
         createdAt: true,
         planId: true,
         plan: { select: { id: true, name: true, slug: true } },

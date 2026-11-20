@@ -53,9 +53,14 @@ export class PlansService {
     throw new BadRequestException(`${field} must be an integer`);
   }
 
-  async findAll() {
+  async findAll(product?: string) {
+    // El plan "free" es la base de la prueba de ambos productos.
+    const where: any = { isActive: true };
+    if (product === "shop" || product === "food") {
+      where.OR = [{ product }, { slug: "free" }];
+    }
     return this.prisma.plan.findMany({
-      where: { isActive: true },
+      where,
       orderBy: { sortOrder: "asc" },
     });
   }
@@ -140,6 +145,7 @@ export class PlansService {
     const description = dto?.description ? String(dto.description) : undefined;
     const features = dto?.features ?? undefined;
     const isActive = dto?.isActive === undefined ? true : Boolean(dto.isActive);
+    const product = this.normalizeProduct(dto?.product ?? "shop");
 
     return this.prisma.plan.create({
       data: {
@@ -155,6 +161,7 @@ export class PlansService {
         features,
         isActive,
         sortOrder,
+        product,
       } as any,
     });
   }
@@ -205,7 +212,14 @@ export class PlansService {
     if (dto?.description !== undefined) data.description = dto.description ? String(dto.description) : null;
     if (dto?.features !== undefined) data.features = dto.features;
     if (dto?.isActive !== undefined) data.isActive = Boolean(dto.isActive);
+    if (dto?.product !== undefined) data.product = this.normalizeProduct(dto.product);
 
     return this.prisma.plan.update({ where: { id }, data });
+  }
+
+  private normalizeProduct(value: unknown): "shop" | "food" {
+    const v = String(value || "").trim().toLowerCase();
+    if (v !== "shop" && v !== "food") throw new BadRequestException("product must be shop or food");
+    return v;
   }
 }

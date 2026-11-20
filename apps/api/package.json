@@ -86,6 +86,9 @@
       ]
     },
     "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^expo-server-sdk$": "<rootDir>/test-utils/expo-server-sdk.mock.ts"
+    },
     "moduleFileExtensions": [
       "ts",
       "js",

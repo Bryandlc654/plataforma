@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
 interface Tenant {
-  id: string; name: string; slug: string; subdomain: string;
+  id: string; name: string; slug: string; subdomain: string; product?: "shop" | "food";
   isActive: boolean; planId: string | null; plan: { id: string; name: string; slug: string } | null;
   _count: { userTenants: number; sites: number };
   createdAt: string;
@@ -263,7 +263,12 @@ export default function AdminTenantsPage() {
                   <tr key={t.id} className="hover:bg-[#f7f7f7]/50 transition-colors group">
                     <td className="py-3.5 px-4">
                       <button onClick={() => setSelected(t)} className="text-left hover:text-primary-600 transition-colors">
-                        <p className="font-medium text-[#303030]">{t.name}</p>
+                        <p className="font-medium text-[#303030]">
+                          {t.name}
+                          <span className={`ml-2 rounded-md px-1.5 py-0.5 align-middle text-[10px] font-semibold ${t.product === "food" ? "bg-orange-50 text-orange-700" : "bg-blue-50 text-blue-700"}`}>
+                            {t.product === "food" ? "Food" : "Shop"}
+                          </span>
+                        </p>
                         <p className="text-xs text-[#8a8a8a] mt-0.5">{t.subdomain || t.slug}</p>
                       </button>
                     </td>

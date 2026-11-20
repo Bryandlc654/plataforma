@@ -5,6 +5,7 @@ import {
   MaxLength,
   IsOptional,
   Matches,
+  IsIn,
 } from "class-validator";
 
 export class RegisterUserDto {
@@ -35,6 +36,11 @@ export class RegisterUserDto {
 export class StartAuthDto {
   @IsEmail()
   email!: string;
+
+  /** Producto que contrata la cuenta nueva: Jeaz Shop (sitios web) o Jeaz Food (menú digital). */
+  @IsOptional()
+  @IsIn(["shop", "food"])
+  product?: "shop" | "food";
 }
 
 export class SetPasswordDto {

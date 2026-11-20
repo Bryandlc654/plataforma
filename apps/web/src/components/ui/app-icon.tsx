@@ -1,4 +1,4 @@
-import { HiGlobeAlt, HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone, HiShieldCheck, HiNewspaper, HiLightBulb } from "react-icons/hi2";
+import { HiGlobeAlt, HiHome, HiSquares2X2, HiBars3, HiEnvelope, HiChartBar, HiMagnifyingGlass, HiUsers, HiClipboardDocumentList, HiCog6Tooth, HiPhone, HiCurrencyDollar, HiLink, HiArrowUpRight, HiKey, HiBolt, HiSparkles, HiShoppingCart, HiCalendarDays, HiTicket, HiPhoto, HiWrenchScrewdriver, HiUserGroup, HiArrowDownTray, HiMegaphone, HiShieldCheck, HiNewspaper, HiLightBulb, HiReceiptPercent, HiBookOpen, HiBuildingStorefront } from "react-icons/hi2";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   home: HiHome,
@@ -20,6 +20,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ai: HiSparkles,
   popups: HiMegaphone,
   ecommerce: HiShoppingCart,
+  foodorders: HiReceiptPercent,
+  foodmenu: HiBookOpen,
+  restaurant: HiBuildingStorefront,
   bookings: HiCalendarDays,
   support: HiTicket,
   media: HiPhoto,

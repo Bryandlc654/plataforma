@@ -15,6 +15,7 @@ import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { v4 as uuid } from "uuid";
 import { PrismaService } from "../../prisma/prisma.service";
 import { EmailService } from "../email/email.service";
+import { defaultFoodSettings } from "../food/food-settings";
 import {
   RegisterUserDto,
   LoginDto,
@@ -191,10 +192,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         });
 
         const freePlan = await tx.plan.findUnique({ where: { slug: "free" } });
+        const product = dto.product === "food" ? "food" : "shop";
 
         const tenant = await tx.tenant.create({
           data: {
             name: businessName,
+            product,
             slug: this.generateSlug(localPart),
             subdomain: this.generateSlug(localPart),
             planId: freePlan?.id,
@@ -205,6 +208,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
             settings: {
               trial: { startedAt: new Date().toISOString(), endsAt: trialEndsAt.toISOString() },
               onboarding: { completed: false, goals: [] },
+              ...(product === "food" ? { food: defaultFoodSettings() } : {}),
             } as any,
           },
         });
@@ -715,6 +719,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
             slug: true,
             subdomain: true,
             isActive: true,
+            product: true,
           },
         },
       },
@@ -746,6 +751,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         name: ut.tenant.name,
         slug: ut.tenant.slug,
         subdomain: ut.tenant.subdomain,
+        product: ut.tenant.product,
         isOwner: ut.isOwner,
       })),
       ...tokens,

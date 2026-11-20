@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { DEFAULT_PLANS, PERMISSIONS, ROLE_PERMISSIONS, ROLES } from "../../shared/index";
+import { DEFAULT_FOOD_PLANS, DEFAULT_PLANS, PERMISSIONS, ROLE_PERMISSIONS, ROLES } from "../../shared/index";
 
 @Injectable()
 export class SeedService implements OnModuleInit {
@@ -28,6 +28,7 @@ export class SeedService implements OnModuleInit {
     }
     try {
       await this.seedPlans();
+      await this.seedFoodPlans();
       await this.seedEcommerceTemplate();
       this.logger.log("Database seeded successfully");
     } catch (err: any) {
@@ -151,6 +152,25 @@ export class SeedService implements OnModuleInit {
     });
 
     this.logger.log(`Seeded ${DEFAULT_PLANS.length} plans`);
+  }
+
+  /** Planes de Jeaz Food: se crean una vez, si aún no existe ninguno de ese producto. */
+  private async seedFoodPlans() {
+    const existing = await this.prisma.plan.count({ where: { product: "food" } });
+    if (existing > 0) return;
+    const base = await this.prisma.plan.count();
+    await this.prisma.plan.createMany({
+      data: DEFAULT_FOOD_PLANS.map((plan, index) => ({
+        ...plan,
+        product: "food",
+        currency: "USD",
+        billingInterval: "monthly",
+        features: JSON.parse(JSON.stringify(plan.features)),
+        sortOrder: base + index,
+      })) as any,
+      skipDuplicates: true,
+    });
+    this.logger.log(`Seeded ${DEFAULT_FOOD_PLANS.length} Jeaz Food plans`);
   }
 
   async seedEcommerceTemplate() {

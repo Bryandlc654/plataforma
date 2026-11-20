@@ -18,6 +18,8 @@ interface TenantInfo {
   name: string;
   slug: string;
   subdomain?: string;
+  /** "shop" (Jeaz Shop) o "food" (Jeaz Food). */
+  product?: "shop" | "food";
   isOwner: boolean;
 }
 
@@ -43,7 +45,7 @@ interface AuthState {
     firstName: string;
     lastName: string;
   }) => Promise<{ message: string; email: string; requiresVerification: boolean }>;
-  startWithEmail: (email: string) => Promise<{ email: string; isNew: boolean }>;
+  startWithEmail: (email: string, product?: "shop" | "food") => Promise<{ email: string; isNew: boolean }>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendVerification: (email: string) => Promise<string>;
   logout: () => void;
@@ -137,10 +139,10 @@ const useAuthStore = create<AuthState>()(
         }
       },
 
-      startWithEmail: async (email: string) => {
+      startWithEmail: async (email: string, product?: "shop" | "food") => {
         set({ isLoading: true });
         try {
-          const response: any = await api.post("/auth/start", { email });
+          const response: any = await api.post("/auth/start", product ? { email, product } : { email });
           const payload = response.data || response;
           return { email: payload.email || email, isNew: !!payload.isNew };
         } finally {

@@ -121,6 +121,8 @@ model Tenant {
   primaryColor    String?  @default("#2563EB") @map("primary_color")
   secondaryColor  String?  @default("#1E40AF") @map("secondary_color")
   isActive        Boolean  @default(true) @map("is_active")
+  /// Producto contratado: "shop" (Jeaz Shop, sitios web) o "food" (Jeaz Food, menú digital).
+  product         String   @default("shop")
   planId          String?  @map("plan_id")
   subscriptionEndsAt DateTime? @map("subscription_ends_at")
   maxUsers        Int      @default(3)
@@ -246,6 +248,8 @@ model Plan {
   maxSites        Int      @default(1)
   maxStorage      BigInt   @default(52428800)
   features        Json?
+  /// Producto al que pertenece el plan: "shop" o "food".
+  product         String   @default("shop")
   isActive        Boolean  @default(true) @map("is_active")
   sortOrder       Int      @default(0) @map("sort_order")
   createdAt       DateTime @default(now()) @map("created_at")
@@ -725,12 +729,21 @@ model Order {
   paymentMethod String? @map("payment_method")
   paymentReference String? @map("payment_reference")
   paidAt      DateTime? @map("paid_at")
+  /// "shop" (tienda) o "food" (pedido del menú de Jeaz Food).
+  source      String   @default("shop")
+  /// Jeaz Food: número correlativo del pedido dentro del restaurante.
+  orderNumber Int?     @map("order_number")
+  /// Jeaz Food: "delivery", "pickup" o "dine_in".
+  fulfillment String?
+  deliveryAddress String? @map("delivery_address") @db.Text
+  deliveryFee Decimal  @default(0) @map("delivery_fee")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   items  OrderItem[]
 
+  @@index([tenantId, source, createdAt])
   @@index([tenantId, status])
   @@index([status, createdAt])
   @@map("orders")
@@ -743,6 +756,9 @@ model OrderItem {
   quantity  Int    @default(1)
   price     Decimal
   total     Decimal
+  /// Jeaz Food: opciones elegidas [{ group, name, price }].
+  options   Json?
+  notes     String?
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)

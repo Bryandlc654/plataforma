@@ -5,6 +5,7 @@ import {
   Put,
   Param,
   Body,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
@@ -23,8 +24,8 @@ export class PlansController {
 
   @Get()
   @ApiOperation({ summary: "List all available plans" })
-  async findAll() {
-    return this.plansService.findAll();
+  async findAll(@Query("product") product?: string) {
+    return this.plansService.findAll(product);
   }
 
   @Get("tenant/:tenantId")

@@ -154,3 +154,25 @@ export const DEFAULT_PLANS = [
     features: ["10 sitios web", "Dominio personalizado", "SEO avanzado", "Roles avanzados", "API pública", "Webhooks", "Soporte prioritario", "White-label"],
   },
 ] as const;
+
+/** Planes de Jeaz Food (menú digital). La prueba usa el plan "free" común a ambos productos. */
+export const DEFAULT_FOOD_PLANS = [
+  {
+    name: "Food Básico",
+    slug: "food-basico",
+    price: 14.99,
+    maxUsers: 2,
+    maxSites: 1,
+    maxStorage: 500 * 1024 * 1024,
+    features: ["Menú digital ilimitado", "Pedidos por WhatsApp", "Delivery, retiro y mesa", "Código QR", "Panel de pedidos en vivo"],
+  },
+  {
+    name: "Food Pro",
+    slug: "food-pro",
+    price: 29.99,
+    maxUsers: 5,
+    maxSites: 1,
+    maxStorage: 2 * 1024 * 1024 * 1024,
+    features: ["Todo lo de Básico", "Hasta 5 usuarios", "Reportes de ventas", "Notificaciones en la app móvil", "Soporte prioritario"],
+  },
+] as const;

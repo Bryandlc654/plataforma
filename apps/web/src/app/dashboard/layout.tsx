@@ -10,6 +10,14 @@ import { useEffect, useState, Fragment } from "react";
 import api from "@/lib/api";
 import { cachedJson, setCachedJson } from "@/lib/cached-fetch";
 
+/** Secciones de Jeaz Shop que no aplican a un restaurante de Jeaz Food. */
+const SHOP_ONLY_PATHS = [
+  "/dashboard/sites", "/dashboard/domains", "/dashboard/leads", "/dashboard/marketing",
+  "/dashboard/bookings-page", "/dashboard/ecommerce", "/dashboard/whatsapp", "/dashboard/analytics",
+  "/dashboard/seo", "/dashboard/blog", "/dashboard/popups", "/dashboard/linktrees",
+  "/dashboard/sorteos", "/dashboard/reviews",
+];
+
 function hasRole(user: any, role: string) { return user?.roles?.includes(role) || false; }
 function hasPermission(user: any, perm: string) { return user?.permissions?.includes(perm) || hasRole(user, "super_admin"); }
 
@@ -31,6 +39,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [trialExpired, setTrialExpired] = useState(false);
   const [gateChecked, setGateChecked] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  // Producto de la empresa activa: "shop" (Jeaz Shop) o "food" (Jeaz Food).
+  const [product, setProduct] = useState<"shop" | "food">(tenant?.product === "food" ? "food" : "shop");
+  const isFood = !isPlatformStaff && product === "food";
 
   // El asistente /welcome solo se muestra justo después de registrarse (ver AuthFlow); aquí no se fuerza.
   // La cuenta de prueba muestra "La prueba termina en N días" hasta que haya un plan de pago.
@@ -41,6 +52,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       try {
         const res: any = await api.get(`/tenants/${tenantId}/settings`);
         const data = res.data || res;
+        const p = data?.product === "food" ? "food" : "shop";
+        setProduct(p);
+        // Lo guardamos en la sesión para que las páginas lo sepan sin volver a pedirlo.
+        const current = useAuthStore.getState().tenant;
+        if (current && current.id === tenantId && current.product !== p) {
+          useAuthStore.setState({ tenant: { ...current, product: p } });
+        }
         const endsAt = data?.settings?.trial?.endsAt;
         if (!endsAt) {
           setTrialDaysLeft(null);
@@ -78,6 +96,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname?.startsWith("/dashboard/billing")) return;
     router.replace("/dashboard/billing?trial=expired");
   }, [trialExpired, isPlatformStaff, pathname, router]);
+
+  // Cada producto ve solo su panel.
+  useEffect(() => {
+    if (!gateChecked || isPlatformStaff || !tenantId || !pathname) return;
+    if (product === "food") {
+      if (pathname === "/dashboard" || SHOP_ONLY_PATHS.some((p) => pathname.startsWith(p))) router.replace("/dashboard/food");
+    } else if (pathname.startsWith("/dashboard/food")) {
+      router.replace("/dashboard");
+    }
+  }, [gateChecked, isPlatformStaff, tenantId, pathname, product, router]);
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; slug: string; isOwner: boolean }>>([]);
   const [capabilities, setCapabilities] = useState<{ bookings: boolean; ecommerce: boolean } | null>(null);
 
@@ -94,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         try {
           const res: any = await api.get("/users/tenants");
           const list = (res.data || res || []).filter((t: any) => t.isActive !== false);
-          if (list[0]) selectTenant({ id: list[0].id, name: list[0].name, slug: list[0].slug, isOwner: list[0].isOwner });
+          if (list[0]) selectTenant({ id: list[0].id, name: list[0].name, slug: list[0].slug, product: list[0].product, isOwner: list[0].isOwner });
         } catch {}
       }
     })();
@@ -128,7 +156,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     catch { setTenants([]); }
   };
 
-  const handleSelectTenant = (t: any) => selectTenant({ id: t.id, name: t.name, slug: t.slug, isOwner: t.isOwner });
+  const handleSelectTenant = (t: any) => selectTenant({ id: t.id, name: t.name, slug: t.slug, product: t.product, isOwner: t.isOwner });
 
   const handleLogout = async () => {
     if (loggingOut) return;
@@ -166,6 +194,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { href: "/dashboard/seo", label: "SEO", icon: "seo", perms: ["site.read"] },
         { href: "/dashboard/blog", label: "Blog", icon: "blog", perms: ["site.read"] },
         { href: "/dashboard/popups", label: "Popups", icon: "popups", perms: ["site.read"] },
+      ]
+    },
+    {
+      title: "Administración",
+      links: [
+        { href: "/dashboard/users", label: "Equipo y permisos", icon: "shield", perms: ["user.read", "role.manage", "billing.read", "config.tenant", "audit.view"] },
+        { href: "/dashboard/support", label: "Soporte", icon: "support", roles: "*" },
+      ]
+    }
+  ];
+
+  // Agrupación para restaurantes (Jeaz Food)
+  const foodNavGroups = [
+    {
+      title: "General",
+      links: [
+        { href: "/dashboard/food", label: "Inicio", icon: "home", roles: "*", exact: true },
+        { href: "/dashboard/food/orders", label: "Pedidos", icon: "foodorders", perms: ["site.read"] },
+        { href: "/dashboard/food/menu", label: "Menú y productos", icon: "foodmenu", perms: ["site.read"] },
+        { href: "/dashboard/food/settings", label: "Mi restaurante", icon: "restaurant", perms: ["config.tenant"] },
+        { href: "/dashboard/media", label: "Archivos Media", icon: "media", perms: ["site.read"] },
+        { href: "/dashboard/app-download", label: "App Movil", icon: "appdownload", perms: ["site.read"] },
       ]
     },
     {
@@ -217,7 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const groups = (isPlatformStaff ? adminNavGroups : tenantNavGroups)
+  const groups = (isPlatformStaff ? adminNavGroups : isFood ? foodNavGroups : tenantNavGroups)
     .map((group) => ({
       ...group,
       links: group.links.filter((link: any) => {
@@ -232,7 +282,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }))
     .filter((g) => g.links.length > 0);
 
-  const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname?.startsWith(href));
+  const isActive = (href: string) => (href === "/dashboard" || href === "/dashboard/food" ? pathname === href : pathname?.startsWith(href));
 
   const allLinks = groups.flatMap((g) => g.links as any[]);
   const results = search.trim()
@@ -247,7 +297,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <button onClick={() => setMobileOpen(true)} aria-label="Abrir menú" className="rounded-lg p-1.5 text-white/80 hover:bg-white/10 lg:hidden">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
         </button>
-        <Link href="/dashboard" className="flex min-w-0 items-center gap-2 lg:w-[220px]">
+        <Link href={isFood ? "/dashboard/food" : "/dashboard"} className="flex min-w-0 items-center gap-2 lg:w-[220px]">
           {platformLogo ? (
             <img src={platformLogo} alt="Logo de la plataforma" className="h-7 w-auto max-w-[150px] object-contain" />
           ) : (
@@ -361,7 +411,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-[13px] font-semibold text-[#303030]">
                 {trialDaysLeft > 0 ? `La prueba termina en ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"}` : "Tu prueba terminó"}
               </p>
-              <p className="mt-0.5 text-[12px] text-[#616161]">Elige un plan para seguir vendiendo.</p>
+              <p className="mt-0.5 text-[12px] text-[#616161]">{isFood ? "Elige un plan para seguir recibiendo pedidos." : "Elige un plan para seguir vendiendo."}</p>
               <Link href="/dashboard/billing" className="btn-primary mt-2 w-full">Elegir un plan</Link>
             </div>
           )}

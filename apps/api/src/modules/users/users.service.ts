@@ -86,7 +86,7 @@ export class UsersService {
       select: {
         isOwner: true,
         joinedAt: true,
-        tenant: { select: { id: true, name: true, slug: true, subdomain: true, customDomain: true, logoUrl: true, isActive: true } },
+        tenant: { select: { id: true, name: true, slug: true, subdomain: true, customDomain: true, logoUrl: true, isActive: true, product: true } },
         roles: { select: { role: { select: { name: true } } } },
       },
     });
@@ -99,6 +99,7 @@ export class UsersService {
       customDomain: ut.tenant.customDomain,
       logoUrl: ut.tenant.logoUrl,
       isActive: ut.tenant.isActive,
+      product: ut.tenant.product,
       isOwner: ut.isOwner,
       roles: ut.roles.map((r) => r.role.name),
       joinedAt: ut.joinedAt,

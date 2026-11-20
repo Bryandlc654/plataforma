@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 
-interface Plan { id: string; name: string; slug: string; description?: string; price: number; currency: string; billingInterval: string; maxUsers: number; maxSites: number; maxStorage: string | number; isActive: boolean; sortOrder: number; features: any; }
+interface Plan { id: string; name: string; slug: string; description?: string; price: number; currency: string; billingInterval: string; maxUsers: number; maxSites: number; maxStorage: string | number; isActive: boolean; sortOrder: number; features: any; product?: "shop" | "food"; }
 
 export default function AdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]); const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false); const [editing, setEditing] = useState<Plan|null>(null);
-  const [form, setForm] = useState({ name:"", slug:"", price:"0", maxUsers:"1", maxSites:"1", maxStorage:"50", description:"", billingInterval:"monthly" });
+  const [form, setForm] = useState({ name:"", slug:"", price:"0", maxUsers:"1", maxSites:"1", maxStorage:"50", description:"", billingInterval:"monthly", product:"shop" });
 
   useEffect(() => { fetchPlans(); }, []);
   const fetchPlans = async () => {
@@ -22,8 +22,8 @@ export default function AdminPlansPage() {
     }
   };
 
-  const openCreate = () => { setEditing(null); setForm({ name:"", slug:"", price:"0", maxUsers:"1", maxSites:"1", maxStorage:"50", description:"", billingInterval:"monthly" }); setShowModal(true); };
-  const openEdit = (p: Plan) => { setEditing(p); setForm({ name:p.name, slug:p.slug, price:String(p.price), maxUsers:String(p.maxUsers), maxSites:String(p.maxSites), maxStorage:String(Math.round(Number(p.maxStorage)/1024/1024)), description:p.description||"", billingInterval:p.billingInterval }); setShowModal(true); };
+  const openCreate = () => { setEditing(null); setForm({ name:"", slug:"", price:"0", maxUsers:"1", maxSites:"1", maxStorage:"50", description:"", billingInterval:"monthly", product:"shop" }); setShowModal(true); };
+  const openEdit = (p: Plan) => { setEditing(p); setForm({ name:p.name, slug:p.slug, price:String(p.price), maxUsers:String(p.maxUsers), maxSites:String(p.maxSites), maxStorage:String(Math.round(Number(p.maxStorage)/1024/1024)), description:p.description||"", billingInterval:p.billingInterval, product:p.product||"shop" }); setShowModal(true); };
 
   const save = async () => {
     const name = form.name.trim();
@@ -36,6 +36,7 @@ export default function AdminPlansPage() {
       maxStorage: Number(form.maxStorage) * 1024 * 1024,
       description: form.description,
       billingInterval: form.billingInterval,
+      product: form.product,
     };
     try {
       if (editing) await api.put(`/plans/${editing.id}`, data); else await api.post("/plans", data);
@@ -61,7 +62,7 @@ export default function AdminPlansPage() {
       <div className="grid gap-6 md:grid-cols-3">
         {plans.map(p => (
           <div key={p.id} className={`bg-white rounded-xl border-2 ${p.isActive?"border-[#e3e3e3]":"border-[#ebebeb] opacity-60"} p-6 relative`}>
-            <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-lg text-[#303030]">{p.name}</h3><span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isActive?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}`}>{p.isActive?"Activo":"Inactivo"}</span></div>
+            <div className="flex items-center justify-between mb-4"><div><h3 className="font-semibold text-lg text-[#303030]">{p.name}</h3><span className={`mt-1 inline-block rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${p.product==="food"?"bg-orange-50 text-orange-700":"bg-blue-50 text-blue-700"}`}>{p.slug==="free"?"Prueba (ambos)":p.product==="food"?"Jeaz Food":"Jeaz Shop"}</span></div><span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${p.isActive?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}`}>{p.isActive?"Activo":"Inactivo"}</span></div>
             <p className="text-3xl font-bold text-primary-700">{Number(p.price)===0?"Gratis":formatCurrency(Number(p.price))}<span className="text-sm font-normal text-[#8a8a8a]">/{p.billingInterval==="monthly"?"mes":"año"}</span></p>
             <div className="mt-5 space-y-2 text-sm text-[#616161]"><div className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>Hasta {p.maxUsers} usuarios</div><div className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>Hasta {p.maxSites} sitios</div><div className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>{Math.round(Number(p.maxStorage)/1024/1024)} MB</div></div>
             {p.description && <p className="mt-4 text-xs text-[#8a8a8a]">{p.description}</p>}
@@ -88,6 +89,7 @@ export default function AdminPlansPage() {
 
       {showModal && <div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={()=>setShowModal(false)}/><div className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"><h3 className="text-lg font-semibold text-[#303030] mb-4">{editing?"Editar plan":"Nuevo plan"}</h3>
         <div className="space-y-3">
+          <div><label className="block text-xs font-medium text-[#616161] mb-1">Producto</label><select className="input-field" value={form.product} onChange={e=>setForm({...form,product:e.target.value})}><option value="shop">Jeaz Shop (sitios web)</option><option value="food">Jeaz Food (menú digital)</option></select></div>
           <div className="grid grid-cols-2 gap-3"><div><label className="block text-xs font-medium text-[#616161] mb-1">Nombre</label><input className="input-field" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></div><div><label className="block text-xs font-medium text-[#616161] mb-1">Slug</label><input className="input-field" value={form.slug} onChange={e=>setForm({...form,slug:e.target.value})}/></div></div>
           <div className="grid grid-cols-2 gap-3"><div><label className="block text-xs font-medium text-[#616161] mb-1">Precio</label><input className="input-field" type="number" value={form.price} onChange={e=>setForm({...form,price:e.target.value})}/></div><div><label className="block text-xs font-medium text-[#616161] mb-1">Facturación</label><select className="input-field" value={form.billingInterval} onChange={e=>setForm({...form,billingInterval:e.target.value})}><option value="monthly">Mensual</option><option value="annual">Anual</option></select></div></div>
           <div className="grid grid-cols-3 gap-3"><div><label className="block text-xs font-medium text-[#616161] mb-1">Usuarios máx</label><input className="input-field" type="number" value={form.maxUsers} onChange={e=>setForm({...form,maxUsers:e.target.value})}/></div><div><label className="block text-xs font-medium text-[#616161] mb-1">Sitios máx</label><input className="input-field" type="number" value={form.maxSites} onChange={e=>setForm({...form,maxSites:e.target.value})}/></div><div><label className="block text-xs font-medium text-[#616161] mb-1">Storage (MB)</label><input className="input-field" type="number" value={form.maxStorage} onChange={e=>setForm({...form,maxStorage:e.target.value})}/></div></div>

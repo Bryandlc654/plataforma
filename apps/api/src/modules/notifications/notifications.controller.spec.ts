@@ -1,18 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotificationsController } from './notifications.controller';
+import { NotificationsController } from "./notifications.controller";
 
-describe('NotificationsController', () => {
-  let controller: NotificationsController;
+describe("NotificationsController", () => {
+  const service = {
+    registerToken: jest.fn().mockResolvedValue({ success: true }),
+    unregisterToken: jest.fn().mockResolvedValue({ success: true }),
+  };
+  const controller = new NotificationsController(service as any);
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [NotificationsController],
-    }).compile();
-
-    controller = module.get<NotificationsController>(NotificationsController);
+  it("registra el token a nombre del usuario de la sesión", async () => {
+    await controller.registerToken({ id: "u1" }, "ExponentPushToken[abc]", "ios");
+    expect(service.registerToken).toHaveBeenCalledWith("u1", "ExponentPushToken[abc]", "ios");
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it("solo borra tokens del usuario de la sesión", async () => {
+    await controller.unregisterToken({ id: "u1" }, "ExponentPushToken[abc]");
+    expect(service.unregisterToken).toHaveBeenCalledWith("u1", "ExponentPushToken[abc]");
   });
 });

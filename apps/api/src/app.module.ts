@@ -27,6 +27,7 @@ import { InvitationsModule } from "./modules/invitations/invitations.module";
 import { AuditModule } from "./modules/audit/audit.module";
 import { ProductsModule } from "./modules/products/products.module";
 import { OrdersModule } from "./modules/orders/orders.module";
+import { FoodModule } from "./modules/food/food.module";
 import { CouponsModule } from "./modules/coupons/coupons.module";
 import { BookingsModule } from "./modules/bookings/bookings.module";
 import { TicketsModule } from "./modules/tickets/tickets.module";
@@ -104,6 +105,7 @@ if (!throttlerRedis && process.env.NODE_ENV === "production") {
     AuditModule,
     ProductsModule,
     OrdersModule,
+    FoodModule,
     CouponsModule,
     BookingsModule,
     TicketsModule,
