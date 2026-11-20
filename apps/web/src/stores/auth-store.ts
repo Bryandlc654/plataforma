@@ -142,7 +142,8 @@ const useAuthStore = create<AuthState>()(
       startWithEmail: async (email: string, product?: "shop" | "food") => {
         set({ isLoading: true });
         try {
-          const response: any = await api.post("/auth/start", product ? { email, product } : { email });
+          // "shop" es el valor por defecto del API: solo se envía el producto cuando es Food.
+          const response: any = await api.post("/auth/start", product === "food" ? { email, product } : { email });
           const payload = response.data || response;
           return { email: payload.email || email, isNew: !!payload.isNew };
         } finally {
