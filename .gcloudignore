@@ -13,3 +13,7 @@ logs/
 backups/
 *.log
 *.sql.gz
+# Archivos locales que no deben subirse a Cloud Build
+keysR2.txt
+uploads/
+temp_html*.jsonl

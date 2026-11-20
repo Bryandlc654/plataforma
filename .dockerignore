@@ -10,3 +10,7 @@ coverage/
 .vscode/
 .idea/
 logs/
+
+keysR2.txt
+uploads/
+temp_html*.jsonl
