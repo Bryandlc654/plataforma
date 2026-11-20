@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Bricolage_Grotesque } from "next/font/google";
+import { Bricolage_Grotesque, Nunito, Playfair_Display } from "next/font/google";
 import { resolveApiBaseUrl } from "@/lib/api-config";
 import { MenuApp, type PublicMenu } from "./menu-app";
 
-const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["500", "700", "800"], variable: "--font-menu" });
+// Tipografías de las plantillas (Urbano/Galería, Bistró y Café).
+const bricolage = Bricolage_Grotesque({ subsets: ["latin"], weight: ["500", "700", "800"], variable: "--font-bricolage" });
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["500", "600", "700"], style: ["normal", "italic"], variable: "--font-playfair" });
+const nunito = Nunito({ subsets: ["latin"], weight: ["400", "600", "700", "800"], variable: "--font-nunito" });
 
 async function fetchMenu(slug: string): Promise<PublicMenu | null> {
   const apiBase = resolveApiBaseUrl(process.env.NEXT_PUBLIC_API_URL);
@@ -37,7 +40,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const menu = await fetchMenu(slug);
   if (!menu) notFound();
   return (
-    <div className={display.variable}>
+    <div className={`${bricolage.variable} ${playfair.variable} ${nunito.variable}`}>
       <MenuApp slug={slug} initial={menu} />
     </div>
   );

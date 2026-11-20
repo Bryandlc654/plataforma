@@ -72,6 +72,18 @@ export class FoodController {
   }
 
   @RequirePermissions(PERMISSIONS.SITE_UPDATE)
+  @Post("products/:id/duplicate")
+  duplicateProduct(@CurrentUser() user: any, @Param("id") id: string) {
+    return this.food.duplicateProduct(user.tenantId, id);
+  }
+
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
+  @Post("menu/starter")
+  loadStarterMenu(@CurrentUser() user: any, @Body("type") type: unknown) {
+    return this.food.loadStarterMenu(user.tenantId, type);
+  }
+
+  @RequirePermissions(PERMISSIONS.SITE_UPDATE)
   @Put("products/:id")
   updateProduct(@CurrentUser() user: any, @Param("id") id: string, @Body() body: any) {
     return this.food.updateProduct(user.tenantId, id, body);

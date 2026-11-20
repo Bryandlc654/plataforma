@@ -7,6 +7,15 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useConfirm } from "@/components/providers/confirm-provider";
 import { FoodCategory, FoodOptionGroup, FoodProduct, money, unwrap } from "@/lib/food";
 
+const STARTER_TYPES = [
+  { id: "burgers", label: "Hamburguesas" },
+  { id: "pizza", label: "Pizzería" },
+  { id: "cafe", label: "Cafetería" },
+  { id: "fastfood", label: "Comida rápida" },
+  { id: "restaurant", label: "Restaurante" },
+  { id: "bar", label: "Bar" },
+];
+
 const card = "rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]";
 const rid = () => Math.random().toString(36).slice(2, 10);
 
@@ -58,6 +67,7 @@ function ProductModal({
   draft,
   setDraft,
   categories,
+  products,
   onClose,
   onSave,
   saving,
@@ -66,6 +76,7 @@ function ProductModal({
   draft: Draft;
   setDraft: (d: Draft) => void;
   categories: FoodCategory[];
+  products: FoodProduct[];
   onClose: () => void;
   onSave: () => void;
   saving: boolean;
@@ -152,13 +163,43 @@ function ProductModal({
                 <p className="text-[13px] font-semibold text-[#303030]">Opciones y extras</p>
                 <p className="text-[12px] text-[#8a8a8a]">Ej. “¿Con o sin pan?”, “Elige tu salsa”, “Agrega extras”.</p>
               </div>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => set({ optionGroups: [...draft.optionGroups, { id: rid(), name: "", required: false, max: 1, options: [{ id: rid(), name: "", price: "" }] }] })}
-              >
-                + Grupo
-              </button>
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {products.some((x) => x.id !== draft.id && x.optionGroups.length) && (
+                  <select
+                    className="input-field !w-auto !py-1"
+                    value=""
+                    aria-label="Copiar opciones de otro plato"
+                    onChange={(e) => {
+                      const src = products.find((x) => x.id === e.target.value);
+                      if (!src) return;
+                      set({
+                        optionGroups: [
+                          ...draft.optionGroups,
+                          ...src.optionGroups.map((g) => ({
+                            ...g,
+                            id: rid(),
+                            options: g.options.map((o) => ({ id: rid(), name: o.name, price: o.price ? String(o.price) : "" })),
+                          })),
+                        ],
+                      });
+                    }}
+                  >
+                    <option value="">Copiar de…</option>
+                    {products
+                      .filter((x) => x.id !== draft.id && x.optionGroups.length)
+                      .map((x) => (
+                        <option key={x.id} value={x.id}>{x.name}</option>
+                      ))}
+                  </select>
+                )}
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => set({ optionGroups: [...draft.optionGroups, { id: rid(), name: "", required: false, max: 1, options: [{ id: rid(), name: "", price: "" }] }] })}
+                >
+                  + Grupo
+                </button>
+              </div>
             </div>
             {draft.optionGroups.map((g, gi) => (
               <div key={g.id} className="space-y-2 border-t border-[#ebebeb] px-3 py-3">
@@ -236,6 +277,8 @@ export default function FoodMenuPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [quick, setQuick] = useState<Record<string, { name: string; price: string }>>({});
+  const [starterBusy, setStarterBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -355,6 +398,39 @@ export default function FoodMenuPage() {
     }
   };
 
+  /** Alta rápida: nombre + precio y Enter, sin abrir el editor. */
+  const quickAdd = async (categoryId: string) => {
+    const q = quick[categoryId] || { name: "", price: "" };
+    const price = Number(q.price.replace(",", "."));
+    if (!q.name.trim() || !Number.isFinite(price) || price < 0 || q.price === "") return;
+    try {
+      const saved = unwrap<FoodProduct>(await api.post("/food/products", { name: q.name.trim(), price, categoryId: categoryId || null }));
+      setProducts((l) => [...l, saved]);
+      setQuick((m) => ({ ...m, [categoryId]: { name: "", price: "" } }));
+      setError(null);
+      setTimeout(() => document.getElementById(`quick-name-${categoryId || "none"}`)?.focus(), 0);
+    } catch (err) { fail(err, "No se pudo agregar el plato."); }
+  };
+
+  const duplicate = async (p: FoodProduct) => {
+    try {
+      const copy = unwrap<FoodProduct>(await api.post(`/food/products/${p.id}/duplicate`));
+      setProducts((l) => [...l, copy]);
+      openProduct(copy);
+    } catch (err) { fail(err, "No se pudo duplicar."); }
+  };
+
+  const loadStarter = async (type: string) => {
+    setStarterBusy(true);
+    try {
+      const data = unwrap<{ categories: FoodCategory[]; products: FoodProduct[] }>(await api.post("/food/menu/starter", { type }));
+      setCategories(data.categories);
+      setProducts(data.products);
+      setError("Listo: cargamos un menú de ejemplo. Cambia nombres, precios y fotos, o borra lo que no uses.");
+    } catch (err) { fail(err, "No se pudo cargar el menú de ejemplo."); }
+    finally { setStarterBusy(false); }
+  };
+
   const quickUpdate = async (p: FoodProduct, patch: Partial<Pick<FoodProduct, "isActive" | "soldOut">>) => {
     setProducts((l) => l.map((x) => (x.id === p.id ? { ...x, ...patch } : x)));
     try { await api.put(`/food/products/${p.id}`, patch); } catch (err) { fail(err, "No se pudo actualizar."); load(); }
@@ -384,7 +460,7 @@ export default function FoodMenuPage() {
     return (
       <main className="mx-auto w-full max-w-[1200px] animate-pulse p-4 sm:p-6">
         <div className="mb-6 h-8 w-48 rounded-lg bg-[#e3e3e3]" />
-        <div className="grid gap-4 lg:grid-cols-[280px_1fr]"><div className={`${card} h-72`} /><div className={`${card} h-96`} /></div>
+        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]"><div className={`${card} h-72`} /><div className={`${card} h-96`} /></div>
       </main>
     );
   }
@@ -406,7 +482,7 @@ export default function FoodMenuPage() {
         </p>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-[280px_1fr]">
+      <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className={`${card} p-3 lg:sticky lg:top-20`}>
           <h2 className="mb-2 px-1 text-[13px] font-semibold text-[#303030]">Categorías</h2>
           <ul className="space-y-0.5">
@@ -442,13 +518,27 @@ export default function FoodMenuPage() {
           </form>
         </aside>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar plato" className="input-field max-w-xs" />
           {products.length === 0 && (
-            <div className={`${card} px-6 py-12 text-center`}>
-              <p className="text-[15px] font-semibold text-[#303030]">Tu menú está vacío</p>
-              <p className="mt-1 text-[13px] text-[#616161]">Crea una categoría a la izquierda y agrega tu primer plato.</p>
-              <button onClick={() => openProduct()} className="btn-primary mt-4">+ Agregar plato</button>
+            <div className={`${card} px-6 py-10 text-center`}>
+              <p className="text-[16px] font-semibold text-[#303030]">Arma tu menú en 1 minuto</p>
+              <p className="mx-auto mt-1 max-w-md text-[13px] text-[#616161]">
+                Elige tu tipo de negocio y cargamos un menú de ejemplo con categorías, platos y opciones. Solo cambias nombres y precios.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {STARTER_TYPES.map((t) => (
+                  <button key={t.id} onClick={() => loadStarter(t.id)} disabled={starterBusy} className="btn-secondary">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-5 text-[13px] text-[#8a8a8a]">
+                o{" "}
+                <button onClick={() => openProduct()} className="font-medium text-[#005bd3] hover:underline">
+                  empieza desde cero
+                </button>
+              </p>
             </div>
           )}
           {groups.map((g) => (
@@ -457,8 +547,8 @@ export default function FoodMenuPage() {
                 <h2 className="text-[14px] font-semibold text-[#303030]">{g.name}</h2>
                 <button onClick={() => openProduct(undefined, g.id)} className="text-[13px] font-medium text-[#005bd3] hover:underline">+ Plato</button>
               </div>
-              {g.items.length === 0 ? (
-                <p className="px-4 py-5 text-[13px] text-[#8a8a8a]">Sin platos todavía.</p>
+              {g.items.length === 0 && !search ? null : g.items.length === 0 ? (
+                <p className="px-4 py-5 text-[13px] text-[#8a8a8a]">Sin resultados.</p>
               ) : (
                 <ul className="divide-y divide-[#ebebeb]">
                   {g.items.map((p) => (
@@ -490,10 +580,34 @@ export default function FoodMenuPage() {
                           <Toggle on={p.soldOut} onChange={(v) => quickUpdate(p, { soldOut: v })} label="Agotado" /> Agotado
                         </label>
                       </div>
-                      <button onClick={() => removeProduct(p)} className="btn-ghost !px-2 text-[#8a8a8a]" aria-label={`Eliminar ${p.name}`}>✕</button>
+                      <button onClick={() => duplicate(p)} className="btn-ghost !px-2 text-[#8a8a8a]" title="Duplicar" aria-label={`Duplicar ${p.name}`}>⧉</button>
+                      <button onClick={() => removeProduct(p)} className="btn-ghost !px-2 text-[#8a8a8a]" title="Eliminar" aria-label={`Eliminar ${p.name}`}>✕</button>
                     </li>
                   ))}
                 </ul>
+              )}
+              {!search && (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); quickAdd(g.id); }}
+                  className="flex items-center gap-2 border-t border-[#ebebeb] bg-[#fafafa] px-4 py-2.5"
+                >
+                  <input
+                    id={`quick-name-${g.id || "none"}`}
+                    className="input-field"
+                    placeholder="Agregar plato rápido: nombre"
+                    value={quick[g.id]?.name || ""}
+                    maxLength={100}
+                    onChange={(e) => setQuick((m) => ({ ...m, [g.id]: { name: e.target.value, price: m[g.id]?.price || "" } }))}
+                  />
+                  <input
+                    className="input-field !w-24"
+                    placeholder="Precio"
+                    inputMode="decimal"
+                    value={quick[g.id]?.price || ""}
+                    onChange={(e) => setQuick((m) => ({ ...m, [g.id]: { name: m[g.id]?.name || "", price: e.target.value } }))}
+                  />
+                  <button className="btn-secondary" disabled={!quick[g.id]?.name?.trim() || !quick[g.id]?.price}>Agregar</button>
+                </form>
               )}
             </section>
           ))}
@@ -505,6 +619,7 @@ export default function FoodMenuPage() {
           draft={draft}
           setDraft={setDraft}
           categories={categories}
+          products={products}
           onClose={() => setDraft(null)}
           onSave={saveProduct}
           saving={saving}

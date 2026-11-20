@@ -52,7 +52,15 @@ export default function WelcomePage() {
   // Jeaz Shop o Jeaz Food: llega en la URL justo después de registrarse y se confirma con el servidor.
   const [product, setProduct] = useState<"shop" | "food" | null>(null);
   const [foodType, setFoodType] = useState("restaurant");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [starter, setStarter] = useState(true);
   const isFood = product === "food";
+
+  // Jeaz Food empieza por su restaurante: el pago queda para después (tiene 3 días gratis
+  // y el panel muestra cuándo termina la prueba).
+  useEffect(() => {
+    if (product === "food") setStep("goals");
+  }, [product]);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("product");
@@ -148,7 +156,12 @@ export default function WelcomePage() {
           await api.put(`/tenants/${tenantId}`, { name });
           useAuthStore.setState((s: any) => ({ tenant: s.tenant ? { ...s.tenant, name } : s.tenant }));
           // El enlace del menú toma el nombre del restaurante (si está libre).
-          if (isFood) await api.put("/food/settings", { slug: name }).catch(() => undefined);
+          if (isFood) await api.put("/food/settings", { slug: name, slugAuto: true }).catch(() => undefined);
+        }
+        if (isFood && !skipGoals) {
+          const wa = whatsapp.replace(/\D/g, "");
+          if (wa) await api.put("/food/settings", { settings: { whatsapp: wa } }).catch(() => undefined);
+          if (starter) await api.post("/food/menu/starter", { type: foodType }).catch(() => undefined);
         }
         await api.put(`/tenants/${tenantId}/settings`, {
           onboarding: { completed: true, goals: isFood ? (skipGoals ? [] : [foodType]) : chosen },
@@ -295,7 +308,28 @@ export default function WelcomePage() {
                   </button>
                 ))}
               </div>
-            ) : (
+            ) : null}
+            {isFood && (
+              <>
+                <label htmlFor="wa" className="mb-1.5 mt-5 block text-sm font-medium text-[#303030]">WhatsApp para recibir pedidos</label>
+                <input
+                  id="wa"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  inputMode="tel"
+                  placeholder="Ej. 593991234567 (con código de país)"
+                  className="sp-input"
+                />
+                <label className="mt-4 flex cursor-pointer items-start gap-2.5 text-sm text-[#303030]">
+                  <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[#303030]" checked={starter} onChange={(e) => setStarter(e.target.checked)} />
+                  <span>
+                    <span className="font-medium">Crear un menú de ejemplo para empezar</span>
+                    <span className="block text-xs text-[#616161]">Con categorías y platos típicos de tu negocio. Solo cambias nombres y precios.</span>
+                  </span>
+                </label>
+              </>
+            )}
+            {!isFood && (
             <div className="flex flex-wrap gap-2">
               {GOALS.map((g) => (
                 <button

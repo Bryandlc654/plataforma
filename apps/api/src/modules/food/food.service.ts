@@ -14,6 +14,7 @@ import {
   normalizeProductExtras,
   openStatus,
 } from "./food-settings";
+import { starterFor } from "./food-starter";
 
 const ORDER_INCLUDE = { items: { include: { product: { select: { id: true, name: true, images: true } } } } } as const;
 
@@ -79,9 +80,15 @@ export class FoodService {
       const slug = slugify(str(body.slug, 60));
       if (slug.length < 3) throw new BadRequestException("El enlace del menú debe tener al menos 3 caracteres");
       if (slug !== tenant.slug) {
-        const taken = await this.prisma.tenant.findFirst({ where: { slug, NOT: { id: tenantId } }, select: { id: true } });
-        if (taken) throw new BadRequestException("Ese enlace ya está en uso. Prueba con otro.");
-        data.slug = slug;
+        const isTaken = async (candidate: string) =>
+          !!(await this.prisma.tenant.findFirst({ where: { slug: candidate, NOT: { id: tenantId } }, select: { id: true } }));
+        if (!(await isTaken(slug))) data.slug = slug;
+        else if (body?.slugAuto === true) {
+          // Bienvenida: si el nombre ya está en uso se toma la primera variante libre (nombre-2, nombre-3…).
+          for (let i = 2; i <= 50 && !data.slug; i++) {
+            if (!(await isTaken(`${slug}-${i}`))) data.slug = `${slug}-${i}`;
+          }
+        } else throw new BadRequestException("Ese enlace ya está en uso. Prueba con otro.");
       }
     }
 
@@ -239,6 +246,74 @@ export class FoodService {
     }
     const p = await this.prisma.product.update({ where: { id }, data });
     return this.serializeProduct(p);
+  }
+
+  /** Copia un plato (con sus opciones) para crear variantes en segundos. */
+  async duplicateProduct(tenantId: string, id: string) {
+    await this.assertFood(tenantId);
+    const p = await this.prisma.product.findFirst({ where: { id, tenantId } });
+    if (!p) throw new NotFoundException("Plato no encontrado");
+    const name = `${p.name} (copia)`.slice(0, 100);
+    const base = slugify(name) || "plato";
+    let slug = base;
+    for (let i = 2; await this.prisma.product.findFirst({ where: { tenantId, slug }, select: { id: true } }); i++) slug = `${base}-${i}`;
+    const copy = await this.prisma.product.create({
+      data: {
+        tenantId,
+        name,
+        slug,
+        categoryId: p.categoryId,
+        description: p.description,
+        price: p.price,
+        comparePrice: p.comparePrice,
+        images: (p.images as any) ?? [],
+        variants: { ...normalizeProductExtras(p.variants), soldOut: false } as any,
+        isActive: p.isActive,
+        isFeatured: false,
+        stock: 0,
+      },
+    });
+    return this.serializeProduct(copy);
+  }
+
+  /**
+   * Carga un menú de ejemplo según el tipo de negocio. Solo si el menú está vacío,
+   * para no mezclarse nunca con platos reales.
+   */
+  async loadStarterMenu(tenantId: string, type: unknown) {
+    await this.assertFood(tenantId);
+    const existing = await this.prisma.product.count({ where: { tenantId } });
+    if (existing > 0) throw new BadRequestException("Tu menú ya tiene platos. El menú de ejemplo solo se carga en un menú vacío.");
+    const starter = starterFor(String(type || ""));
+    const last = await this.prisma.productCategory.aggregate({ where: { tenantId }, _max: { sortOrder: true } });
+    let order = (last._max.sortOrder ?? -1) + 1;
+    let n = 0;
+    for (const section of starter) {
+      const cat = await this.prisma.productCategory.create({
+        data: { tenantId, name: section.category, slug: await this.uniqueCategorySlug(tenantId, section.category), sortOrder: order++ },
+      });
+      for (const item of section.products) {
+        const base = slugify(item.name) || "plato";
+        let slug = base;
+        for (let i = 2; await this.prisma.product.findFirst({ where: { tenantId, slug }, select: { id: true } }); i++) slug = `${base}-${i}`;
+        await this.prisma.product.create({
+          data: {
+            tenantId,
+            categoryId: cat.id,
+            name: item.name,
+            slug,
+            description: item.description || null,
+            price: item.price,
+            isFeatured: !!item.featured,
+            images: [],
+            stock: 0,
+            variants: normalizeProductExtras({ optionGroups: item.groups || [] }) as any,
+          },
+        });
+        n++;
+      }
+    }
+    return { created: { categories: starter.length, products: n }, ...(await this.getMenu(tenantId)) };
   }
 
   async deleteProduct(tenantId: string, id: string) {
@@ -485,6 +560,8 @@ export class FoodService {
     if (!allowed[fulfillment]) throw new BadRequestException("Elige cómo quieres recibir tu pedido");
     const address = str(body?.address, 300);
     if (fulfillment === "delivery" && address.length < 5) throw new BadRequestException("Escribe la dirección de entrega");
+    // En el local: número o nombre de mesa (llega del QR de la mesa o lo escribe el cliente).
+    const table = str(body?.table, 12).replace(/[^\p{L}\p{N} -]/gu, "");
 
     const paymentMethod = String(body?.paymentMethod || "") as PaymentMethod;
     if (!settings.paymentMethods.includes(paymentMethod)) throw new BadRequestException("Elige un método de pago");
@@ -545,7 +622,7 @@ export class FoodService {
           orderNumber: (last._max.orderNumber ?? 0) + 1,
           status: "pending",
           fulfillment,
-          deliveryAddress: fulfillment === "delivery" ? address : null,
+          deliveryAddress: fulfillment === "delivery" ? address : fulfillment === "dine_in" && table ? `Mesa ${table}` : null,
           deliveryFee,
           totalAmount: total,
           currency: settings.currency,
@@ -590,7 +667,7 @@ export class FoodService {
       `*Total: ${fmt(total)}*`,
       "",
       `👤 ${customerName} · ${customerPhone}`,
-      `🛵 ${FULFILLMENT_LABELS[fulfillment]}${fulfillment === "delivery" ? `: ${address}` : ""}`,
+      `🛵 ${FULFILLMENT_LABELS[fulfillment]}${fulfillment === "delivery" ? `: ${address}` : fulfillment === "dine_in" && table ? ` · Mesa ${table}` : ""}`,
       `💳 ${PAYMENT_LABELS[paymentMethod]}`,
       ...(notes ? [`📝 ${notes}`] : []),
     ].join("\n");

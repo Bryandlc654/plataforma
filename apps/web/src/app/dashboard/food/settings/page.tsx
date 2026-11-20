@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import api from "@/lib/api";
 import MediaPicker from "@/components/media-picker";
 import { useAuthStore } from "@/stores/auth-store";
-import { DAY_LABELS, FoodSettings, PAYMENT_LABELS, PaymentMethod, menuUrl, unwrap } from "@/lib/food";
+import { DAY_LABELS, FoodSettings, MENU_TEMPLATES, MenuTemplate, PAYMENT_LABELS, PaymentMethod, menuUrl, unwrap } from "@/lib/food";
 
 const card = "rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.07),0_1px_0_rgba(0,0,0,0.07)]";
 
@@ -21,6 +21,92 @@ interface Data {
   logoUrl: string | null;
   settings: FoodSettings;
   status: { isOpen: boolean; label: string };
+}
+
+/** Boceto de cada plantilla para elegir de un vistazo. */
+function TemplateSketch({ id, accent, dark }: { id: MenuTemplate; accent: string; dark: boolean }) {
+  const bg = dark ? "#151515" : id === "bistro" ? "#f6f0e6" : id === "cafe" ? "#fff8f1" : "#ffffff";
+  const card = dark ? "#262626" : id === "gallery" ? "#efefee" : id === "bistro" ? "transparent" : "#ffffff";
+  const ink = dark ? "#e7e5e4" : "#292524";
+  const line = dark ? "#333" : "#e7e0d5";
+  const bar = (w: string, h = 4, c = ink, o = 0.85) => <span className="block rounded-full" style={{ width: w, height: h, background: c, opacity: o }} />;
+  return (
+    <div className="h-[150px] overflow-hidden rounded-lg border border-black/10" style={{ background: bg }}>
+      {id === "street" && (
+        <>
+          <div className="h-10" style={{ background: `linear-gradient(135deg, ${accent}, #222)` }} />
+          <div className="space-y-1.5 px-2.5 pt-2">
+            {bar("55%", 7)}
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => <span key={i} className="h-3 w-8 rounded-full" style={{ background: i === 0 ? accent : line }} />)}
+            </div>
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-1.5 rounded-md p-1.5" style={{ background: card, border: `1px solid ${line}` }}>
+                <div className="flex-1 space-y-1">{bar("70%")}{bar("40%", 3, accent, 1)}</div>
+                <span className="h-7 w-7 rounded" style={{ background: line }} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      {id === "gallery" && (
+        <>
+          <div className="relative h-14" style={{ background: `linear-gradient(160deg, #444, ${accent})` }}>
+            <span className="absolute bottom-1.5 left-2">{bar("60px", 6, "#fff", 1)}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 p-2">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-1">
+                <span className="block aspect-square rounded" style={{ background: i % 2 ? card : `${accent}33` }} />
+                {bar("80%", 3)}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      {id === "bistro" && (
+        <div className="flex flex-col items-center px-3 pt-3">
+          <span className="h-5 w-5 rounded-full border" style={{ borderColor: line }} />
+          <span className="mt-1.5 font-serif text-[13px] font-bold" style={{ color: ink }}>Carta</span>
+          <span className="mt-1 flex w-16 items-center gap-1">
+            <span className="h-px flex-1" style={{ background: line }} />
+            <span className="text-[8px]" style={{ color: accent }}>✦</span>
+            <span className="h-px flex-1" style={{ background: line }} />
+          </span>
+          <div className="mt-2 w-full space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i}>
+                <div className="flex items-end gap-1">
+                  {bar("38%", 4)}
+                  <span className="mb-0.5 flex-1 border-b border-dotted" style={{ borderColor: ink, opacity: 0.4 }} />
+                  {bar("14%", 4)}
+                </div>
+                <span className="mt-0.5 block">{bar("60%", 2, ink, 0.35)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {id === "cafe" && (
+        <div className="px-2.5 pt-2">
+          <div className="h-9 rounded-xl" style={{ background: `linear-gradient(135deg, ${accent}aa, ${accent}44)` }} />
+          <div className="-mt-3 flex justify-center">
+            <span className="h-6 w-6 rounded-full border-2" style={{ background: accent, borderColor: bg }} />
+          </div>
+          <div className="mx-auto mt-1 w-1/2">{bar("100%", 5)}</div>
+          <div className="mt-2 rounded-xl p-1" style={{ background: card }}>
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-1.5 p-1">
+                <span className="h-6 w-6 rounded-lg" style={{ background: `${accent}44` }} />
+                <div className="flex-1">{bar("70%", 3)}</div>
+                <span className="h-3 w-7 rounded-full" style={{ background: `${accent}33` }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
@@ -55,6 +141,8 @@ export default function FoodSettingsPage() {
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [picker, setPicker] = useState<"logo" | "cover" | null>(null);
   const [qr, setQr] = useState("");
+  const [table, setTable] = useState("");
+  const [tableQr, setTableQr] = useState("");
 
   useEffect(() => {
     if (!tenantId) return;
@@ -72,6 +160,15 @@ export default function FoodSettingsPage() {
     if (!data?.slug) return;
     QRCode.toDataURL(menuUrl(data.slug), { width: 512, margin: 2 }).then(setQr).catch(() => setQr(""));
   }, [data?.slug]);
+
+  useEffect(() => {
+    const t = table.trim();
+    if (!data?.slug || !t) {
+      setTableQr("");
+      return;
+    }
+    QRCode.toDataURL(`${menuUrl(data.slug)}?mesa=${encodeURIComponent(t)}`, { width: 512, margin: 2 }).then(setTableQr).catch(() => setTableQr(""));
+  }, [data?.slug, table]);
 
   if (!data) {
     return (
@@ -104,6 +201,17 @@ export default function FoodSettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Al elegir plantilla se aplica su fondo sugerido, y su color solo si el dueño no puso uno propio.
+  const pickTemplate = (id: MenuTemplate) => {
+    const tpl = MENU_TEMPLATES.find((t) => t.id === id)!;
+    const untouchedAccent = MENU_TEMPLATES.some((t) => t.accent.toLowerCase() === s.accentColor.toLowerCase());
+    set({ template: id, theme: tpl.theme, ...(untouchedAccent ? { accentColor: tpl.accent } : {}) });
+  };
+  const previewUrl = (id: MenuTemplate) => {
+    const tpl = MENU_TEMPLATES.find((t) => t.id === id)!;
+    return `${menuUrl(data.slug)}?template=${id}&theme=${id === s.template ? s.theme : tpl.theme}`;
   };
 
   const noFulfillment = !s.delivery.enabled && !s.pickup.enabled && !s.dineIn.enabled;
@@ -191,6 +299,23 @@ export default function FoodSettingsPage() {
             <div className="space-y-2">
               <a href={qr} download={`menu-${data.slug}-qr.png`} className="btn-secondary">Descargar QR</a>
               <p className="max-w-[260px] text-[12px] text-[#8a8a8a]">Imprímelo en tamaño mínimo de 3 cm para que se lea bien con el celular.</p>
+            </div>
+          </div>
+        )}
+        {s.dineIn.enabled && (
+          <div className="rounded-lg border border-[#e3e3e3] p-3">
+            <p className="text-[13px] font-semibold text-[#303030]">QR por mesa</p>
+            <p className="text-[12px] text-[#8a8a8a]">Quien escanee el QR de una mesa pide “en el local” con su número de mesa ya puesto.</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <input className="input-field !w-28" placeholder="Ej. 5" value={table} maxLength={12} onChange={(e) => setTable(e.target.value)} aria-label="Número de mesa" />
+              {tableQr && (
+                <>
+                  <img src={tableQr} alt={`QR de la mesa ${table}`} className="h-16 w-16 rounded border border-[#e3e3e3]" />
+                  <a href={tableQr} download={`menu-${data.slug}-mesa-${table.trim()}.png`} className="btn-secondary">
+                    Descargar QR mesa {table.trim()}
+                  </a>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -300,8 +425,29 @@ export default function FoodSettingsPage() {
         </div>
       </Section>
 
-      <Section title="Apariencia del menú" description="El color de acento se usa en botones, precios y categorías.">
-        <div className="flex flex-wrap items-end gap-4">
+      <Section title="Diseño del menú" description="Elige cómo se ve tu menú. Puedes ver cada diseño con tus platos antes de guardar.">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {MENU_TEMPLATES.map((t) => {
+            const on = s.template === t.id;
+            return (
+              <div key={t.id} className={`rounded-xl border-2 p-2 transition ${on ? "border-[#303030]" : "border-transparent bg-[#f7f7f7] hover:border-[#c9cccf]"}`}>
+                <button type="button" onClick={() => pickTemplate(t.id)} className="block w-full text-left" aria-pressed={on}>
+                  <TemplateSketch id={t.id} accent={on ? s.accentColor : t.accent} dark={(on ? s.theme : t.theme) === "dark"} />
+                  <span className="mt-2 flex items-center justify-between px-1">
+                    <span className="text-[13px] font-semibold text-[#303030]">{t.name}</span>
+                    {on && <span className="badge badge-success">En uso</span>}
+                  </span>
+                  <span className="block px-1 text-[12px] leading-snug text-[#616161]">{t.description}</span>
+                  <span className="block px-1 pt-0.5 text-[11px] text-[#8a8a8a]">Ideal para: {t.bestFor}</span>
+                </button>
+                <a href={previewUrl(t.id)} target="_blank" rel="noreferrer" className="mt-1.5 block px-1 text-[12px] font-medium text-[#005bd3] hover:underline">
+                  Ver con mis platos ↗
+                </a>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-end gap-4 border-t border-[#ebebeb] pt-4">
           <div>
             <label className="label">Color de acento</label>
             <div className="flex items-center gap-2">

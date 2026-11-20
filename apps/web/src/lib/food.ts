@@ -44,10 +44,21 @@ export interface DayHours {
   to: string;
 }
 
+export type MenuTemplate = "street" | "gallery" | "bistro" | "cafe";
+
+/** Plantillas del menú público: cambian el diseño, no el contenido. */
+export const MENU_TEMPLATES: Array<{ id: MenuTemplate; name: string; description: string; theme: "dark" | "light"; accent: string; bestFor: string }> = [
+  { id: "street", name: "Urbano", description: "Portada grande, tipografía fuerte y tarjetas con foto a un lado.", theme: "dark", accent: "#F97316", bestFor: "Hamburguesas, comida rápida, bares" },
+  { id: "gallery", name: "Galería", description: "Cuadrícula de fotos grandes: el plato es el protagonista.", theme: "light", accent: "#E11D48", bestFor: "Menús con buenas fotos, postres, sushi" },
+  { id: "bistro", name: "Bistró", description: "Carta elegante con tipografía clásica y precios alineados.", theme: "light", accent: "#9A3412", bestFor: "Restaurantes, cocina de autor, vinos" },
+  { id: "cafe", name: "Café", description: "Suave y cercano, lista compacta con miniaturas.", theme: "light", accent: "#B45309", bestFor: "Cafeterías, panaderías, heladerías" },
+];
+
 export interface FoodSettings {
   tagline: string;
   description: string;
   coverUrl: string;
+  template: MenuTemplate;
   accentColor: string;
   theme: "dark" | "light";
   announcement: string;

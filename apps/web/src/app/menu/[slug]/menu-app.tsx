@@ -9,9 +9,12 @@ import {
   FoodProduct,
   FoodSettings,
   Fulfillment,
+  MENU_TEMPLATES,
+  MenuTemplate,
   PAYMENT_LABELS,
   PaymentMethod,
 } from "@/lib/food";
+import { CategoryTabs, Featured, MenuHeader, MenuSection, containerWidth, templateVars } from "./templates";
 
 export interface PublicMenu {
   restaurant: Omit<FoodSettings, "timezone"> & {
@@ -44,6 +47,7 @@ interface Customer {
   fulfillment: Fulfillment | "";
   payment: PaymentMethod | "";
   notes: string;
+  table?: string;
 }
 
 const STATUS_STEPS = [
@@ -132,18 +136,39 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
   const [placed, setPlaced] = useLocal<{ id: string; number: number; total: number; whatsappUrl: string | null } | null>(`jf:last:${slug}`, null);
   const [tracking, setTracking] = useState<{ status: string } | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState<{ template?: MenuTemplate; theme?: "dark" | "light" }>({});
 
-  // Mantiene el menú al día (precios, agotados, horario) mientras la página está abierta.
+  // ?template=gallery&theme=light → vista previa del diseño sin guardarlo (desde el panel).
+  // ?mesa=5 → QR de una mesa: el pedido queda "en el local" con la mesa ya puesta.
   useEffect(() => {
-    const t = setInterval(async () => {
+    const qs = new URLSearchParams(window.location.search);
+    const t = qs.get("template") as MenuTemplate | null;
+    const th = qs.get("theme");
+    setPreview({
+      template: t && MENU_TEMPLATES.some((x) => x.id === t) ? t : undefined,
+      theme: th === "dark" || th === "light" ? th : undefined,
+    });
+    const mesa = (qs.get("mesa") || "").trim().slice(0, 12);
+    if (mesa && initial.restaurant.dineIn.enabled) {
+      setCustomer((c) => ({ ...c, fulfillment: "dine_in", table: mesa }));
+    }
+  }, [initial.restaurant.dineIn.enabled, setCustomer]);
+
+  // Mantiene el menú al día (precios, agotados, horario, diseño). La primera carga llega
+  // del servidor (con caché, para que abra rápido) y aquí se actualiza enseguida: así el
+  // dueño ve al instante lo que acaba de guardar.
+  useEffect(() => {
+    const load = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/food/public/${encodeURIComponent(slug)}`);
+        const res = await fetch(`${API_BASE_URL}/food/public/${encodeURIComponent(slug)}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
           setMenu(json?.data ?? json);
         }
       } catch {}
-    }, 60000);
+    };
+    load();
+    const t = setInterval(load, 60000);
     return () => clearInterval(t);
   }, [slug]);
 
@@ -228,6 +253,7 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
     if (!customer.name.trim()) return setError("Escribe tu nombre");
     if (customer.phone.replace(/\D/g, "").length < 7) return setError("Escribe un teléfono válido");
     if (fulfillment === "delivery" && customer.address.trim().length < 5) return setError("Escribe la dirección de entrega");
+    if (fulfillment === "dine_in" && !(customer.table || "").trim()) return setError("Escribe el número de tu mesa");
     setSending(true);
     // La pestaña se abre antes de esperar la respuesta para que el navegador no la bloquee.
     const wa = r.whatsapp ? window.open("", "_blank") : null;
@@ -238,6 +264,7 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
           customerName: customer.name,
           customerPhone: customer.phone,
           address: customer.address,
+          table: fulfillment === "dine_in" ? customer.table : undefined,
           fulfillment,
           paymentMethod: payment,
           notes: customer.notes,
@@ -261,22 +288,14 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
     }
   };
 
-  const light = r.theme === "light";
-  const vars = {
-    "--jf-accent": r.accentColor || "#F97316",
-    "--jf-bg": light ? "#faf7f2" : "#111111",
-    "--jf-card": light ? "#ffffff" : "#1b1b1b",
-    "--jf-sheet": light ? "#ffffff" : "#181818",
-    "--jf-soft": light ? "#f1ece4" : "#262626",
-    "--jf-line": light ? "#e7e0d5" : "#2c2c2c",
-    "--jf-ink": light ? "#1c1917" : "#f6f1e9",
-    "--jf-muted": light ? "#6b625a" : "#a8a29e",
-  } as React.CSSProperties;
+  const template: MenuTemplate = preview.template || r.template || "street";
+  const vars = templateVars(template, preview.theme || r.theme, r.accentColor);
+  const width = containerWidth(template);
 
   return (
     <div style={vars} className="min-h-screen bg-[var(--jf-bg)] pb-28 text-[var(--jf-ink)] antialiased">
       <style>{`
-        .jf-display{font-family:var(--font-menu),system-ui,sans-serif;letter-spacing:-.02em}
+        .jf-display{font-family:var(--jf-font);letter-spacing:${template === "bistro" ? "0" : "-.02em"}}
         .jf-fade{animation:jfFade .2s ease-out}
         .jf-up{animation:jfUp .28s cubic-bezier(.2,.8,.2,1)}
         .jf-marquee{animation:jfMarquee 22s linear infinite}
@@ -287,45 +306,17 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
         @media (prefers-reduced-motion:reduce){.jf-marquee,.jf-up,.jf-fade{animation:none}}
       `}</style>
 
-      {/* Portada */}
-      <header className="relative">
-        <div className="relative h-[230px] overflow-hidden sm:h-[300px]">
-          {r.coverUrl ? (
-            <img src={r.coverUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full" style={{ background: "radial-gradient(120% 90% at 20% 10%, var(--jf-accent), transparent 60%), var(--jf-soft)" }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--jf-bg)] via-black/30 to-black/20" />
-          <button onClick={() => setInfoOpen(true)} className="absolute right-4 top-4 rounded-full bg-black/45 px-3 py-1.5 text-[13px] font-semibold text-white backdrop-blur hover:bg-black/60">
-            Info
-          </button>
-        </div>
-        <div className="relative mx-auto -mt-20 max-w-[720px] px-4">
-          <div className="flex items-end gap-4">
-            {r.logoUrl ? (
-              <img src={r.logoUrl} alt={`Logo de ${r.name}`} className="h-20 w-20 rounded-2xl bg-[var(--jf-card)] object-contain p-1.5 shadow-xl ring-1 ring-[var(--jf-line)]" />
-            ) : (
-              <div className="jf-display flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--jf-accent)] text-3xl font-extrabold text-white shadow-xl">{r.name.charAt(0)}</div>
-            )}
-            <div className="min-w-0 pb-1">
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${r.isOpen && r.acceptingOrders ? "bg-emerald-500/15 text-emerald-500" : "bg-[var(--jf-soft)] text-[var(--jf-muted)]"}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${r.isOpen && r.acceptingOrders ? "bg-emerald-500" : "bg-[var(--jf-muted)]"}`} />
-                {r.acceptingOrders ? r.statusLabel : "Pedidos en pausa"}
-              </span>
-            </div>
-          </div>
-          <h1 className="jf-display mt-3 text-[34px] font-extrabold leading-[1.02] sm:text-[44px]">{r.name}</h1>
-          {r.tagline && <p className="mt-1.5 text-[15px] text-[var(--jf-muted)]">{r.tagline}</p>}
-          <div className="mt-3 flex flex-wrap gap-2 text-[12px] text-[var(--jf-muted)]">
-            {r.delivery.enabled && <span className="rounded-full border border-[var(--jf-line)] px-2.5 py-1">🛵 Delivery{r.delivery.fee ? ` · ${fmt(r.delivery.fee)}` : ""}</span>}
-            {r.pickup.enabled && <span className="rounded-full border border-[var(--jf-line)] px-2.5 py-1">🛍️ Retiro en local</span>}
-            {r.dineIn.enabled && <span className="rounded-full border border-[var(--jf-line)] px-2.5 py-1">🍽️ En el local</span>}
-            {r.address && <button onClick={() => setInfoOpen(true)} className="max-w-full truncate rounded-full border border-[var(--jf-line)] px-2.5 py-1">📍 {r.address}</button>}
-          </div>
-        </div>
-      </header>
+      <MenuHeader template={template} r={r} fmt={fmt} onInfo={() => setInfoOpen(true)} />
 
-      {r.announcement && (
+      {r.announcement && template === "bistro" ? (
+        <p className="mx-auto mt-6 max-w-[720px] px-6 text-center text-[13px] font-semibold uppercase tracking-[0.2em] text-[var(--jf-accent)]">
+          {r.announcement}
+        </p>
+      ) : r.announcement && template === "cafe" ? (
+        <div className="mx-auto mt-5 max-w-[720px] px-4">
+          <p className="rounded-full bg-[var(--jf-soft)] px-4 py-2.5 text-center text-[14px] font-bold text-[var(--jf-accent)]">✦ {r.announcement}</p>
+        </div>
+      ) : r.announcement && (
         <div className="mt-6 -rotate-1 overflow-hidden bg-[var(--jf-accent)] py-2 text-white shadow-lg">
           <div className="jf-marquee flex w-max whitespace-nowrap">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -337,7 +328,7 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
 
       {/* Seguimiento del último pedido */}
       {placed && (
-        <div className="mx-auto mt-6 max-w-[720px] px-4">
+        <div className={`mx-auto mt-6 ${width} px-4`}>
           <div className="rounded-2xl border border-[var(--jf-line)] bg-[var(--jf-card)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -375,106 +366,26 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
         </div>
       )}
 
-      {/* Categorías + búsqueda */}
-      <nav className="sticky top-0 z-30 mt-6 border-b border-[var(--jf-line)] bg-[var(--jf-bg)]/90 backdrop-blur-md">
-        <div className="mx-auto max-w-[720px] px-4 pt-3">
-          <label className="relative block">
-            <span className="sr-only">Buscar en el menú</span>
-            <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--jf-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" /></svg>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="¿Qué se te antoja?"
-              className="h-11 w-full rounded-full border border-[var(--jf-line)] bg-[var(--jf-card)] pl-10 pr-4 text-[15px] text-[var(--jf-ink)] placeholder:text-[var(--jf-muted)] focus:border-[var(--jf-accent)] focus:outline-none"
-            />
-          </label>
-          <div ref={tabsRef} className="jf-noscroll -mx-4 flex gap-2 overflow-x-auto px-4 py-3">
-            {menu.categories.map((c) => (
-              <button
-                key={c.id}
-                data-cat={c.id}
-                onClick={() => scrollTo(c.id)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-semibold transition-colors ${
-                  activeCat === c.id && !q ? "bg-[var(--jf-accent)] text-white" : "border border-[var(--jf-line)] bg-[var(--jf-card)] text-[var(--jf-muted)] hover:text-[var(--jf-ink)]"
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <CategoryTabs
+        template={template}
+        categories={menu.categories}
+        active={activeCat}
+        searching={!!q}
+        onPick={scrollTo}
+        tabsRef={tabsRef}
+        search={search}
+        onSearch={setSearch}
+      />
 
-      <main className="mx-auto max-w-[720px] px-4">
-        {featured.length > 0 && !q && (
-          <section className="pt-6">
-            <h2 className="jf-display text-[22px] font-extrabold">Los favoritos</h2>
-            <div className="jf-noscroll -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
-              {featured.map((p) => (
-                <button key={p.id} onClick={() => setProduct(p)} className="w-[200px] flex-shrink-0 overflow-hidden rounded-2xl border border-[var(--jf-line)] bg-[var(--jf-card)] text-left">
-                  {p.image ? (
-                    <div className="aspect-[4/3] bg-[var(--jf-soft)]"><img src={p.image} alt="" className="h-full w-full object-cover" loading="lazy" /></div>
-                  ) : (
-                    <div className="jf-display flex aspect-[4/3] items-center justify-center text-[44px] font-extrabold text-white/90" style={{ background: "linear-gradient(135deg, var(--jf-accent), color-mix(in srgb, var(--jf-accent) 45%, #000))" }}>
-                      {p.name.charAt(0)}
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <p className="line-clamp-1 text-[15px] font-bold">{p.name}</p>
-                    <p className="mt-0.5 text-[15px] font-bold text-[var(--jf-accent)]">{fmt(p.price)}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+      <main className={`mx-auto ${width} px-4`}>
+        {!q && <Featured template={template} products={featured} fmt={fmt} onSelect={setProduct} />}
 
         {sections.length === 0 && (
           <p className="py-16 text-center text-[15px] text-[var(--jf-muted)]">{q ? `No encontramos “${search}” en el menú.` : "El menú se está preparando. Vuelve pronto."}</p>
         )}
 
         {sections.map((c) => (
-          <section key={c.id} id={`sec-${c.id}`} className="scroll-mt-32 pt-8">
-            <h2 className="jf-display text-[26px] font-extrabold">{c.name}</h2>
-            <div className="mt-3 space-y-3">
-              {c.products.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => !p.soldOut && setProduct(p)}
-                  disabled={p.soldOut}
-                  className="flex w-full gap-3 rounded-2xl border border-[var(--jf-line)] bg-[var(--jf-card)] p-3 text-left transition-colors hover:border-[var(--jf-accent)] disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-[var(--jf-line)]"
-                >
-                  <div className="min-w-0 flex-1 py-0.5">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {p.tags.map((t) => (
-                        <span key={t} className="rounded-full bg-[var(--jf-soft)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[var(--jf-accent)]">{t}</span>
-                      ))}
-                      {p.soldOut && <span className="rounded-full bg-[var(--jf-soft)] px-2 py-0.5 text-[11px] font-bold uppercase text-[var(--jf-muted)]">Agotado</span>}
-                    </div>
-                    <p className="mt-1 text-[16px] font-bold leading-snug">{p.name}</p>
-                    {p.description && <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-[var(--jf-muted)]">{p.description}</p>}
-                    <p className="mt-2 flex items-baseline gap-2">
-                      <span className="text-[16px] font-extrabold text-[var(--jf-accent)]">{fmt(p.price)}</span>
-                      {p.comparePrice ? <span className="text-[13px] text-[var(--jf-muted)] line-through">{fmt(p.comparePrice)}</span> : null}
-                    </p>
-                  </div>
-                  {p.image ? (
-                    <div className="relative h-[104px] w-[104px] flex-shrink-0 overflow-hidden rounded-xl bg-[var(--jf-soft)]">
-                      <img src={p.image} alt="" className="h-full w-full object-cover" loading="lazy" />
-                      {!p.soldOut && (
-                        <span className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--jf-accent)] text-xl font-bold leading-none text-white shadow-lg" aria-hidden>+</span>
-                      )}
-                    </div>
-                  ) : (
-                    // Sin foto: solo el botón, sin recuadro vacío.
-                    !p.soldOut && (
-                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center self-end rounded-full bg-[var(--jf-accent)] text-xl font-bold leading-none text-white" aria-hidden>+</span>
-                    )
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+          <MenuSection key={c.id} template={template} id={c.id} name={c.name} products={c.products} fmt={fmt} onSelect={setProduct} />
         ))}
 
         <footer className="mt-14 border-t border-[var(--jf-line)] py-8 text-center text-[12px] text-[var(--jf-muted)]">
@@ -562,6 +473,9 @@ export function MenuApp({ slug, initial }: { slug: string; initial: PublicMenu }
                 <Field label="Tu nombre" value={customer.name} onChange={(v) => setCustomer({ ...customer, name: v })} autoComplete="name" />
                 <Field label="Teléfono" value={customer.phone} onChange={(v) => setCustomer({ ...customer, phone: v })} type="tel" autoComplete="tel" />
               </div>
+              {fulfillment === "dine_in" && (
+                <Field label="Número de mesa" value={customer.table || ""} onChange={(v) => setCustomer({ ...customer, table: v })} />
+              )}
               {fulfillment === "delivery" && (
                 <Field label="Dirección de entrega y referencia" value={customer.address} onChange={(v) => setCustomer({ ...customer, address: v })} autoComplete="street-address" multiline />
               )}

@@ -140,3 +140,36 @@ describe("FoodService.assertFood", () => {
     await expect(service(prisma).getMenu("t1")).rejects.toThrow(ForbiddenException);
   });
 });
+
+describe("FoodService: mesa y menú de ejemplo", () => {
+  it("guarda la mesa en pedidos para comer en el local", async () => {
+    const s = allDay();
+    s.dineIn = { enabled: true };
+    s.whatsapp = "593991234567";
+    const prisma = makePrisma(s, [burger]);
+    const res = await service(prisma).createPublicOrder("brasa", order({ fulfillment: "dine_in", table: "5<script>" }));
+    expect(prisma.order.create.mock.calls[0][0].data.deliveryAddress).toBe("Mesa 5script");
+    expect(decodeURIComponent(String(res.whatsappUrl))).toContain("Mesa 5script");
+  });
+
+  it("solo carga el menú de ejemplo si el menú está vacío", async () => {
+    const prisma = makePrisma();
+    prisma.product.count = jest.fn().mockResolvedValue(3);
+    await expect(service(prisma).loadStarterMenu("t1", "burgers")).rejects.toThrow(/vacío/);
+  });
+
+  it("los menús de ejemplo tienen opciones válidas", () => {
+    const { STARTER_MENUS } = require("./food-starter");
+    for (const [type, menu] of Object.entries<any>(STARTER_MENUS)) {
+      expect(menu.length).toBeGreaterThan(1);
+      for (const section of menu) {
+        for (const p of section.products) {
+          expect(p.price).toBeGreaterThan(0);
+          const extras = normalizeProductExtras({ optionGroups: p.groups || [] });
+          expect(extras.optionGroups.length).toBe((p.groups || []).length);
+        }
+      }
+      expect(type).toBeTruthy();
+    }
+  });
+});

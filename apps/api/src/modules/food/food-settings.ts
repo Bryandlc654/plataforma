@@ -9,6 +9,10 @@ export const FULFILLMENTS: Fulfillment[] = ["delivery", "pickup", "dine_in"];
 export const PAYMENT_METHODS = ["cash", "transfer", "card", "deuna"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
+/** Plantillas del menú público (cómo se ve, no qué contiene). */
+export const MENU_TEMPLATES = ["street", "gallery", "bistro", "cafe"] as const;
+export type MenuTemplate = (typeof MENU_TEMPLATES)[number];
+
 export interface DayHours {
   open: boolean;
   from: string; // "HH:mm"
@@ -19,6 +23,7 @@ export interface FoodSettings {
   tagline: string;
   description: string;
   coverUrl: string;
+  template: MenuTemplate;
   accentColor: string;
   theme: "dark" | "light";
   announcement: string;
@@ -72,6 +77,7 @@ export function defaultFoodSettings(): FoodSettings {
     tagline: "",
     description: "",
     coverUrl: "",
+    template: "street",
     accentColor: "#F97316",
     theme: "dark",
     announcement: "",
@@ -133,6 +139,7 @@ export function normalizeFoodSettings(raw: any): FoodSettings {
     tagline: str(r.tagline, 120, d.tagline),
     description: str(r.description, 600, d.description),
     coverUrl: safeUrl(r.coverUrl),
+    template: (MENU_TEMPLATES as readonly string[]).includes(r.template) ? r.template : d.template,
     accentColor: /^#[0-9a-fA-F]{6}$/.test(r.accentColor || "") ? r.accentColor : d.accentColor,
     theme: r.theme === "light" ? "light" : "dark",
     announcement: str(r.announcement, 160, d.announcement),

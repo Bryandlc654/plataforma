@@ -24,11 +24,25 @@ const COLUMNS: Array<{ status: OrderStatus; title: string }> = [
   { status: "on_the_way", title: "En camino" },
 ];
 
+let audioCtx: AudioContext | null = null;
+function getAudio(): AudioContext | null {
+  try {
+    if (!audioCtx) {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      audioCtx = Ctx ? new Ctx() : null;
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
+
 /** Aviso sonoro corto cuando entra un pedido nuevo (sin archivos de audio). */
 function beep() {
   try {
-    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getAudio();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     [0, 0.18].forEach((t) => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -240,7 +254,21 @@ export default function FoodOrdersPage() {
   const [sym, setSym] = useState("$");
   const [sound, setSound] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notifyPerm, setNotifyPerm] = useState<NotificationPermission | "unsupported">("default");
   const seen = useRef<Set<string> | null>(null);
+
+  useEffect(() => {
+    setNotifyPerm(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
+  }, []);
+
+  // Activa los avisos: permiso de notificaciones + desbloqueo del sonido (requiere un clic).
+  const enableAlerts = async () => {
+    getAudio()?.resume().catch(() => {});
+    beep();
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      try { setNotifyPerm(await Notification.requestPermission()); } catch {}
+    }
+  };
 
   useEffect(() => {
     setOpenId(new URLSearchParams(window.location.search).get("id"));
@@ -252,7 +280,19 @@ export default function FoodOrdersPage() {
     try {
       const list = unwrap<FoodOrder[]>(await api.get("/food/orders", { params: { scope: "active" } }));
       const ids = new Set(list.map((o) => o.id));
-      if (seen.current && list.some((o) => o.status === "pending" && !seen.current!.has(o.id)) && sound) beep();
+      const fresh = seen.current ? list.filter((o) => o.status === "pending" && !seen.current!.has(o.id)) : [];
+      if (fresh.length) {
+        if (sound) beep();
+        // Notificación del sistema: avisa aunque la pestaña esté en segundo plano.
+        if (typeof Notification !== "undefined" && Notification.permission === "granted" && document.hidden) {
+          for (const o of fresh.slice(0, 3)) {
+            try {
+              const n = new Notification(`Nuevo pedido #${o.number}`, { body: `${o.customerName || "Cliente"} · ${o.items.length} ${o.items.length === 1 ? "producto" : "productos"}`, tag: o.id });
+              n.onclick = () => { window.focus(); setOpenId(o.id); n.close(); };
+            } catch {}
+          }
+        }
+      }
       seen.current = ids;
       setActive(list);
       setError(null);
@@ -281,6 +321,14 @@ export default function FoodOrdersPage() {
     const t = setTimeout(loadHistory, search ? 300 : 0);
     return () => clearTimeout(t);
   }, [tab, tenantId, loadHistory, search]);
+
+  // El título de la pestaña muestra cuántos pedidos nuevos esperan.
+  const pendingCount = active.filter((o) => o.status === "pending").length;
+  useEffect(() => {
+    const prev = document.title;
+    document.title = pendingCount ? `(${pendingCount}) Pedidos nuevos` : "Pedidos";
+    return () => { document.title = prev; };
+  }, [pendingCount]);
 
   const all = useMemo(() => [...active, ...history], [active, history]);
   const [fetched, setFetched] = useState<FoodOrder | null>(null);
@@ -321,9 +369,15 @@ export default function FoodOrdersPage() {
           <h1 className="page-title">Pedidos</h1>
           <p className="page-subtitle">Se actualiza solo cada 10 segundos.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={toggleSound} className="btn-secondary" title="Sonido al llegar un pedido nuevo">
-            {sound ? "🔔 Sonido activado" : "🔕 Sonido apagado"}
+        <div className="flex flex-wrap items-center gap-2">
+          {notifyPerm === "default" && (
+            <button onClick={enableAlerts} className="btn-primary" title="Avisos con sonido y notificación aunque estés en otra pestaña">
+              🔔 Activar avisos de pedidos
+            </button>
+          )}
+          {notifyPerm === "denied" && <span className="text-[12px] text-[#8a8a8a]">Notificaciones bloqueadas en el navegador</span>}
+          <button onClick={() => { toggleSound(); getAudio()?.resume().catch(() => {}); }} className="btn-secondary" title="Sonido al llegar un pedido nuevo">
+            {sound ? "🔊 Sonido activado" : "🔇 Sonido apagado"}
           </button>
         </div>
       </div>

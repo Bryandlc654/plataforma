@@ -158,6 +158,14 @@ export default function FoodHomePage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`Mira nuestro menú y haz tu pedido aquí: ${menuUrl(data.restaurant.slug)}`)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary"
+          >
+            Compartir por WhatsApp
+          </a>
           <button onClick={copy} className="btn-secondary">{copied ? "¡Enlace copiado!" : "Copiar enlace"}</button>
           <a href={menuUrl(data.restaurant.slug)} target="_blank" rel="noreferrer" className="btn-primary">Ver mi menú ↗</a>
         </div>
